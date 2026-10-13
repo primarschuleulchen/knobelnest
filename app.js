@@ -67,8 +67,8 @@
     mond:  { label: 'Mond',  bg: '#DCE3F5', p: '<path d="M20 15A8.5 8.5 0 1 1 9 4a7 7 0 0 0 11 11z"/>' },
     baum:  { label: 'Baum',  bg: '#D5EBC9', p: '<path d="M12 22v-6"/><path d="M12 2l6 8h-3l4 6H5l4-6H6z"/>' },
     fisch: { label: 'Fisch', bg: '#CBE6EE', p: '<path d="M3 12c3-5 9-6 13-3l5-3v12l-5-3c-4 3-10 2-13-3z"/><circle cx="8" cy="11" r=".9" fill="#1B2A3D"/>' },
-    haus:  { label: 'Haus',  bg: '#F6D6C8', p: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>' },
-    stern: { label: 'Stern', bg: '#F7E1EE', p: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>' }
+    haus:  { label: 'Haus',  bg: '#E1E8F8', p: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>' },
+    stern: { label: 'Stern', bg: '#E4F5EC', p: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>' }
   };
   var SYM_IDS = Object.keys(SYM);
   function symSvg(id, size) {
@@ -82,10 +82,12 @@
   function pwLabel(pw) { return pw.split(',').map(function (s) { return SYM[s] ? SYM[s].label : s; }).join(', '); }
 
   // Farben
-  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F4D2CE', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
-  var TINTS = ['#D5EBC9', '#F6D6C8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#F7E1EE'];
+  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#D3F1E4', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
+  var TINTS = ['#D5EBC9', '#E1E8F8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#E4F5EC'];
+  var FACH_SHORT = { 'Mathematik': 'Mathe' };
+  function fachShort(f) { return FACH_SHORT[f] || f; }
   function fachColor(f) { return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
-  var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#F4D2CE', '#E3D5F0', '#F3E2A6'];
+  var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#D3F1E4', '#E3D5F0', '#F3E2A6'];
   function kidColor(name) { return KID_TINTS[hash(name) % KID_TINTS.length]; }
   var PALETTE = [['#2F5E9E', 'Blau'], ['#1E6F7A', 'Petrol'], ['#2E7D4F', 'Grün'], ['#C46A1C', 'Orange'], ['#C0473C', 'Rot'],
     ['#B83A78', 'Pink'], ['#8A4F7D', 'Violett'], ['#7A5634', 'Braun'], ['#E8B710', 'Gelb'], ['#6BB3E8', 'Hellblau'], ['#86C66E', 'Hellgrün']];
@@ -101,7 +103,7 @@
       '" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
   }
   var I = {
-    logo: '<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="2" width="30" height="36" rx="6" fill="#2B6CB0"/><rect x="8.5" y="6" width="23" height="26" rx="2.5" fill="#DCEEFC"/><circle cx="20" cy="35" r="1.5" fill="#DCEEFC"/><path d="M20 10.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z" fill="#F6A5BE" stroke="#B04A6E" stroke-width="1" stroke-linejoin="round"/></svg>',
+    logo: '<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="2" width="30" height="36" rx="6" fill="#2B6CB0"/><rect x="8.5" y="6" width="23" height="26" rx="2.5" fill="#DCEEFC"/><circle cx="20" cy="35" r="1.5" fill="#DCEEFC"/><path d="M20 10.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z" fill="#A8E6CF" stroke="#2E8B6A" stroke-width="1" stroke-linejoin="round"/></svg>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     play: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
@@ -291,7 +293,7 @@
   var T = {
     me: null, classes: [], cls: null, games: [], rel: new Set(), kids: [], subjects: [],
     progress: null, progressBusy: false, tafel: null, tafelBusy: false,
-    tab: LS.get('kn_tab') || 'spiele', fach: 'alle', q: '', pfilter: 'alle',
+    tab: LS.get('kn_tab') || 'spiele', fach: 'alle', closed: LS.get('kn_closed') || {}, q: '', pfilter: 'alle',
     fresh: new Set(), editColor: null, newColor: '#2E7D4F', loginErr: '', loginInfo: '',
     admin: { teachers: null, tg: [], open: null, form: null }
   };
@@ -434,28 +436,37 @@
           h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
-      (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
+      (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
       '<input class="input" id="gSearch" type="search" placeholder="z. B. Einmaleins" value="' + h(T.q) + '" data-input="search"></div></div>';
     var groups = [], by = {};
     shown.forEach(function (g) { var k = g.fach + '|' + g.thema; if (!by[k]) { by[k] = { fach: g.fach, thema: g.thema, list: [] }; groups.push(by[k]); } by[k].list.push(g); });
     if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
     groups.forEach(function (gr) {
-      out += '<h3 class="gtitle"><small>' + h(gr.fach) + ' ›</small>' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + '</small></h3><div class="games">' +
+      var gk = gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
+      out += '<h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
+        '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
+        gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' + (shut ? '' : '<div class="games">' +
         gr.list.map(function (g) {
           var on = T.rel.has(g.id);
-          return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(g.fach.slice(0, 2)) +
+          return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
             (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
             '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span>' +
-            (g.stufe ? '<span class="pill" style="background:#FDE7EE;color:#8A3552">' + h(g.stufe) + '</span>' : '') + '</div>' +
+            (g.stufe ? '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>' : '') + '</div>' +
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
             '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button></div></div></article>';
-        }).join('') + '</div>';
+        }).join('') + '</div>');
     });
     return out + '</section>';
   };
   ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
+  ACT.gGroup = function (el) { var k = el.dataset.k; if (T.closed[k]) delete T.closed[k]; else T.closed[k] = 1; LS.set('kn_closed', T.closed); T.render(); };
+  ACT.gGroupAll = function (el) {
+    T.closed = {};
+    if (el.dataset.v === '1') T.games.forEach(function (g) { T.closed[g.fach + '|' + g.thema] = 1; });
+    LS.set('kn_closed', T.closed); T.render();
+  };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   ACT.rel = async function (el) {
     var id = el.dataset.id, on = !T.rel.has(id);
@@ -613,7 +624,7 @@
         '<button type="button" class="colorbtn" style="background:' + h(s.color) + '" aria-label="Farbe von ' + h(s.name) + ' ändern" data-a="subjColor" data-id="' + s.id + '"></button>' +
         '<b class="grow" style="font-size:18px">' + h(s.name) + '</b><span class="muted small">' + (s.active ? 'diese Woche auf der Tafel' : 'nicht auf der Tafel') + '</span>' +
         '<button type="button" class="btn icon" aria-pressed="' + s.fav + '" aria-label="' + h(s.name) + (s.fav ? ' ist Favorit' : ' als Favorit markieren') + '" data-a="subjFav" data-id="' + s.id + '">' +
-        '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (s.fav ? '#F6A5BE' : 'none') + '" stroke="' + (s.fav ? '#B04A6E' : '#66788D') + '" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' + I.star + '</svg></button>' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (s.fav ? '#A8E6CF' : 'none') + '" stroke="' + (s.fav ? '#2E8B6A' : '#66788D') + '" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' + I.star + '</svg></button>' +
         '<button type="button" class="btn icon' + (UI.confirm === key ? ' danger armed' : '') + '" aria-label="' + h(s.name) + ' löschen" data-a="subjDel" data-id="' + s.id + '">' +
         (UI.confirm === key ? '?' : ic(I.trash, 20, '#9A3B1A', 2)) + '</button></div>' +
         (T.editColor === s.id ? '<div style="padding-left:44px">' + swatches(s.color, 'subjPick', s.id) + '</div>' : '') + '</div>';
@@ -745,9 +756,18 @@
       '<button type="button" class="switch" role="switch" aria-checked="' + F.for_all + '" data-a="gAll"><span>Für alle Lehrpersonen freischalten</span><span class="track"></span></button>' +
       '<div class="row"><button class="btn primary">' + (F.id ? 'Änderungen speichern' : 'Spiel speichern') + '</button>' + (F.id ? '<button type="button" class="btn" data-a="gCancel">Abbrechen</button>' : '') + '</div>' +
       '<p class="muted small">Tipp für Fortschritt: Ein Spiel kann <code>knobelnest.answer(true/false)</code> oder <code>knobelnest.progress(erledigt, total)</code> aufrufen. Spiele aus dem Spielheft melden sich automatisch.</p></form>';
-    var glist = T.games.length ? '<div class="tablewrap"><table><thead><tr><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + T.games.map(function (g) {
+    var sel = A.sel || (A.sel = {}), nSel = Object.keys(sel).length;
+    var others = (A.teachers || []).filter(function (t) { return !t.is_admin; });
+    var bulk = T.games.length ? '<div class="card row" style="padding:14px 16px;position:sticky;top:110px;z-index:3' + (nSel ? ';border-color:var(--green);box-shadow:0 4px 0 var(--green)' : '') + '">' +
+      '<b class="grow">' + (nSel ? plural(nSel, 'Spiel', 'Spiele') + ' ausgewählt' : 'Spiele anhaken, um sie einer Lehrperson auf einmal zu geben') + '</b>' +
+      (nSel ? '<label class="sr" for="bulkT">Lehrperson</label><select class="input" id="bulkT" style="width:auto;min-height:44px" data-change="bulkT">' +
+        '<option value="">Lehrperson wählen …</option>' + others.map(function (t) { return '<option value="' + t.id + '"' + (A.bulkT === t.id ? ' selected' : '') + '>' + h(t.name || t.email) + '</option>'; }).join('') + '</select>' +
+        '<button class="btn sm primary" data-a="bulkGo" data-on="1">Zuteilen</button><button class="btn sm" data-a="bulkGo" data-on="0">Wegnehmen</button>' +
+        '<button class="btn sm" data-a="bulkClear">Auswahl aufheben</button>' : '') + '</div>' : '';
+    var allSel = T.games.length && nSel === T.games.length;
+    var glist = T.games.length ? bulk + '<div class="tablewrap"><table><thead><tr><th style="width:44px"><input type="checkbox" aria-label="Alle Spiele auswählen" style="width:22px;height:22px" data-change="gSelAll"' + (allSel ? ' checked' : '') + '></th><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + T.games.map(function (g) {
       var key = 'game:' + g.id;
-      return '<tr><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
+      return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
         '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
         '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
@@ -756,7 +776,7 @@
       var mine = A.tg.filter(function (x) { return x.teacher_id === t.id; }).map(function (x) { return x.game_id; });
       var open = A.open === t.id;
       return '<li style="flex-direction:column;align-items:stretch"><div class="row"><span class="avatar">' + h(initials(t.name || t.email)) + '</span><span class="grow"><b>' + h(t.name || '(noch kein Name)') + '</b>' +
-        (t.is_admin ? ' <span class="pill" style="background:#F6A5BE">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
+        (t.is_admin ? ' <span class="pill" style="background:#A8E6CF">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
         '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
         (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
         (open ? (function () {
@@ -783,9 +803,10 @@
       '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
       (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
-      '<div class="cols2"><div class="wide">' + pack + form + '<h2 style="font-size:24px">Alle Spiele</h2>' + glist + '</div>' +
+      '<div class="cols2"><div class="wide">' + pack + form + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
       '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
+      '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + glist + '</section>' +
       '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + teachers + '</section>';
   };
   ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
@@ -843,6 +864,20 @@
   ACT.gDel = async function (el) {
     if (!armed('game:' + el.dataset.id)) return T.render();
     await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
+  };
+  ACT.gSel = function (el) { var s = T.admin.sel; if (el.checked) s[el.dataset.id] = 1; else delete s[el.dataset.id]; T.render(); };
+  ACT.gSelAll = function (el) { T.admin.sel = {}; if (el.checked) T.games.forEach(function (g) { T.admin.sel[g.id] = 1; }); T.render(); };
+  ACT.bulkClear = function () { T.admin.sel = {}; T.render(); };
+  ACT.bulkT = function (el) { T.admin.bulkT = el.value; };
+  ACT.bulkGo = async function (el) {
+    var A = T.admin, t = A.bulkT, ids = Object.keys(A.sel), on = el.dataset.on === '1';
+    if (!t) return toast('Bitte zuerst eine Lehrperson wählen.');
+    await DB.setTeacherGames(t, ids, on);
+    A.tg = A.tg.filter(function (x) { return !(x.teacher_id === t && ids.indexOf(x.game_id) >= 0); });
+    if (on) ids.forEach(function (g) { A.tg.push({ teacher_id: t, game_id: g }); });
+    var who = (A.teachers.filter(function (x) { return x.id === t; })[0] || {});
+    toast(plural(ids.length, 'Spiel', 'Spiele') + (on ? ' an ' : ' weggenommen von ') + (who.name || who.email) + (on ? ' zugeteilt.' : '.'));
+    T.render();
   };
   ACT.gAllToggle = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];

@@ -1,7 +1,7 @@
 /* Knobelnest – Gestaltung */
 :root{
   --bg:#EEF5FC; --card:#FFFFFF; --ink:#1B2A3D; --soft:#4A5B70; --line:#D3E1EF; --line2:#B4C8DE;
-  --green:#2B6CB0; --green-d:#1D4F86; --green-l:#E3F0FC; --amber:#F6A5BE; --focus:#C2416B; --kid:#DCEEFC;
+  --green:#2B6CB0; --green-d:#1D4F86; --green-l:#E3F0FC; --amber:#A8E6CF; --focus:#1F8A65; --kid:#DCEEFC;
   --red:#9A3B1A; --red-ink:#7A2E12;
   --h:'Bricolage Grotesque', system-ui, sans-serif;
   --b:'Atkinson Hyperlegible', system-ui, sans-serif;
@@ -96,12 +96,15 @@ textarea.input{resize:vertical;line-height:1.5}
 .tile span span{font-size:14px;color:var(--soft)}
 
 /* Spiel-Karten */
-.gtitle{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-family:var(--h);font-size:21px;margin-top:6px}
+.gtitle{font-family:var(--h);font-size:30px;margin-top:6px}
+.gtoggle{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;width:100%;padding:8px 4px;border:0;border-bottom:1.5px solid var(--line);background:none;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.gtoggle .chev{display:inline-block;width:24px;font-size:30px;line-height:1;transition:transform .15s;color:var(--green)}
+.gtoggle[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .gtitle small{font-family:var(--b);font-size:15px;font-weight:400;color:var(--soft)}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
 .game{display:flex;flex-direction:column;background:#fff;border:1.5px solid var(--line);border-radius:18px;overflow:hidden}
-.game-top{height:96px;position:relative;display:grid;place-items:center;font-family:var(--h);font-weight:700;font-size:34px;color:rgba(24,35,31,.55)}
-.game-top .pill{position:absolute;top:12px;left:12px;background:var(--ink);color:#fff}
+.game-top{height:52px;position:relative;display:grid;place-items:center;font-family:var(--h);font-weight:700;font-size:22px;color:rgba(27,42,61,.7)}
+.game-top .pill{position:absolute;top:50%;left:12px;transform:translateY(-50%);background:var(--ink);color:#fff}
 .game-body{flex:1;padding:18px 18px 20px;display:flex;flex-direction:column;gap:10px}
 .game-body h3{font-size:21px}
 .game-body p{font-size:15px;color:var(--soft)}
@@ -143,9 +146,9 @@ tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
 .overlay{position:fixed;inset:0;z-index:50;background:rgba(24,35,31,.55);display:grid;place-items:center;padding:16px}
 .dialog{background:#fff;border-radius:20px;padding:28px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:18px}
 .bigcode{background:var(--green);color:#fff;border-radius:24px;padding:48px 40px;text-align:center;display:flex;flex-direction:column;gap:18px;max-width:900px}
-.bigcode b{font-family:var(--h);font-size:clamp(60px,14vw,160px);letter-spacing:.08em;line-height:1}
+.bigcode b{font-family:var(--h);font-size:clamp(34px,7vw,88px);letter-spacing:.06em;line-height:1;white-space:nowrap}
 .bigcode p{font-size:clamp(18px,2.6vw,28px);color:#DCEBFA}
-.bigcode-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:clamp(20px,4vw,48px)}
+.bigcode-row{display:flex;flex-direction:column;align-items:center;gap:22px}
 .qrbox{background:#fff;border-radius:18px;padding:14px;width:clamp(200px,30vw,340px);aspect-ratio:1;display:grid;place-items:center;color:var(--soft);font-size:15px}
 .qrbox svg{display:block;width:100%;height:auto}
 .player{position:fixed;inset:0;z-index:60;background:#fff;display:flex;flex-direction:column}
