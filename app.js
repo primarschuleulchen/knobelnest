@@ -82,7 +82,7 @@
   function pwLabel(pw) { return pw.split(',').map(function (s) { return SYM[s] ? SYM[s].label : s; }).join(', '); }
 
   // Farben
-  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#D3F1E4', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
+  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F28B82', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
   var TINTS = ['#D5EBC9', '#E1E8F8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#E4F5EC'];
   var FACH_SHORT = { 'Mathematik': 'Mathe' };
   function fachShort(f) { return FACH_SHORT[f] || f; }
