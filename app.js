@@ -22,7 +22,18 @@
   function plural(n, one, many) { return n === 1 ? '1 ' + one : n + ' ' + many; }
   function initials(n) { n = (n || '?').trim(); var p = n.split(/\s+/); return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); }
   function hash(s) { var x = 0; s = String(s); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; }
-  function kidUrl() { return location.origin + location.pathname + '#/klasse'; }
+  function kidUrl(code) { return location.origin + location.pathname + '#/klasse' + (code ? '/' + encodeURIComponent(String(code).replace(/\s+/g, '')) : ''); }
+  var qrLib = null;
+  function loadQR() {
+    if (window.qrcode) return Promise.resolve(window.qrcode);
+    if (!qrLib) qrLib = new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+      s.onload = function () { res(window.qrcode); }; s.onerror = function () { qrLib = null; rej(new Error('QR')); };
+      document.head.appendChild(s);
+    });
+    return qrLib;
+  }
+  function qrSvg(text) { return loadQR().then(function (q) { var c = q(0, 'M'); c.addData(text); c.make(); return c.createSvgTag(8, 2); }); }
   function shortUrl(u) { return u.replace(/^https?:\/\//, ''); }
   function since(ts) {
     if (!ts) return '–';
@@ -55,13 +66,13 @@
     sonne: { label: 'Sonne', bg: '#FFE7A3', p: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>' },
     mond:  { label: 'Mond',  bg: '#DCE3F5', p: '<path d="M20 15A8.5 8.5 0 1 1 9 4a7 7 0 0 0 11 11z"/>' },
     baum:  { label: 'Baum',  bg: '#D5EBC9', p: '<path d="M12 22v-6"/><path d="M12 2l6 8h-3l4 6H5l4-6H6z"/>' },
-    fisch: { label: 'Fisch', bg: '#CBE6EE', p: '<path d="M3 12c3-5 9-6 13-3l5-3v12l-5-3c-4 3-10 2-13-3z"/><circle cx="8" cy="11" r=".9" fill="#18231F"/>' },
+    fisch: { label: 'Fisch', bg: '#CBE6EE', p: '<path d="M3 12c3-5 9-6 13-3l5-3v12l-5-3c-4 3-10 2-13-3z"/><circle cx="8" cy="11" r=".9" fill="#1B2A3D"/>' },
     haus:  { label: 'Haus',  bg: '#F6D6C8', p: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>' },
     stern: { label: 'Stern', bg: '#F7E1EE', p: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>' }
   };
   var SYM_IDS = Object.keys(SYM);
   function symSvg(id, size) {
-    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="#18231F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SYM[id].p + '</svg>';
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="#1B2A3D" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SYM[id].p + '</svg>';
   }
   function randPw(not) {
     var p;
@@ -90,7 +101,7 @@
       '" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
   }
   var I = {
-    logo: '<svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="10" fill="#F0B23D"/><path d="M12 26l6-12 4 8 3-5 4 9" fill="none" stroke="#18231F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    logo: '<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="2" width="30" height="36" rx="6" fill="#2B6CB0"/><rect x="8.5" y="6" width="23" height="26" rx="2.5" fill="#DCEEFC"/><circle cx="20" cy="35" r="1.5" fill="#DCEEFC"/><path d="M20 10.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z" fill="#F6A5BE" stroke="#B04A6E" stroke-width="1" stroke-linejoin="round"/></svg>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     play: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
@@ -251,7 +262,7 @@
       }).join('') + '</div></section>';
     });
     var missing = s.kids.filter(function (k) { return !entry[k.id] || !subjName[entry[k.id].subject_id]; }).map(function (k) { return k.name; });
-    out += '<p style="color:#C9D6D1;font-size:17px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
+    out += '<p style="color:#C7DAEE;font-size:17px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
     return '<div class="board' + (kid ? '' : ' wall') + '"><div class="board-in">' + out + '</div></div>';
   }
 
@@ -308,7 +319,7 @@
 
   T.renderLogin = function () {
     UI.view = 'login';
-    paint('<div class="login"><section class="login-hero"><a class="logo" href="#/" style="color:#F2F5F4">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+    paint('<div class="login"><section class="login-hero"><a class="logo" href="#/" style="color:#EEF5FC">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
       '<div class="stack" style="gap:18px"><h1>Ihre Lernspiele an einem Ort.</h1><p>Spiele für die Klasse freigeben, den Fortschritt sehen und die Arbeitsstand-Tafel für den Wochenplan nutzen.</p></div>' +
       '<a class="kidlink" href="#/klasse">' + ic(I.play, 22) + '<span>Für Kinder: Hier geht\'s zum Klassen-Login</span></a></section>' +
       '<section class="login-form"><form data-a="login" class="stack"><div class="stack" style="gap:8px"><h2 style="font-size:34px">Anmelden</h2>' +
@@ -408,7 +419,7 @@
     });
     var out = '<section class="banner"><div class="stack" style="gap:8px;flex:1 1 360px"><h2>Klasse ' + h(c.name) + '</h2>' +
       '<p>Die Kinder öffnen <b style="color:#fff">' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
-      '<p style="color:var(--amber);font-weight:700">' + released + ' von ' + plural(games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
+      '<p style="color:#fff;font-weight:700">' + released + ' von ' + plural(games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a></div></div></section>';
     if (!games.length) {
@@ -416,7 +427,7 @@
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
     }
     out += '<section class="stack"><h2 style="font-size:26px">Fächer</h2><div class="tiles">' +
-      [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3E8E6' }].concat(fachs.map(function (f) {
+      [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3ECF5' }].concat(fachs.map(function (f) {
         return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
       })).map(function (t) {
         return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
@@ -434,8 +445,8 @@
           var on = T.rel.has(g.id);
           return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(g.fach.slice(0, 2)) +
             (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
-            '<span class="pill" style="background:#E6EEEB;color:#1E5B4F">' + h(g.fach) + '</span>' +
-            (g.stufe ? '<span class="pill" style="background:#F1ECE0;color:#6B4E12">' + h(g.stufe) + '</span>' : '') + '</div>' +
+            '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span>' +
+            (g.stufe ? '<span class="pill" style="background:#FDE7EE;color:#8A3552">' + h(g.stufe) + '</span>' : '') + '</div>' +
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
@@ -460,8 +471,11 @@
   };
   ACT.showCode = function () {
     var c = T.cur();
-    overlay('<div class="bigcode"><p>Klasse ' + h(c.name) + ' · Öffne ' + h(shortUrl(kidUrl())) + '</p><b>' + h(c.code) + '</b>' +
+    var o = overlay('<div class="bigcode"><p>Klasse ' + h(c.name) + ' · QR-Code scannen oder ' + h(shortUrl(kidUrl())) + ' öffnen</p>' +
+      '<div class="bigcode-row"><div class="qrbox" id="qrBox" role="img" aria-label="QR-Code zum Klassen-Login">QR-Code wird geladen …</div><b>' + h(c.code) + '</b></div>' +
       '<button class="btn" style="align-self:center" data-a="closeOverlay">Schliessen</button></div>');
+    qrSvg(kidUrl(c.code)).then(function (svg) { var b = o.querySelector('#qrBox'); if (b) b.innerHTML = svg; })
+      .catch(function () { var b = o.querySelector('#qrBox'); if (b) b.textContent = 'QR-Code nicht verfügbar. Bitte die Adresse eintippen.'; });
   };
 
   // ---------- Kinder ----------
@@ -469,10 +483,10 @@
     var c = T.cur();
     var list = T.kids.length ? '<ul class="list">' + T.kids.map(function (k) {
       var key = 'kid:' + k.id;
-      return '<li class="' + (T.fresh.has(k.id) ? 'fresh' : '') + '"><span class="avatar" style="background:' + kidColor(k.name) + ';color:#18231F">' + h(k.name.charAt(0)) + '</span>' +
+      return '<li class="' + (T.fresh.has(k.id) ? 'fresh' : '') + '"><span class="avatar" style="background:' + kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' +
         '<b class="grow" style="font-size:18px">' + h(k.name) + '</b><span class="pwrow" role="img" aria-label="Bildpasswort: ' + h(pwLabel(k.pw)) + '">' +
         k.pw.split(',').map(function (p) { return SYM[p] ? '<span style="background:' + SYM[p].bg + '">' + symSvg(p, 24) + '</span>' : ''; }).join('') + '</span>' +
-        (T.fresh.has(k.id) ? '<span class="pill" style="background:#E6EEEB;color:#1E5B4F">Neues Passwort</span>' : '') +
+        (T.fresh.has(k.id) ? '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">Neues Passwort</span>' : '') +
         '<span class="row" style="margin-left:auto;gap:8px"><button class="btn sm" data-a="kidPw" data-id="' + k.id + '">Passwort zurücksetzen</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="kidDel" data-id="' + k.id + '">' + (UI.confirm === key ? 'Wirklich löschen?' : 'Löschen') + '</button></span></li>';
     }).join('') + '</ul>' : '<div class="empty">Noch keine Kinder. Tragen Sie rechts die Namen ein.</div>';
@@ -567,10 +581,10 @@
           var p = P[k.id + '|' + g.id]; if (p && p.last_played && (!last || p.last_played > last)) last = p.last_played;
           var x = cell(p);
           return '<td><div class="stack" style="gap:5px"><div class="bar"><i style="width:' + x.pct + '%;' + (x.pct >= 100 ? 'background:#2E7D4F' : '') + '"></i></div>' +
-            '<span class="small" style="color:' + (x.none ? '#6B7773' : 'var(--ink)') + '">' + h(x.label) + '</span></div></td>';
+            '<span class="small" style="color:' + (x.none ? '#66788D' : 'var(--ink)') + '">' + h(x.label) + '</span></div></td>';
         }).join('');
         return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
-          kidColor(k.name) + ';color:#18231F">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
+          kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
           '<td class="muted" style="white-space:nowrap">' + since(last) + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     return head + table + '<p class="muted small">Spiele, die dafür vorbereitet sind, melden richtige Antworten oder den Spielstand. Bei anderen Spielen sieht man, wie oft sie geöffnet wurden. Gespeichert werden nur Vorname, Fortschritt und Datum.</p>';
@@ -599,7 +613,7 @@
         '<button type="button" class="colorbtn" style="background:' + h(s.color) + '" aria-label="Farbe von ' + h(s.name) + ' ändern" data-a="subjColor" data-id="' + s.id + '"></button>' +
         '<b class="grow" style="font-size:18px">' + h(s.name) + '</b><span class="muted small">' + (s.active ? 'diese Woche auf der Tafel' : 'nicht auf der Tafel') + '</span>' +
         '<button type="button" class="btn icon" aria-pressed="' + s.fav + '" aria-label="' + h(s.name) + (s.fav ? ' ist Favorit' : ' als Favorit markieren') + '" data-a="subjFav" data-id="' + s.id + '">' +
-        '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (s.fav ? '#F0B23D' : 'none') + '" stroke="' + (s.fav ? '#8A6400' : '#6B7773') + '" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' + I.star + '</svg></button>' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (s.fav ? '#F6A5BE' : 'none') + '" stroke="' + (s.fav ? '#B04A6E' : '#66788D') + '" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' + I.star + '</svg></button>' +
         '<button type="button" class="btn icon' + (UI.confirm === key ? ' danger armed' : '') + '" aria-label="' + h(s.name) + ' löschen" data-a="subjDel" data-id="' + s.id + '">' +
         (UI.confirm === key ? '?' : ic(I.trash, 20, '#9A3B1A', 2)) + '</button></div>' +
         (T.editColor === s.id ? '<div style="padding-left:44px">' + swatches(s.color, 'subjPick', s.id) + '</div>' : '') + '</div>';
@@ -609,17 +623,17 @@
       var st = T.tafel.state;
       counts = st.subjects.map(function (s) {
         var n = st.entries.filter(function (e) { return e.subject_id === s.id && e.col === 'frage'; }).length;
-        return '<div class="row" style="justify-content:space-between;padding:10px 12px;border-radius:10px;background:#2A6D60"><span class="row" style="gap:10px;font-weight:700">' +
+        return '<div class="row" style="justify-content:space-between;padding:10px 12px;border-radius:10px;background:#3D7CC0"><span class="row" style="gap:10px;font-weight:700">' +
           '<span style="width:12px;height:12px;border-radius:4px;background:' + h(s.color) + ';box-shadow:0 0 0 1.5px #fff"></span>' + h(s.name) + '</span><span>' +
           (n === 0 ? 'keine' : plural(n, 'Kind', 'Kinder')) + '</span></div>';
-      }).join('') || '<p style="color:#CFE2DC">Keine Fächer aktiv.</p>';
-    } else counts = '<p style="color:#CFE2DC">Wird geladen …</p>';
+      }).join('') || '<p style="color:#DCEBFA">Keine Fächer aktiv.</p>';
+    } else counts = '<p style="color:#DCEBFA">Wird geladen …</p>';
     var resetKey = 'resetFav', clearKey = 'clearTafel';
     return '<div class="cols2"><div class="wide"><div class="stack" style="gap:8px"><h1 class="h1">Arbeitsstand-Tafel</h1>' +
       '<p class="muted">Haken Sie an, was diese Woche auf der Tafel steht. Mit dem Stern markieren Sie Favoriten, die beim Zurücksetzen bleiben.</p></div>' +
       '<section class="card stack"><div class="row" style="justify-content:space-between"><h2>Fächer und Aufgaben</h2>' +
       '<button class="btn sm' + (UI.confirm === resetKey ? ' danger armed' : '') + '" data-a="resetFav">' + ic(I.reset) + (UI.confirm === resetKey ? ' Nicht-Favoriten wirklich löschen?' : ' Zurücksetzen auf Favoriten') + '</button></div>' +
-      list + '<form class="stack" data-a="addSubj" style="padding-top:14px;border-top:1.5px solid #E4EAE7"><div class="field"><label for="subjName">Eigenes Fach oder Aufgabe hinzufügen</label>' +
+      list + '<form class="stack" data-a="addSubj" style="padding-top:14px;border-top:1.5px solid #E2EBF5"><div class="field"><label for="subjName">Eigenes Fach oder Aufgabe hinzufügen</label>' +
       '<div class="row"><input class="input grow" style="flex:1 1 220px" id="subjName" name="name" maxlength="40" placeholder="z. B. Lesetraining" value="' + h(T.subjDraft || '') + '" data-input="subjDraft" required><button class="btn primary">Hinzufügen</button></div></div>' +
       '<div class="row"><span class="lbl">Farbe:</span>' + swatches(T.newColor, 'newColor') + '</div></form></section>' +
       '<section class="card stack"><h2>Die drei Spalten</h2><div class="columns">' + COLS.map(function (col) {
@@ -628,10 +642,10 @@
       '<section class="card stack"><h2>Neue Woche</h2><button class="switch" role="switch" aria-checked="' + !!c.tafel_auto + '" data-a="tafelAuto"><span>Namen jeden Montag automatisch von der Tafel nehmen</span><span class="track"></span></button>' +
       '<div class="row"><button class="btn danger' + (UI.confirm === clearKey ? ' armed' : '') + '" data-a="tafelClear">' + (UI.confirm === clearKey ? 'Wirklich alle Namen entfernen?' : 'Alle Namen jetzt entfernen') + '</button>' +
       '<span class="muted small">Die Fächer bleiben, nur die Namen gehen weg.</span></div></section></div>' +
-      '<aside class="side"><section class="card stack" style="background:var(--green);border-color:var(--green);color:#F2F5F4"><h2 style="font-size:22px">Offene Fragen gerade</h2>' + counts +
+      '<aside class="side"><section class="card stack" style="background:var(--green);border-color:var(--green);color:#EEF5FC"><h2 style="font-size:22px">Offene Fragen gerade</h2>' + counts +
       '<a class="btn amber" href="#/wandtafel/' + T.cls + '" target="_blank" rel="noopener">' + ic(I.board) + ' An der Wandtafel zeigen</a>' +
       '<button class="btn" data-a="tafelRefresh">' + ic(I.reset) + ' Aktualisieren</button>' +
-      '<p style="color:#CFE2DC;font-size:14px">Die Kinder öffnen die Tafel nach dem Einloggen über «Unsere Tafel».</p></section></aside></div>';
+      '<p style="color:#DCEBFA;font-size:14px">Die Kinder öffnen die Tafel nach dem Einloggen über «Unsere Tafel».</p></section></aside></div>';
   };
   function subj(id) { return T.subjects.filter(function (s) { return s.id === id; })[0]; }
   ACT.subjActive = async function (el) { var s = subj(el.dataset.id); s.active = !s.active; T.render(); await DB.updateSubject(s.id, { active: s.active }); T.tafel = null; T.render(); };
@@ -742,7 +756,7 @@
       var mine = A.tg.filter(function (x) { return x.teacher_id === t.id; }).map(function (x) { return x.game_id; });
       var open = A.open === t.id;
       return '<li style="flex-direction:column;align-items:stretch"><div class="row"><span class="avatar">' + h(initials(t.name || t.email)) + '</span><span class="grow"><b>' + h(t.name || '(noch kein Name)') + '</b>' +
-        (t.is_admin ? ' <span class="pill" style="background:#F0B23D">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
+        (t.is_admin ? ' <span class="pill" style="background:#F6A5BE">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
         '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
         (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
         (open ? '<div class="stack" style="gap:6px;padding:10px 0 4px 48px">' + T.games.map(function (g) {
@@ -751,8 +765,11 @@
             'data-change="tgSet" data-t="' + t.id + '" data-g="' + g.id + '"> ' + h(g.title) + ' <span class="muted small">' + h(g.fach) + ' › ' + h(g.thema) + (g.for_all ? ' · für alle' : '') + '</span></label>';
         }).join('') + '</div>' : '') + '</li>';
     }).join('') + '</ul>';
+    var pack = '<section class="card stack"><h2>Spielpaket importieren</h2><p class="muted">Mehrere Spiele auf einmal hochladen, zum Beispiel die Datei <b>knobelnest-spielpaket.json</b>. Spiele mit gleichem Titel werden übersprungen.</p>' +
+      '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
+      (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
-      '<div class="cols2"><div class="wide">' + form + '<h2 style="font-size:24px">Alle Spiele</h2>' + glist + '</div>' +
+      '<div class="cols2"><div class="wide">' + pack + form + '<h2 style="font-size:24px">Alle Spiele</h2>' + glist + '</div>' +
       '<aside class="side"><h2 style="font-size:24px">Lehrpersonen</h2>' + teachers +
       '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>';
   };
@@ -766,6 +783,30 @@
       var F = T.admin.form; F.html = String(r.result); F.filename = file.name;
       if (!F.title) { var m = /<title[^>]*>([^<]*)<\/title>/i.exec(F.html); F.title = (m ? m[1] : file.name.replace(/\.html?$/i, '')).trim().slice(0, 80); }
       T.render();
+    };
+    r.readAsText(file, 'utf-8');
+  };
+  ACT.gPack = function (el) {
+    var file = el.files && el.files[0]; if (!file) return;
+    var r = new FileReader();
+    r.onload = async function () {
+      var A = T.admin, data;
+      try { data = JSON.parse(String(r.result)); } catch (e) { return toast('Diese Datei ist kein gültiges Spielpaket.'); }
+      if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Knobelnest-Spielpaket.');
+      var have = {}; T.games.forEach(function (g) { have[g.title.toLowerCase()] = 1; });
+      var todo = data.games.filter(function (g) { return g && g.title && g.fach && g.html && !have[String(g.title).toLowerCase()]; });
+      var skipped = data.games.length - todo.length, done = 0, failed = 0;
+      for (var i = 0; i < todo.length; i++) {
+        var g = todo[i];
+        A.importing = 'Spiel ' + (i + 1) + ' von ' + todo.length + ' wird hochgeladen: ' + g.title; T.render();
+        try {
+          await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: String(g.fach).slice(0, 40),
+            thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all !== false, html: String(g.html) });
+          done++;
+        } catch (e) { failed++; console.error(e); }
+      }
+      A.importing = null; T.games = await DB.listGames(); T.render();
+      toast(plural(done, 'Spiel', 'Spiele') + ' importiert' + (skipped ? ', ' + skipped + ' schon vorhanden' : '') + (failed ? ', ' + failed + ' fehlgeschlagen' : '') + '.');
     };
     r.readAsText(file, 'utf-8');
   };
@@ -805,6 +846,14 @@
   K.start = async function () {
     UI.view = 'kid';
     K.err = ''; K.pw = [];
+    var m = (location.hash || '').match(/^#\/klasse\/([^/?#]+)/);
+    if (m) {
+      var given = decodeURIComponent(m[1]);
+      try { history.replaceState(null, '', location.pathname + location.search + '#/klasse'); } catch (e) {}
+      var old = LS.get('kn_kid');
+      if (old && String(old.code || '').replace(/\s+/g, '').toUpperCase() !== given.toUpperCase()) { DB.kidLogout(old.token); LS.del('kn_kid'); }
+      LS.set('kn_code', given);
+    }
     var s = LS.get('kn_kid');
     if (s && s.exp > Date.now()) { K.sess = s; K.step = 'home'; return K.loadHome(); }
     LS.del('kn_kid'); K.sess = null;
@@ -826,7 +875,7 @@
     toast(errMsg(e));
   };
   K.shell = function (body, back) {
-    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="logo">' + I.logo.replace('#F0B23D', '#1E5B4F').replace('#18231F', '#F0B23D') + h(C.PORTAL_NAME) + '</span>' +
+    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="logo">' + I.logo + h(C.PORTAL_NAME) + '</span>' +
       (back ? '<button class="kid-btn" data-a="kBack">' + back + '</button>' : '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>') +
       '</div>' + body + '</div></div>';
   };
@@ -868,7 +917,7 @@
     }).join('');
     return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
-      '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:var(--amber);display:grid;place-items:center">' + ic(I.board, 34, '#18231F', 2) + '</span>' +
+      '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:var(--amber);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
       '<span><b>Unsere Tafel</b><span>Zeig, wo du im Wochenplan stehst, und finde Hilfe.</span></span></button>', 'Abmelden');
   };
   K.view_thema = function () {
