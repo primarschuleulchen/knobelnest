@@ -3,8 +3,8 @@
   --bg:#EEF5FC; --card:#FFFFFF; --ink:#1B2A3D; --soft:#4A5B70; --line:#D3E1EF; --line2:#B4C8DE;
   --green:#2B6CB0; --green-d:#1D4F86; --green-l:#E3F0FC; --amber:#A8E6CF; --focus:#1F8A65; --kid:#DCEEFC;
   --red:#9A3B1A; --red-ink:#7A2E12;
-  --h:'Bricolage Grotesque', system-ui, sans-serif;
-  --b:'Atkinson Hyperlegible', system-ui, sans-serif;
+  --h:'Fredoka', 'Andika', system-ui, sans-serif;
+  --b:'Andika', 'Trebuchet MS', system-ui, sans-serif;
   color-scheme: light;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -13,7 +13,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--b);font-si
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--green)} a:hover{color:var(--green-d)}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-h1,h2,h3{font-family:var(--h);font-weight:700;margin:0;line-height:1.1;letter-spacing:-.01em}
+h1,h2,h3{font-family:var(--h);font-weight:600;margin:0;line-height:1.1;letter-spacing:0}
 p{margin:0}
 .boot{padding:40px;text-align:center;color:var(--soft)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -296,8 +296,11 @@ tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
 .player-bar .starbar[hidden]{display:none}
 .player-bar .starbar .sb-name{font-family:var(--b)}
 .player-bar .starbar .sb-total{color:#C9D6E6;font-size:14px}
-.player-bar .sb-dots .dot{background:transparent;border-color:#8FA6BF}
+.player-bar .sb-dots .dot:not(.ok):not(.no){background:transparent;border-color:#8FA6BF}
 .player-bar .st.off{color:#4A6383}
 .player-bar .btn[data-a="playerFull"]{margin-left:auto}
 @media (max-width:1300px){.player-bar .starbar .sb-total{display:none}}
 @media (max-width:820px){.player-bar .starbar .sb-dots{display:none}}
+
+/* Schriften: Andika für Text, Fredoka für Titel */
+button,input,select,textarea{font-family:inherit}

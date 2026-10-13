@@ -1190,7 +1190,7 @@
     c = c || { modus: 'runde' };
     if (c.modus === 'sammeln') {
       var pf = {}; if (c.proFuer && typeof c.proFuer === 'object') Object.keys(c.proFuer).forEach(function (k) { pf[k] = Math.max(1, Math.min(100, +c.proFuer[k] || 10)); });
-      return { modus: 'sammeln', pro: c.pro === 'runde' ? 'runde' : Math.max(1, Math.min(100, +c.pro || 10)), max: Math.max(1, Math.min(20, +c.max || 5)), proLevel: !!c.proLevel, proFuer: pf };
+      return { modus: 'sammeln', pro: c.pro === 'runde' ? 'runde' : Math.max(1, Math.min(100, +c.pro || 10)), max: Math.max(1, Math.min(20, +c.max || 5)), proLevel: !!c.proLevel, proFuer: pf, proTag: c.proTag !== false };
     }
     if (c.modus === 'eigene' || c.modus === 'aus') return { modus: c.modus };
     return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
@@ -1221,7 +1221,8 @@
       a.stars = awardSum(a); a.max = maxFor(); S.dirty = true;
       if (PL) try { PL.frame.contentWindow.postMessage({ knobelnestAward: S.view() }, '*'); } catch (e) {}
     }
-    function boxOf(k) { return a.boxDay[k] === today() ? (+a.box[k] || 0) : 0; }
+    function boxOf(k) { return !cfg.proTag || a.boxDay[k] === today() ? (+a.box[k] || 0) : 0; }
+    function doneToday(k) { return cfg.proTag && a.starDay[k] === today(); }
     function modal(have, max, title, line, isNew) {
       if (!PL) return;
       var old = PL.el.querySelector('.pmodal'); if (old) old.remove();
@@ -1243,7 +1244,7 @@
       } else {
         var info;
         if (have >= max) info = 'Alle ' + max + ' Sterne!';
-        else if (a.starDay[k] === today()) info = 'Heute verdient ✓ Morgen gibt es den nächsten.';
+        else if (doneToday(k)) info = 'Heute verdient ✓ Morgen gibt es den nächsten.';
         else if (cfg.pro === 'runde') info = 'Für einen fertigen Durchgang gibt es einen Stern.';
         else { var bx = boxOf(k), per = starPer(cfg, k), d2 = ''; for (var j = 0; j < per; j++) d2 += '<span class="dot' + (j < bx ? ' ok' : '') + '"></span>';
           info = per === 1 ? 'Nächste Aufgabe = 1 Stern' : 'Nächster Stern: <b>' + bx + ' von ' + per + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
@@ -1272,7 +1273,7 @@
         }
       } else if (ok && cfg.pro !== 'runde') {
         var have = +a.lv[k] || 0;
-        if (have < cfg.max && a.starDay[k] !== today()) {
+        if (have < cfg.max && !doneToday(k)) {
           a.box[k] = boxOf(k) + 1; a.boxDay[k] = today(); S.dirty = true;
           if (a.box[k] >= starPer(cfg, k)) { win(k); return; }
         }
@@ -1284,14 +1285,14 @@
       var done = a.lv[k] >= cfg.max;
       setTimeout(function () {
         modal(a.lv[k], cfg.max, done ? 'Alle Sterne!' : 'Neuer Stern!', done ? 'Du hast alle ' + cfg.max + ' Sterne gesammelt. Super geübt!' :
-          'Morgen kannst du den nächsten Stern holen. Weiterüben darfst du trotzdem.', true);
+          cfg.proTag ? 'Morgen kannst du den nächsten Stern holen. Weiterüben darfst du trotzdem.' : 'Mit ' + starPer(cfg, k) + ' weiteren richtigen gibt es den nächsten Stern.', true);
       }, 600);
     }
     S.roundDone = function () {
       if (cfg.modus !== 'sammeln' || cfg.pro !== 'runde') return;
       S.shown = true; var k = key();
       if ((+a.lv[k] || 0) >= cfg.max) return S.render();
-      if (a.starDay[k] === today()) { S.render(); return setTimeout(function () { modal(+a.lv[k] || 0, cfg.max, 'Durchgang geschafft!', 'Deinen Stern für heute hast du schon. Morgen kannst du den nächsten holen.'); }, 400); }
+      if (doneToday(k)) { S.render(); return setTimeout(function () { modal(+a.lv[k] || 0, cfg.max, 'Durchgang geschafft!', 'Deinen Stern für heute hast du schon. Morgen kannst du den nächsten holen.'); }, 400); }
       win(k);
     };
     S.own = function (x) {
