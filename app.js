@@ -112,6 +112,7 @@
     board: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 4v12M15 4v12M8 20h8"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    sort: '<path d="M7 4v16M3 8l4-4 4 4"/><path d="M17 20V4M13 16l4 4 4-4"/>',
     helpers: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M17 11l2 2 4-4"/>'
   };
 
@@ -169,17 +170,40 @@
   ACT.closeOverlay = function () { closeOverlays(); };
 
   // Spiel-Player (Spiel läuft abgeschirmt in einem iframe)
-  var SHIM = '<script>(function(){function mem(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null},get length(){return Object.keys(m).length}}}' +
-    '["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});' +
-    'function send(m){try{m.knobelnest=1;parent.postMessage(m,"*")}catch(e){}}' +
-    'window.knobelnest={answer:function(ok){send({type:"answer",ok:!!ok})},progress:function(done,total){send({type:"progress",done:+done,total:+total})}};' +
-    'if(!window.__report){window.__report=function(ok){send({type:"answer",ok:!!ok})}}})();<\/script>';
-  function prepare(html) {
+  // Läuft im Spiel (iframe): Speicher nachbilden, gespeicherten Stand laden, Meldungen an das Portal
+  function shimMain(seed) {
+    function send(m) { try { m.knobelnest = 1; parent.postMessage(m, '*'); } catch (e) {} }
+    function mem(init, onchange) {
+      var m = {}, k;
+      if (init && typeof init === 'object') for (k in init) if (typeof init[k] === 'string') m[k] = init[k];
+      function ch() { if (onchange) onchange(m); }
+      return {
+        getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
+        setItem: function (k, v) { k = String(k); v = String(v); if (m[k] === v) return; m[k] = v; ch(); },
+        removeItem: function (k) { k = String(k); if (Object.prototype.hasOwnProperty.call(m, k)) { delete m[k]; ch(); } },
+        clear: function () { m = {}; ch(); },
+        key: function (i) { return Object.keys(m)[i] || null; },
+        get length() { return Object.keys(m).length; }
+      };
+    }
+    try { Object.defineProperty(window, 'localStorage', { value: mem(seed, function (m) { send({ type: 'store', data: m }); }), configurable: true }); } catch (e) {}
+    try { window.sessionStorage.getItem('x'); } catch (e) { try { Object.defineProperty(window, 'sessionStorage', { value: mem(), configurable: true }); } catch (_) {} }
+    window.knobelnest = {
+      answer: function (ok) { send({ type: 'answer', ok: !!ok }); },
+      progress: function (done, total) { send({ type: 'progress', done: +done, total: +total }); },
+      level: function (n) { send({ type: 'level', level: n == null ? null : String(n) }); },
+      round: function () { send({ type: 'round' }); },
+      award: function (a) { try { send({ type: 'award', award: JSON.parse(JSON.stringify(a || {})) }); } catch (e) {} }
+    };
+    if (!window.__report) window.__report = function (ok) { send({ type: 'answer', ok: !!ok }); };
+  }
+  function prepare(html, seed) {
+    var tag = '<script>(' + shimMain.toString() + ')(' + JSON.stringify(seed || null).replace(/</g, '\\u003c') + ');<\/script>';
     var m = /<head[^>]*>/i.exec(html);
-    return m ? html.slice(0, m.index + m[0].length) + SHIM + html.slice(m.index + m[0].length) : SHIM + html;
+    return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
   var PL = null;
-  function openPlayer(title, html, onMsg, onClose) {
+  function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
     var p = document.createElement('div');
     p.className = 'player'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', title);
@@ -189,9 +213,10 @@
     f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
     f.setAttribute('allow', 'fullscreen; autoplay');
     f.title = title;
-    f.srcdoc = prepare(html);
-    p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
-    PL = { el: p, frame: f, onMsg: onMsg, onClose: onClose };
+    f.srcdoc = prepare(html, seed);
+    var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
+    p.appendChild(bar); p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
+    PL = { el: p, frame: f, bar: bar, onMsg: onMsg, onClose: onClose };
   }
   function closePlayer() {
     if (!PL) return; var x = PL; PL = null;
@@ -443,9 +468,21 @@
     if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
     groups.forEach(function (gr) {
       var gk = gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
-      out += '<h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
+      var sorting = T.sorting === gk && !shut;
+      out += '<div class="ghead"><h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
         '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
-        gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' + (shut ? '' : '<div class="games">' +
+        gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
+        (T.me.is_admin && !shut && gr.list.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
+      if (sorting) {
+        out += '<div class="sortbox"><p class="muted">Ziehen Sie ein Spiel am Griff <span aria-hidden="true">⠿</span> an die richtige Stelle oder benutzen Sie die Pfeile. Die Reihenfolge wird sofort gespeichert und gilt für alle Lehrpersonen und Kinder.</p>' +
+          '<ol class="sorter" data-k="' + h(gk) + '">' + gr.list.map(function (g, i) {
+            return '<li class="srow" data-id="' + g.id + '"><span class="grip" title="Ziehen" aria-hidden="true">⠿</span><span class="snum">' + (i + 1) + '</span><b>' + h(g.title) + '</b>' +
+              '<span class="sbtns"><button class="btn sm" data-a="sMove" data-d="-1" data-id="' + g.id + '" aria-label="' + h(g.title) + ' nach oben"' + (i ? '' : ' disabled') + '>↑</button>' +
+              '<button class="btn sm" data-a="sMove" data-d="1" data-id="' + g.id + '" aria-label="' + h(g.title) + ' nach unten"' + (i < gr.list.length - 1 ? '' : ' disabled') + '>↓</button></span></li>';
+          }).join('') + '</ol><div class="row"><button class="btn primary" data-a="gSort" data-k="' + h(gk) + '">Fertig</button></div></div>';
+        return;
+      }
+      out += (shut ? '' : '<div class="games">' +
         gr.list.map(function (g) {
           var on = T.rel.has(g.id);
           return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
@@ -461,6 +498,52 @@
     return out + '</section>';
   };
   ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
+  // Reihenfolge der Spiele innerhalb eines Themas (nur Admin)
+  function gameCmp(a, b) {
+    return a.fach.localeCompare(b.fach, 'de') || a.thema.localeCompare(b.thema, 'de') || ((a.sort || 0) - (b.sort || 0)) || a.title.localeCompare(b.title, 'de');
+  }
+  ACT.gSort = function (el) { T.sorting = T.sorting === el.dataset.k ? null : el.dataset.k; T.render(); };
+  async function saveOrder(ids) {
+    var by = {}; T.games.forEach(function (g) { by[g.id] = g; });
+    var old = ids.map(function (id) { return by[id].sort || 0; });
+    ids.forEach(function (id, i) { by[id].sort = i + 1; });
+    T.games.sort(gameCmp); T.render();
+    try { await DB.setGameOrder(ids); toast('Reihenfolge gespeichert'); }
+    catch (e) { ids.forEach(function (id, i) { by[id].sort = old[i]; }); T.games.sort(gameCmp); T.render(); throw e; }
+  }
+  function sorterIds(list) { return Array.prototype.map.call(list.querySelectorAll('.srow'), function (r) { return r.dataset.id; }); }
+  ACT.sMove = function (el) {
+    var row = el.closest('.srow'), list = row.parentNode, ids = sorterIds(list), i = ids.indexOf(row.dataset.id), j = i + (+el.dataset.d);
+    if (j < 0 || j >= ids.length) return;
+    ids.splice(j, 0, ids.splice(i, 1)[0]);
+    return saveOrder(ids).then(function () {
+      var r = document.querySelector('.srow[data-id="' + row.dataset.id + '"]'); if (!r) return;
+      var b = r.querySelector('[data-a="sMove"][data-d="' + el.dataset.d + '"]');
+      if (!b || b.disabled) b = r.querySelector('[data-a="sMove"][data-d="' + (-el.dataset.d) + '"]');
+      if (b) b.focus();
+    });
+  };
+  // Ziehen mit Maus, Finger oder Stift
+  document.addEventListener('pointerdown', function (e) {
+    var grip = e.target.closest && e.target.closest('.srow .grip'); if (!grip) return;
+    e.preventDefault();
+    var row = grip.closest('.srow'), list = row.parentNode, before = sorterIds(list).join(), y0 = e.clientY;
+    row.classList.add('dragging');
+    function move(ev) {
+      var y = ev.clientY, rows = Array.prototype.filter.call(list.children, function (r) { return r !== row; }), next = null;
+      for (var i = 0; i < rows.length; i++) { var b = rows[i].getBoundingClientRect(); if (y < b.top + b.height / 2) { next = rows[i]; break; } }
+      if (next) { if (row.nextElementSibling !== next) list.insertBefore(row, next); }
+      else if (list.lastElementChild !== row) list.appendChild(row);
+      if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 70) window.scrollBy(0, 12);
+    }
+    function up() {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      row.classList.remove('dragging');
+      var ids = sorterIds(list);
+      if (ids.join() !== before) saveOrder(ids).catch(function (x) { toast(errMsg(x)); });
+    }
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  });
   ACT.gGroup = function (el) { var k = el.dataset.k; if (T.closed[k]) delete T.closed[k]; else T.closed[k] = 1; LS.set('kn_closed', T.closed); T.render(); };
   ACT.gGroupAll = function (el) {
     T.closed = {};
@@ -569,10 +652,20 @@
     var games = T.games.filter(function (g) { return T.rel.has(g.id); });
     var P = {}; T.progress.forEach(function (p) { P[p.kid_id + '|' + p.game_id] = p; });
     function cell(p) {
-      if (!p || (!p.plays && !p.attempts && p.done == null)) return { pct: 0, label: 'Noch nicht begonnen', none: true };
-      if (p.total) return { pct: Math.min(100, Math.round(p.done / p.total * 100)), label: p.done + ' von ' + p.total + (p.done >= p.total ? ' · fertig' : '') };
-      if (p.attempts) return { pct: Math.round(p.correct / p.attempts * 100), label: p.correct + ' von ' + p.attempts + ' richtig' };
-      return { pct: 0, label: 'geöffnet (' + p.plays + '×)' };
+      if (!p || (!p.plays && !p.attempts && p.done == null)) return { none: true, html: '<span class="small" style="color:#66788D">Noch nicht begonnen</span>' };
+      var ls = lvlInfo(p), lines;
+      if (ls.length) {
+        lines = ls.slice(0, 4).map(function (x, i) {
+          return '<span class="small"' + (i ? ' style="color:var(--soft)"' : '') + '><b>' + h(x.name) + ':</b> ' + lvlText(x) + '</span>' +
+            (i === 0 && x.t ? '<div class="bar"><i style="width:' + Math.min(100, Math.round((x.d || 0) / x.t * 100)) + '%"></i></div>' : '');
+        });
+        if (ls.length > 4) lines.push('<span class="small muted">+ ' + (ls.length - 4) + ' weitere Level</span>');
+      } else {
+        lines = ['<span class="small">' + (p.total ? p.done + ' von ' + p.total + ' geschafft' : p.attempts ? p.correct + ' richtig, ' + (p.attempts - p.correct) + ' falsch' : 'geöffnet (' + p.plays + '×)') + '</span>'];
+      }
+      var aw = awardText(p.award);
+      if (aw) lines.unshift('<span class="small" style="font-weight:700">' + h(aw) + '</span>');
+      return { html: lines.join('') };
     }
     var kids = T.kids.filter(function (k) {
       if (T.pfilter !== 'offen') return true;
@@ -590,9 +683,7 @@
         var last = null;
         var cells = games.map(function (g) {
           var p = P[k.id + '|' + g.id]; if (p && p.last_played && (!last || p.last_played > last)) last = p.last_played;
-          var x = cell(p);
-          return '<td><div class="stack" style="gap:5px"><div class="bar"><i style="width:' + x.pct + '%;' + (x.pct >= 100 ? 'background:#2E7D4F' : '') + '"></i></div>' +
-            '<span class="small" style="color:' + (x.none ? '#66788D' : 'var(--ink)') + '">' + h(x.label) + '</span></div></td>';
+          return '<td style="min-width:190px"><div class="stack" style="gap:4px">' + cell(p).html + '</div></td>';
         }).join('');
         return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
           kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
@@ -800,6 +891,7 @@
         })() : '') + '</li>';
     }).join('') + '</ul>';
     var pack = '<section class="card stack"><h2>Spielpaket importieren</h2><p class="muted">Mehrere Spiele auf einmal hochladen, zum Beispiel die Datei <b>knobelnest-spielpaket.json</b>. Spiele mit gleichem Titel werden übersprungen.</p>' +
+      '<label class="row" style="gap:10px"><input type="checkbox" style="width:22px;height:22px" data-change="packUpd"' + (A.packUpd ? ' checked' : '') + '> Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen (Fach, Thema, Zuteilungen und Fortschritt bleiben)</label>' +
       '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
       (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
@@ -829,23 +921,28 @@
       var A = T.admin, data;
       try { data = JSON.parse(String(r.result)); } catch (e) { return toast('Diese Datei ist kein gültiges Spielpaket.'); }
       if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Knobelnest-Spielpaket.');
-      var have = {}; T.games.forEach(function (g) { have[g.title.toLowerCase()] = 1; });
-      var todo = data.games.filter(function (g) { return g && g.title && g.fach && g.html && !have[String(g.title).toLowerCase()]; });
-      var skipped = data.games.length - todo.length, done = 0, failed = 0;
+      var have = {}; T.games.forEach(function (g) { have[g.title.toLowerCase()] = g; });
+      var valid = data.games.filter(function (g) { return g && g.title && g.fach && g.html; });
+      var todo = valid.filter(function (g) { return A.packUpd || !have[String(g.title).toLowerCase()]; });
+      var skipped = valid.length - todo.length, added = 0, updated = 0, failed = 0;
       for (var i = 0; i < todo.length; i++) {
-        var g = todo[i];
-        A.importing = 'Spiel ' + (i + 1) + ' von ' + todo.length + ' wird hochgeladen: ' + g.title; T.render();
+        var g = todo[i], old = have[String(g.title).toLowerCase()];
+        A.importing = 'Spiel ' + (i + 1) + ' von ' + todo.length + (old ? ' wird aktualisiert: ' : ' wird hochgeladen: ') + g.title; T.render();
         try {
-          await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: String(g.fach).slice(0, 40),
-            thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all === true, html: String(g.html) });
-          done++;
+          if (old) { await DB.saveGame({ id: old.id, title: old.title, description: old.description, fach: old.fach, thema: old.thema, stufe: old.stufe, for_all: old.for_all, sort: old.sort || (isFinite(g.sort) ? +g.sort : 0), html: String(g.html) }); updated++; }
+          else {
+            await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: String(g.fach).slice(0, 40),
+              thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all === true, sort: isFinite(g.sort) ? +g.sort : 0, html: String(g.html) });
+            added++;
+          }
         } catch (e) { failed++; console.error(e); }
       }
       A.importing = null; T.games = await DB.listGames(); T.render();
-      toast(plural(done, 'Spiel', 'Spiele') + ' importiert' + (skipped ? ', ' + skipped + ' schon vorhanden' : '') + (failed ? ', ' + failed + ' fehlgeschlagen' : '') + '.');
+      toast(plural(added, 'Spiel', 'Spiele') + ' neu' + (updated ? ', ' + updated + ' aktualisiert' : '') + (skipped ? ', ' + skipped + ' schon vorhanden' : '') + (failed ? ', ' + failed + ' fehlgeschlagen' : '') + '.');
     };
     r.readAsText(file, 'utf-8');
   };
+  ACT.packUpd = function (el) { T.admin.packUpd = el.checked; };
   ACT.gSave = async function () {
     var F = T.admin.form;
     if (!F.title.trim() || !F.fach.trim()) return toast('Bitte Titel und Fach ausfüllen.');
@@ -946,7 +1043,18 @@
     var b = K['view_' + K.step](); if (b == null) return;
     paint(b);
   };
-  function pct(g) { return g.total ? Math.min(100, Math.round((g.done || 0) / g.total * 100)) : g.attempts ? Math.round(g.correct / g.attempts * 100) : 0; }
+  // Fortschritt eines Spiels: zuletzt gespieltes Level zuerst
+  function lvlInfo(p) {
+    var lv = (p && p.levels) || {}, keys = Object.keys(lv);
+    if (p && p.last_level && keys.indexOf(p.last_level) > 0) { keys.splice(keys.indexOf(p.last_level), 1); keys.unshift(p.last_level); }
+    return keys.map(function (k) { var x = lv[k] || {}; return { name: k, c: x.c || 0, a: x.a || 0, d: x.d, t: x.t }; });
+  }
+  function lvlText(x) { return x.t ? (x.d || 0) + ' von ' + x.t + ' geschafft' : x.c + ' richtig, ' + (x.a - x.c) + ' falsch'; }
+  function pct(g) {
+    var l = lvlInfo(g)[0];
+    if (l) return l.t ? Math.min(100, Math.round((l.d || 0) / l.t * 100)) : null;
+    return g.total ? Math.min(100, Math.round((g.done || 0) / g.total * 100)) : null;
+  }
 
   K.view_code = function () {
     return K.shell('<form class="kid-card" data-a="kCode"><h1>Hallo!</h1><p class="lead">Gib den Code ein, den deine Lehrerin oder dein Lehrer an die Wandtafel geschrieben hat.</p>' +
@@ -988,19 +1096,22 @@
     var themen = uniq(games.map(function (g) { return g.thema; }));
     return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + '</p><h1>Wähle ein Thema</h1></div><div class="big-tiles">' + themen.map(function (t) {
       var gs = games.filter(function (g) { return g.thema === t; });
-      var p = Math.round(gs.reduce(function (a, g) { return a + pct(g); }, 0) / gs.length);
+      var played = gs.filter(function (g) { return g.plays; }).length;
+      var stars = gs.reduce(function (n, g) { var a = g.award || {}; return n + (typeof a.stars === 'number' ? a.stars : awardSum(a)); }, 0);
       return '<button class="big-tile" style="min-height:150px" data-a="kThema" data-t="' + h(t) + '"><b style="font-size:30px">' + h(t) + '</b><span>' + plural(gs.length, 'Spiel', 'Spiele') + '</span>' +
-        '<span class="kbar" style="margin-top:auto"><i style="width:' + p + '%"></i></span></button>';
+        '<span style="margin-top:auto;font-size:17px;font-weight:400">' + (played ? 'Schon gespielt: ' + played + ' von ' + gs.length : 'Noch nichts gespielt') + '</span>' + (stars ? '<span class="kaward">⭐ ' + stars + '</span>' : '') + '</button>';
     }).join('') + '</div>', 'Zurück');
   };
   K.view_games = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach && g.thema === K.thema; });
     return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + ' › ' + h(K.thema) + '</p><h1>Wähle ein Spiel</h1></div><div class="big-tiles">' + games.map(function (g) {
-      var p = pct(g);
-      var label = g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' von ' + g.attempts + ' richtig' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
+      var p = pct(g), l = lvlInfo(g)[0];
+      var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
+        g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
       return '<article class="big-tile" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:700">' + h(g.thema) + '</div>' +
         '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
-        '<span class="kbar"><i style="width:' + p + '%"></i></span><span style="font-size:17px">' + h(label) + '</span>' +
+        (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') +
+        (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span style="font-size:17px">' + h(label) + '</span>' +
         '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
     }).join('') + '</div>', 'Zurück');
   };
@@ -1056,22 +1167,167 @@
     }
     K.render();
   };
+  // ---------- Sterne (wie im Lernheft) ----------
+  // Ein Spiel kann im <head> festlegen, wie es Sterne gibt:
+  //   <meta name="knobelnest-sterne" content='{"modus":"runde","n":10}'>                       10 Antworten = 1 Runde, bis 3 Sterne pro Level
+  //   <meta name="knobelnest-sterne" content='{"modus":"sammeln","pro":10,"max":5,"proLevel":true}'>  je 10 richtige 1 Stern (1 pro Tag), höchstens 5
+  //   <meta name="knobelnest-sterne" content='{"modus":"eigene"}'>                              das Spiel zählt selbst (knobelnest.award)
+  function starCfg(html) {
+    var m = /<meta\s+name=["']knobelnest-sterne["']\s+content=(["'])([\s\S]*?)\1/i.exec(html || ''), c = null;
+    if (m) try { c = JSON.parse(m[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')); } catch (e) {}
+    c = c || { modus: 'runde' };
+    if (c.modus === 'sammeln') return { modus: 'sammeln', pro: c.pro === 'runde' ? 'runde' : Math.max(1, Math.min(100, +c.pro || 10)), max: Math.max(1, Math.min(20, +c.max || 5)), proLevel: !!c.proLevel };
+    if (c.modus === 'eigene' || c.modus === 'aus') return { modus: c.modus };
+    return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
+  }
+  function today() { return new Date().toLocaleDateString('sv-SE'); }
+  function starRow(n, max, cls) { var o = ''; for (var i = 0; i < max; i++) o += '<span class="st' + (i < n ? '' : ' off') + (cls && i === n - 1 ? ' ' + cls : '') + '">★</span>'; return o; }
+  function fmtTime(ms) { var t = Math.round(ms / 1000), m = Math.floor(t / 60); t %= 60; return m + ':' + (t < 10 ? '0' : '') + t; }
+  function awardSum(a) { var n = 0, lv = (a && a.lv) || {}; Object.keys(lv).forEach(function (k) { n += +lv[k] || 0; }); return n; }
+  // Kurztext für Übersichten: "⭐ 7 · ⏱️ 3:12"
+  function awardText(a) {
+    if (!a) return '';
+    var parts = [], st = typeof a.stars === 'number' ? a.stars : awardSum(a);
+    if (st) parts.push('⭐ ' + st + ' ' + (st === 1 ? 'Stern' : 'Sterne'));
+    if (a.best) parts.push('⏱️ Bestzeit ' + fmtTime(a.best));
+    return parts.join(' · ');
+  }
+  function Stars(cfg, award, base) {
+    var S = { cfg: cfg, a: award && typeof award === 'object' ? award : {}, level: null, round: null, dirty: false, total: base || 0 };
+    ['lv', 'box', 'boxDay', 'starDay'].forEach(function (k) { if (!S.a[k] || typeof S.a[k] !== 'object') S.a[k] = {}; });
+    var a = S.a;
+    function key() { return cfg.modus === 'sammeln' && !cfg.proLevel ? 'Spiel' : (S.level || 'Spiel'); }
+    function maxFor() { return cfg.modus === 'sammeln' ? cfg.max : 3; }
+    function sync() { a.stars = awardSum(a); a.max = maxFor(); S.dirty = true; }
+    function boxOf(k) { return a.boxDay[k] === today() ? (+a.box[k] || 0) : 0; }
+    function modal(have, max, title, line, isNew) {
+      if (!PL) return;
+      var old = PL.el.querySelector('.pmodal'); if (old) old.remove();
+      var m = document.createElement('div'); m.className = 'pmodal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+      m.innerHTML = '<div class="pmodal-box">' + (S.level ? '<p class="pm-lv">' + h(S.level) + '</p>' : '') +
+        '<div class="pm-stars" aria-label="' + have + ' von ' + max + ' Sternen">' + starRow(have, max, isNew ? 'new' : '') + '</div>' +
+        '<h2>' + h(title) + '</h2><p>' + h(line) + '</p><button class="kid-go" data-a="pmClose">Weiter spielen</button></div>';
+      PL.el.appendChild(m); m.querySelector('button').focus();
+    }
+    S.render = function () {
+      if (!PL || cfg.modus === 'eigene' || cfg.modus === 'aus') return;
+      var b = PL.bar, k = key(), max = maxFor(), have = Math.min(max, +a.lv[k] || 0), name = S.level || '', body;
+      if (!S.shown) return;
+      if (cfg.modus === 'runde') {
+        var r = S.round || { n: 0, res: [] }, dots = '';
+        for (var i = 0; i < cfg.n; i++) dots += '<span class="dot' + (i < r.res.length ? (r.res[i] ? ' ok' : ' no') : '') + '"></span>';
+        body = '<span class="sb-name">' + (name ? h(name) + ' · ' : '') + 'Antwort ' + Math.min(r.n + 1, cfg.n) + ' von ' + cfg.n + '</span><span class="sb-dots" aria-hidden="true">' + dots + '</span>' +
+          '<span class="sb-best" aria-label="Bestwert ' + have + ' von 3 Sternen">Bestwert ' + starRow(have, 3) + '</span>';
+      } else {
+        var info;
+        if (have >= max) info = 'Alle ' + max + ' Sterne gesammelt!';
+        else if (a.starDay[k] === today()) info = 'Stern für heute verdient. Morgen gibt es den nächsten.';
+        else if (cfg.pro === 'runde') info = 'Für einen fertigen Durchgang gibt es einen Stern.';
+        else { var bx = boxOf(k), d2 = ''; for (var j = 0; j < cfg.pro; j++) d2 += '<span class="dot' + (j < bx ? ' ok' : '') + '"></span>';
+          info = 'Nächster Stern: <b>' + bx + ' von ' + cfg.pro + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
+        body = '<span class="sb-name">' + (cfg.proLevel && name ? h(name) : 'Deine Sterne') + '</span><span class="sb-stars" aria-label="' + have + ' von ' + max + ' Sternen">' + starRow(have, max) + '</span><span class="sb-info">' + info + '</span>';
+      }
+      b.innerHTML = body + '<span class="sb-total">Insgesamt ' + S.total + ' richtig</span>'; b.hidden = false;
+    };
+    S.setLevel = function (lv) { if (lv === S.level) return; S.level = lv; S.round = null; S.render(); };
+    S.answer = function (ok) {
+      if (ok) S.total++;
+      if (cfg.modus === 'eigene' || cfg.modus === 'aus') return;
+      S.shown = true;
+      var k = key();
+      if (cfg.modus === 'runde') {
+        var r = S.round = S.round || { n: 0, c: 0, res: [] };
+        r.n++; if (ok) r.c++; r.res.push(!!ok);
+        if (r.n >= cfg.n) {
+          var n = cfg.n, st = r.c >= Math.ceil(n * .9) ? 3 : r.c >= Math.ceil(n * .7) ? 2 : r.c >= Math.ceil(n * .5) ? 1 : 0;
+          var prev = +a.lv[k] || 0; if (st > prev) { a.lv[k] = st; sync(); }
+          S.round = null; S.render();
+          setTimeout(function () {
+            modal(st, 3, st === 3 ? 'Super gemacht!' : st === 2 ? 'Gut gemacht!' : st === 1 ? 'Geschafft!' : 'Weiter üben!',
+              r.c + ' von ' + n + ' richtig.' + (st > prev && prev ? ' Neuer Bestwert!' : st < prev ? ' Dein Bestwert: ' + prev + (prev === 1 ? ' Stern.' : ' Sterne.') : ''), st > 0);
+          }, 700);
+          return;
+        }
+      } else if (ok && cfg.pro !== 'runde') {
+        var have = +a.lv[k] || 0;
+        if (have < cfg.max && a.starDay[k] !== today()) {
+          a.box[k] = boxOf(k) + 1; a.boxDay[k] = today(); S.dirty = true;
+          if (a.box[k] >= cfg.pro) { win(k); return; }
+        }
+      }
+      S.render();
+    };
+    function win(k) {
+      a.lv[k] = (+a.lv[k] || 0) + 1; a.box[k] = 0; a.starDay[k] = today(); sync(); S.render();
+      var done = a.lv[k] >= cfg.max;
+      setTimeout(function () {
+        modal(a.lv[k], cfg.max, done ? 'Alle Sterne!' : 'Neuer Stern!', done ? 'Du hast alle ' + cfg.max + ' Sterne gesammelt. Super geübt!' :
+          'Morgen kannst du den nächsten Stern holen. Weiterüben darfst du trotzdem.', true);
+      }, 600);
+    }
+    S.roundDone = function () {
+      if (cfg.modus !== 'sammeln' || cfg.pro !== 'runde') return;
+      S.shown = true; var k = key();
+      if ((+a.lv[k] || 0) >= cfg.max) return S.render();
+      if (a.starDay[k] === today()) { S.render(); return setTimeout(function () { modal(+a.lv[k] || 0, cfg.max, 'Durchgang geschafft!', 'Deinen Stern für heute hast du schon. Morgen kannst du den nächsten holen.'); }, 400); }
+      win(k);
+    };
+    S.own = function (x) {
+      if (!x || typeof x !== 'object') return;
+      if (isFinite(x.stars)) a.stars = Math.max(0, Math.min(10000, Math.round(x.stars)));
+      if (isFinite(x.max)) a.max = Math.round(x.max);
+      if (x.best == null || isFinite(x.best)) a.best = x.best == null ? null : Math.max(0, Math.round(x.best));
+      if (x.lv && typeof x.lv === 'object') { a.lv = {}; Object.keys(x.lv).slice(0, 40).forEach(function (k) { if (isFinite(x.lv[k])) a.lv[String(k).slice(0, 40)] = Math.round(x.lv[k]); }); }
+      S.dirty = true;
+    };
+    if (a.stars) S.shown = true;
+    return S;
+  }
+  ACT.pmClose = function (el) { var m = el.closest('.pmodal'); if (m) m.remove(); if (PL) try { PL.frame.focus(); } catch (e) {} };
+
   ACT.kPlay = async function (el) {
     var g = K.home.games.filter(function (x) { return x.id === el.dataset.id; })[0];
-    var html;
-    try { html = await DB.kidGame(K.sess.token, g.id); } catch (e) { return K.sessionLost(e); }
-    var pend = { correct: 0, attempts: 0, done: null, total: null, dirty: false }, flushing = false;
+    var html, st;
+    try {
+      var both = await Promise.all([DB.kidGame(K.sess.token, g.id), DB.kidState(K.sess.token, g.id).catch(function () { return null; })]);
+      html = both[0]; st = both[1] || {};
+    } catch (e) { return K.sessionLost(e); }
+    var pend = { correct: 0, attempts: 0, done: null, total: null, level: null, dirty: false };
+    var save = { data: null, dirty: false };
+    var S = Stars(starCfg(html), st.award, g.correct || 0);
     async function flush() {
-      if (!pend.dirty || flushing || !K.sess) return;
-      var r = { correct: pend.correct, attempts: pend.attempts, done: pend.done, total: pend.total };
-      pend.correct = 0; pend.attempts = 0; pend.dirty = false; flushing = true;
-      try { await DB.kidReport(K.sess.token, g.id, r); } catch (e) { console.warn(e); } finally { flushing = false; }
+      if (!K.sess) return;
+      var jobs = [];
+      if (pend.dirty) {
+        var r = { correct: pend.correct, attempts: pend.attempts, done: pend.done, total: pend.total, level: pend.level };
+        pend.correct = 0; pend.attempts = 0; pend.dirty = false;
+        jobs.push(DB.kidReport(K.sess.token, g.id, r));
+      }
+      if (save.dirty || S.dirty) {
+        var sv = save.dirty ? save.data : null, aw = S.dirty ? S.a : null;
+        save.dirty = false; S.dirty = false;
+        jobs.push(DB.kidSave(K.sess.token, g.id, sv, aw));
+      }
+      try { await Promise.all(jobs); } catch (e) { console.warn(e); }
     }
     var t = setInterval(flush, 4000);
     openPlayer(g.title, html, function (d) {
-      if (d.type === 'answer' && (d.spielheft || d.knobelnest)) { pend.attempts++; if (d.ok) pend.correct++; pend.dirty = true; }
+      if (!d.spielheft && !d.knobelnest) return;
+      if (d.type === 'level') {
+        var nl = d.level == null || d.level === 'main' ? null : String(d.level).slice(0, 40);
+        if (nl !== pend.level) { flush(); pend.level = nl; pend.done = null; pend.total = null; }
+        S.setLevel(nl);
+      }
+      if (d.type === 'answer') { pend.attempts++; if (d.ok) pend.correct++; pend.dirty = true; S.answer(!!d.ok); }
+      if (d.type === 'round') S.roundDone();
       if (d.type === 'progress' && d.knobelnest && isFinite(d.done) && isFinite(d.total)) { pend.done = Math.round(d.done); pend.total = Math.round(d.total); pend.dirty = true; }
-    }, async function () { clearInterval(t); await flush(); K.loadHome(); });
+      if (d.type === 'award' && d.knobelnest) S.own(d.award);
+      if (d.type === 'store' && d.knobelnest && d.data && typeof d.data === 'object') {
+        var js = JSON.stringify(d.data);
+        if (js.length < 190000) { save.data = d.data; save.dirty = true; } else console.warn('Spielstand zu gross, wird nicht gespeichert');
+      }
+    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, st.save);
+    S.render();
   };
   ACT.kTafel = async function () {
     K.step = 'tafel'; K.tafel = null; K.render();

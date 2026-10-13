@@ -16,7 +16,7 @@
     return res.data;
   }
 
-  var GAME_COLS = 'id,title,description,fach,thema,stufe,for_all,created_at,updated_at';
+  var GAME_COLS = 'id,title,description,fach,thema,stufe,for_all,sort,created_at,updated_at';
 
   window.DB = {
     // ---------- Anmeldung Lehrpersonen ----------
@@ -37,16 +37,21 @@
     setMyName: async function (id, name) { ok(await sb.from('profiles').update({ name: name }).eq('id', id)); },
 
     // ---------- Spiele ----------
-    listGames: async function () { return ok(await sb.from('games').select(GAME_COLS).order('fach').order('thema').order('title')); },
+    listGames: async function () { return ok(await sb.from('games').select(GAME_COLS).order('fach').order('thema').order('sort').order('title')); },
     gameHtml: async function (id) { return ok(await sb.from('games').select('html').eq('id', id).single()).html; },
     saveGame: async function (g) {
       var row = { title: g.title, description: g.description || '', fach: g.fach, thema: g.thema || 'Allgemein',
                   stufe: g.stufe || '', for_all: !!g.for_all, updated_at: new Date().toISOString() };
       if (g.html) row.html = g.html;
+      if (g.sort != null && isFinite(g.sort)) row.sort = Math.round(g.sort);
       if (g.id) return ok(await sb.from('games').update(row).eq('id', g.id).select(GAME_COLS).single());
       return ok(await sb.from('games').insert(row).select(GAME_COLS).single());
     },
     deleteGame: async function (id) { ok(await sb.from('games').delete().eq('id', id)); },
+    setGameOrder: async function (ids) {
+      var res = await Promise.all(ids.map(function (id, i) { return sb.from('games').update({ sort: i + 1 }).eq('id', id); }));
+      res.forEach(ok);
+    },
     setGameForAll: async function (id, on) { ok(await sb.from('games').update({ for_all: on }).eq('id', id)); },
 
     // ---------- Lehrpersonen (Admin) ----------
@@ -84,7 +89,7 @@
     },
     listProgress: async function (kidIds) {
       if (!kidIds.length) return [];
-      return ok(await sb.from('progress').select('kid_id,game_id,correct,attempts,done,total,plays,last_played').in('kid_id', kidIds));
+      return ok(await sb.from('progress').select('kid_id,game_id,correct,attempts,done,total,plays,last_played,levels,last_level,award').in('kid_id', kidIds));
     },
 
     // ---------- Tafel (Lehrperson) ----------
@@ -103,7 +108,11 @@
     kidGame: async function (token, gid) { return ok(await sb.rpc('kid_game', { p_token: token, p_game: gid })); },
     kidReport: async function (token, gid, r) {
       return ok(await sb.rpc('kid_report', { p_token: token, p_game: gid, p_correct: r.correct || 0, p_attempts: r.attempts || 0,
-        p_done: r.done == null ? null : r.done, p_total: r.total == null ? null : r.total }));
+        p_done: r.done == null ? null : r.done, p_total: r.total == null ? null : r.total, p_level: r.level || null }));
+    },
+    kidState: async function (token, gid) { return ok(await sb.rpc('kid_state', { p_token: token, p_game: gid })); },
+    kidSave: async function (token, gid, save, award) {
+      return ok(await sb.rpc('kid_save', { p_token: token, p_game: gid, p_save: save == null ? null : save, p_award: award == null ? null : award }));
     },
     tafelGet: async function (token) { return ok(await sb.rpc('tafel_get', { p_token: token })); },
     tafelSet: async function (token, subject, col) { return ok(await sb.rpc('tafel_set', { p_token: token, p_subject: subject, p_col: col })); }
