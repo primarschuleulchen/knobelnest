@@ -1,0 +1,997 @@
+// Knobelnest – Webseite für Lehrpersonen und Kinder
+(function () {
+  'use strict';
+  var C = window.KN_CONFIG, DB = window.DB;
+  var app = document.getElementById('app');
+
+  // ===================================================================
+  // Hilfsmittel
+  // ===================================================================
+  var LS = {
+    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  function h(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function rnd(n) { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+  function uniq(a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); }
+  function plural(n, one, many) { return n === 1 ? '1 ' + one : n + ' ' + many; }
+  function initials(n) { n = (n || '?').trim(); var p = n.split(/\s+/); return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); }
+  function hash(s) { var x = 0; s = String(s); for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; }
+  function kidUrl() { return location.origin + location.pathname + '#/klasse'; }
+  function shortUrl(u) { return u.replace(/^https?:\/\//, ''); }
+  function since(ts) {
+    if (!ts) return '–';
+    var d = new Date(ts), now = new Date();
+    var days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / 86400000);
+    if (days <= 0) return 'heute';
+    if (days === 1) return 'gestern';
+    if (days < 7) return 'vor ' + days + ' Tagen';
+    return d.toLocaleDateString('de-CH');
+  }
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3200);
+  }
+  function errMsg(e) {
+    var m = (e && e.message) || String(e);
+    if (/Invalid login/i.test(m)) return 'E-Mail oder Passwort stimmt nicht.';
+    if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Keine Verbindung. Bitte das Internet prüfen.';
+    if (/kids_class_name/i.test(m)) return 'Diesen Namen gibt es in der Klasse schon.';
+    if (/classes_code/i.test(m)) return 'Dieser Klassencode ist schon vergeben.';
+    if (/Password should be|password.*characters/i.test(m)) return 'Das Passwort ist zu kurz (mindestens 8 Zeichen).';
+    if (/JWT|session/i.test(m)) return 'Bitte neu anmelden.';
+    return m;
+  }
+
+  // Bildpasswort-Symbole
+  var SYM = {
+    sonne: { label: 'Sonne', bg: '#FFE7A3', p: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>' },
+    mond:  { label: 'Mond',  bg: '#DCE3F5', p: '<path d="M20 15A8.5 8.5 0 1 1 9 4a7 7 0 0 0 11 11z"/>' },
+    baum:  { label: 'Baum',  bg: '#D5EBC9', p: '<path d="M12 22v-6"/><path d="M12 2l6 8h-3l4 6H5l4-6H6z"/>' },
+    fisch: { label: 'Fisch', bg: '#CBE6EE', p: '<path d="M3 12c3-5 9-6 13-3l5-3v12l-5-3c-4 3-10 2-13-3z"/><circle cx="8" cy="11" r=".9" fill="#18231F"/>' },
+    haus:  { label: 'Haus',  bg: '#F6D6C8', p: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>' },
+    stern: { label: 'Stern', bg: '#F7E1EE', p: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>' }
+  };
+  var SYM_IDS = Object.keys(SYM);
+  function symSvg(id, size) {
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="#18231F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SYM[id].p + '</svg>';
+  }
+  function randPw(not) {
+    var p;
+    do { var a = SYM_IDS.slice(), o = []; for (var i = 0; i < 3; i++) o.push(a.splice(rnd(a.length), 1)[0]); p = o.join(','); } while (p === not);
+    return p;
+  }
+  function pwLabel(pw) { return pw.split(',').map(function (s) { return SYM[s] ? SYM[s].label : s; }).join(', '); }
+
+  // Farben
+  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F4D2CE', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
+  var TINTS = ['#D5EBC9', '#F6D6C8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#F7E1EE'];
+  function fachColor(f) { return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
+  var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#F4D2CE', '#E3D5F0', '#F3E2A6'];
+  function kidColor(name) { return KID_TINTS[hash(name) % KID_TINTS.length]; }
+  var PALETTE = [['#2F5E9E', 'Blau'], ['#1E6F7A', 'Petrol'], ['#2E7D4F', 'Grün'], ['#C46A1C', 'Orange'], ['#C0473C', 'Rot'],
+    ['#B83A78', 'Pink'], ['#8A4F7D', 'Violett'], ['#7A5634', 'Braun'], ['#E8B710', 'Gelb'], ['#6BB3E8', 'Hellblau'], ['#86C66E', 'Hellgrün']];
+  var COLS = [
+    { id: 'helfen', label: 'Ich kann helfen', ic: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>' },
+    { id: 'klar', label: 'Ich komme gut klar', ic: '<path d="M5 12.5l4.5 4.5L19 7.5"/>' },
+    { id: 'frage', label: 'Ich habe eine Frage', ic: '<path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.3-1.5 2.4"/><path d="M12 18h.01"/>' }
+  ];
+  var COL_LABEL = { helfen: 'Ich kann helfen', klar: 'Ich komme gut klar', frage: 'Ich habe eine Frage' };
+
+  function ic(paths, size, color, sw) {
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') +
+      '" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+  }
+  var I = {
+    logo: '<svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="10" fill="#F0B23D"/><path d="M12 26l6-12 4 8 3-5 4 9" fill="none" stroke="#18231F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    back: '<path d="M15 18l-6-6 6-6"/>',
+    play: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+    star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+    print: '<path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/>',
+    board: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 4v12M15 4v12M8 20h8"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    helpers: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M17 11l2 2 4-4"/>'
+  };
+
+  // Zeichnen mit Fokus-Erhalt
+  function paint(html) {
+    var a = document.activeElement, id = a && a.id, s = null, e = null;
+    try { s = a.selectionStart; e = a.selectionEnd; } catch (x) {}
+    app.innerHTML = html;
+    if (id) {
+      var n = document.getElementById(id);
+      if (n) { n.focus(); try { if (s != null) n.setSelectionRange(s, e); } catch (x) {} }
+    }
+  }
+
+  // Aktionen (Klicks, Formulare, Eingaben)
+  var ACT = {};
+  function run(fn, el, ev) {
+    if (!fn) return;
+    Promise.resolve().then(function () { return fn(el, ev); }).catch(function (err) { console.error(err); toast(errMsg(err)); });
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-a]');
+    if (!el || el.tagName === 'FORM') return;
+    if (el.tagName === 'A' && !el.getAttribute('href')) e.preventDefault();
+    run(ACT[el.dataset.a], el, e);
+  });
+  document.addEventListener('submit', function (e) {
+    var f = e.target.closest('form[data-a]'); if (!f) return;
+    e.preventDefault(); run(ACT[f.dataset.a], f, e);
+  });
+  document.addEventListener('change', function (e) { var el = e.target.closest('[data-change]'); if (el) run(ACT[el.dataset.change], el, e); });
+  document.addEventListener('input', function (e) { var el = e.target.closest('[data-input]'); if (el) run(ACT[el.dataset.input], el, e); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (PL) closePlayer(); else closeOverlays(); } });
+
+  var confirmTimer;
+  function armed(key) {
+    if (UI.confirm === key) { UI.confirm = null; return true; }
+    UI.confirm = key; clearTimeout(confirmTimer);
+    confirmTimer = setTimeout(function () { if (UI.confirm === key) { UI.confirm = null; rerender(); } }, 4000);
+    return false;
+  }
+  var UI = { confirm: null, view: null };
+  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); }
+
+  // Overlays
+  function overlay(html) {
+    closeOverlays();
+    var o = document.createElement('div'); o.className = 'overlay'; o.innerHTML = html;
+    o.addEventListener('click', function (e) { if (e.target === o) closeOverlays(); });
+    document.body.appendChild(o);
+    var f = o.querySelector('input,button'); if (f) f.focus();
+    return o;
+  }
+  function closeOverlays() { Array.prototype.forEach.call(document.querySelectorAll('.overlay'), function (o) { o.remove(); }); }
+  ACT.closeOverlay = function () { closeOverlays(); };
+
+  // Spiel-Player (Spiel läuft abgeschirmt in einem iframe)
+  var SHIM = '<script>(function(){function mem(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null},get length(){return Object.keys(m).length}}}' +
+    '["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});' +
+    'function send(m){try{m.knobelnest=1;parent.postMessage(m,"*")}catch(e){}}' +
+    'window.knobelnest={answer:function(ok){send({type:"answer",ok:!!ok})},progress:function(done,total){send({type:"progress",done:+done,total:+total})}};' +
+    'if(!window.__report){window.__report=function(ok){send({type:"answer",ok:!!ok})}}})();<\/script>';
+  function prepare(html) {
+    var m = /<head[^>]*>/i.exec(html);
+    return m ? html.slice(0, m.index + m[0].length) + SHIM + html.slice(m.index + m[0].length) : SHIM + html;
+  }
+  var PL = null;
+  function openPlayer(title, html, onMsg, onClose) {
+    closePlayer();
+    var p = document.createElement('div');
+    p.className = 'player'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', title);
+    p.innerHTML = '<div class="player-bar"><button class="btn sm" data-a="closePlayer">' + ic(I.back) + ' Zurück</button><b>' + h(title) +
+      '</b><button class="btn sm" data-a="playerFull">Vollbild</button></div>';
+    var f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
+    f.setAttribute('allow', 'fullscreen; autoplay');
+    f.title = title;
+    f.srcdoc = prepare(html);
+    p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
+    PL = { el: p, frame: f, onMsg: onMsg, onClose: onClose };
+  }
+  function closePlayer() {
+    if (!PL) return; var x = PL; PL = null;
+    if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
+    x.el.remove(); document.body.style.overflow = '';
+    if (x.onClose) x.onClose();
+  }
+  ACT.closePlayer = function () { closePlayer(); };
+  ACT.playerFull = function () { if (PL && PL.el.requestFullscreen) PL.el.requestFullscreen(); };
+  window.addEventListener('message', function (e) {
+    if (!PL || e.source !== PL.frame.contentWindow) return;
+    var d = e.data; if (!d || typeof d !== 'object') return;
+    if (PL.onMsg) PL.onMsg(d);
+  });
+
+  // Router
+  var timers = [];
+  function every(ms, fn) { timers.push(setInterval(fn, ms)); }
+  function stopTimers() { timers.forEach(clearInterval); timers = []; }
+  function route() {
+    stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null;
+    var hs = location.hash || '';
+    if (/access_token=|type=recovery|error_description=/.test(hs)) return;
+    if (hs.indexOf('#/klasse') === 0) return K.start();
+    var m = hs.match(/^#\/wandtafel\/([0-9a-f-]{36})/);
+    if (m) return W.start(m[1]);
+    return T.start();
+  }
+
+  // ===================================================================
+  // Tafel (gemeinsam für Kinder und Wandtafel)
+  // ===================================================================
+  function board(t, mode) {
+    var s = t.state || { subjects: [], kids: [], entries: [] }, me = t.me;
+    var kidName = {}; s.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var entry = {}; s.entries.forEach(function (e) { entry[e.kid_id] = e; });
+    var mine = me ? entry[me] : null;
+    var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
+    var kid = mode === 'kid';
+    var out = '<div class="board-head"><div class="stack" style="gap:6px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span>' +
+      '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
+      '<p>' + (kid ? 'Tippe beim Fach auf die Spalte, die zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
+      '<div class="row">' + (kid ? '<button class="board-btn" data-a="kBack">' + ic(I.back) + ' Zurück</button>' :
+        '<button class="board-btn" data-a="wallFull">Vollbild</button><a class="board-btn" href="#/">Zum Portal</a>') + '</div></div>';
+    if (kid) {
+      out += '<div class="mine"><b>Du (' + h(kidName[me] || '') + '):</b><span>' +
+        (mine && subjName[mine.subject_id] ? h(subjName[mine.subject_id]) + ' · ' + COL_LABEL[mine.col] : 'Du stehst noch nicht auf der Tafel. Wähle unten dein Fach und die passende Spalte.') + '</span>' +
+        (mine ? '<button class="board-btn" style="margin-left:auto" data-a="tOff">Namen wegnehmen</button>' : '') + '</div>';
+    }
+    if (!s.subjects.length) out += '<div class="subject"><p class="muted">Die Lehrperson hat noch keine Fächer für die Tafel ausgewählt.</p></div>';
+    s.subjects.forEach(function (sub) {
+      var inSub = s.entries.filter(function (e) { return e.subject_id === sub.id; });
+      var helpers = inSub.filter(function (e) { return e.col === 'helfen'; }).map(function (e) { return kidName[e.kid_id]; });
+      out += '<section class="subject"><div class="row" style="justify-content:space-between"><h2><i style="background:' + h(sub.color) + '"></i>' + h(sub.name) + '</h2>' +
+        '<span class="muted">' + (inSub.length === 1 ? '1 Kind arbeitet daran' : inSub.length + ' Kinder arbeiten daran') + '</span></div>';
+      if (kid && mine && mine.subject_id === sub.id && mine.col === 'frage' && helpers.length) {
+        out += '<div class="helpers">' + ic(I.helpers, 26, '#1F3F6B') + '<span><b>Diese Kinder können dir helfen:</b> ' + h(helpers.join(', ')) + '</span></div>';
+      }
+      out += '<div class="columns">' + COLS.map(function (c) {
+        var names = inSub.filter(function (e) { return e.col === c.id; });
+        var here = mine && mine.subject_id === sub.id && mine.col === c.id;
+        return '<div class="column c-' + c.id + '"><div class="column-h"><span class="dot">' + ic(c.ic, 22, '#fff', 2.4) + '</span>' + c.label +
+          '<span class="n">' + names.length + '</span></div><div class="names">' +
+          names.map(function (e) {
+            var n = kidName[e.kid_id] || '';
+            return '<span class="tag' + (kid && e.kid_id === me ? ' me' : '') + '"><span class="ini" style="background:' + kidColor(n) + '">' + h(n.charAt(0)) + '</span>' + h(n) + '</span>';
+          }).join('') + '</div>' +
+          (kid && !here ? '<button class="put" data-a="tSet" data-s="' + sub.id + '" data-c="' + c.id + '">' + (mine ? 'Meinen Namen hierhin' : 'Hier eintragen') + '</button>' : '') +
+          '</div>';
+      }).join('') + '</div></section>';
+    });
+    var missing = s.kids.filter(function (k) { return !entry[k.id] || !subjName[entry[k.id].subject_id]; }).map(function (k) { return k.name; });
+    out += '<p style="color:#C9D6D1;font-size:17px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
+    return '<div class="board' + (kid ? '' : ' wall') + '"><div class="board-in">' + out + '</div></div>';
+  }
+
+  // ===================================================================
+  // Wandtafel (Lehrperson, für den Beamer)
+  // ===================================================================
+  var W = {
+    start: async function (cid) {
+      UI.view = 'wall';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
+      async function load() {
+        try { paint(board(await DB.tafelTeacher(cid), 'wall')); }
+        catch (e) { paint('<div class="main"><div class="card stack"><h2>Tafel nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); stopTimers(); }
+      }
+      await load();
+      every(5000, function () { if (!document.hidden) load(); });
+    }
+  };
+  ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
+
+  // ===================================================================
+  // Lehrpersonen
+  // ===================================================================
+  var T = {
+    me: null, classes: [], cls: null, games: [], rel: new Set(), kids: [], subjects: [],
+    progress: null, progressBusy: false, tafel: null, tafelBusy: false,
+    tab: LS.get('kn_tab') || 'spiele', fach: 'alle', q: '', pfilter: 'alle',
+    fresh: new Set(), editColor: null, newColor: '#2E7D4F', loginErr: '', loginInfo: '',
+    admin: { teachers: null, tg: [], open: null, form: null }
+  };
+
+  T.start = async function () {
+    UI.view = 'teacher';
+    var s = await DB.session();
+    if (!s) return T.renderLogin();
+    app.innerHTML = '<p class="boot">Wird geladen …</p>';
+    T.me = await DB.me();
+    T.classes = await DB.listClasses();
+    var saved = LS.get('kn_cls');
+    T.cls = (T.classes.filter(function (c) { return c.id === saved; })[0] || T.classes[0] || {}).id || null;
+    T.games = await DB.listGames();
+    await T.loadClass();
+    T.render();
+  };
+  T.loadClass = async function () {
+    T.progress = null; T.tafel = null; T.fresh = new Set();
+    if (!T.cls) { T.rel = new Set(); T.kids = []; T.subjects = []; return; }
+    var r = await Promise.all([DB.listReleases(T.cls), DB.listKids(T.cls), DB.listSubjects(T.cls)]);
+    T.rel = new Set(r[0]); T.kids = r[1]; T.subjects = r[2];
+  };
+  T.cur = function () { return T.classes.filter(function (c) { return c.id === T.cls; })[0] || null; };
+
+  T.renderLogin = function () {
+    UI.view = 'login';
+    paint('<div class="login"><section class="login-hero"><a class="logo" href="#/" style="color:#F2F5F4">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+      '<div class="stack" style="gap:18px"><h1>Ihre Lernspiele an einem Ort.</h1><p>Spiele für die Klasse freigeben, den Fortschritt sehen und die Arbeitsstand-Tafel für den Wochenplan nutzen.</p></div>' +
+      '<a class="kidlink" href="#/klasse">' + ic(I.play, 22) + '<span>Für Kinder: Hier geht\'s zum Klassen-Login</span></a></section>' +
+      '<section class="login-form"><form data-a="login" class="stack"><div class="stack" style="gap:8px"><h2 style="font-size:34px">Anmelden</h2>' +
+      '<p class="muted">Für Lehrpersonen mit Zugang zu ' + h(C.PORTAL_NAME) + '.</p></div>' +
+      '<div class="field"><label for="lgMail">E-Mail</label><input class="input" id="lgMail" name="email" type="email" autocomplete="username" value="' + h(T.loginEmail || '') + '" required></div>' +
+      '<div class="field"><label for="lgPw">Passwort</label><input class="input" id="lgPw" name="pw" type="password" autocomplete="current-password" required></div>' +
+      '<p class="err">' + h(T.loginErr) + '</p>' +
+      '<button class="btn primary" style="min-height:54px;font-size:18px">Anmelden</button>' +
+      '<button type="button" class="btn" data-a="forgot">Passwort vergessen?</button>' +
+      (T.loginInfo ? '<p class="note">' + h(T.loginInfo) + '</p>' : '') +
+      '</form></section></div>');
+  };
+  ACT.login = async function (f) {
+    T.loginErr = ''; T.loginEmail = f.elements.email.value.trim();
+    try { await DB.signIn(T.loginEmail, f.elements.pw.value); }
+    catch (e) { T.loginErr = errMsg(e); return T.renderLogin(); }
+    await T.start();
+  };
+  ACT.forgot = function () {
+    T.loginInfo = 'Bitte melden Sie sich bei ' + C.CONTACT + '. Sie erhalten ein neues Startpasswort.';
+    T.renderLogin();
+  };
+  ACT.logout = async function () { await DB.signOut(); T.me = null; location.hash = '#/'; T.renderLogin(); };
+
+  T.render = function () {
+    if (!T.me) return;
+    if (!T.me.name) return paint(T.onboardName());
+    if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
+    var body;
+    if (!T.classes.length && T.tab !== 'verwaltung') body = T.onboardClass();
+    else body = ({ spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
+    paint(T.shell(body));
+  };
+  T.shell = function (body) {
+    var tabs = [['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
+    if (T.me.is_admin) tabs.push(['verwaltung', 'Verwaltung']);
+    return '<header class="top"><div class="top-in"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a><div class="row">' +
+      (T.classes.length ? '<label class="sr" for="clsSel">Klasse wählen</label><select id="clsSel" class="input" style="min-height:44px;width:auto" data-change="pickClass">' +
+        T.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === T.cls ? ' selected' : '') + '>Klasse ' + h(c.name) + '</option>'; }).join('') + '</select>' : '') +
+      '<button class="btn sm" data-a="account"><span class="avatar">' + h(initials(T.me.name)) + '</span>' + h(T.me.name) + '</button>' +
+      '<button class="btn sm" data-a="logout">Abmelden</button></div></div>' +
+      '<nav class="tabs" role="tablist">' + tabs.map(function (t) {
+        return '<button class="tab" role="tab" aria-selected="' + (T.tab === t[0]) + '" data-a="tab" data-t="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</nav></header><main class="main">' + body + '</main>';
+  };
+  ACT.tab = function (el) { T.tab = el.dataset.t; LS.set('kn_tab', T.tab); UI.confirm = null; T.render(); };
+  ACT.pickClass = async function (el) { T.cls = el.value; LS.set('kn_cls', T.cls); await T.loadClass(); T.render(); };
+
+  T.onboardName = function () {
+    return '<main class="main" style="max-width:560px"><form class="card stack" data-a="saveName"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+      '<h1 class="h1">Willkommen!</h1><p class="muted">Wie sollen Ihre Kinder und Kolleginnen Sie im Portal sehen?</p>' +
+      '<div class="field"><label for="obName">Ihr Name</label><input class="input" id="obName" name="name" placeholder="z. B. Frau Meier" required></div>' +
+      '<button class="btn primary">Weiter</button></form></main>';
+  };
+  ACT.saveName = async function (f) {
+    var n = f.elements.name.value.trim(); if (!n) return;
+    await DB.setMyName(T.me.id, n); T.me.name = n; toast('Name gespeichert.');
+    if (document.querySelector('.overlay')) T.account();
+    T.render();
+  };
+  T.onboardClass = function () {
+    return '<form class="card stack" data-a="createClass" style="max-width:620px"><h1 class="h1">Ihre erste Klasse</h1>' +
+      '<p class="muted">Jede Klasse bekommt einen eigenen Klassencode. Damit melden sich die Kinder an.</p>' +
+      '<div class="field"><label for="cName">Name der Klasse</label><input class="input" id="cName" name="cname" placeholder="z. B. 5a" required maxlength="30"></div>' +
+      '<button class="btn primary">Klasse anlegen</button></form>';
+  };
+  var CODE_WORDS = ['FUCHS', 'DACHS', 'LUCHS', 'BIBER', 'IGEL', 'ADLER', 'EULE', 'OTTER', 'GEMSE', 'WOLF', 'HASE', 'FALKE', 'KAUZ', 'MARDER', 'SPATZ',
+    'PANDA', 'KOALA', 'DELFIN', 'PINGUIN', 'ZEBRA', 'TIGER', 'KATZE', 'MAUS', 'ELCH', 'STORCH', 'RABE', 'SCHWAN', 'LAMA', 'WAL', 'MURMEL'];
+  function genCode() { return CODE_WORDS[rnd(CODE_WORDS.length)] + ' ' + (100 + rnd(900)); }
+  async function withFreeCode(fn) {
+    for (var i = 0; i < 8; i++) {
+      try { return await fn(genCode()); }
+      catch (e) { if (!/classes_code/.test(e.message)) throw e; }
+    }
+    throw new Error('Kein freier Klassencode gefunden. Bitte nochmals versuchen.');
+  }
+  ACT.createClass = async function (f) {
+    var name = f.elements.cname.value.trim(); if (!name) return;
+    var c = await withFreeCode(function (code) { return DB.createClass(name, code); });
+    var d = [['Mathematik', '#2F5E9E'], ['Deutsch', '#8A4F7D'], ['Englisch', '#C0473C'], ['NMG', '#C46A1C']];
+    for (var i = 0; i < d.length; i++) await DB.addSubject(c.id, { name: d[i][0], color: d[i][1], fav: true, active: true, sort: i });
+    T.classes.push(c); T.cls = c.id; LS.set('kn_cls', c.id);
+    await T.loadClass(); T.tab = 'kinder'; LS.set('kn_tab', 'kinder');
+    closeOverlays(); toast('Klasse ' + name + ' angelegt. Code: ' + c.code); T.render();
+  };
+
+  // ---------- Spiele ----------
+  function isNew(g) { return Date.now() - new Date(g.created_at).getTime() < 14 * 86400000; }
+  T.tabSpiele = function () {
+    var c = T.cur(), games = T.games;
+    var released = games.filter(function (g) { return T.rel.has(g.id); }).length;
+    var fachs = uniq(games.map(function (g) { return g.fach; }));
+    if (T.fach !== 'alle' && fachs.indexOf(T.fach) < 0) T.fach = 'alle';
+    var q = T.q.trim().toLowerCase();
+    var shown = games.filter(function (g) {
+      return (T.fach === 'alle' || g.fach === T.fach) && (!q || (g.title + ' ' + g.description + ' ' + g.thema + ' ' + g.fach).toLowerCase().indexOf(q) >= 0);
+    });
+    var out = '<section class="banner"><div class="stack" style="gap:8px;flex:1 1 360px"><h2>Klasse ' + h(c.name) + '</h2>' +
+      '<p>Die Kinder öffnen <b style="color:#fff">' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
+      '<p style="color:var(--amber);font-weight:700">' + released + ' von ' + plural(games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
+      '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
+      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a></div></div></section>';
+    if (!games.length) {
+      return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
+        'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
+    }
+    out += '<section class="stack"><h2 style="font-size:26px">Fächer</h2><div class="tiles">' +
+      [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3E8E6' }].concat(fachs.map(function (f) {
+        return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
+      })).map(function (t) {
+        return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
+          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
+      }).join('') + '</div></section>';
+    out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
+      (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
+      '<input class="input" id="gSearch" type="search" placeholder="z. B. Einmaleins" value="' + h(T.q) + '" data-input="search"></div></div>';
+    var groups = [], by = {};
+    shown.forEach(function (g) { var k = g.fach + '|' + g.thema; if (!by[k]) { by[k] = { fach: g.fach, thema: g.thema, list: [] }; groups.push(by[k]); } by[k].list.push(g); });
+    if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
+    groups.forEach(function (gr) {
+      out += '<h3 class="gtitle"><small>' + h(gr.fach) + ' ›</small>' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + '</small></h3><div class="games">' +
+        gr.list.map(function (g) {
+          var on = T.rel.has(g.id);
+          return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(g.fach.slice(0, 2)) +
+            (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
+            '<span class="pill" style="background:#E6EEEB;color:#1E5B4F">' + h(g.fach) + '</span>' +
+            (g.stufe ? '<span class="pill" style="background:#F1ECE0;color:#6B4E12">' + h(g.stufe) + '</span>' : '') + '</div>' +
+            '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
+            '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
+            (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
+            '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button></div></div></article>';
+        }).join('') + '</div>';
+    });
+    return out + '</section>';
+  };
+  ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
+  ACT.search = function (el) { T.q = el.value; T.render(); };
+  ACT.rel = async function (el) {
+    var id = el.dataset.id, on = !T.rel.has(id);
+    if (on) T.rel.add(id); else T.rel.delete(id);
+    T.render();
+    try { await DB.setRelease(T.cls, id, on); }
+    catch (e) { if (on) T.rel.delete(id); else T.rel.add(id); T.render(); throw e; }
+  };
+  ACT.preview = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
+    toast('Spiel wird geladen …');
+    openPlayer(g.title + ' (Vorschau)', await DB.gameHtml(g.id));
+  };
+  ACT.showCode = function () {
+    var c = T.cur();
+    overlay('<div class="bigcode"><p>Klasse ' + h(c.name) + ' · Öffne ' + h(shortUrl(kidUrl())) + '</p><b>' + h(c.code) + '</b>' +
+      '<button class="btn" style="align-self:center" data-a="closeOverlay">Schliessen</button></div>');
+  };
+
+  // ---------- Kinder ----------
+  T.tabKinder = function () {
+    var c = T.cur();
+    var list = T.kids.length ? '<ul class="list">' + T.kids.map(function (k) {
+      var key = 'kid:' + k.id;
+      return '<li class="' + (T.fresh.has(k.id) ? 'fresh' : '') + '"><span class="avatar" style="background:' + kidColor(k.name) + ';color:#18231F">' + h(k.name.charAt(0)) + '</span>' +
+        '<b class="grow" style="font-size:18px">' + h(k.name) + '</b><span class="pwrow" role="img" aria-label="Bildpasswort: ' + h(pwLabel(k.pw)) + '">' +
+        k.pw.split(',').map(function (p) { return SYM[p] ? '<span style="background:' + SYM[p].bg + '">' + symSvg(p, 24) + '</span>' : ''; }).join('') + '</span>' +
+        (T.fresh.has(k.id) ? '<span class="pill" style="background:#E6EEEB;color:#1E5B4F">Neues Passwort</span>' : '') +
+        '<span class="row" style="margin-left:auto;gap:8px"><button class="btn sm" data-a="kidPw" data-id="' + k.id + '">Passwort zurücksetzen</button>' +
+        '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="kidDel" data-id="' + k.id + '">' + (UI.confirm === key ? 'Wirklich löschen?' : 'Löschen') + '</button></span></li>';
+    }).join('') + '</ul>' : '<div class="empty">Noch keine Kinder. Tragen Sie rechts die Namen ein.</div>';
+    return '<div class="cols2"><div class="wide"><div class="row" style="justify-content:space-between;align-items:flex-end">' +
+      '<div class="stack" style="gap:6px"><h1 class="h1">Kinder der Klasse ' + h(c.name) + '</h1><p class="muted">' + plural(T.kids.length, 'Kind', 'Kinder') +
+      ' · Klassencode <b style="color:var(--ink)">' + h(c.code) + '</b></p></div>' +
+      (T.kids.length ? '<button class="btn primary" data-a="printCards">' + ic(I.print) + ' Passwort-Kärtchen drucken</button>' : '') + '</div>' + list +
+      '<p class="muted small">Beim Zurücksetzen bekommt das Kind drei neue Bilder. Der Fortschritt bleibt erhalten.</p></div>' +
+      '<aside class="side"><form class="card stack" data-a="addKid"><h2 style="font-size:22px">Ein Kind hinzufügen</h2>' +
+      '<div class="field"><label for="kidName">Vorname oder Spitzname</label><input class="input" id="kidName" name="name" maxlength="30" placeholder="z. B. Mila" required></div>' +
+      '<button class="btn primary">Hinzufügen</button></form>' +
+      '<form class="card stack" data-a="addBulk"><h2 style="font-size:22px">Ganze Klasse auf einmal</h2>' +
+      '<div class="field"><label for="kidBulk">Ein Name pro Zeile</label><textarea class="input" id="kidBulk" name="list" rows="6" placeholder="Mila&#10;Tim&#10;Aylin"></textarea></div>' +
+      '<button class="btn">Alle hinzufügen</button><p class="muted small">Tipp: Namensliste aus Excel kopieren und hier einfügen.</p></form>' +
+      '<div class="note"><b>Datenschutz:</b> Nur Vornamen oder Spitznamen eintragen. Keine Nachnamen, Geburtsdaten oder E-Mail-Adressen der Kinder.</div></aside></div>';
+  };
+  function kidExists(n) { return T.kids.some(function (k) { return k.name.toLowerCase() === n.toLowerCase(); }); }
+  ACT.addKid = async function (f) {
+    var n = f.elements.name.value.trim(); if (!n) return;
+    if (kidExists(n)) return toast('Diesen Namen gibt es in der Klasse schon.');
+    var r = await DB.addKids(T.cls, [{ name: n, pw: randPw() }]);
+    r.forEach(function (k) { T.kids.push(k); T.fresh.add(k.id); });
+    T.kids.sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); }); T.progress = null; T.tafel = null;
+    T.render(); var i = document.getElementById('kidName'); if (i) { i.value = ''; i.focus(); }
+  };
+  ACT.addBulk = async function (f) {
+    var seen = {}, add = [];
+    f.elements.list.value.split(/[\n,;]/).forEach(function (s) {
+      var n = s.trim().slice(0, 30); var k = n.toLowerCase();
+      if (n && !seen[k] && !kidExists(n)) { seen[k] = 1; add.push({ name: n, pw: randPw() }); }
+    });
+    if (!add.length) return toast('Keine neuen Namen gefunden.');
+    var r = await DB.addKids(T.cls, add);
+    r.forEach(function (k) { T.kids.push(k); T.fresh.add(k.id); });
+    T.kids.sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); }); T.progress = null; T.tafel = null;
+    toast(plural(r.length, 'Kind', 'Kinder') + ' hinzugefügt.'); T.render();
+  };
+  ACT.kidPw = async function (el) {
+    var k = T.kids.filter(function (x) { return x.id === el.dataset.id; })[0];
+    var pw = randPw(k.pw); await DB.setKidPw(k.id, pw); k.pw = pw; T.fresh.add(k.id);
+    toast('Neues Bildpasswort für ' + k.name + ': ' + pwLabel(pw)); T.render();
+  };
+  ACT.kidDel = async function (el) {
+    if (!armed('kid:' + el.dataset.id)) return T.render();
+    await DB.deleteKid(el.dataset.id);
+    T.kids = T.kids.filter(function (k) { return k.id !== el.dataset.id; }); T.progress = null; T.tafel = null; T.render();
+  };
+  ACT.printCards = function () {
+    var c = T.cur();
+    document.getElementById('print').innerHTML = '<div class="pcards">' + T.kids.map(function (k) {
+      return '<div class="pcard"><h3>' + h(k.name) + '</h3><div class="pw">' + k.pw.split(',').map(function (p) {
+        return SYM[p] ? '<span style="background:' + SYM[p].bg + '">' + symSvg(p, 48) + '</span>' : ''; }).join('') +
+        '</div><p>Klasse ' + h(c.name) + ' · Code <b>' + h(c.code) + '</b><br>' + h(shortUrl(kidUrl())) + '</p></div>';
+    }).join('') + '</div>';
+    setTimeout(function () { window.print(); }, 50);
+  };
+
+  // ---------- Fortschritt ----------
+  T.tabFortschritt = function () {
+    if (T.progress === null) {
+      if (!T.progressBusy) {
+        T.progressBusy = true;
+        DB.listProgress(T.kids.map(function (k) { return k.id; })).then(function (p) { T.progress = p; T.progressBusy = false; T.render(); })
+          .catch(function (e) { T.progressBusy = false; toast(errMsg(e)); });
+      }
+      return '<p class="muted">Fortschritt wird geladen …</p>';
+    }
+    var c = T.cur();
+    var games = T.games.filter(function (g) { return T.rel.has(g.id); });
+    var P = {}; T.progress.forEach(function (p) { P[p.kid_id + '|' + p.game_id] = p; });
+    function cell(p) {
+      if (!p || (!p.plays && !p.attempts && p.done == null)) return { pct: 0, label: 'Noch nicht begonnen', none: true };
+      if (p.total) return { pct: Math.min(100, Math.round(p.done / p.total * 100)), label: p.done + ' von ' + p.total + (p.done >= p.total ? ' · fertig' : '') };
+      if (p.attempts) return { pct: Math.round(p.correct / p.attempts * 100), label: p.correct + ' von ' + p.attempts + ' richtig' };
+      return { pct: 0, label: 'geöffnet (' + p.plays + '×)' };
+    }
+    var kids = T.kids.filter(function (k) {
+      if (T.pfilter !== 'offen') return true;
+      return games.some(function (g) { return cell(P[k.id + '|' + g.id]).none; });
+    });
+    var head = '<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="stack" style="gap:6px"><h1 class="h1">Fortschritt Klasse ' + h(c.name) + '</h1>' +
+      '<p class="muted">' + plural(T.kids.length, 'Kind', 'Kinder') + ' · ' + plural(games.length, 'Spiel', 'Spiele') + ' freigegeben</p></div>' +
+      '<div class="row"><button class="btn" data-a="refreshProgress">' + ic(I.reset) + ' Aktualisieren</button><button class="btn" data-a="tab" data-t="kinder">Kinder verwalten</button></div></div>' +
+      '<div class="chips" role="group" aria-label="Filter">' + [['alle', 'Alle Kinder'], ['offen', 'Spiel noch nicht begonnen']].map(function (f) {
+        return '<button class="chip" aria-pressed="' + (T.pfilter === f[0]) + '" data-a="pfilter" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>';
+    if (!T.kids.length || !games.length) return head + '<div class="empty">' + (!T.kids.length ? 'Noch keine Kinder in dieser Klasse.' : 'Noch keine Spiele freigegeben.') + '</div>';
+    var table = '<div class="tablewrap"><table><thead><tr><th scope="col">Kind</th>' + games.map(function (g) {
+      return '<th scope="col">' + h(g.title) + '<br><span style="font-weight:400">' + h(g.fach) + '</span></th>'; }).join('') +
+      '<th scope="col">Zuletzt aktiv</th></tr></thead><tbody>' + kids.map(function (k) {
+        var last = null;
+        var cells = games.map(function (g) {
+          var p = P[k.id + '|' + g.id]; if (p && p.last_played && (!last || p.last_played > last)) last = p.last_played;
+          var x = cell(p);
+          return '<td><div class="stack" style="gap:5px"><div class="bar"><i style="width:' + x.pct + '%;' + (x.pct >= 100 ? 'background:#2E7D4F' : '') + '"></i></div>' +
+            '<span class="small" style="color:' + (x.none ? '#6B7773' : 'var(--ink)') + '">' + h(x.label) + '</span></div></td>';
+        }).join('');
+        return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
+          kidColor(k.name) + ';color:#18231F">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
+          '<td class="muted" style="white-space:nowrap">' + since(last) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return head + table + '<p class="muted small">Spiele, die dafür vorbereitet sind, melden richtige Antworten oder den Spielstand. Bei anderen Spielen sieht man, wie oft sie geöffnet wurden. Gespeichert werden nur Vorname, Fortschritt und Datum.</p>';
+  };
+  ACT.pfilter = function (el) { T.pfilter = el.dataset.f; T.render(); };
+  ACT.refreshProgress = function () { T.progress = null; T.render(); };
+
+  // ---------- Arbeitsstand-Tafel ----------
+  T.tabTafel = function () {
+    var c = T.cur();
+    if (T.tafel === null && !T.tafelBusy) {
+      T.tafelBusy = true;
+      DB.tafelTeacher(T.cls).then(function (t) { T.tafel = t; T.tafelBusy = false; if (T.tab === 'tafel') T.render(); })
+        .catch(function (e) { T.tafelBusy = false; toast(errMsg(e)); });
+    }
+    function swatches(sel, action, id) {
+      return '<div class="swatches" role="group" aria-label="Farbe wählen">' + PALETTE.map(function (p) {
+        return '<button type="button" class="swatch" style="background:' + p[0] + '" aria-label="' + p[1] + '" aria-pressed="' + (p[0] === sel) + '" data-a="' + action + '" data-c="' + p[0] + '"' + (id ? ' data-id="' + id + '"' : '') + '></button>';
+      }).join('') + '</div>';
+    }
+    var list = T.subjects.length ? '<div class="stack" style="gap:8px">' + T.subjects.map(function (s) {
+      var key = 'subj:' + s.id;
+      return '<div class="subj' + (s.active ? '' : ' off') + '"><div class="subj-row">' +
+        '<button type="button" class="check" role="checkbox" aria-checked="' + s.active + '" aria-label="' + h(s.name) + ' diese Woche auf der Tafel" data-a="subjActive" data-id="' + s.id + '">' +
+        (s.active ? ic(I.check, 16, '#fff', 3.4) : '') + '</button>' +
+        '<button type="button" class="colorbtn" style="background:' + h(s.color) + '" aria-label="Farbe von ' + h(s.name) + ' ändern" data-a="subjColor" data-id="' + s.id + '"></button>' +
+        '<b class="grow" style="font-size:18px">' + h(s.name) + '</b><span class="muted small">' + (s.active ? 'diese Woche auf der Tafel' : 'nicht auf der Tafel') + '</span>' +
+        '<button type="button" class="btn icon" aria-pressed="' + s.fav + '" aria-label="' + h(s.name) + (s.fav ? ' ist Favorit' : ' als Favorit markieren') + '" data-a="subjFav" data-id="' + s.id + '">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="' + (s.fav ? '#F0B23D' : 'none') + '" stroke="' + (s.fav ? '#8A6400' : '#6B7773') + '" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">' + I.star + '</svg></button>' +
+        '<button type="button" class="btn icon' + (UI.confirm === key ? ' danger armed' : '') + '" aria-label="' + h(s.name) + ' löschen" data-a="subjDel" data-id="' + s.id + '">' +
+        (UI.confirm === key ? '?' : ic(I.trash, 20, '#9A3B1A', 2)) + '</button></div>' +
+        (T.editColor === s.id ? '<div style="padding-left:44px">' + swatches(s.color, 'subjPick', s.id) + '</div>' : '') + '</div>';
+    }).join('') + '</div>' : '<div class="empty">Noch keine Fächer. Fügen Sie unten eines hinzu.</div>';
+    var counts = '';
+    if (T.tafel) {
+      var st = T.tafel.state;
+      counts = st.subjects.map(function (s) {
+        var n = st.entries.filter(function (e) { return e.subject_id === s.id && e.col === 'frage'; }).length;
+        return '<div class="row" style="justify-content:space-between;padding:10px 12px;border-radius:10px;background:#2A6D60"><span class="row" style="gap:10px;font-weight:700">' +
+          '<span style="width:12px;height:12px;border-radius:4px;background:' + h(s.color) + ';box-shadow:0 0 0 1.5px #fff"></span>' + h(s.name) + '</span><span>' +
+          (n === 0 ? 'keine' : plural(n, 'Kind', 'Kinder')) + '</span></div>';
+      }).join('') || '<p style="color:#CFE2DC">Keine Fächer aktiv.</p>';
+    } else counts = '<p style="color:#CFE2DC">Wird geladen …</p>';
+    var resetKey = 'resetFav', clearKey = 'clearTafel';
+    return '<div class="cols2"><div class="wide"><div class="stack" style="gap:8px"><h1 class="h1">Arbeitsstand-Tafel</h1>' +
+      '<p class="muted">Haken Sie an, was diese Woche auf der Tafel steht. Mit dem Stern markieren Sie Favoriten, die beim Zurücksetzen bleiben.</p></div>' +
+      '<section class="card stack"><div class="row" style="justify-content:space-between"><h2>Fächer und Aufgaben</h2>' +
+      '<button class="btn sm' + (UI.confirm === resetKey ? ' danger armed' : '') + '" data-a="resetFav">' + ic(I.reset) + (UI.confirm === resetKey ? ' Nicht-Favoriten wirklich löschen?' : ' Zurücksetzen auf Favoriten') + '</button></div>' +
+      list + '<form class="stack" data-a="addSubj" style="padding-top:14px;border-top:1.5px solid #E4EAE7"><div class="field"><label for="subjName">Eigenes Fach oder Aufgabe hinzufügen</label>' +
+      '<div class="row"><input class="input grow" style="flex:1 1 220px" id="subjName" name="name" maxlength="40" placeholder="z. B. Lesetraining" value="' + h(T.subjDraft || '') + '" data-input="subjDraft" required><button class="btn primary">Hinzufügen</button></div></div>' +
+      '<div class="row"><span class="lbl">Farbe:</span>' + swatches(T.newColor, 'newColor') + '</div></form></section>' +
+      '<section class="card stack"><h2>Die drei Spalten</h2><div class="columns">' + COLS.map(function (col) {
+        return '<div class="column c-' + col.id + '" style="min-height:0"><div class="column-h" style="font-size:17px">' + col.label + '</div></div>'; }).join('') +
+      '</div><p class="muted small">Wer «Ich habe eine Frage» wählt, sieht sofort, wer im gleichen Fach helfen kann. Jedes Kind steht nur an einem Ort.</p></section>' +
+      '<section class="card stack"><h2>Neue Woche</h2><button class="switch" role="switch" aria-checked="' + !!c.tafel_auto + '" data-a="tafelAuto"><span>Namen jeden Montag automatisch von der Tafel nehmen</span><span class="track"></span></button>' +
+      '<div class="row"><button class="btn danger' + (UI.confirm === clearKey ? ' armed' : '') + '" data-a="tafelClear">' + (UI.confirm === clearKey ? 'Wirklich alle Namen entfernen?' : 'Alle Namen jetzt entfernen') + '</button>' +
+      '<span class="muted small">Die Fächer bleiben, nur die Namen gehen weg.</span></div></section></div>' +
+      '<aside class="side"><section class="card stack" style="background:var(--green);border-color:var(--green);color:#F2F5F4"><h2 style="font-size:22px">Offene Fragen gerade</h2>' + counts +
+      '<a class="btn amber" href="#/wandtafel/' + T.cls + '" target="_blank" rel="noopener">' + ic(I.board) + ' An der Wandtafel zeigen</a>' +
+      '<button class="btn" data-a="tafelRefresh">' + ic(I.reset) + ' Aktualisieren</button>' +
+      '<p style="color:#CFE2DC;font-size:14px">Die Kinder öffnen die Tafel nach dem Einloggen über «Unsere Tafel».</p></section></aside></div>';
+  };
+  function subj(id) { return T.subjects.filter(function (s) { return s.id === id; })[0]; }
+  ACT.subjActive = async function (el) { var s = subj(el.dataset.id); s.active = !s.active; T.render(); await DB.updateSubject(s.id, { active: s.active }); T.tafel = null; T.render(); };
+  ACT.subjFav = async function (el) { var s = subj(el.dataset.id); s.fav = !s.fav; T.render(); await DB.updateSubject(s.id, { fav: s.fav }); };
+  ACT.subjColor = function (el) { T.editColor = T.editColor === el.dataset.id ? null : el.dataset.id; T.render(); };
+  ACT.subjPick = async function (el) { var s = subj(el.dataset.id); s.color = el.dataset.c; T.editColor = null; T.render(); await DB.updateSubject(s.id, { color: s.color }); T.tafel = null; T.render(); };
+  ACT.subjDel = async function (el) {
+    if (!armed('subj:' + el.dataset.id)) return T.render();
+    await DB.deleteSubjects([el.dataset.id]);
+    T.subjects = T.subjects.filter(function (s) { return s.id !== el.dataset.id; }); T.tafel = null; T.render();
+  };
+  ACT.newColor = function (el) { T.newColor = el.dataset.c; T.render(); };
+  ACT.addSubj = async function (f) {
+    var n = f.elements.name.value.trim(); if (!n) return;
+    if (T.subjects.some(function (s) { return s.name.toLowerCase() === n.toLowerCase(); })) return toast('Dieses Fach gibt es schon.');
+    var s = await DB.addSubject(T.cls, { name: n, color: T.newColor, fav: false, active: true, sort: T.subjects.length });
+    T.subjects.push(s); T.subjDraft = ''; T.tafel = null; T.render();
+  };
+  ACT.subjDraft = function (el) { T.subjDraft = el.value; };
+  ACT.resetFav = async function () {
+    if (!armed('resetFav')) return T.render();
+    var del = T.subjects.filter(function (s) { return !s.fav; }).map(function (s) { return s.id; });
+    await DB.deleteSubjects(del);
+    T.subjects = T.subjects.filter(function (s) { return s.fav; });
+    for (var i = 0; i < T.subjects.length; i++) if (!T.subjects[i].active) { T.subjects[i].active = true; await DB.updateSubject(T.subjects[i].id, { active: true }); }
+    T.tafel = null; toast('Nur noch die Favoriten sind auf der Tafel.'); T.render();
+  };
+  ACT.tafelAuto = async function () { var c = T.cur(); c.tafel_auto = !c.tafel_auto; T.render(); await DB.updateClass(c.id, { tafel_auto: c.tafel_auto }); };
+  ACT.tafelClear = async function () {
+    if (!armed('clearTafel')) return T.render();
+    await DB.clearTafel(T.cls); T.tafel = null; toast('Alle Namen wurden von der Tafel genommen.'); T.render();
+  };
+  ACT.tafelRefresh = function () { T.tafel = null; T.render(); };
+
+  // ---------- Konto ----------
+  T.account = function () {
+    var c = T.cur(), delKey = 'delClass';
+    overlay('<div class="dialog" role="dialog" aria-label="Konto und Klassen"><div class="row" style="justify-content:space-between"><h2 style="font-size:26px">Konto und Klassen</h2>' +
+      '<button class="btn sm" data-a="closeOverlay">Schliessen</button></div>' +
+      '<form class="stack" data-a="saveName"><div class="field"><label for="accName">Ihr Name</label><div class="row"><input class="input grow" style="flex:1 1 200px" id="accName" name="name" value="' + h(T.me.name) + '" required><button class="btn">Speichern</button></div></div></form>' +
+      '<form class="stack" data-a="savePw"><div class="field"><label for="accPw">Neues Passwort (mindestens 8 Zeichen)</label><input class="input" id="accPw" name="pw" type="password" minlength="8" autocomplete="new-password" required></div>' +
+      '<div class="field"><label for="accPw2">Passwort wiederholen</label><input class="input" id="accPw2" name="pw2" type="password" minlength="8" autocomplete="new-password" required></div>' +
+      '<button class="btn">Passwort ändern</button></form>' +
+      (c ? '<div class="stack" style="padding-top:14px;border-top:1.5px solid var(--line)"><h3 style="font-size:20px">Klasse ' + h(c.name) + ' · Code ' + h(c.code) + '</h3>' +
+        '<form class="row" data-a="renameClass"><label class="sr" for="accCls">Neuer Klassenname</label><input class="input grow" style="flex:1 1 180px" id="accCls" name="cname" value="' + h(c.name) + '" required maxlength="30"><button class="btn">Umbenennen</button></form>' +
+        '<div class="row"><button class="btn" data-a="newCode">Neuen Klassencode erstellen</button><button class="btn danger' + (UI.confirm === delKey ? ' armed' : '') + '" data-a="delClass">' +
+        (UI.confirm === delKey ? 'Klasse mit allen Kindern löschen?' : 'Klasse löschen') + '</button></div>' +
+        '<p class="muted small">Mit einem neuen Code funktioniert der alte nicht mehr.</p></div>' : '') +
+      '<form class="stack" data-a="createClass" style="padding-top:14px;border-top:1.5px solid var(--line)"><div class="field"><label for="accNew">Weitere Klasse anlegen</label>' +
+      '<div class="row"><input class="input grow" style="flex:1 1 180px" id="accNew" name="cname" placeholder="z. B. 6b" required maxlength="30"><button class="btn primary">Anlegen</button></div></div></form></div>');
+  };
+  ACT.account = function () { T.account(); };
+  ACT.savePw = async function (f) {
+    if (f.elements.pw.value !== f.elements.pw2.value) return toast('Die beiden Passwörter sind nicht gleich.');
+    await DB.setPassword(f.elements.pw.value); toast('Passwort geändert.'); closeOverlays();
+  };
+  ACT.renameClass = async function (f) {
+    var c = T.cur(), n = f.elements.cname.value.trim(); if (!n) return;
+    await DB.updateClass(c.id, { name: n }); c.name = n; toast('Klasse umbenannt.'); T.account(); T.render();
+  };
+  ACT.newCode = async function () {
+    var c = T.cur();
+    await withFreeCode(function (code) { return DB.updateClass(c.id, { code: code }).then(function () { c.code = code; }); });
+    toast('Neuer Klassencode: ' + c.code); T.account(); T.render();
+  };
+  ACT.delClass = async function () {
+    if (!armed('delClass')) return T.account();
+    var c = T.cur(); await DB.deleteClass(c.id);
+    T.classes = T.classes.filter(function (x) { return x.id !== c.id; });
+    T.cls = T.classes[0] ? T.classes[0].id : null; LS.set('kn_cls', T.cls);
+    await T.loadClass(); closeOverlays(); toast('Klasse gelöscht.'); T.render();
+  };
+
+  // ---------- Verwaltung (nur Admin) ----------
+  function blankForm() { return { id: null, title: '', description: '', fach: '', thema: '', stufe: '', for_all: false, html: null, filename: '' }; }
+  T.tabAdmin = function () {
+    var A = T.admin; if (!A.form) A.form = blankForm();
+    if (A.teachers === null && !A.busy) {
+      A.busy = true;
+      Promise.all([DB.listTeachers(), DB.listTeacherGames()]).then(function (r) { A.teachers = r[0]; A.tg = r[1]; A.busy = false; if (T.tab === 'verwaltung') T.render(); })
+        .catch(function (e) { A.busy = false; toast(errMsg(e)); });
+    }
+    var F = A.form;
+    var fachs = uniq(T.games.map(function (g) { return g.fach; }).concat(['Mathematik', 'Deutsch', 'Englisch', 'NMG', 'Französisch', 'Gestalten', 'Musik']));
+    var themen = uniq(T.games.filter(function (g) { return !F.fach || g.fach === F.fach; }).map(function (g) { return g.thema; }));
+    var form = '<form class="card stack" data-a="gSave"><h2>' + (F.id ? 'Spiel bearbeiten' : 'Neues Spiel hochladen') + '</h2>' +
+      '<div class="field"><label for="gFile">Spiel-Datei (.html)' + (F.id ? ' – nur wählen, wenn Sie die Datei ersetzen möchten' : '') + '</label>' +
+      '<input class="input" id="gFile" type="file" accept=".html,.htm,text/html" data-change="gFile">' +
+      (F.filename ? '<span class="muted small">Gewählt: ' + h(F.filename) + '</span>' : '') + '</div>' +
+      '<div class="field"><label for="gTitle">Titel</label><input class="input" id="gTitle" value="' + h(F.title) + '" data-input="gField" data-k="title" required maxlength="80"></div>' +
+      '<div class="field"><label for="gDesc">Kurzbeschreibung</label><input class="input" id="gDesc" value="' + h(F.description) + '" data-input="gField" data-k="description" maxlength="160"></div>' +
+      '<div class="row" style="align-items:flex-start"><div class="field grow" style="flex:1 1 200px"><label for="gFach">Fach</label><input class="input" id="gFach" list="fachList" value="' + h(F.fach) + '" data-input="gField" data-k="fach" required maxlength="40"></div>' +
+      '<div class="field grow" style="flex:1 1 200px"><label for="gThema">Thema</label><input class="input" id="gThema" list="themaList" value="' + h(F.thema) + '" data-input="gField" data-k="thema" placeholder="z. B. Raster & Koordinaten" maxlength="60"></div>' +
+      '<div class="field grow" style="flex:1 1 140px"><label for="gStufe">Stufe</label><input class="input" id="gStufe" value="' + h(F.stufe) + '" data-input="gField" data-k="stufe" placeholder="z. B. 5./6. Klasse" maxlength="30"></div></div>' +
+      '<datalist id="fachList">' + fachs.map(function (f) { return '<option value="' + h(f) + '">'; }).join('') + '</datalist>' +
+      '<datalist id="themaList">' + themen.map(function (t) { return '<option value="' + h(t) + '">'; }).join('') + '</datalist>' +
+      '<button type="button" class="switch" role="switch" aria-checked="' + F.for_all + '" data-a="gAll"><span>Für alle Lehrpersonen freischalten</span><span class="track"></span></button>' +
+      '<div class="row"><button class="btn primary">' + (F.id ? 'Änderungen speichern' : 'Spiel speichern') + '</button>' + (F.id ? '<button type="button" class="btn" data-a="gCancel">Abbrechen</button>' : '') + '</div>' +
+      '<p class="muted small">Tipp für Fortschritt: Ein Spiel kann <code>knobelnest.answer(true/false)</code> oder <code>knobelnest.progress(erledigt, total)</code> aufrufen. Spiele aus dem Spielheft melden sich automatisch.</p></form>';
+    var glist = T.games.length ? '<div class="tablewrap"><table><thead><tr><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + T.games.map(function (g) {
+      var key = 'game:' + g.id;
+      return '<tr><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
+        '<td>' + (g.for_all ? 'alle Lehrpersonen' : 'zugeteilt') + '</td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
+        '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
+        '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="empty">Noch keine Spiele hochgeladen.</div>';
+    var teachers = A.teachers === null ? '<p class="muted">Wird geladen …</p>' : '<ul class="list">' + A.teachers.map(function (t) {
+      var mine = A.tg.filter(function (x) { return x.teacher_id === t.id; }).map(function (x) { return x.game_id; });
+      var open = A.open === t.id;
+      return '<li style="flex-direction:column;align-items:stretch"><div class="row"><span class="avatar">' + h(initials(t.name || t.email)) + '</span><span class="grow"><b>' + h(t.name || '(noch kein Name)') + '</b>' +
+        (t.is_admin ? ' <span class="pill" style="background:#F0B23D">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
+        '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
+        (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
+        (open ? '<div class="stack" style="gap:6px;padding:10px 0 4px 48px">' + T.games.map(function (g) {
+          var on = g.for_all || mine.indexOf(g.id) >= 0;
+          return '<label class="row" style="gap:10px;font-size:16px"><input type="checkbox" style="width:22px;height:22px" ' + (on ? 'checked ' : '') + (g.for_all ? 'disabled ' : '') +
+            'data-change="tgSet" data-t="' + t.id + '" data-g="' + g.id + '"> ' + h(g.title) + ' <span class="muted small">' + h(g.fach) + ' › ' + h(g.thema) + (g.for_all ? ' · für alle' : '') + '</span></label>';
+        }).join('') + '</div>' : '') + '</li>';
+    }).join('') + '</ul>';
+    return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
+      '<div class="cols2"><div class="wide">' + form + '<h2 style="font-size:24px">Alle Spiele</h2>' + glist + '</div>' +
+      '<aside class="side"><h2 style="font-size:24px">Lehrpersonen</h2>' + teachers +
+      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>';
+  };
+  ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
+  ACT.gAll = function () { T.admin.form.for_all = !T.admin.form.for_all; T.render(); };
+  ACT.gFile = function (el) {
+    var file = el.files && el.files[0]; if (!file) return;
+    if (file.size > 8 * 1024 * 1024) return toast('Die Datei ist zu gross (höchstens 8 MB).');
+    var r = new FileReader();
+    r.onload = function () {
+      var F = T.admin.form; F.html = String(r.result); F.filename = file.name;
+      if (!F.title) { var m = /<title[^>]*>([^<]*)<\/title>/i.exec(F.html); F.title = (m ? m[1] : file.name.replace(/\.html?$/i, '')).trim().slice(0, 80); }
+      T.render();
+    };
+    r.readAsText(file, 'utf-8');
+  };
+  ACT.gSave = async function () {
+    var F = T.admin.form;
+    if (!F.title.trim() || !F.fach.trim()) return toast('Bitte Titel und Fach ausfüllen.');
+    if (!F.id && !F.html) return toast('Bitte eine Spiel-Datei wählen.');
+    await DB.saveGame({ id: F.id, title: F.title.trim(), description: F.description.trim(), fach: F.fach.trim(), thema: F.thema.trim() || 'Allgemein',
+      stufe: F.stufe.trim(), for_all: F.for_all, html: F.html });
+    toast(F.id ? 'Spiel gespeichert.' : 'Spiel hochgeladen.');
+    T.admin.form = blankForm(); T.games = await DB.listGames(); T.render();
+  };
+  ACT.gEdit = function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
+    T.admin.form = { id: g.id, title: g.title, description: g.description, fach: g.fach, thema: g.thema, stufe: g.stufe, for_all: g.for_all, html: null, filename: '' };
+    T.render(); window.scrollTo(0, 0);
+  };
+  ACT.gCancel = function () { T.admin.form = blankForm(); T.render(); };
+  ACT.gDel = async function (el) {
+    if (!armed('game:' + el.dataset.id)) return T.render();
+    await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
+  };
+  ACT.tOpen = function (el) { T.admin.open = T.admin.open === el.dataset.id ? null : el.dataset.id; T.render(); };
+  ACT.tgSet = async function (el) {
+    var t = el.dataset.t, g = el.dataset.g, on = el.checked;
+    await DB.setTeacherGame(t, g, on);
+    if (on) T.admin.tg.push({ teacher_id: t, game_id: g });
+    else T.admin.tg = T.admin.tg.filter(function (x) { return !(x.teacher_id === t && x.game_id === g); });
+    T.render();
+  };
+
+  // ===================================================================
+  // Kinder
+  // ===================================================================
+  var K = { step: 'code', code: null, cls: null, kid: null, pw: [], sess: null, home: null, fach: null, thema: null, tafel: null, err: '', busy: false };
+
+  K.start = async function () {
+    UI.view = 'kid';
+    K.err = ''; K.pw = [];
+    var s = LS.get('kn_kid');
+    if (s && s.exp > Date.now()) { K.sess = s; K.step = 'home'; return K.loadHome(); }
+    LS.del('kn_kid'); K.sess = null;
+    var code = LS.get('kn_code');
+    if (code) {
+      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names'; return K.render(); } } catch (e) {}
+    }
+    K.step = 'code'; K.render();
+  };
+  K.loadHome = async function () {
+    try { K.home = await DB.kidHome(K.sess.token); }
+    catch (e) { return K.sessionLost(e); }
+    K.render();
+  };
+  K.sessionLost = function (e) {
+    if (/Anmeldung|session/i.test((e && e.message) || '')) {
+      LS.del('kn_kid'); K.sess = null; K.home = null; toast('Bitte melde dich nochmals an.'); return K.start();
+    }
+    toast(errMsg(e));
+  };
+  K.shell = function (body, back) {
+    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="logo">' + I.logo.replace('#F0B23D', '#1E5B4F').replace('#18231F', '#F0B23D') + h(C.PORTAL_NAME) + '</span>' +
+      (back ? '<button class="kid-btn" data-a="kBack">' + back + '</button>' : '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>') +
+      '</div>' + body + '</div></div>';
+  };
+  K.render = function () {
+    var b = K['view_' + K.step](); if (b == null) return;
+    paint(b);
+  };
+  function pct(g) { return g.total ? Math.min(100, Math.round((g.done || 0) / g.total * 100)) : g.attempts ? Math.round(g.correct / g.attempts * 100) : 0; }
+
+  K.view_code = function () {
+    return K.shell('<form class="kid-card" data-a="kCode"><h1>Hallo!</h1><p class="lead">Gib den Code ein, den deine Lehrerin oder dein Lehrer an die Wandtafel geschrieben hat.</p>' +
+      '<label class="sr" for="kCode">Klassencode</label><input class="kid-input" id="kCode" name="code" placeholder="FUCHS 123" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
+      '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go">Weiter</button></form>');
+  };
+  K.view_names = function () {
+    return K.shell('<div class="stack" style="gap:6px"><h1>Wer bist du?</h1><p class="lead">Klasse ' + h(K.cls.class_name) + ' · Tippe auf deinen Namen.</p></div>' +
+      (K.cls.kids.length ? '<div class="kid-grid">' + K.cls.kids.map(function (k) {
+        return '<button class="kid-name" data-a="kName" data-id="' + k.id + '"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span><b>' + h(k.name) + '</b></button>';
+      }).join('') + '</div>' : '<div class="kid-card"><p class="lead">In dieser Klasse sind noch keine Kinder eingetragen.</p></div>'), 'Anderer Code');
+  };
+  K.view_pw = function () {
+    var full = K.pw.length >= 3;
+    return K.shell('<div class="kid-card"><h1>Hallo ' + h(K.kid.name) + '!</h1><p class="lead">Tippe deine drei Bilder in der richtigen Reihenfolge an.</p>' +
+      '<div class="slots" aria-label="' + K.pw.length + ' von 3 Bildern gewählt">' + [0, 1, 2].map(function (i) {
+        return '<span class="slot' + (i < K.pw.length ? ' on' : '') + '">' + (i < K.pw.length ? ic(I.check, 30, '#fff', 3) : '') + '</span>'; }).join('') + '</div>' +
+      '<div class="syms">' + SYM_IDS.map(function (id) {
+        return '<button class="sym" style="background:' + SYM[id].bg + '" aria-label="' + SYM[id].label + '" data-a="kSym" data-s="' + id + '"' + (full ? ' disabled' : '') + '>' + symSvg(id, 54) + '</button>';
+      }).join('') + '</div><p class="err" style="font-size:18px">' + h(K.err) + '</p>' +
+      '<div class="row" style="flex-wrap:nowrap"><button class="kid-btn" style="flex:1;height:62px;background:#fff" data-a="kClear">Nochmals</button>' +
+      '<button class="kid-go" style="flex:2;height:62px" data-a="kLogin"' + (full && !K.busy ? '' : ' disabled') + '>Einloggen</button></div>' +
+      '<p class="muted">Bilder vergessen? Frag deine Lehrperson.</p></div>', 'Zurück');
+  };
+  K.view_home = function () {
+    if (!K.home) return K.shell('<p class="lead">Wird geladen …</p>', 'Abmelden');
+    var games = K.home.games, fachs = uniq(games.map(function (g) { return g.fach; }));
+    var tiles = fachs.map(function (f) {
+      var n = games.filter(function (g) { return g.fach === f; }).length;
+      return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
+    }).join('');
+    return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
+      (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
+      '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:var(--amber);display:grid;place-items:center">' + ic(I.board, 34, '#18231F', 2) + '</span>' +
+      '<span><b>Unsere Tafel</b><span>Zeig, wo du im Wochenplan stehst, und finde Hilfe.</span></span></button>', 'Abmelden');
+  };
+  K.view_thema = function () {
+    var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
+    var themen = uniq(games.map(function (g) { return g.thema; }));
+    return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + '</p><h1>Wähle ein Thema</h1></div><div class="big-tiles">' + themen.map(function (t) {
+      var gs = games.filter(function (g) { return g.thema === t; });
+      var p = Math.round(gs.reduce(function (a, g) { return a + pct(g); }, 0) / gs.length);
+      return '<button class="big-tile" style="min-height:150px" data-a="kThema" data-t="' + h(t) + '"><b style="font-size:30px">' + h(t) + '</b><span>' + plural(gs.length, 'Spiel', 'Spiele') + '</span>' +
+        '<span class="kbar" style="margin-top:auto"><i style="width:' + p + '%"></i></span></button>';
+    }).join('') + '</div>', 'Zurück');
+  };
+  K.view_games = function () {
+    var games = K.home.games.filter(function (g) { return g.fach === K.fach && g.thema === K.thema; });
+    return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + ' › ' + h(K.thema) + '</p><h1>Wähle ein Spiel</h1></div><div class="big-tiles">' + games.map(function (g) {
+      var p = pct(g);
+      var label = g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' von ' + g.attempts + ' richtig' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
+      return '<article class="big-tile" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:700">' + h(g.thema) + '</div>' +
+        '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
+        '<span class="kbar"><i style="width:' + p + '%"></i></span><span style="font-size:17px">' + h(label) + '</span>' +
+        '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
+    }).join('') + '</div>', 'Zurück');
+  };
+  K.view_tafel = function () {
+    if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
+    return board(K.tafel, 'kid');
+  };
+
+  ACT.kCode = async function (f) {
+    var code = f.elements.code.value.trim(); if (!code) return;
+    var c = await DB.kidClass(code);
+    if (!c) { K.err = 'Diesen Code kennen wir nicht. Schau nochmals an der Wandtafel.'; return K.render(); }
+    K.err = ''; K.code = code; K.cls = c; LS.set('kn_code', code); K.step = 'names'; K.render();
+  };
+  ACT.kName = function (el) {
+    K.kid = K.cls.kids.filter(function (k) { return k.id === el.dataset.id; })[0];
+    K.pw = []; K.err = ''; K.step = 'pw'; K.render();
+  };
+  ACT.kSym = function (el) { if (K.pw.length < 3) { K.pw.push(el.dataset.s); K.err = ''; K.render(); } };
+  ACT.kClear = function () { K.pw = []; K.err = ''; K.render(); };
+  ACT.kLogin = async function () {
+    if (K.pw.length < 3 || K.busy) return;
+    K.busy = true;
+    try {
+      var r = await DB.kidLogin(K.code, K.kid.id, K.pw.join(','));
+      if (!r.ok) {
+        K.pw = [];
+        K.err = r.error === 'gesperrt' ? 'Kurze Pause! Versuch es in ' + Math.max(1, Math.ceil((r.seconds || 60) / 60)) + ' Minuten wieder.' :
+          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
+        if (r.error === 'unbekannt') { LS.del('kn_code'); K.step = 'code'; }
+        return K.render();
+      }
+      K.sess = { token: r.token, name: r.name, code: K.code, exp: Date.now() + 11.5 * 3600 * 1000 };
+      LS.set('kn_kid', K.sess); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
+    } finally { K.busy = false; }
+  };
+  ACT.kFach = function (el) { K.fach = el.dataset.f; var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
+    if (th.length === 1) { K.thema = th[0]; K.step = 'games'; } else K.step = 'thema'; K.render(); };
+  ACT.kThema = function (el) { K.thema = el.dataset.t; K.step = 'games'; K.render(); };
+  ACT.kBack = async function () {
+    stopTimers(); K.err = '';
+    switch (K.step) {
+      case 'names': LS.del('kn_code'); K.step = 'code'; break;
+      case 'pw': K.step = 'names'; break;
+      case 'home':
+        if (K.sess) await DB.kidLogout(K.sess.token);
+        LS.del('kn_kid'); K.sess = null; K.home = null; return K.start();
+      case 'thema': K.step = 'home'; break;
+      case 'games': var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
+        K.step = th.length === 1 ? 'home' : 'thema'; break;
+      case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
+      default: K.step = 'home';
+    }
+    K.render();
+  };
+  ACT.kPlay = async function (el) {
+    var g = K.home.games.filter(function (x) { return x.id === el.dataset.id; })[0];
+    var html;
+    try { html = await DB.kidGame(K.sess.token, g.id); } catch (e) { return K.sessionLost(e); }
+    var pend = { correct: 0, attempts: 0, done: null, total: null, dirty: false }, flushing = false;
+    async function flush() {
+      if (!pend.dirty || flushing || !K.sess) return;
+      var r = { correct: pend.correct, attempts: pend.attempts, done: pend.done, total: pend.total };
+      pend.correct = 0; pend.attempts = 0; pend.dirty = false; flushing = true;
+      try { await DB.kidReport(K.sess.token, g.id, r); } catch (e) { console.warn(e); } finally { flushing = false; }
+    }
+    var t = setInterval(flush, 4000);
+    openPlayer(g.title, html, function (d) {
+      if (d.type === 'answer' && (d.spielheft || d.knobelnest)) { pend.attempts++; if (d.ok) pend.correct++; pend.dirty = true; }
+      if (d.type === 'progress' && d.knobelnest && isFinite(d.done) && isFinite(d.total)) { pend.done = Math.round(d.done); pend.total = Math.round(d.total); pend.dirty = true; }
+    }, async function () { clearInterval(t); await flush(); K.loadHome(); });
+  };
+  ACT.kTafel = async function () {
+    K.step = 'tafel'; K.tafel = null; K.render();
+    async function load() {
+      if (K.step !== 'tafel' || document.hidden) return;
+      try { K.tafel = await DB.tafelGet(K.sess.token); if (K.step === 'tafel') K.render(); }
+      catch (e) { stopTimers(); K.sessionLost(e); }
+    }
+    await load(); every(5000, load);
+  };
+  ACT.tSet = async function (el) {
+    try { K.tafel = await DB.tafelSet(K.sess.token, el.dataset.s, el.dataset.c); } catch (e) { return K.sessionLost(e); }
+    K.render();
+  };
+  ACT.tOff = async function () {
+    try { K.tafel = await DB.tafelSet(K.sess.token, null, null); } catch (e) { return K.sessionLost(e); }
+    K.render();
+  };
+
+  // ===================================================================
+  // Start
+  // ===================================================================
+  DB.onAuth(function (ev) {
+    if (ev === 'PASSWORD_RECOVERY') {
+      UI.view = 'recovery';
+      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">Neues Passwort</h1>' +
+        '<div class="field"><label for="rcPw">Neues Passwort (mindestens 8 Zeichen)</label><input class="input" id="rcPw" name="pw" type="password" minlength="8" autocomplete="new-password" required></div>' +
+        '<button class="btn primary">Speichern</button></form></main>');
+    }
+  });
+  ACT.recoverPw = async function (f) { await DB.setPassword(f.elements.pw.value); toast('Passwort gespeichert.'); location.hash = '#/'; T.start(); };
+
+  window.addEventListener('hashchange', route);
+  route();
+})();
