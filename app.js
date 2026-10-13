@@ -500,7 +500,7 @@
           return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
             (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
             '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span>' +
-            (g.stufe ? '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>' : '') + '</div>' +
+            (g.stufe ? (/zusatz/i.test(g.stufe) ? '<span class="pill zusatz-t">★ ' + h(g.stufe) + '</span>' : '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>') : '') + '</div>' +
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
@@ -853,7 +853,7 @@
       '<div class="field"><label for="gDesc">Kurzbeschreibung</label><input class="input" id="gDesc" value="' + h(F.description) + '" data-input="gField" data-k="description" maxlength="160"></div>' +
       '<div class="row" style="align-items:flex-start"><div class="field grow" style="flex:1 1 200px"><label for="gFach">Fach</label><input class="input" id="gFach" list="fachList" value="' + h(F.fach) + '" data-input="gField" data-k="fach" required maxlength="40"></div>' +
       '<div class="field grow" style="flex:1 1 200px"><label for="gThema">Thema</label><input class="input" id="gThema" list="themaList" value="' + h(F.thema) + '" data-input="gField" data-k="thema" placeholder="z. B. Raster & Koordinaten" maxlength="60"></div>' +
-      '<div class="field grow" style="flex:1 1 140px"><label for="gStufe">Stufe</label><input class="input" id="gStufe" value="' + h(F.stufe) + '" data-input="gField" data-k="stufe" placeholder="z. B. 5./6. Klasse" maxlength="30"></div></div>' +
+      '<div class="field grow" style="flex:1 1 140px"><label for="gStufe">Stufe</label><input class="input" id="gStufe" value="' + h(F.stufe) + '" data-input="gField" data-k="stufe" placeholder="z. B. 5./6. Klasse oder Zusatz" maxlength="30"></div></div>' +
       '<datalist id="fachList">' + fachs.map(function (f) { return '<option value="' + h(f) + '">'; }).join('') + '</datalist>' +
       '<datalist id="themaList">' + themen.map(function (t) { return '<option value="' + h(t) + '">'; }).join('') + '</datalist>' +
       '<button type="button" class="switch" role="switch" aria-checked="' + F.for_all + '" data-a="gAll"><span>Für alle Lehrpersonen freischalten</span><span class="track"></span></button>' +
@@ -941,7 +941,7 @@
         var g = todo[i], old = have[String(g.title).toLowerCase()];
         A.importing = 'Spiel ' + (i + 1) + ' von ' + todo.length + (old ? ' wird aktualisiert: ' : ' wird hochgeladen: ') + g.title; T.render();
         try {
-          if (old) { await DB.saveGame({ id: old.id, title: old.title, description: old.description, fach: old.fach, thema: old.thema, stufe: old.stufe, for_all: old.for_all, sort: old.sort || (isFinite(g.sort) ? +g.sort : 0), html: String(g.html) }); updated++; }
+          if (old) { await DB.saveGame({ id: old.id, title: old.title, description: old.description, fach: old.fach, thema: old.thema, stufe: old.stufe || String(g.stufe || '').slice(0, 30), for_all: old.for_all, sort: old.sort || (isFinite(g.sort) ? +g.sort : 0), html: String(g.html) }); updated++; }
           else {
             await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: String(g.fach).slice(0, 40),
               thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all === true, sort: isFinite(g.sort) ? +g.sort : 0, html: String(g.html) });
@@ -1120,7 +1120,9 @@
       var p = pct(g), l = lvlInfo(g)[0];
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
         g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
-      return '<article class="big-tile" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:500">' + h(g.thema) + '</div>' +
+      var extra = /zusatz/i.test(g.stufe || '');
+      return '<article class="big-tile' + (extra ? ' extra' : '') + '" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px">' + h(g.thema) +
+        (extra ? '<span class="zusatz">★ Zusatz</span>' : '') + '</div>' +
         '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
         (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') +
         (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span style="font-size:17px">' + h(label) + '</span>' +
