@@ -171,7 +171,7 @@
 
   // Spiel-Player (Spiel läuft abgeschirmt in einem iframe)
   // Läuft im Spiel (iframe): Speicher nachbilden, gespeicherten Stand laden, Meldungen an das Portal
-  function shimMain(seed) {
+  function shimMain(seed, aw) {
     function send(m) { try { m.knobelnest = 1; parent.postMessage(m, '*'); } catch (e) {} }
     function mem(init, onchange) {
       var m = {}, k;
@@ -195,10 +195,21 @@
       round: function () { send({ type: 'round' }); },
       award: function (a) { try { send({ type: 'award', award: JSON.parse(JSON.stringify(a || {})) }); } catch (e) {} }
     };
+    // Sterne pro Level lesen: knobelnest.sterne('Mittel · Ablesen') -> { have, max }; bei Änderung kommt das Ereignis 'knobelnest-sterne'
+    var AW = aw && typeof aw === 'object' ? aw : { lv: {}, max: 0 };
+    window.knobelnest.sterne = function (k) { return { have: +((AW.lv || {})[k]) || 0, max: +AW.max || 0 }; };
+    window.addEventListener('message', function (e) {
+      if (e.source !== parent || !e.data || !e.data.knobelnestAward) return;
+      AW = e.data.knobelnestAward;
+      try { window.dispatchEvent(new Event('knobelnest-sterne')); } catch (x) {}
+    });
     if (!window.__report) window.__report = function (ok) { send({ type: 'answer', ok: !!ok }); };
   }
   function prepare(html, seed) {
-    var tag = '<script>(' + shimMain.toString() + ')(' + JSON.stringify(seed || null).replace(/</g, '\\u003c') + ');<\/script>';
+    seed = seed || {};
+    var aw = seed.award || { lv: {}, max: starMax(starCfg(html)) };
+    var J = function (v) { return JSON.stringify(v == null ? null : v).replace(/</g, '\\u003c'); };
+    var tag = '<script>(' + shimMain.toString() + ')(' + J(seed.store) + ',' + J(aw) + ');<\/script>';
     var m = /<head[^>]*>/i.exec(html);
     return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
@@ -1176,10 +1187,16 @@
     var m = /<meta\s+name=["']knobelnest-sterne["']\s+content=(["'])([\s\S]*?)\1/i.exec(html || ''), c = null;
     if (m) try { c = JSON.parse(m[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')); } catch (e) {}
     c = c || { modus: 'runde' };
-    if (c.modus === 'sammeln') return { modus: 'sammeln', pro: c.pro === 'runde' ? 'runde' : Math.max(1, Math.min(100, +c.pro || 10)), max: Math.max(1, Math.min(20, +c.max || 5)), proLevel: !!c.proLevel };
+    if (c.modus === 'sammeln') {
+      var pf = {}; if (c.proFuer && typeof c.proFuer === 'object') Object.keys(c.proFuer).forEach(function (k) { pf[k] = Math.max(1, Math.min(100, +c.proFuer[k] || 10)); });
+      return { modus: 'sammeln', pro: c.pro === 'runde' ? 'runde' : Math.max(1, Math.min(100, +c.pro || 10)), max: Math.max(1, Math.min(20, +c.max || 5)), proLevel: !!c.proLevel, proFuer: pf };
+    }
     if (c.modus === 'eigene' || c.modus === 'aus') return { modus: c.modus };
     return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
   }
+  function starMax(c) { return c.modus === 'sammeln' ? c.max : c.modus === 'runde' ? 3 : 0; }
+  // Wie viele richtige braucht es für einen Stern? (pro Level verschieden möglich, z. B. "Zeichnen": 1)
+  function starPer(c, k) { var n = c.pro; Object.keys(c.proFuer || {}).forEach(function (p) { if (String(k).indexOf(p) === 0) n = c.proFuer[p]; }); return n; }
   function today() { return new Date().toLocaleDateString('sv-SE'); }
   function starRow(n, max, cls) { var o = ''; for (var i = 0; i < max; i++) o += '<span class="st' + (i < n ? '' : ' off') + (cls && i === n - 1 ? ' ' + cls : '') + '">★</span>'; return o; }
   function fmtTime(ms) { var t = Math.round(ms / 1000), m = Math.floor(t / 60); t %= 60; return m + ':' + (t < 10 ? '0' : '') + t; }
@@ -1198,7 +1215,11 @@
     var a = S.a;
     function key() { return cfg.modus === 'sammeln' && !cfg.proLevel ? 'Spiel' : (S.level || 'Spiel'); }
     function maxFor() { return cfg.modus === 'sammeln' ? cfg.max : 3; }
-    function sync() { a.stars = awardSum(a); a.max = maxFor(); S.dirty = true; }
+    S.view = function () { return { lv: a.lv, max: maxFor() }; };
+    function sync() {
+      a.stars = awardSum(a); a.max = maxFor(); S.dirty = true;
+      if (PL) try { PL.frame.contentWindow.postMessage({ knobelnestAward: S.view() }, '*'); } catch (e) {}
+    }
     function boxOf(k) { return a.boxDay[k] === today() ? (+a.box[k] || 0) : 0; }
     function modal(have, max, title, line, isNew) {
       if (!PL) return;
@@ -1223,8 +1244,8 @@
         if (have >= max) info = 'Alle ' + max + ' Sterne gesammelt!';
         else if (a.starDay[k] === today()) info = 'Stern für heute verdient. Morgen gibt es den nächsten.';
         else if (cfg.pro === 'runde') info = 'Für einen fertigen Durchgang gibt es einen Stern.';
-        else { var bx = boxOf(k), d2 = ''; for (var j = 0; j < cfg.pro; j++) d2 += '<span class="dot' + (j < bx ? ' ok' : '') + '"></span>';
-          info = 'Nächster Stern: <b>' + bx + ' von ' + cfg.pro + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
+        else { var bx = boxOf(k), per = starPer(cfg, k), d2 = ''; for (var j = 0; j < per; j++) d2 += '<span class="dot' + (j < bx ? ' ok' : '') + '"></span>';
+          info = per === 1 ? 'Für die nächste gelöste Aufgabe gibt es einen Stern.' : 'Nächster Stern: <b>' + bx + ' von ' + per + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
         body = '<span class="sb-name">' + (cfg.proLevel && name ? h(name) : 'Deine Sterne') + '</span><span class="sb-stars" aria-label="' + have + ' von ' + max + ' Sternen">' + starRow(have, max) + '</span><span class="sb-info">' + info + '</span>';
       }
       b.innerHTML = body + '<span class="sb-total">Insgesamt ' + S.total + ' richtig</span>'; b.hidden = false;
@@ -1252,7 +1273,7 @@
         var have = +a.lv[k] || 0;
         if (have < cfg.max && a.starDay[k] !== today()) {
           a.box[k] = boxOf(k) + 1; a.boxDay[k] = today(); S.dirty = true;
-          if (a.box[k] >= cfg.pro) { win(k); return; }
+          if (a.box[k] >= starPer(cfg, k)) { win(k); return; }
         }
       }
       S.render();
@@ -1326,7 +1347,7 @@
         var js = JSON.stringify(d.data);
         if (js.length < 190000) { save.data = d.data; save.dirty = true; } else console.warn('Spielstand zu gross, wird nicht gespeichert');
       }
-    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, st.save);
+    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, { store: st.save, award: S.view() });
     S.render();
   };
   ACT.kTafel = async function () {
