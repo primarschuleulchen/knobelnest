@@ -748,7 +748,7 @@
     var glist = T.games.length ? '<div class="tablewrap"><table><thead><tr><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + T.games.map(function (g) {
       var key = 'game:' + g.id;
       return '<tr><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
-        '<td>' + (g.for_all ? 'alle Lehrpersonen' : 'zugeteilt') + '</td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
+        '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
         '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
     }).join('') + '</tbody></table></div>' : '<div class="empty">Noch keine Spiele hochgeladen.</div>';
@@ -759,19 +759,34 @@
         (t.is_admin ? ' <span class="pill" style="background:#F6A5BE">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
         '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
         (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
-        (open ? '<div class="stack" style="gap:6px;padding:10px 0 4px 48px">' + T.games.map(function (g) {
-          var on = g.for_all || mine.indexOf(g.id) >= 0;
-          return '<label class="row" style="gap:10px;font-size:16px"><input type="checkbox" style="width:22px;height:22px" ' + (on ? 'checked ' : '') + (g.for_all ? 'disabled ' : '') +
-            'data-change="tgSet" data-t="' + t.id + '" data-g="' + g.id + '"> ' + h(g.title) + ' <span class="muted small">' + h(g.fach) + ' › ' + h(g.thema) + (g.for_all ? ' · für alle' : '') + '</span></label>';
-        }).join('') + '</div>' : '') + '</li>';
+        (open ? (function () {
+          var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
+          var groups = [], by = {};
+          T.games.forEach(function (g) { var k = g.fach + ' › ' + g.thema; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
+          return '<div class="stack" style="gap:14px;padding:12px 0 6px">' +
+            '<div class="row"><button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(T.games) + '">Alle Spiele geben</button>' +
+            '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(T.games) + '">Alle wegnehmen</button></div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">' + groups.map(function (k) {
+              var list = by[k], free = list.filter(function (g) { return !g.for_all; });
+              var allOn = free.length && free.every(function (g) { return mine.indexOf(g.id) >= 0; });
+              return '<div class="card stack" style="padding:14px;gap:8px"><div class="row" style="justify-content:space-between"><b>' + h(k) + '</b>' +
+                (free.length ? '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="' + (allOn ? 0 : 1) + '" data-ids="' + ids(list) + '">' + (allOn ? 'Thema wegnehmen' : 'Ganzes Thema') + '</button>' : '') + '</div>' +
+                list.map(function (g) {
+                  var on = g.for_all || mine.indexOf(g.id) >= 0;
+                  return '<label class="row" style="gap:10px;font-size:16px;flex-wrap:nowrap"><input type="checkbox" style="width:22px;height:22px;flex:none" ' + (on ? 'checked ' : '') + (g.for_all ? 'disabled ' : '') +
+                    'data-change="tgSet" data-t="' + t.id + '" data-g="' + g.id + '"><span>' + h(g.title) + (g.for_all ? ' <span class="muted small">· für alle</span>' : '') + '</span></label>';
+                }).join('') + '</div>';
+            }).join('') + '</div></div>';
+        })() : '') + '</li>';
     }).join('') + '</ul>';
     var pack = '<section class="card stack"><h2>Spielpaket importieren</h2><p class="muted">Mehrere Spiele auf einmal hochladen, zum Beispiel die Datei <b>knobelnest-spielpaket.json</b>. Spiele mit gleichem Titel werden übersprungen.</p>' +
       '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
       (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
       '<div class="cols2"><div class="wide">' + pack + form + '<h2 style="font-size:24px">Alle Spiele</h2>' + glist + '</div>' +
-      '<aside class="side"><h2 style="font-size:24px">Lehrpersonen</h2>' + teachers +
-      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>';
+      '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
+      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
+      '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + teachers + '</section>';
   };
   ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
   ACT.gAll = function () { T.admin.form.for_all = !T.admin.form.for_all; T.render(); };
@@ -801,7 +816,7 @@
         A.importing = 'Spiel ' + (i + 1) + ' von ' + todo.length + ' wird hochgeladen: ' + g.title; T.render();
         try {
           await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: String(g.fach).slice(0, 40),
-            thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all !== false, html: String(g.html) });
+            thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: g.for_all === true, html: String(g.html) });
           done++;
         } catch (e) { failed++; console.error(e); }
       }
@@ -828,6 +843,19 @@
   ACT.gDel = async function (el) {
     if (!armed('game:' + el.dataset.id)) return T.render();
     await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
+  };
+  ACT.gAllToggle = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
+    await DB.setGameForAll(g.id, !g.for_all); g.for_all = !g.for_all;
+    toast(g.title + (g.for_all ? ': für alle Lehrpersonen.' : ': nur noch für zugeteilte Lehrpersonen.')); T.render();
+  };
+  ACT.tgBulk = async function (el) {
+    var t = el.dataset.t, on = el.dataset.on === '1', ids = (el.dataset.ids || '').split(',').filter(Boolean);
+    if (!ids.length) return;
+    await DB.setTeacherGames(t, ids, on);
+    T.admin.tg = T.admin.tg.filter(function (x) { return !(x.teacher_id === t && ids.indexOf(x.game_id) >= 0); });
+    if (on) ids.forEach(function (g) { T.admin.tg.push({ teacher_id: t, game_id: g }); });
+    T.render();
   };
   ACT.tOpen = function (el) { T.admin.open = T.admin.open === el.dataset.id ? null : el.dataset.id; T.render(); };
   ACT.tgSet = async function (el) {

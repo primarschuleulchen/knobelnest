@@ -47,10 +47,15 @@
       return ok(await sb.from('games').insert(row).select(GAME_COLS).single());
     },
     deleteGame: async function (id) { ok(await sb.from('games').delete().eq('id', id)); },
+    setGameForAll: async function (id, on) { ok(await sb.from('games').update({ for_all: on }).eq('id', id)); },
 
     // ---------- Lehrpersonen (Admin) ----------
     listTeachers: async function () { return ok(await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at')); },
     listTeacherGames: async function () { return ok(await sb.from('teacher_games').select('teacher_id,game_id,created_at')); },
+    setTeacherGames: async function (tid, gids, on) {
+      if (on) ok(await sb.from('teacher_games').upsert(gids.map(function (g) { return { teacher_id: tid, game_id: g }; }), { onConflict: 'teacher_id,game_id', ignoreDuplicates: true }));
+      else ok(await sb.from('teacher_games').delete().eq('teacher_id', tid).in('game_id', gids));
+    },
     setTeacherGame: async function (tid, gid, on) {
       if (on) ok(await sb.from('teacher_games').upsert({ teacher_id: tid, game_id: gid }, { onConflict: 'teacher_id,game_id', ignoreDuplicates: true }));
       else ok(await sb.from('teacher_games').delete().eq('teacher_id', tid).eq('game_id', gid));
