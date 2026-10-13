@@ -287,3 +287,17 @@ tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
 .sbtns{display:flex;gap:6px}
 .sbtns .btn{min-width:44px;justify-content:center}
 .starbar[hidden]{display:none}
+
+/* Sternenleiste sitzt in der dunklen Spielleiste (spart Platz auf dem iPad) */
+.player-bar{flex-wrap:wrap;row-gap:4px}
+.player-bar > b{flex:0 1 auto;max-width:30%}
+.player-bar .starbar b{font:inherit;font-weight:700;max-width:none;flex:none;white-space:normal}
+.player-bar .starbar{flex:1 1 0;min-width:0;background:transparent;border:0;color:#fff;padding:0 6px;font-size:15px;gap:4px 14px}
+.player-bar .starbar[hidden]{display:none}
+.player-bar .starbar .sb-name{font-family:var(--b)}
+.player-bar .starbar .sb-total{color:#C9D6E6;font-size:14px}
+.player-bar .sb-dots .dot{background:transparent;border-color:#8FA6BF}
+.player-bar .st.off{color:#4A6383}
+.player-bar .btn[data-a="playerFull"]{margin-left:auto}
+@media (max-width:1300px){.player-bar .starbar .sb-total{display:none}}
+@media (max-width:820px){.player-bar .starbar .sb-dots{display:none}}

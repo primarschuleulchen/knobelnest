@@ -226,7 +226,8 @@
     f.title = title;
     f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
-    p.appendChild(bar); p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
+    p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
+    p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
     PL = { el: p, frame: f, bar: bar, onMsg: onMsg, onClose: onClose };
   }
   function closePlayer() {
@@ -1241,11 +1242,11 @@
           '<span class="sb-best" aria-label="Bestwert ' + have + ' von 3 Sternen">Bestwert ' + starRow(have, 3) + '</span>';
       } else {
         var info;
-        if (have >= max) info = 'Alle ' + max + ' Sterne gesammelt!';
-        else if (a.starDay[k] === today()) info = 'Stern für heute verdient. Morgen gibt es den nächsten.';
+        if (have >= max) info = 'Alle ' + max + ' Sterne!';
+        else if (a.starDay[k] === today()) info = 'Heute verdient ✓ Morgen gibt es den nächsten.';
         else if (cfg.pro === 'runde') info = 'Für einen fertigen Durchgang gibt es einen Stern.';
         else { var bx = boxOf(k), per = starPer(cfg, k), d2 = ''; for (var j = 0; j < per; j++) d2 += '<span class="dot' + (j < bx ? ' ok' : '') + '"></span>';
-          info = per === 1 ? 'Für die nächste gelöste Aufgabe gibt es einen Stern.' : 'Nächster Stern: <b>' + bx + ' von ' + per + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
+          info = per === 1 ? 'Nächste Aufgabe = 1 Stern' : 'Nächster Stern: <b>' + bx + ' von ' + per + '</b> richtig</span><span class="sb-dots" aria-hidden="true">' + d2; }
         body = '<span class="sb-name">' + (cfg.proLevel && name ? h(name) : 'Deine Sterne') + '</span><span class="sb-stars" aria-label="' + have + ' von ' + max + ' Sternen">' + starRow(have, max) + '</span><span class="sb-info">' + info + '</span>';
       }
       b.innerHTML = body + '<span class="sb-total">Insgesamt ' + S.total + ' richtig</span>'; b.hidden = false;
