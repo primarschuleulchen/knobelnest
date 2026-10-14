@@ -128,6 +128,22 @@
     raceEnd: async function (id) { ok(await sb.from('races').update({ status: 'done' }).eq('id', id)); },
     raceGet: async function (id) { return ok(await sb.from('races').select('id,status,settings,starts_at').eq('id', id).single()); },
     raceRuns: async function (id) { return ok(await sb.from('race_runs').select('kid_id,pos,correct,wrong,finished_at').eq('race_id', id)); },
+    // ---------- Tagesfolie (Speicher pro Lehrperson) ----------
+    storeGet: async function (doc) {
+      var r = ok(await sb.from('teacher_store').select('data').eq('doc', doc).maybeSingle());
+      return r ? r.data : null;
+    },
+    storeSet: async function (doc, data) {
+      ok(await sb.from('teacher_store').upsert({ doc: doc, data: data, updated_at: new Date().toISOString() }, { onConflict: 'teacher_id,doc' }));
+    },
+    storeDel: async function (doc) { ok(await sb.from('teacher_store').delete().eq('doc', doc)); },
+    storeUpload: async function (blob) {
+      var uid = ok(await sb.auth.getUser()).user.id;
+      var ext = ((blob.type || '').split('/')[1] || 'bin').replace(/[^a-z0-9]/gi, '').slice(0, 5);
+      var path = uid + '/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      ok(await sb.storage.from('tagesfolien').upload(path, blob, { contentType: blob.type || 'application/octet-stream', upsert: false }));
+      return sb.storage.from('tagesfolien').getPublicUrl(path).data.publicUrl;
+    },
     kidRace: async function (token) { return ok(await sb.rpc('kid_race', { p_token: token })); },
     kidRaceJoin: async function (token, race) { return ok(await sb.rpc('kid_race_join', { p_token: token, p_race: race })); },
     kidRaceStep: async function (token, race, isOk) { return ok(await sb.rpc('kid_race_step', { p_token: token, p_race: race, p_ok: !!isOk })); },

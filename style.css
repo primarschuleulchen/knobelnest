@@ -404,3 +404,16 @@ b,strong{font-weight:700}
 .chip.mode small{font-weight:400;font-size:14px;opacity:.75}
 .kspr-task .gap{display:inline-block;min-width:1.3em;padding:0 .15em;border:3px dashed var(--btn);border-radius:.25em;color:var(--btn);line-height:1.05}
 .kspr-ans.no b{color:#C0392B}
+/* Fortschritt: Namen bleiben links stehen, der Rest scrollt dahinter durch */
+.ptable tbody th[scope="row"],.ptable thead tr:first-child th:first-child{position:sticky;left:0;z-index:3;background:#fff;box-shadow:3px 0 0 #D3E1EF}
+.ptable tbody tr:hover th[scope="row"]{background:#fff}
+/* Arbeitsstand eingebettet (Tagesfolie) */
+.board.embed{padding:8px 10px}
+.board.embed .board-head{margin:0 0 4px}
+.board.embed .board-head h1{font-size:clamp(16px,4vh,28px);margin:0}
+.board.embed .board-head .kick{font-size:12px}
+.folie{position:fixed;inset:0;background:#fbfaf6}
+.folie iframe{width:100%;height:100%;border:0;display:block}
+.board.embed .matrix{gap:5px;grid-template-columns:minmax(70px,.6fr) repeat(3,minmax(0,1fr))}
+.board.embed .mx-h span.lbl{display:inline;font-size:clamp(10px,2vw,16px);line-height:1.1}
+.board.embed .mx-subj{font-size:clamp(11px,3.4vh,22px);padding:4px 8px;gap:6px;hyphens:auto;overflow-wrap:break-word}

@@ -271,8 +271,10 @@
     if (/error_description=/.test(hs)) return linkError(hs);
     if (/access_token=|type=recovery/.test(hs)) { setTimeout(function () { if (/access_token=/.test(location.hash) && UI.view !== 'recovery') { location.hash = '#/'; } }, 4000); return; }
     if (hs.indexOf('#/klasse') === 0) return K.start();
-    var m = hs.match(/^#\/wandtafel\/([0-9a-f-]{36})/);
-    if (m) return W.start(m[1]);
+    var m = hs.match(/^#\/wandtafel\/([0-9a-f-]{36})(\/embed)?/);
+    if (m) return W.start(m[1], !!m[2]);
+    var mf = hs.match(/^#\/tagesfolie\/([0-9a-f-]{36})/);
+    if (mf) return F.start(mf[1]);
     var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
     if (ms) return S.start(ms[1]);
     return T.start();
@@ -287,8 +289,8 @@
     var entry = {}; s.entries.forEach(function (e) { entry[e.kid_id] = e; });
     var mine = me ? entry[me] : null;
     var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
-    var kid = mode === 'kid';
-    var out = '<div class="board-head"><div class="stack" style="gap:6px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span>' +
+    var kid = mode === 'kid', emb = mode === 'embed';
+    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head"><div class="stack" style="gap:6px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span>' +
       '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
       '<p>' + (kid ? 'Tippe beim Fach auf das Feld, das zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
       '<div class="row">' + (kid ? '<button class="board-btn" data-a="kBack">' + ic(I.back) + ' Zurück</button>' :
@@ -332,8 +334,8 @@
       out += '</div>';
     }
     var missing = s.kids.filter(function (k) { return !entry[k.id] || !subjName[entry[k.id].subject_id]; }).map(function (k) { return k.name; });
-    if (!kid) out += '<p style="flex:none;margin:0;color:#3D5A7A;font-size:16px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
-    return '<div class="board' + (kid ? '' : ' wall') + '"><div class="board-in">' + out + '</div></div>';
+    if (!kid && !emb) out += '<p style="flex:none;margin:0;color:#3D5A7A;font-size:16px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
+    return '<div class="board' + (kid ? '' : ' wall') + (emb ? ' embed' : '') + '"><div class="board-in">' + out + '</div></div>';
   }
 
 
@@ -453,17 +455,56 @@
   // Wandtafel (Lehrperson, für den Beamer)
   // ===================================================================
   var W = {
-    start: async function (cid) {
+    start: async function (cid, embed) {
       UI.view = 'wall';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       async function load() {
-        try { paint(board(await DB.tafelTeacher(cid), 'wall')); }
+        try { paint(board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall')); }
         catch (e) { paint('<div class="main"><div class="card stack"><h2>Tafel nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); stopTimers(); }
       }
       await load();
-      every(5000, function () { if (!document.hidden) load(); });
+      every(embed ? 3000 : 5000, function () { if (!document.hidden) load(); });
+    }
+  };
+
+  // ===================================================================
+  // Tagesfolie (Lehrperson, an der Wandtafel). Läuft als eigene Seite tagesfolie.html im Rahmen;
+  // Klassenliste, Speicher und Arbeitsstand-Tafel kommen von hier.
+  // ===================================================================
+  var F = {
+    start: async function (cid) {
+      UI.view = 'folie';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      app.innerHTML = '<p class="boot">Tagesfolie wird geladen …</p>';
+      var cls, kids;
+      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); }
+      catch (e) { paint('<div class="main"><div class="card stack"><h2>Tagesfolie nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      var uid = s.user.id, base = location.href.split('#')[0];
+      var doc = function (id) {
+        return {
+          get: async function () { var d = await DB.storeGet(id); return { exists: d != null, data: function () { return d; } }; },
+          set: async function (v) { await DB.storeSet(id, JSON.parse(JSON.stringify(v))); },
+          delete: async function () { await DB.storeDel(id); }
+        };
+      };
+      window.knTagesfolie = {
+        uid: uid, className: cls ? cls.name : '',
+        roster: (kids || []).map(function (k) { return k.name; }),
+        boardUrl: base + '#/wandtafel/' + cid + '/embed',
+        back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
+        claude: {
+          use: async function (name) {
+            if (name === 'db') return { collection: function () { return { doc: doc }; } };
+            if (name === 'user') return { id: async function () { return uid; } };
+            if (name === 'assets') return { upload: async function (blob) { return { url: await DB.storeUpload(blob) }; } };
+            return null;
+          }
+        }
+      };
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('23') + '" title="Tagesfolie" allow="fullscreen"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
@@ -604,7 +645,8 @@
       '<p>Die Kinder öffnen <b>' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
-      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a></div></div></section>';
+      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
+      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a></div></div></section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -1081,10 +1123,15 @@
       '<p class="muted small">Tipp für Fortschritt: Ein Spiel kann <code>knobelnest.answer(true/false)</code> oder <code>knobelnest.progress(erledigt, total)</code> aufrufen. Spiele aus dem Spielheft melden sich automatisch.</p></form>';
     var sel = A.sel || (A.sel = {}), nSel = Object.keys(sel).length;
     var afs = uniq(T.games.map(function (g) { return g.fach; })); if (afs.indexOf(A.fach) < 0) A.fach = 'alle';
+    var ats = A.fach === 'alle' ? [] : uniq(T.games.filter(function (g) { return g.fach === A.fach; }).map(function (g) { return g.thema; }));
+    if (ats.indexOf(A.thema) < 0) A.thema = 'alle';
     var FG = adminGames();
     var fchips = afs.length > 1 ? '<div class="chips" role="group" aria-label="Nach Fach filtern">' + ['alle'].concat(afs).map(function (f) {
       var n = f === 'alle' ? T.games.length : T.games.filter(function (g) { return g.fach === f; }).length;
-      return '<button class="chip" aria-pressed="' + (A.fach === f) + '" data-a="aFach" data-f="' + h(f) + '">' + (f === 'alle' ? 'Alle Fächer' : h(f)) + ' · ' + n + '</button>'; }).join('') + '</div>' : '';
+      return '<button class="chip" aria-pressed="' + (A.fach === f) + '" data-a="aFach" data-f="' + h(f) + '">' + (f === 'alle' ? 'Alle Fächer' : h(f)) + ' · ' + n + '</button>'; }).join('') + '</div>' +
+      (ats.length > 1 ? '<div class="chips" role="group" aria-label="Nach Thema filtern" style="margin-top:-4px;padding-left:14px;border-left:3px solid var(--line2)">' + ['alle'].concat(ats).map(function (t) {
+        var n = T.games.filter(function (g) { return g.fach === A.fach && (t === 'alle' || g.thema === t); }).length;
+        return '<button class="chip" style="min-height:38px" aria-pressed="' + (A.thema === t) + '" data-a="aThema" data-t="' + h(t) + '">' + (t === 'alle' ? 'Alle Themen' : h(t)) + ' · ' + n + '</button>'; }).join('') + '</div>' : '') : '';
     var others = (A.teachers || []).filter(function (t) { return !t.is_admin; });
     var bulk = T.games.length ? '<div class="card row" style="padding:14px 16px;position:sticky;top:110px;z-index:3' + (nSel ? ';border-color:var(--green);box-shadow:0 4px 0 var(--green)' : '') + '">' +
       '<b class="grow">' + (nSel ? plural(nSel, 'Spiel', 'Spiele') + ' ausgewählt' : 'Spiele anhaken, um sie einer Lehrperson auf einmal zu geben') + '</b>' +
@@ -1112,8 +1159,8 @@
           var groups = [], by = {};
           FG.forEach(function (g) { var k = g.fach + ' › ' + g.thema; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
           return '<div class="stack" style="gap:14px;padding:12px 0 6px">' +
-            '<div class="row"><button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle Spiele geben' : 'Alle ' + h(A.fach) + '-Spiele geben') + '</button>' +
-            '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle wegnehmen' : 'Alle ' + h(A.fach) + '-Spiele wegnehmen') + '</button></div>' +
+            '<div class="row"><button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle Spiele geben' : 'Alle ' + h(A.thema !== 'alle' ? A.thema : A.fach) + '-Spiele geben') + '</button>' +
+            '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle wegnehmen' : 'Alle ' + h(A.thema !== 'alle' ? A.thema : A.fach) + '-Spiele wegnehmen') + '</button></div>' +
             '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">' + groups.map(function (k) {
               var list = by[k], free = list.filter(function (g) { return !g.for_all; });
               var allOn = free.length && free.every(function (g) { return mine.indexOf(g.id) >= 0; });
@@ -1136,7 +1183,7 @@
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
       '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
       '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
-      '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur Spiele aus diesem Fach gezeigt:</p>' + fchips : '') + teachers + '</section>';
+      '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur die hier gewählten Spiele gezeigt:</p>' + fchips : '') + teachers + '</section>';
   };
   ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
   ACT.gAll = function () { T.admin.form.for_all = !T.admin.form.for_all; T.render(); };
@@ -1200,8 +1247,12 @@
     await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
   };
   ACT.gSel = function (el) { var s = T.admin.sel; if (el.checked) s[el.dataset.id] = 1; else delete s[el.dataset.id]; T.render(); };
-  function adminGames() { var f = T.admin.fach || 'alle'; return T.games.filter(function (g) { return f === 'alle' || g.fach === f; }); }
-  ACT.aFach = function (el) { T.admin.fach = el.dataset.f; T.render(); };
+  function adminGames() {
+    var f = T.admin.fach || 'alle', t = f === 'alle' ? 'alle' : (T.admin.thema || 'alle');
+    return T.games.filter(function (g) { return (f === 'alle' || g.fach === f) && (t === 'alle' || g.thema === t); });
+  }
+  ACT.aFach = function (el) { T.admin.fach = el.dataset.f; T.admin.thema = 'alle'; T.render(); };
+  ACT.aThema = function (el) { T.admin.thema = el.dataset.t; T.render(); };
   ACT.gSelAll = function (el) { T.admin.sel = {}; if (el.checked) adminGames().forEach(function (g) { T.admin.sel[g.id] = 1; }); T.render(); };
   ACT.bulkClear = function () { T.admin.sel = {}; T.render(); };
   ACT.bulkT = function (el) { T.admin.bulkT = el.value; };
