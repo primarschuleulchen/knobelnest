@@ -255,7 +255,8 @@
   function route() {
     stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null;
     var hs = location.hash || '';
-    if (/access_token=|type=recovery|error_description=/.test(hs)) return;
+    if (/error_description=/.test(hs)) return linkError(hs);
+    if (/access_token=|type=recovery/.test(hs)) { setTimeout(function () { if (/access_token=/.test(location.hash) && UI.view !== 'recovery') { location.hash = '#/'; } }, 4000); return; }
     if (hs.indexOf('#/klasse') === 0) return K.start();
     var m = hs.match(/^#\/wandtafel\/([0-9a-f-]{36})/);
     if (m) return W.start(m[1]);
@@ -1379,15 +1380,30 @@
   // ===================================================================
   // Start
   // ===================================================================
-  DB.onAuth(function (ev) {
-    if (ev === 'PASSWORD_RECOVERY') {
+  // Einladungs-/Passwort-Links aus der E-Mail
+  var LINK_INVITE = /type=(invite|signup|magiclink)/.test(location.hash), LINK_RECOVERY = /type=recovery/.test(location.hash);
+  function linkError(hs) {
+    var p = new URLSearchParams(hs.replace(/^#\/?/, ''));
+    var code = p.get('error_code') || '', msg = /expired/.test(code + p.get('error_description')) ?
+      'Dieser Link ist abgelaufen oder wurde schon benutzt. Bitten Sie die Administratorin um einen neuen Link oder setzen Sie Ihr Passwort mit «Passwort vergessen?» neu.' :
+      'Der Link aus der E-Mail hat nicht funktioniert (' + (p.get('error_description') || code || 'unbekannter Fehler').replace(/\+/g, ' ') + ').';
+    history.replaceState(null, '', location.pathname + '#/');
+    T.start(); setTimeout(function () { toast(msg); }, 400);
+    UI.linkMsg = msg;
+  }
+  DB.onAuth(function (ev, sess) {
+    var viaLink = sess && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && (LINK_INVITE || LINK_RECOVERY);
+    if (ev === 'PASSWORD_RECOVERY' || viaLink) {
+      if (UI.view === 'recovery') return;
+      var invite = LINK_INVITE && ev !== 'PASSWORD_RECOVERY'; LINK_INVITE = false; LINK_RECOVERY = false;
       UI.view = 'recovery';
-      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">Neues Passwort</h1>' +
+      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">' + (invite ? 'Willkommen bei ' + h(C.PORTAL_NAME) + '!' : 'Neues Passwort') + '</h1>' +
+        (invite ? '<p class="muted">Legen Sie jetzt Ihr eigenes Passwort fest. Damit melden Sie sich künftig mit Ihrer E-Mail-Adresse an.</p>' : '') +
         '<div class="field"><label for="rcPw">Neues Passwort (mindestens 8 Zeichen)</label><input class="input" id="rcPw" name="pw" type="password" minlength="8" autocomplete="new-password" required></div>' +
         '<button class="btn primary">Speichern</button></form></main>');
     }
   });
-  ACT.recoverPw = async function (f) { await DB.setPassword(f.elements.pw.value); toast('Passwort gespeichert.'); location.hash = '#/'; T.start(); };
+  ACT.recoverPw = async function (f) { await DB.setPassword(f.elements.pw.value); toast('Passwort gespeichert.'); history.replaceState(null, '', location.pathname + '#/'); UI.view = null; T.start(); };
 
   window.addEventListener('hashchange', route);
   route();
