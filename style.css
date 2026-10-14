@@ -399,3 +399,4 @@ b,strong{font-weight:700}
 .game-top{padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:52px;text-align:center}
 .game-top:has(.pill){padding-left:72px}
 .game-top .pill{line-height:1.4}
+.tile b{word-break:normal}.tiles .tile .sw{width:44px;height:44px}

@@ -574,8 +574,8 @@
   // ---------- Spiele ----------
   function isNew(g) { return Date.now() - new Date(g.created_at).getTime() < 14 * 86400000; }
   T.tabSpiele = function () {
-    var c = T.cur(), games = T.games;
-    var released = games.filter(function (g) { return T.rel.has(g.id); }).length;
+    var c = T.cur(), games = T.games.concat(liveGames());
+    var released = T.games.filter(function (g) { return T.rel.has(g.id); }).length;
     var fachs = uniq(games.map(function (g) { return g.fach; }));
     if (T.fach !== 'alle' && fachs.indexOf(T.fach) < 0) T.fach = 'alle';
     var q = T.q.trim().toLowerCase();
@@ -584,11 +584,10 @@
     });
     var out = '<section class="banner"><div class="stack" style="gap:8px;flex:1 1 360px"><h2>Klasse ' + h(c.name) + '</h2>' +
       '<p>Die Kinder öffnen <b>' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
-      '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
+      '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
-      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
-      '<a class="btn primary" href="#/sprint/' + T.cls + '">🏃 Klassen-Sprint</a></div></div></section>';
-    if (!games.length) {
+      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a></div></div></section>';
+    if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
     }
@@ -597,7 +596,7 @@
         return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
       })).map(function (t) {
         return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
-          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 14 : 16) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
+          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
       (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
@@ -607,22 +606,27 @@
     if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
     groups.forEach(function (gr) {
       var gk = gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
-      var sorting = T.sorting === gk && !shut;
+      var sorting = T.sorting === gk && !shut, real = gr.list.filter(function (g) { return !g.live; });
       out += '<div class="ghead"><h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
         '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
         gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
-        (T.me.is_admin && !shut && gr.list.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
+        (T.me.is_admin && !shut && real.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
       if (sorting) {
         out += '<div class="sortbox"><p class="muted">Ziehen Sie ein Spiel am Griff <span aria-hidden="true">⠿</span> an die richtige Stelle oder benutzen Sie die Pfeile. Die Reihenfolge wird sofort gespeichert und gilt für alle Lehrpersonen und Kinder.</p>' +
-          '<ol class="sorter" data-k="' + h(gk) + '">' + gr.list.map(function (g, i) {
+          '<ol class="sorter" data-k="' + h(gk) + '">' + real.map(function (g, i) {
             return '<li class="srow" data-id="' + g.id + '"><span class="grip" title="Ziehen" aria-hidden="true">⠿</span><span class="snum">' + (i + 1) + '</span><b>' + h(g.title) + '</b>' +
               '<span class="sbtns"><button class="btn sm" data-a="sMove" data-d="-1" data-id="' + g.id + '" aria-label="' + h(g.title) + ' nach oben"' + (i ? '' : ' disabled') + '>↑</button>' +
-              '<button class="btn sm" data-a="sMove" data-d="1" data-id="' + g.id + '" aria-label="' + h(g.title) + ' nach unten"' + (i < gr.list.length - 1 ? '' : ' disabled') + '>↓</button></span></li>';
+              '<button class="btn sm" data-a="sMove" data-d="1" data-id="' + g.id + '" aria-label="' + h(g.title) + ' nach unten"' + (i < real.length - 1 ? '' : ' disabled') + '>↓</button></span></li>';
           }).join('') + '</ol><div class="row"><button class="btn primary" data-a="gSort" data-k="' + h(gk) + '">Fertig</button></div></div>';
         return;
       }
       out += (shut ? '' : '<div class="games">' +
         gr.list.map(function (g) {
+          if (g.live) return '<article class="game live"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) + '</div><div class="game-body"><div class="row" style="gap:8px">' +
+            '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span><span class="pill" style="background:#FFE8A3;color:#6A5420">Live mit iPads</span></div>' +
+            '<h3>' + g.icon + ' ' + h(g.title) + '</h3><p>' + h(g.description) + '</p>' +
+            '<div class="game-foot"><p class="muted small" style="margin:0">Immer verfügbar. Die Kinder sehen den Sprint erst, wenn Sie ihn öffnen.</p>' +
+            '<a class="btn primary" href="' + g.href + '">' + ic(I.play, 14, '#fff') + ' Spielen</a></div></div></article>';
           var on = T.rel.has(g.id);
           return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
             (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
@@ -638,6 +642,13 @@
     return out + '</section>';
   };
   ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
+  // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
+  // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.
+  function liveGames() {
+    var wall = T.games.filter(function (g) { return /wandtafel/i.test(g.fach); })[0];
+    var fach = wall ? wall.fach : 'Wandtafelspiele', thema = wall ? wall.thema : 'Wandtafel';
+    return [{ id: 'live-sprint', live: true, icon: '🏃', title: 'Klassen-Sprint', fach: fach, thema: thema, description: 'Alle Kinder rechnen gleichzeitig 1×1 am iPad. Vorne an der Wandtafel sieht man live, wer wo auf der Rennbahn ist.', href: '#/sprint/' + T.cls }];
+  }
   // Reihenfolge der Spiele innerhalb eines Themas (nur Admin)
   function gameCmp(a, b) {
     return a.fach.localeCompare(b.fach, 'de') || a.thema.localeCompare(b.thema, 'de') || ((a.sort || 0) - (b.sort || 0)) || a.title.localeCompare(b.title, 'de');
@@ -687,7 +698,7 @@
   ACT.gGroup = function (el) { var k = el.dataset.k; if (T.closed[k]) delete T.closed[k]; else T.closed[k] = 1; LS.set('kn_closed', T.closed); T.render(); };
   ACT.gGroupAll = function (el) {
     T.closed = {};
-    if (el.dataset.v === '1') T.games.forEach(function (g) { T.closed[g.fach + '|' + g.thema] = 1; });
+    if (el.dataset.v === '1') T.games.concat(liveGames()).forEach(function (g) { T.closed[g.fach + '|' + g.thema] = 1; });
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
