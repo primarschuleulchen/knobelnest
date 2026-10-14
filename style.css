@@ -319,3 +319,16 @@ b,strong{font-weight:700}
 .big-tile.extra{border-style:dashed;box-shadow:0 8px 0 #9DB4CF}
 .zusatz{font-family:var(--b);font-weight:700;font-size:15px;background:#FFF3C4;color:#7A5B00;border:2px solid #E2B100;border-radius:999px;padding:2px 10px;white-space:nowrap}
 .pill.zusatz-t{background:#FFF3C4;color:#7A5B00}
+
+/* Fortschritt: Themen auf- und zuklappen */
+.ptable thead th{vertical-align:bottom}
+.ptable .pgrp{background:#F1F7FD;border-left:2px solid #D3E3F3;padding:6px 10px}
+.ptable .pgrp .gtoggle{font-size:15px;font-family:var(--h);color:var(--ink);text-align:left;white-space:nowrap}
+.ptable .pgrp .gtoggle small{font-family:var(--b);font-size:12px;color:var(--soft)}
+.ptable .pgame{font-size:13px;white-space:normal;min-width:120px;border-left:2px solid #E2EBF5}
+.ptable td.psum{min-width:120px;border-left:2px solid #E2EBF5;background:#FAFCFE}
+.ptable .pgrp .gtoggle{border-bottom:0;flex-wrap:nowrap;align-items:center;padding:2px 0;gap:6px}
+.ptable .pgrp .gtoggle .chev{font-size:24px;width:18px}
+.ptable .pfach{border-left:2px solid #C9DCF0;padding:6px 10px}
+.ptable .pfach .gtoggle{border-bottom:0;flex-wrap:nowrap;align-items:center;padding:2px 0;gap:6px;font-family:var(--h);font-size:17px;color:var(--ink);white-space:nowrap}
+.ptable .pfach .gtoggle .chev{font-size:24px;width:18px;color:var(--ink)}

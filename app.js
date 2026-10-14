@@ -689,8 +689,36 @@
       return '<p class="muted">Fortschritt wird geladen …</p>';
     }
     var c = T.cur();
-    var games = T.games.filter(function (g) { return T.rel.has(g.id); });
+    var allGames = T.games.filter(function (g) { return T.rel.has(g.id); });
+    var fachs = uniq(allGames.map(function (g) { return g.fach; }));
+    if (T.pfach && T.pfach !== 'alle' && fachs.indexOf(T.pfach) < 0) T.pfach = 'alle';
+    var games = allGames.filter(function (g) { return !T.pfach || T.pfach === 'alle' || g.fach === T.pfach; });
     var P = {}; T.progress.forEach(function (p) { P[p.kid_id + '|' + p.game_id] = p; });
+    T.pOpen = T.pOpen || LS.get('kn_popen') || {};
+    // Spalten-Gruppen: ein Thema = eine Gruppe; zugeklappt = eine Übersichts-Spalte
+    var groups = [], byG = {}, fgroups = [], byF = {};
+    games.forEach(function (g) {
+      var k = g.fach + '|' + g.thema; if (!byG[k]) { byG[k] = { key: k, fach: g.fach, thema: g.thema, list: [] }; groups.push(byG[k]); } byG[k].list.push(g);
+      if (!byF[g.fach]) { byF[g.fach] = { key: 'F:' + g.fach, fach: g.fach, list: [], groups: [] }; fgroups.push(byF[g.fach]); } byF[g.fach].list.push(g);
+    });
+    groups.forEach(function (gr) { byF[gr.fach].groups.push(gr); });
+    // Anzahl Spalten eines Fachs / Themas, je nach auf- oder zugeklappt
+    function tCols(gr) { return T.pOpen[gr.key] ? gr.list.length : 1; }
+    function fCols(f) { return T.pOpen[f.key] ? f.groups.reduce(function (n, gr) { return n + tCols(gr); }, 0) : 1; }
+    function tog(key, open, top, label) {
+      return '<button class="gtoggle" aria-expanded="' + open + '" data-a="pGroup" data-k="' + h(key) + '"><span class="chev" aria-hidden="true">›</span><span>' +
+        (top ? '<small>' + h(top) + '</small><br>' : '') + h(label) + '</span></button>';
+    }
+    function started(p) { return p && (p.plays || p.attempts || p.done != null); }
+    function sumCell(k, gr) {
+      var st = 0, n = 0, ok = 0;
+      gr.list.forEach(function (g) { var p = P[k.id + '|' + g.id]; if (started(p)) { n++; ok += p.correct || 0; var a = p.award || {}; st += typeof a.stars === 'number' ? a.stars : awardSum(a); } });
+      if (!n) return '<span class="small" style="color:#66788D">Noch nichts</span>';
+      return (st ? '<span class="small" style="font-weight:700;white-space:nowrap">⭐ ' + st + (st === 1 ? ' Stern' : ' Sterne') + '</span>' : '') +
+        '<span class="small" style="white-space:nowrap"><b>' + n + ' von ' + gr.list.length + '</b> Spielen</span>' +
+        (ok ? '<span class="small muted">' + ok + ' richtig</span>' : '') +
+        '<div class="bar"><i style="width:' + Math.round(n / gr.list.length * 100) + '%"></i></div>';
+    }
     function cell(p) {
       if (!p || (!p.plays && !p.attempts && p.done == null)) return { none: true, html: '<span class="small" style="color:#66788D">Noch nicht begonnen</span>' };
       var ls = lvlInfo(p), lines;
@@ -714,16 +742,36 @@
     var head = '<div class="row" style="justify-content:space-between;align-items:flex-end"><div class="stack" style="gap:6px"><h1 class="h1">Fortschritt Klasse ' + h(c.name) + '</h1>' +
       '<p class="muted">' + plural(T.kids.length, 'Kind', 'Kinder') + ' · ' + plural(games.length, 'Spiel', 'Spiele') + ' freigegeben</p></div>' +
       '<div class="row"><button class="btn" data-a="refreshProgress">' + ic(I.reset) + ' Aktualisieren</button><button class="btn" data-a="tab" data-t="kinder">Kinder verwalten</button></div></div>' +
+      '<div class="row" style="justify-content:space-between;align-items:center">' +
+      '<div class="chips" role="group" aria-label="Fach">' + ['alle'].concat(fachs).map(function (f) {
+        return '<button class="chip" aria-pressed="' + ((T.pfach || 'alle') === f) + '" data-a="pfach" data-f="' + h(f) + '">' + (f === 'alle' ? 'Alle Fächer' : h(f)) + '</button>'; }).join('') + '</div>' +
       '<div class="chips" role="group" aria-label="Filter">' + [['alle', 'Alle Kinder'], ['offen', 'Spiel noch nicht begonnen']].map(function (f) {
-        return '<button class="chip" aria-pressed="' + (T.pfilter === f[0]) + '" data-a="pfilter" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>';
+        return '<button class="chip" aria-pressed="' + (T.pfilter === f[0]) + '" data-a="pfilter" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><button class="btn sm" data-a="pOpenAll" data-v="0">Alles zuklappen</button><button class="btn sm" data-a="pOpenAll" data-v="f">Themen zeigen</button><button class="btn sm" data-a="pOpenAll" data-v="1">Alle Spiele zeigen</button></div></div>';
     if (!T.kids.length || !games.length) return head + '<div class="empty">' + (!T.kids.length ? 'Noch keine Kinder in dieser Klasse.' : 'Noch keine Spiele freigegeben.') + '</div>';
-    var table = '<div class="tablewrap"><table><thead><tr><th scope="col">Kind</th>' + games.map(function (g) {
-      return '<th scope="col">' + h(g.title) + '<br><span style="font-weight:400">' + h(g.fach) + '</span></th>'; }).join('') +
-      '<th scope="col">Zuletzt aktiv</th></tr></thead><tbody>' + kids.map(function (k) {
+    // Kopf mit drei Ebenen: Fach › Thema › Spiel
+    var r1 = '', r2 = '', r3 = '';
+    fgroups.forEach(function (f) {
+      var fo = !!T.pOpen[f.key];
+      r1 += '<th scope="colgroup" class="pfach" colspan="' + fCols(f) + '" style="background:' + fachColor(f.fach) + '">' + tog(f.key, fo, '', f.fach) + '</th>';
+      if (!fo) { r2 += '<th scope="col" class="pgame muted" rowspan="2">' + plural(f.list.length, 'Spiel', 'Spiele') + '</th>'; return; }
+      f.groups.forEach(function (gr) {
+        var to = !!T.pOpen[gr.key];
+        r2 += '<th scope="colgroup" class="pgrp" colspan="' + tCols(gr) + '">' + tog(gr.key, to, '', gr.thema) + '</th>';
+        r3 += to ? gr.list.map(function (g) { return '<th scope="col" class="pgame">' + h(g.title) + '</th>'; }).join('') :
+          '<th scope="col" class="pgame muted">' + plural(gr.list.length, 'Spiel', 'Spiele') + '</th>';
+      });
+    });
+    var table = '<div class="tablewrap"><table class="ptable"><thead><tr><th scope="col" rowspan="3">Kind</th>' + r1 + '<th scope="col" rowspan="3">Zuletzt aktiv</th></tr>' +
+      '<tr>' + r2 + '</tr><tr>' + r3 + '</tr></thead><tbody>' + kids.map(function (k) {
         var last = null;
-        var cells = games.map(function (g) {
-          var p = P[k.id + '|' + g.id]; if (p && p.last_played && (!last || p.last_played > last)) last = p.last_played;
-          return '<td style="min-width:190px"><div class="stack" style="gap:4px">' + cell(p).html + '</div></td>';
+        games.forEach(function (g) { var p = P[k.id + '|' + g.id]; if (p && p.last_played && (!last || p.last_played > last)) last = p.last_played; });
+        var cells = fgroups.map(function (f) {
+          if (!T.pOpen[f.key]) return '<td class="psum"><div class="stack" style="gap:3px">' + sumCell(k, f) + '</div></td>';
+          return f.groups.map(function (gr) {
+            if (!T.pOpen[gr.key]) return '<td class="psum"><div class="stack" style="gap:3px">' + sumCell(k, gr) + '</div></td>';
+            return gr.list.map(function (g) { return '<td style="min-width:180px"><div class="stack" style="gap:4px">' + cell(P[k.id + '|' + g.id]).html + '</div></td>'; }).join('');
+          }).join('');
         }).join('');
         return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
           kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
@@ -732,6 +780,14 @@
     return head + table + '<p class="muted small">Spiele, die dafür vorbereitet sind, melden richtige Antworten oder den Spielstand. Bei anderen Spielen sieht man, wie oft sie geöffnet wurden. Gespeichert werden nur Vorname, Fortschritt und Datum.</p>';
   };
   ACT.pfilter = function (el) { T.pfilter = el.dataset.f; T.render(); };
+  ACT.pfach = function (el) { T.pfach = el.dataset.f; T.render(); };
+  ACT.pGroup = function (el) { var k = el.dataset.k; T.pOpen = T.pOpen || {}; if (T.pOpen[k]) delete T.pOpen[k]; else T.pOpen[k] = 1; LS.set('kn_popen', T.pOpen); T.render(); };
+  ACT.pOpenAll = function (el) {
+    T.pOpen = {};
+    if (el.dataset.v === '1') T.games.forEach(function (g) { if (!T.pfach || T.pfach === 'alle' || g.fach === T.pfach) { T.pOpen['F:' + g.fach] = 1; T.pOpen[g.fach + '|' + g.thema] = 1; } });
+    if (el.dataset.v === 'f') T.games.forEach(function (g) { T.pOpen['F:' + g.fach] = 1; });
+    LS.set('kn_popen', T.pOpen); T.render();
+  };
   ACT.refreshProgress = function () { T.progress = null; T.render(); };
 
   // ---------- Arbeitsstand-Tafel ----------
