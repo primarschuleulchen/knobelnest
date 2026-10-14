@@ -248,12 +248,12 @@
   }
   function closePlayer() {
     if (!PL) return; var x = PL; PL = null;
-    if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
+    try { if (document.fullscreenElement) document.exitFullscreen(); else if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (e) {}
     x.el.remove(); document.body.style.overflow = '';
     if (x.onClose) x.onClose();
   }
   ACT.closePlayer = function () { closePlayer(); };
-  ACT.playerFull = function () { if (PL && PL.el.requestFullscreen) PL.el.requestFullscreen(); };
+  ACT.playerFull = function () { if (!PL) return; var e = PL.el; try { (e.requestFullscreen || e.webkitRequestFullscreen).call(e); } catch (x) {} };
   window.addEventListener('message', function (e) {
     if (!PL || e.source !== PL.frame.contentWindow) return;
     var d = e.data; if (!d || typeof d !== 'object') return;
@@ -532,7 +532,8 @@
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
-            '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button></div></div></article>';
+            (/wandtafel/i.test(g.stufe || '') ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
+            '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') + '</div></div></article>';
         }).join('') + '</div>');
     });
     return out + '</section>';
@@ -597,6 +598,13 @@
     T.render();
     try { await DB.setRelease(T.cls, id, on); }
     catch (e) { if (on) T.rel.delete(id); else T.rel.add(id); T.render(); throw e; }
+  };
+  // Spiele für die Wandtafel: direkt im Vollbild starten (Lehrperson spielt mit der Klasse)
+  ACT.playBoard = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], d = document.documentElement;
+    try { (d.requestFullscreen || d.webkitRequestFullscreen || function () {}).call(d); } catch (e) {}
+    toast('Spiel wird geladen …');
+    openPlayer(g.title, await DB.gameHtml(g.id));
   };
   ACT.preview = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
