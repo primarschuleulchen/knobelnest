@@ -86,6 +86,9 @@
   var TINTS = ['#D5EBC9', '#E1E8F8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#E4F5EC'];
   var FACH_SHORT = { 'Mathematik': 'Mathe' };
   function fachShort(f) { return FACH_SHORT[f] || f; }
+  // Knopf-Farbe pro Fach (dunklerer Ton der Fachfarbe); sonst das normale Blau
+  var FACH_BTN = { 'Englisch': '#CC5046' };
+  function fachBtn(f) { return FACH_BTN[f] ? 'background:' + FACH_BTN[f] + ';' : ''; }
   function fachColor(f) { return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
   var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#D3F1E4', '#E3D5F0', '#F3E2A6'];
   function kidColor(name) { return KID_TINTS[hash(name) % KID_TINTS.length]; }
@@ -198,6 +201,7 @@
     // Sterne pro Level lesen: knobelnest.sterne('Mittel · Ablesen') -> { have, max }; bei Änderung kommt das Ereignis 'knobelnest-sterne'
     var AW = aw && typeof aw === 'object' ? aw : { lv: {}, max: 0 };
     window.knobelnest.sterne = function (k) { return { have: +((AW.lv || {})[k]) || 0, max: +AW.max || 0 }; };
+    window.knobelnest.alle = function () { return { lv: AW.lv || {}, max: +AW.max || 0 }; };
     window.addEventListener('message', function (e) {
       if (e.source !== parent || !e.data || !e.data.knobelnestAward) return;
       AW = e.data.knobelnestAward;
@@ -1126,7 +1130,7 @@
         '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
         (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') +
         (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span style="font-size:17px">' + h(label) + '</span>' +
-        '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
+        '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px;' + fachBtn(g.fach) + '" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
     }).join('') + '</div>', 'Zurück');
   };
   K.view_tafel = function () {
