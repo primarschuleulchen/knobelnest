@@ -400,3 +400,7 @@ b,strong{font-weight:700}
 .game-top:has(.pill){padding-left:72px}
 .game-top .pill{line-height:1.4}
 .tile b{word-break:normal}.tiles .tile .sw{width:44px;height:44px}
+.chip.mode{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:6px 18px;border-radius:16px;line-height:1.2;min-height:56px}
+.chip.mode small{font-weight:400;font-size:14px;opacity:.75}
+.kspr-task .gap{display:inline-block;min-width:1.3em;padding:0 .15em;border:3px dashed var(--btn);border-radius:.25em;color:var(--btn);line-height:1.05}
+.kspr-ans.no b{color:#C0392B}

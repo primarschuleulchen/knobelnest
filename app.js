@@ -341,11 +341,22 @@
   // Klassen-Sprint: Lehrperson zeigt das Rennen, alle Kinder rechnen am iPad
   // ===================================================================
   var SPR_GOALS = [10, 15, 20, 30];
-  function sprTask(rows, last) {
-    var a, b, key, g = 0;
-    do { a = rows[Math.floor(Math.random() * rows.length)]; b = 1 + Math.floor(Math.random() * 10); if (Math.random() < .5) { var t = a; a = b; b = t; } key = a + 'x' + b; } while (key === last && g++ < 20);
-    return { a: a, b: b, key: key };
+  var SPR_MODES = [['mal', 'Malrechnungen', '3 · 7 = ?'], ['luecke', 'Fehlende Zahl', '3 · ? = 21'], ['div', 'Division', '21 : 3 = ?'], ['mix', 'Gemischt', 'alles durcheinander']];
+  function sprTask(rows, last, mode) {
+    var a, b, p, m, key, q, ans, g = 0, gap = '<span class="gap">?</span>';
+    rows = rows && rows.length ? rows : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    do {
+      m = mode === 'mix' ? ['mal', 'luecke', 'div'][Math.floor(Math.random() * 3)] : (mode || 'mal');
+      a = rows[Math.floor(Math.random() * rows.length)]; b = 1 + Math.floor(Math.random() * 10); p = a * b;
+      if (m === 'div') { q = p + ' : ' + a + ' = ' + gap; ans = b; key = 'd' + p + ':' + a; }
+      else if (m === 'luecke') {
+        if (Math.random() < .5) { q = a + ' · ' + gap + ' = ' + p; } else { q = gap + ' · ' + a + ' = ' + p; }
+        ans = b; key = 'l' + a + 'x' + b;
+      } else { if (Math.random() < .5) { q = a + ' · ' + b + ' = ' + gap; } else { q = b + ' · ' + a + ' = ' + gap; } ans = p; key = 'm' + a + 'x' + b; }
+    } while (key === last && g++ < 20);
+    return { q: q, ans: ans, full: q.replace(gap, '<b>' + ans + '</b>'), key: key };
   }
+  function sprModeName(m) { var x = SPR_MODES.filter(function (y) { return y[0] === (m || 'mal'); })[0]; return x ? x[1] : 'Malrechnungen'; }
   function medal(n) { return n === 1 ? '🥇' : n === 2 ? '🥈' : n === 3 ? '🥉' : n + '.'; }
   var S = {
     start: async function (cid) {
@@ -384,8 +395,10 @@
       var body = '';
       if (!r) {
         body = '<div class="spr-setup card stack"><p class="lead">Alle Kinder rechnen gleichzeitig an ihrem iPad. Jede richtige Antwort bringt ihren Läufer einen Schritt weiter. Hier vorne sieht die ganze Klasse das Rennen.</p>' +
-          '<div><p class="h3">Welche Reihen?</p><div class="chips">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) {
-            return '<button class="chip" aria-pressed="' + (S.setup.rows.indexOf(n) >= 0) + '" data-a="sRow" data-n="' + n + '">' + n + '</button>'; }).join('') + '</div></div>' +
+          '<div><p class="h3">Was wird gerechnet?</p><div class="chips">' + SPR_MODES.map(function (m) {
+            return '<button class="chip mode" aria-pressed="' + ((S.setup.mode || 'mal') === m[0]) + '" data-a="sMode" data-m="' + m[0] + '"><b>' + m[1] + '</b><small>' + m[2] + '</small></button>'; }).join('') + '</div></div>' +
+          '<div><p class="h3">Welche Reihen?</p><div class="chips"><button class="chip" aria-pressed="' + (S.setup.rows.length === 10) + '" data-a="sRow" data-n="all">Alle Reihen</button>' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) {
+            return '<button class="chip" aria-pressed="' + (S.setup.rows.length < 10 && S.setup.rows.indexOf(n) >= 0) + '" data-a="sRow" data-n="' + n + '">' + n + '</button>'; }).join('') + '</div></div>' +
           '<div><p class="h3">Länge der Strecke</p><div class="chips">' + SPR_GOALS.map(function (n) {
             return '<button class="chip" aria-pressed="' + (S.setup.goal === n) + '" data-a="sGoal" data-n="' + n + '">' + n + ' Aufgaben</button>'; }).join('') + '</div></div>' +
           '<button class="btn primary big" data-a="sOpen"' + (S.setup.rows.length ? '' : ' disabled') + '>Sprint öffnen</button></div>';
@@ -397,7 +410,8 @@
       var place = {}; fin.forEach(function (x, i) { place[x.kid_id] = i + 1; });
       if (r.status === 'wait') {
         body = '<div class="spr-info">Kinder: einloggen und auf <b>«🏃 Sprint»</b> tippen · Code <b>' + h(cls.code || '') + '</b> · ' +
-          runs.length + ' von ' + S.kids.length + ' Kindern sind bereit</div>';
+          runs.length + ' von ' + S.kids.length + ' Kindern sind bereit · ' + sprModeName(r.settings && r.settings.mode) + ', ' +
+          (r.settings && r.settings.rows && r.settings.rows.length < 10 ? 'Reihen ' + r.settings.rows.join(', ') : 'alle Reihen') + ', ' + goal + ' Aufgaben</div>';
       }
       var list = r.status === 'wait' ? S.kids.map(function (k) { return { kid_id: k.id, pos: 0, wait: !byKid[k.id] }; }) : runs;
       list.sort(function (a, b) { return (kidName[a.kid_id] || '').localeCompare(kidName[b.kid_id] || ''); });
@@ -423,9 +437,13 @@
       paint('<div class="spr">' + head + body + '</div>');
     }
   };
-  ACT.sRow = function (el) { var n = +el.dataset.n, i = S.setup.rows.indexOf(n); if (i >= 0) S.setup.rows.splice(i, 1); else S.setup.rows.push(n); S.setup.rows.sort(function (a, b) { return a - b; }); LS.set('kn_sprint', S.setup); S.render(); };
+  ACT.sMode = function (el) { S.setup.mode = el.dataset.m; LS.set('kn_sprint', S.setup); S.render(); };
+  ACT.sRow = function (el) {
+    if (el.dataset.n === 'all') { S.setup.rows = S.setup.rows.length === 10 ? [] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; LS.set('kn_sprint', S.setup); return S.render(); }
+    var n = +el.dataset.n; if (S.setup.rows.length === 10) S.setup.rows = [];
+    var i = S.setup.rows.indexOf(n); if (i >= 0) S.setup.rows.splice(i, 1); else S.setup.rows.push(n); S.setup.rows.sort(function (a, b) { return a - b; }); LS.set('kn_sprint', S.setup); S.render(); };
   ACT.sGoal = function (el) { S.setup.goal = +el.dataset.n; LS.set('kn_sprint', S.setup); S.render(); };
-  ACT.sOpen = async function () { S.race = await DB.raceCreate(S.cid, { rows: S.setup.rows, goal: S.setup.goal }); S.runs = []; S.render(); };
+  ACT.sOpen = async function () { S.race = await DB.raceCreate(S.cid, { rows: S.setup.rows, goal: S.setup.goal, mode: S.setup.mode || 'mal' }); S.runs = []; S.render(); };
   ACT.sGo = async function () { var r = await DB.raceStart(S.race.id); S.offset = Date.parse(r.now) - Date.now(); S.race.status = 'run'; S.race.starts_at = r.starts_at; S.render(); };
   ACT.sEnd = async function () { await DB.raceEnd(S.race.id); S.race.status = 'done'; await S.poll(); };
   ACT.sCancel = async function () { await DB.raceEnd(S.race.id); S.race = null; S.runs = []; S.render(); };
@@ -1627,9 +1645,9 @@
       if (!R.cd) R.cd = setInterval(function () { if (K.step !== 'race' || UI.view !== 'kid' || K.racePhase() !== 'count') { clearInterval(R.cd); R.cd = null; if (UI.view !== 'kid') return; } K.render(); }, 250);
       body = '<div class="kid-card"><div class="kspr-count">' + Math.max(1, left) + '</div><p class="lead">Gleich geht\'s los!</p></div>';
     } else if (ph === 'run') {
-      if (!R.task) R.task = sprTask(rows, null);
+      if (!R.task) R.task = sprTask(rows, null, race.settings && race.settings.mode);
       var t = R.task;
-      body = '<div class="kspr">' + track + '<div class="kspr-task">' + t.a + ' · ' + t.b + ' =</div><div class="kspr-ans' + (R.state ? ' ' + R.state : '') + '">' + (R.input ? h(R.input) : (R.msg || '?')) + '</div>' +
+      body = '<div class="kspr">' + track + '<div class="kspr-task">' + t.q + '</div><div class="kspr-ans' + (R.state ? ' ' + R.state : '') + '">' + (R.state === 'no' ? R.input : R.input ? h(R.input) : (R.msg || '?')) + '</div>' +
         '<div class="kspr-pad">' + ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'del', '0', 'ok'].map(function (k) {
           return '<button class="key' + (k === 'ok' ? ' ok' : '') + '" data-a="kRk" data-k="' + k + '"' + (R.lock ? ' disabled' : '') + '>' + (k === 'del' ? '⌫' : k === 'ok' ? '✓' : k) + '</button>'; }).join('') + '</div></div>';
     } else if (ph === 'fin') {
@@ -1652,14 +1670,14 @@
   });
   K.raceCheck = function () {
     var R = K.R; if (!R.input) return;
-    var race = R.r.race, rows = race.settings.rows || [2, 3, 4, 5, 6, 7, 8, 9, 10], goal = race.settings.goal || 10, t = R.task, ok = +R.input === t.a * t.b;
+    var race = R.r.race, rows = race.settings.rows || [2, 3, 4, 5, 6, 7, 8, 9, 10], goal = race.settings.goal || 10, t = R.task, ok = +R.input === t.ans;
     var run = R.r.run || {}; if (R.pos == null) R.pos = run.pos || 0;
-    if (ok) { R.pos = Math.min(goal, R.pos + 1); R.state = 'ok'; } else { R.state = 'no'; R.msg = ''; R.input = t.a + ' · ' + t.b + ' = ' + (t.a * t.b); }
+    if (ok) { R.pos = Math.min(goal, R.pos + 1); R.state = 'ok'; } else { R.state = 'no'; R.msg = ''; R.input = '<span>' + t.full + '</span>'; }
     R.lock = true; K.render();
     DB.kidRaceStep(K.sess.token, race.id, ok).then(function (res) {
       if (res && res.ok) { R.pos = res.pos; if (res.finished) { R.finished = true; R.place = res.place; } K.render(); }
     }).catch(function () {});
-    setTimeout(function () { R.lock = false; R.state = ''; R.input = ''; R.task = sprTask(rows, t.key); if (R.pos >= goal) R.finished = true; K.render(); }, ok ? 350 : 1300);
+    setTimeout(function () { R.lock = false; R.state = ''; R.input = ''; R.task = sprTask(rows, t.key, race.settings.mode); if (R.pos >= goal) R.finished = true; K.render(); }, ok ? 350 : 1300);
   };
 
   // ===================================================================
