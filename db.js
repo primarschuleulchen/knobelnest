@@ -114,6 +114,23 @@
     kidSave: async function (token, gid, save, award) {
       return ok(await sb.rpc('kid_save', { p_token: token, p_game: gid, p_save: save == null ? null : save, p_award: award == null ? null : award }));
     },
+    // ---------- Klassen-Sprint ----------
+    raceLatest: async function (cid) {
+      var rows = ok(await sb.from('races').select('id,status,settings,starts_at,created_at').eq('class_id', cid)
+        .gt('created_at', new Date(Date.now() - 3 * 3600 * 1000).toISOString()).order('created_at', { ascending: false }).limit(1));
+      return rows[0] || null;
+    },
+    raceCreate: async function (cid, settings) {
+      await sb.from('races').update({ status: 'done' }).eq('class_id', cid).in('status', ['wait', 'run']);
+      return ok(await sb.from('races').insert({ class_id: cid, settings: settings }).select('id,status,settings,starts_at,created_at').single());
+    },
+    raceStart: async function (id) { return ok(await sb.rpc('race_start', { p_race: id })); },
+    raceEnd: async function (id) { ok(await sb.from('races').update({ status: 'done' }).eq('id', id)); },
+    raceGet: async function (id) { return ok(await sb.from('races').select('id,status,settings,starts_at').eq('id', id).single()); },
+    raceRuns: async function (id) { return ok(await sb.from('race_runs').select('kid_id,pos,correct,wrong,finished_at').eq('race_id', id)); },
+    kidRace: async function (token) { return ok(await sb.rpc('kid_race', { p_token: token })); },
+    kidRaceJoin: async function (token, race) { return ok(await sb.rpc('kid_race_join', { p_token: token, p_race: race })); },
+    kidRaceStep: async function (token, race, isOk) { return ok(await sb.rpc('kid_race_step', { p_token: token, p_race: race, p_ok: !!isOk })); },
     tafelGet: async function (token) { return ok(await sb.rpc('tafel_get', { p_token: token })); },
     tafelSet: async function (token, subject, col) { return ok(await sb.rpc('tafel_set', { p_token: token, p_subject: subject, p_col: col })); }
   };

@@ -89,7 +89,8 @@
   // Knopf-Farbe pro Fach (dunklerer Ton der Fachfarbe); sonst das normale Blau
   var FACH_BTN = { 'Englisch': '#CC5046' };
   function fachBtn(f) { return FACH_BTN[f] ? 'background:' + FACH_BTN[f] + ';' : ''; }
-  function fachColor(f) { return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
+  function isWall(g) { return /wandtafel/i.test((g.stufe || '') + ' ' + (g.fach || '') + ' ' + (g.thema || '')); }
+  function fachColor(f) { if (/wandtafel/i.test(f || '')) return '#E2E5EA'; return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
   var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#D3F1E4', '#E3D5F0', '#F3E2A6'];
   function kidColor(name) { return KID_TINTS[hash(name) % KID_TINTS.length]; }
   var PALETTE = [['#2F5E9E', 'Blau'], ['#1E6F7A', 'Petrol'], ['#2E7D4F', 'Grün'], ['#C46A1C', 'Orange'], ['#C0473C', 'Rot'],
@@ -272,6 +273,8 @@
     if (hs.indexOf('#/klasse') === 0) return K.start();
     var m = hs.match(/^#\/wandtafel\/([0-9a-f-]{36})/);
     if (m) return W.start(m[1]);
+    var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
+    if (ms) return S.start(ms[1]);
     return T.start();
   }
 
@@ -332,6 +335,101 @@
     if (!kid) out += '<p style="flex:none;margin:0;color:#3D5A7A;font-size:16px">' + (missing.length ? 'Noch nicht auf der Tafel: ' + h(missing.join(', ')) : 'Alle Kinder stehen auf der Tafel.') + '</p>';
     return '<div class="board' + (kid ? '' : ' wall') + '"><div class="board-in">' + out + '</div></div>';
   }
+
+
+  // ===================================================================
+  // Klassen-Sprint: Lehrperson zeigt das Rennen, alle Kinder rechnen am iPad
+  // ===================================================================
+  var SPR_GOALS = [10, 15, 20, 30];
+  function sprTask(rows, last) {
+    var a, b, key, g = 0;
+    do { a = rows[Math.floor(Math.random() * rows.length)]; b = 1 + Math.floor(Math.random() * 10); if (Math.random() < .5) { var t = a; a = b; b = t; } key = a + 'x' + b; } while (key === last && g++ < 20);
+    return { a: a, b: b, key: key };
+  }
+  function medal(n) { return n === 1 ? '🥇' : n === 2 ? '🥈' : n === 3 ? '🥉' : n + '.'; }
+  var S = {
+    start: async function (cid) {
+      UI.view = 'sprint';
+      var sess = await DB.session(); if (!sess) { location.hash = '#/'; return; }
+      S.cid = cid; S.race = null; S.runs = []; S.setup = S.setup || LS.get('kn_sprint') || { rows: [2, 3, 4, 5, 6, 7, 8, 9, 10], goal: 10 };
+      app.innerHTML = '<p class="boot">Sprint wird geladen …</p>';
+      try {
+        var cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0];
+        S.cls = cls; S.kids = await DB.listKids(cid);
+        var r = await DB.raceLatest(cid); S.race = r && r.status !== 'done' ? r : null;
+      } catch (e) { paint('<div class="main"><div class="card stack"><h2>Sprint nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      S.offset = 0; S.render(); S.poll();
+      every(1000, function () { if (!document.hidden) S.poll(); });
+      every(250, function () { if (S.race && S.race.status === 'run' && S.countLeft() > -1) S.render(); });
+    },
+    poll: async function () {
+      if (!S.race || S.busy) return; S.busy = true;
+      try {
+        var r = await DB.raceGet(S.race.id); S.race = r;
+        S.runs = await DB.raceRuns(r.id);
+        // alle fertig -> Rangliste
+        if (r.status === 'run' && S.runs.length && S.runs.every(function (x) { return x.finished_at; })) { await DB.raceEnd(r.id); S.race.status = 'done'; }
+      } catch (e) { console.warn(e); }
+      S.busy = false; S.render();
+    },
+    countLeft: function () { if (!S.race || !S.race.starts_at) return -1; return Math.ceil((Date.parse(S.race.starts_at) - S.offset - Date.now()) / 1000); },
+    render: function () {
+      var cls = S.cls || { name: '' }, r = S.race, kidName = {}; (S.kids || []).forEach(function (k) { kidName[k.id] = k.name; });
+      var head = '<div class="spr-head"><div><span class="kick">Klassen-Sprint · Klasse ' + h(cls.name) + '</span><h1>' +
+        (!r ? 'Neuer Sprint' : r.status === 'wait' ? 'Auf die Plätze …' : r.status === 'run' ? 'Los geht\'s!' : 'Zieleinlauf') + '</h1></div><div class="row">' +
+        (r && r.status === 'wait' ? '<button class="btn primary big" data-a="sGo"' + (S.runs.length ? '' : ' disabled') + '>▶ Start</button><button class="btn" data-a="sCancel">Abbrechen</button>' : '') +
+        (r && r.status === 'run' ? '<button class="btn" data-a="sEnd">Beenden</button>' : '') +
+        (r && r.status === 'done' ? '<button class="btn primary" data-a="sNew">Neuer Sprint</button>' : '') +
+        '<button class="btn" data-a="wallFull">Vollbild</button><a class="btn" href="#/">Zum Portal</a></div></div>';
+      var body = '';
+      if (!r) {
+        body = '<div class="spr-setup card stack"><p class="lead">Alle Kinder rechnen gleichzeitig an ihrem iPad. Jede richtige Antwort bringt ihren Läufer einen Schritt weiter. Hier vorne sieht die ganze Klasse das Rennen.</p>' +
+          '<div><p class="h3">Welche Reihen?</p><div class="chips">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) {
+            return '<button class="chip" aria-pressed="' + (S.setup.rows.indexOf(n) >= 0) + '" data-a="sRow" data-n="' + n + '">' + n + '</button>'; }).join('') + '</div></div>' +
+          '<div><p class="h3">Länge der Strecke</p><div class="chips">' + SPR_GOALS.map(function (n) {
+            return '<button class="chip" aria-pressed="' + (S.setup.goal === n) + '" data-a="sGoal" data-n="' + n + '">' + n + ' Aufgaben</button>'; }).join('') + '</div></div>' +
+          '<button class="btn primary big" data-a="sOpen"' + (S.setup.rows.length ? '' : ' disabled') + '>Sprint öffnen</button></div>';
+        return paint('<div class="spr">' + head + body + '</div>');
+      }
+      var goal = (r.settings && r.settings.goal) || 10, runs = S.runs.slice(), byKid = {};
+      runs.forEach(function (x) { byKid[x.kid_id] = x; });
+      var fin = runs.filter(function (x) { return x.finished_at; }).sort(function (a, b) { return a.finished_at < b.finished_at ? -1 : 1; });
+      var place = {}; fin.forEach(function (x, i) { place[x.kid_id] = i + 1; });
+      if (r.status === 'wait') {
+        body = '<div class="spr-info">Kinder: einloggen und auf <b>«🏃 Sprint»</b> tippen · Code <b>' + h(cls.code || '') + '</b> · ' +
+          runs.length + ' von ' + S.kids.length + ' Kindern sind bereit</div>';
+      }
+      var list = r.status === 'wait' ? S.kids.map(function (k) { return { kid_id: k.id, pos: 0, wait: !byKid[k.id] }; }) : runs;
+      list.sort(function (a, b) { return (kidName[a.kid_id] || '').localeCompare(kidName[b.kid_id] || ''); });
+      if (r.status === 'done') {
+        var rest = runs.filter(function (x) { return !x.finished_at; }).sort(function (a, b) { return b.pos - a.pos; });
+        var order = fin.concat(rest);
+        body = '<div class="spr-result"><div class="podium">' + [1, 0, 2].map(function (i) {
+          var x = order[i]; if (!x) return '<div class="pod p' + (i + 1) + ' empty"></div>';
+          return '<div class="pod p' + (i + 1) + '"><span class="m">' + medal(i + 1) + '</span><b>' + h(kidName[x.kid_id] || '') + '</b><span>' + (x.finished_at ? 'im Ziel' : x.pos + ' von ' + goal) + '</span></div>';
+        }).join('') + '</div><ol class="ranking" start="4">' + order.slice(3).map(function (x) {
+          return '<li><b>' + h(kidName[x.kid_id] || '') + '</b> · ' + (x.finished_at ? 'im Ziel' : x.pos + ' von ' + goal) + '</li>'; }).join('') + '</ol></div>';
+        return paint('<div class="spr">' + head + body + '</div>');
+      }
+      var n = Math.max(1, list.length);
+      body += '<div class="lanes" style="--n:' + n + '">' + list.map(function (x, i) {
+        var nm = kidName[x.kid_id] || '', p = Math.min(1, (x.pos || 0) / goal), pl = place[x.kid_id];
+        return '<div class="lane' + (x.wait ? ' waiting' : '') + '"><span class="lname">' + h(nm) + '</span><div class="ltrack"><span class="lfinish"></span>' +
+          '<span class="runner" style="left:calc(' + (p * 100) + '% - ' + (p * 2.4) + 'em);background:' + kidColor(nm) + '">' + h(nm.charAt(0)) + '</span></div>' +
+          (pl ? '<span class="lplace">' + medal(pl) + '</span>' : '<span class="lscore">' + (x.wait ? '…' : (x.pos || 0) + '/' + goal) + '</span>') + '</div>';
+      }).join('') + '</div>';
+      var left = S.countLeft();
+      if (r.status === 'run' && left > 0) body += '<div class="spr-count">' + left + '</div>';
+      paint('<div class="spr">' + head + body + '</div>');
+    }
+  };
+  ACT.sRow = function (el) { var n = +el.dataset.n, i = S.setup.rows.indexOf(n); if (i >= 0) S.setup.rows.splice(i, 1); else S.setup.rows.push(n); S.setup.rows.sort(function (a, b) { return a - b; }); LS.set('kn_sprint', S.setup); S.render(); };
+  ACT.sGoal = function (el) { S.setup.goal = +el.dataset.n; LS.set('kn_sprint', S.setup); S.render(); };
+  ACT.sOpen = async function () { S.race = await DB.raceCreate(S.cid, { rows: S.setup.rows, goal: S.setup.goal }); S.runs = []; S.render(); };
+  ACT.sGo = async function () { var r = await DB.raceStart(S.race.id); S.offset = Date.parse(r.now) - Date.now(); S.race.status = 'run'; S.race.starts_at = r.starts_at; S.render(); };
+  ACT.sEnd = async function () { await DB.raceEnd(S.race.id); S.race.status = 'done'; await S.poll(); };
+  ACT.sCancel = async function () { await DB.raceEnd(S.race.id); S.race = null; S.runs = []; S.render(); };
+  ACT.sNew = function () { S.race = null; S.runs = []; S.render(); };
 
   // ===================================================================
   // Wandtafel (Lehrperson, für den Beamer)
@@ -488,7 +586,8 @@
       '<p>Die Kinder öffnen <b>' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
-      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a></div></div></section>';
+      '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
+      '<a class="btn primary" href="#/sprint/' + T.cls + '">🏃 Klassen-Sprint</a></div></div></section>';
     if (!games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -498,7 +597,7 @@
         return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
       })).map(function (t) {
         return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
-          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
+          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 14 : 16) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
       (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
@@ -532,7 +631,7 @@
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
-            (/wandtafel/i.test(g.stufe || '') ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
+            (isWall(g) ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
             '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') + '</div></div></article>';
         }).join('') + '</div>');
     });
@@ -952,6 +1051,11 @@
       '<div class="row"><button class="btn primary">' + (F.id ? 'Änderungen speichern' : 'Spiel speichern') + '</button>' + (F.id ? '<button type="button" class="btn" data-a="gCancel">Abbrechen</button>' : '') + '</div>' +
       '<p class="muted small">Tipp für Fortschritt: Ein Spiel kann <code>knobelnest.answer(true/false)</code> oder <code>knobelnest.progress(erledigt, total)</code> aufrufen. Spiele aus dem Spielheft melden sich automatisch.</p></form>';
     var sel = A.sel || (A.sel = {}), nSel = Object.keys(sel).length;
+    var afs = uniq(T.games.map(function (g) { return g.fach; })); if (afs.indexOf(A.fach) < 0) A.fach = 'alle';
+    var FG = adminGames();
+    var fchips = afs.length > 1 ? '<div class="chips" role="group" aria-label="Nach Fach filtern">' + ['alle'].concat(afs).map(function (f) {
+      var n = f === 'alle' ? T.games.length : T.games.filter(function (g) { return g.fach === f; }).length;
+      return '<button class="chip" aria-pressed="' + (A.fach === f) + '" data-a="aFach" data-f="' + h(f) + '">' + (f === 'alle' ? 'Alle Fächer' : h(f)) + ' · ' + n + '</button>'; }).join('') + '</div>' : '';
     var others = (A.teachers || []).filter(function (t) { return !t.is_admin; });
     var bulk = T.games.length ? '<div class="card row" style="padding:14px 16px;position:sticky;top:110px;z-index:3' + (nSel ? ';border-color:var(--green);box-shadow:0 4px 0 var(--green)' : '') + '">' +
       '<b class="grow">' + (nSel ? plural(nSel, 'Spiel', 'Spiele') + ' ausgewählt' : 'Spiele anhaken, um sie einer Lehrperson auf einmal zu geben') + '</b>' +
@@ -959,8 +1063,8 @@
         '<option value="">Lehrperson wählen …</option>' + others.map(function (t) { return '<option value="' + t.id + '"' + (A.bulkT === t.id ? ' selected' : '') + '>' + h(t.name || t.email) + '</option>'; }).join('') + '</select>' +
         '<button class="btn sm primary" data-a="bulkGo" data-on="1">Zuteilen</button><button class="btn sm" data-a="bulkGo" data-on="0">Wegnehmen</button>' +
         '<button class="btn sm" data-a="bulkClear">Auswahl aufheben</button>' : '') + '</div>' : '';
-    var allSel = T.games.length && nSel === T.games.length;
-    var glist = T.games.length ? bulk + '<div class="tablewrap"><table><thead><tr><th style="width:44px"><input type="checkbox" aria-label="Alle Spiele auswählen" style="width:22px;height:22px" data-change="gSelAll"' + (allSel ? ' checked' : '') + '></th><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + T.games.map(function (g) {
+    var allSel = FG.length && FG.every(function (g) { return sel[g.id]; });
+    var glist = T.games.length ? bulk + '<div class="tablewrap"><table><thead><tr><th style="width:44px"><input type="checkbox" aria-label="Alle Spiele auswählen" style="width:22px;height:22px" data-change="gSelAll"' + (allSel ? ' checked' : '') + '></th><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + FG.map(function (g) {
       var key = 'game:' + g.id;
       return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
         '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
@@ -977,10 +1081,10 @@
         (open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
           var groups = [], by = {};
-          T.games.forEach(function (g) { var k = g.fach + ' › ' + g.thema; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
+          FG.forEach(function (g) { var k = g.fach + ' › ' + g.thema; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
           return '<div class="stack" style="gap:14px;padding:12px 0 6px">' +
-            '<div class="row"><button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(T.games) + '">Alle Spiele geben</button>' +
-            '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(T.games) + '">Alle wegnehmen</button></div>' +
+            '<div class="row"><button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle Spiele geben' : 'Alle ' + h(A.fach) + '-Spiele geben') + '</button>' +
+            '<button class="btn sm" data-a="tgBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(FG) + '">' + (A.fach === 'alle' ? 'Alle wegnehmen' : 'Alle ' + h(A.fach) + '-Spiele wegnehmen') + '</button></div>' +
             '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">' + groups.map(function (k) {
               var list = by[k], free = list.filter(function (g) { return !g.for_all; });
               var allOn = free.length && free.every(function (g) { return mine.indexOf(g.id) >= 0; });
@@ -1002,8 +1106,8 @@
       '<div class="cols2"><div class="wide">' + pack + form + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
       '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
-      '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + glist + '</section>' +
-      '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + teachers + '</section>';
+      '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
+      '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur Spiele aus diesem Fach gezeigt:</p>' + fchips : '') + teachers + '</section>';
   };
   ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
   ACT.gAll = function () { T.admin.form.for_all = !T.admin.form.for_all; T.render(); };
@@ -1067,7 +1171,9 @@
     await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
   };
   ACT.gSel = function (el) { var s = T.admin.sel; if (el.checked) s[el.dataset.id] = 1; else delete s[el.dataset.id]; T.render(); };
-  ACT.gSelAll = function (el) { T.admin.sel = {}; if (el.checked) T.games.forEach(function (g) { T.admin.sel[g.id] = 1; }); T.render(); };
+  function adminGames() { var f = T.admin.fach || 'alle'; return T.games.filter(function (g) { return f === 'alle' || g.fach === f; }); }
+  ACT.aFach = function (el) { T.admin.fach = el.dataset.f; T.render(); };
+  ACT.gSelAll = function (el) { T.admin.sel = {}; if (el.checked) adminGames().forEach(function (g) { T.admin.sel[g.id] = 1; }); T.render(); };
   ACT.bulkClear = function () { T.admin.sel = {}; T.render(); };
   ACT.bulkT = function (el) { T.admin.bulkT = el.value; };
   ACT.bulkGo = async function (el) {
@@ -1130,7 +1236,8 @@
   K.loadHome = async function () {
     try { K.home = await DB.kidHome(K.sess.token); }
     catch (e) { return K.sessionLost(e); }
-    K.render();
+    K.render(); K.checkRace();
+    if (!K.raceWatch) K.raceWatch = setInterval(function () { if (K.sess && UI.view === 'kid' && K.step === 'home' && !document.hidden) K.checkRace(); }, 4000);
   };
   K.sessionLost = function (e) {
     if (/Anmeldung|session/i.test((e && e.message) || '')) {
@@ -1191,6 +1298,7 @@
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
+      (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
       '<span><b>Unsere Tafel</b><span>Zeig, wo du im Wochenplan stehst, und finde Hilfe.</span></span></button>', 'Abmelden');
@@ -1269,6 +1377,7 @@
       case 'games': var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
         K.step = th.length === 1 ? 'home' : 'thema'; break;
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
+      case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }
     K.render();
@@ -1462,6 +1571,84 @@
   ACT.tOff = async function () {
     try { K.tafel = await DB.tafelSet(K.sess.token, null, null); } catch (e) { return K.sessionLost(e); }
     K.render();
+  };
+
+  // ---------- Kinder: Sprint mitmachen ----------
+  K.checkRace = async function () {
+    if (!K.sess) return;
+    try {
+      var r = await DB.kidRace(K.sess.token), open = r.race && r.race.status !== 'done' ? r.race.id : null;
+      if (open !== (K.raceOpen || null)) { K.raceOpen = open; if (K.step === 'home') K.render(); }
+    } catch (e) {}
+  };
+  ACT.kRace = async function () {
+    var r = await DB.kidRaceJoin(K.sess.token, K.raceOpen);
+    K.R = { r: r, offset: Date.parse(r.now) - Date.now(), task: null, input: '', lock: false, msg: '' };
+    K.step = 'race'; K.render();
+    clearInterval(K.raceIv);
+    K.raceIv = setInterval(K.racePoll, 1000);
+  };
+  K.racePoll = async function () {
+    if (K.step !== 'race' || !K.R || UI.view !== 'kid') { clearInterval(K.raceIv); return; }
+    var R = K.R, ph = K.racePhase();
+    if (ph === 'run' && (R.tick = (R.tick || 0) + 1) % 3) return; // während dem Rennen nur alle 3 Sekunden nachfragen
+    try { var r = await DB.kidRace(K.sess.token); if (r.race) { R.r = r; R.offset = Date.parse(r.now) - Date.now(); } else R.r.race.status = 'done'; }
+    catch (e) { return; }
+    K.render();
+  };
+  K.racePhase = function () {
+    var R = K.R, race = R.r.race, run = R.r.run || {};
+    if (run.finished || R.finished) return 'fin';
+    if (!race || race.status === 'done') return 'done';
+    if (race.status === 'wait') return 'wait';
+    var left = Date.parse(race.starts_at) - R.offset - Date.now();
+    return left > 0 ? 'count' : 'run';
+  };
+  K.view_race = function () {
+    var R = K.R, race = R.r.race || {}, goal = (race.settings && race.settings.goal) || 10, rows = (race.settings && race.settings.rows) || [2, 3, 4, 5, 6, 7, 8, 9, 10];
+    var run = R.r.run || {}, pos = R.pos != null ? R.pos : (run.pos || 0), ph = K.racePhase();
+    var track = '<div class="kspr-track"><span class="lfinish"></span><span class="runner" style="left:calc(' + (pos / goal * 100) + '% - ' + (pos / goal * 2.4) + 'em);background:' + kidColor(K.sess.name) + '">' + h(K.sess.name.charAt(0)) + '</span></div>' +
+      '<p class="kspr-pos">' + pos + ' von ' + goal + '</p>';
+    var body;
+    if (ph === 'wait') body = '<div class="kid-card"><h1>Du bist dabei!</h1><p class="lead">Warte, bis deine Lehrperson den Sprint startet. Schau nach vorne an die Wandtafel.</p>' + track + '</div>';
+    else if (ph === 'count') {
+      var left = Math.ceil((Date.parse(race.starts_at) - R.offset - Date.now()) / 1000);
+      if (!R.cd) R.cd = setInterval(function () { if (K.step !== 'race' || UI.view !== 'kid' || K.racePhase() !== 'count') { clearInterval(R.cd); R.cd = null; if (UI.view !== 'kid') return; } K.render(); }, 250);
+      body = '<div class="kid-card"><div class="kspr-count">' + Math.max(1, left) + '</div><p class="lead">Gleich geht\'s los!</p></div>';
+    } else if (ph === 'run') {
+      if (!R.task) R.task = sprTask(rows, null);
+      var t = R.task;
+      body = '<div class="kspr">' + track + '<div class="kspr-task">' + t.a + ' · ' + t.b + ' =</div><div class="kspr-ans' + (R.state ? ' ' + R.state : '') + '">' + (R.input ? h(R.input) : (R.msg || '?')) + '</div>' +
+        '<div class="kspr-pad">' + ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'del', '0', 'ok'].map(function (k) {
+          return '<button class="key' + (k === 'ok' ? ' ok' : '') + '" data-a="kRk" data-k="' + k + '"' + (R.lock ? ' disabled' : '') + '>' + (k === 'del' ? '⌫' : k === 'ok' ? '✓' : k) + '</button>'; }).join('') + '</div></div>';
+    } else if (ph === 'fin') {
+      var pl = R.place || R.r.place;
+      body = '<div class="kid-card"><div class="kspr-count">' + (pl && pl <= 3 ? medal(pl) : '🎉') + '</div><h1>Im Ziel!</h1><p class="lead">' + (pl ? 'Du bist als ' + pl + '. im Ziel. ' : '') + 'Super gerannt! Schau nach vorne, wie die anderen laufen.</p>' + track + '</div>';
+    } else body = '<div class="kid-card"><h1>Der Sprint ist vorbei</h1><p class="lead">Du hast ' + pos + ' von ' + goal + ' Aufgaben geschafft. Gut gemacht!</p>' + track + '</div>';
+    return K.shell(body, 'Zurück');
+  };
+  ACT.kRk = function (el) {
+    var R = K.R, k = el.dataset.k; if (!R || R.lock || K.racePhase() !== 'run') return;
+    if (k === 'del') R.input = R.input.slice(0, -1);
+    else if (k === 'ok') return K.raceCheck();
+    else if (R.input.length < 3) R.input = (R.input === '0' ? '' : R.input) + k;
+    R.msg = ''; K.render();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (typeof K === 'undefined' || UI.view !== 'kid' || K.step !== 'race' || !K.R || K.racePhase() !== 'run') return;
+    var k = /^[0-9]$/.test(e.key) ? e.key : e.key === 'Backspace' ? 'del' : e.key === 'Enter' ? 'ok' : null;
+    if (!k) return; e.preventDefault(); ACT.kRk({ dataset: { k: k } });
+  });
+  K.raceCheck = function () {
+    var R = K.R; if (!R.input) return;
+    var race = R.r.race, rows = race.settings.rows || [2, 3, 4, 5, 6, 7, 8, 9, 10], goal = race.settings.goal || 10, t = R.task, ok = +R.input === t.a * t.b;
+    var run = R.r.run || {}; if (R.pos == null) R.pos = run.pos || 0;
+    if (ok) { R.pos = Math.min(goal, R.pos + 1); R.state = 'ok'; } else { R.state = 'no'; R.msg = ''; R.input = t.a + ' · ' + t.b + ' = ' + (t.a * t.b); }
+    R.lock = true; K.render();
+    DB.kidRaceStep(K.sess.token, race.id, ok).then(function (res) {
+      if (res && res.ok) { R.pos = res.pos; if (res.finished) { R.finished = true; R.place = res.place; } K.render(); }
+    }).catch(function () {});
+    setTimeout(function () { R.lock = false; R.state = ''; R.input = ''; R.task = sprTask(rows, t.key); if (R.pos >= goal) R.finished = true; K.render(); }, ok ? 350 : 1300);
   };
 
   // ===================================================================
