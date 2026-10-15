@@ -56,10 +56,12 @@ button{cursor:pointer}
 .ddic:hover,.ddfold:hover{background:var(--leaf-soft);color:var(--ink)}
 .ddrow{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 12px 8px 30px;border-radius:10px;font-size:15px;font-weight:600}
 .ddrow:hover{background:var(--leaf-soft)}
-.ddr{display:flex;align-items:center;gap:2px}
-.ddr .ddrow{flex:1;min-width:0}
-.ddmv{font-size:11px;opacity:.55}
-.ddmv:disabled{opacity:.15}
+.ddr{display:flex;align-items:center}
+.ddr .ddrow{flex:1;min-width:0;padding-left:8px}
+.ddgrip{flex:none;width:26px;height:34px;display:flex;align-items:center;justify-content:center;color:#b3bab4;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:16px}
+.ddhead .ddgrip{height:26px;width:20px}
+.ddr.dragging,.ddhead.dragging{background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:2}
+.ddlist.gdrag .ddr,.ddlist.gdrag .ddempty{display:none}
 .ddrow.on{background:var(--rose-soft);color:#b5524a;font-weight:800}
 .ddempty{font-size:13px;color:var(--muted);padding:4px 12px 8px 30px}
 .ddfoot{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line);flex-wrap:wrap}
@@ -535,17 +537,11 @@ function defaults(){
     ]
   };
 }
-function migrate(s){
-  s.subjects = s.subjects || makeSubjects(); s.bgs = s.bgs || [];
-  const OLD = { deutsch:"#e07a70", englisch:"#6f8fb3", franz:"#b0616f", ttg:"#9b84c4", medien:"#5f9a98", musik:"#d9799b", pause:"#e8b64c", sport:"#e0954f" };
-  DEFAULT_SUBJECTS.forEach(([name, icon, color, long]) => { const x = s.subjects.find(y => y.id === icon); if (!x) return; if (!x.long) { x.name = name; x.long = long; } if (OLD[icon] === x.color) x.color = color; });
-  s.customFonts = s.customFonts || []; s.groups = s.groups || [];
-  if (!s.lessons) s.lessons = ["08:20","09:10","10:00","10:20","11:10","13:30","14:20","15:10"];
-  s.tplGot = s.tplGot || [];
-  if (KN && KN.roster.length) {
+function knClean(screens){
+  if (!(KN && KN.roster.length)) return;
     const own = new Set(KN.roster);
     const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-    s.screens.forEach(sc => sc.widgets.forEach(w => {
+    screens.forEach(sc => sc.widgets.forEach(w => {
       const d = w.data || {};
       if (w.type === "random") {
         if (d.pick && !own.has(d.pick)) d.pick = "";
@@ -558,7 +554,15 @@ function migrate(s){
         const out = Array.from({ length: k }, () => []); names.forEach((n, i) => out[i % k].push(n)); d.groups = out;
       }
     }));
-  }
+}
+function migrate(s){
+  s.subjects = s.subjects || makeSubjects(); s.bgs = s.bgs || [];
+  const OLD = { deutsch:"#e07a70", englisch:"#6f8fb3", franz:"#b0616f", ttg:"#9b84c4", medien:"#5f9a98", musik:"#d9799b", pause:"#e8b64c", sport:"#e0954f" };
+  DEFAULT_SUBJECTS.forEach(([name, icon, color, long]) => { const x = s.subjects.find(y => y.id === icon); if (!x) return; if (!x.long) { x.name = name; x.long = long; } if (OLD[icon] === x.color) x.color = color; });
+  s.customFonts = s.customFonts || []; s.groups = s.groups || [];
+  if (!s.lessons) s.lessons = ["08:20","09:10","10:00","10:20","11:10","13:30","14:20","15:10"];
+  s.tplGot = s.tplGot || [];
+  knClean(s.screens);
   if (KN && KN.template && KN.template.screens) {
     const tpl = KN.template; let n = 0;
     tpl.screens.forEach(src => {
@@ -701,32 +705,72 @@ function openScreenList(anchor){
   closeMenus();
   const r = anchor.getBoundingClientRect(), dd = document.createElement("div");
   dd.className = "dd"; dd.style.left = Math.max(8, r.left) + "px"; dd.style.top = r.bottom + 8 + "px";
-  const row = (x, i, list) => `<div class="ddr"><button class="ddrow ${x.id === S.active ? "on" : ""}" data-go="${x.id}">${esc(x.name)}</button><button class="ddic ddmv" data-smv="-1" data-sid="${x.id}" aria-label="Nach oben"${i ? "" : " disabled"}>▲</button><button class="ddic ddmv" data-smv="1" data-sid="${x.id}" aria-label="Nach unten"${i < list.length - 1 ? "" : " disabled"}>▼</button></div>`;
+  const row = x => `<div class="ddr" data-sid="${x.id}"><span class="ddgrip" aria-hidden="true" title="Ziehen zum Verschieben">⠿</span><button class="ddrow ${x.id === S.active ? "on" : ""}" data-go="${x.id}">${esc(x.name)}</button></div>`;
   const html = () => {
     const loose = S.screens.filter(x => !x.group || !S.groups.some(g => g.id === x.group));
     return `<div class="ddlist">
-      ${loose.length ? `${S.groups.length ? `<div class="ddhead"><span>Ohne Gruppe</span></div>` : ""}${loose.map(row).join("")}` : ""}
+      ${S.groups.length ? `<div class="ddhead" data-loose><span>Ohne Gruppe</span></div>` : ""}${loose.map(row).join("")}
       ${S.groups.map(g => { const list = S.screens.filter(x => x.group === g.id);
-        return `<div class="ddhead" data-gid="${g.id}"><button class="ddfold" data-fold aria-label="Auf- oder zuklappen">${g.collapsed ? "▸" : "▾"}</button><span>${esc(g.name)}</span><em>${list.length}</em><button class="ddic" data-gmv="-1" title="Gruppe nach oben">▲</button><button class="ddic" data-gmv="1" title="Gruppe nach unten">▼</button>
+        return `<div class="ddhead" data-gid="${g.id}"><span class="ddgrip ddggrip" aria-hidden="true" title="Gruppe verschieben">⠿</span><button class="ddfold" data-fold aria-label="Auf- oder zuklappen">${g.collapsed ? "▸" : "▾"}</button><span>${esc(g.name)}</span><em>${list.length}</em>
           <button class="ddic" data-gnew title="Neuer Bildschirm in dieser Gruppe">+</button><button class="ddic" data-gren title="Umbenennen">✎</button><button class="ddic" data-gdel title="Gruppe löschen">✕</button></div>
-          ${g.collapsed ? "" : list.length ? list.map(row).join("") : `<div class="ddempty">Leer – über ⋯ einen Bildschirm hierher verschieben</div>`}`; }).join("")}
+          ${g.collapsed ? "" : list.length ? list.map(row).join("") : `<div class="ddempty">Leer – einen Bildschirm am ⠿ hierher ziehen</div>`}`; }).join("")}
     </div>
     <div class="ddfoot"><button class="sbtn rose" data-newscr>+ Neuer Bildschirm</button><button class="sbtn" data-newgrp>+ Neue Gruppe</button></div>`;
   };
   dd.innerHTML = html(); APP.appendChild(dd);
+  // Ziehen mit Finger, Stift oder Maus
+  dd.addEventListener("pointerdown", e => {
+    const grip = e.target.closest(".ddgrip"); if (!grip) return;
+    e.preventDefault(); e.stopPropagation();
+    const list = dd.querySelector(".ddlist"), isGroup = grip.classList.contains("ddggrip");
+    const el = isGroup ? grip.closest(".ddhead") : grip.closest(".ddr");
+    el.classList.add("dragging"); if (isGroup) list.classList.add("gdrag");
+    let moved = false, scrollT = null;
+    const move = ev => {
+      const r = list.getBoundingClientRect();
+      clearInterval(scrollT); scrollT = null;
+      if (ev.clientY < r.top + 30) scrollT = setInterval(() => list.scrollTop -= 8, 16);
+      else if (ev.clientY > r.bottom - 30) scrollT = setInterval(() => list.scrollTop += 8, 16);
+      el.style.pointerEvents = "none";
+      const over = document.elementFromPoint(r.left + 40, ev.clientY); el.style.pointerEvents = "";
+      if (!over || !list.contains(over)) return;
+      if (isGroup) {
+        const hd = over.closest(".ddhead[data-gid]"); if (!hd || hd === el) return;
+        const b = hd.getBoundingClientRect(), after = ev.clientY > b.top + b.height / 2;
+        list.insertBefore(el, after ? hd.nextSibling : hd); moved = true; return;
+      }
+      const t = over.closest(".ddr, .ddhead, .ddempty"); if (!t || t === el) return;
+      const b = t.getBoundingClientRect(), after = ev.clientY > b.top + b.height / 2;
+      if (t.classList.contains("ddhead")) list.insertBefore(el, t.nextSibling);
+      else if (t.classList.contains("ddempty")) list.insertBefore(el, t);
+      else list.insertBefore(el, after ? t.nextSibling : t);
+      moved = true;
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      clearInterval(scrollT); el.classList.remove("dragging"); list.classList.remove("gdrag");
+      if (!moved) return;
+      if (isGroup) {
+        const ids = [...list.querySelectorAll(".ddhead[data-gid]")].map(x => x.dataset.gid);
+        S.groups.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+      } else {
+        let grp = ""; const order = [];
+        [...list.children].forEach(c => {
+          if (c.classList.contains("ddhead")) { grp = c.dataset.gid || ""; return; }
+          if (c.classList.contains("ddr")) { const sc = S.screens.find(x => x.id === c.dataset.sid); if (sc) { sc.group = grp; order.push(sc); } }
+        });
+        S.screens = order.concat(S.screens.filter(x => !order.includes(x))); // Bildschirme in zugeklappten Gruppen bleiben
+      }
+      save(); const st = list.scrollTop; dd.innerHTML = html(); dd.querySelector(".ddlist").scrollTop = st; renderTabs();
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  });
   dd.addEventListener("click", e => {
-    const mv = e.target.closest("[data-smv]");
-    if (mv) { e.stopPropagation(); const sc = S.screens.find(x => x.id === mv.dataset.sid), loose = x => !x.group || !S.groups.some(g => g.id === x.group);
-      const list = S.screens.filter(x => loose(sc) ? loose(x) : x.group === sc.group), i = list.indexOf(sc), o = list[i + +mv.dataset.smv];
-      if (o) { const a = S.screens.indexOf(sc), b = S.screens.indexOf(o); S.screens[a] = o; S.screens[b] = sc; save(); const st = dd.querySelector(".ddlist").scrollTop; dd.innerHTML = html(); dd.querySelector(".ddlist").scrollTop = st; renderTabs(); }
-      return; }
     const go = e.target.closest("[data-go]"); if (go) { goScreen(go.dataset.go); return; }
     if (e.target.closest("[data-newscr]")) { closeMenus(); newScreen(screen().group); return; }
     if (e.target.closest("[data-newgrp]")) { closeMenus(); askName("Neue Gruppe", "", v => { S.groups.push({ id: uid(), name: v, collapsed: false }); }); return; }
     const h = e.target.closest("[data-gid]"); if (!h) return;
     const g = S.groups.find(x => x.id === h.dataset.gid);
-    const gm = e.target.closest("[data-gmv]");
-    if (gm) { const i = S.groups.indexOf(g), j = i + +gm.dataset.gmv; if (j >= 0 && j < S.groups.length) { [S.groups[i], S.groups[j]] = [S.groups[j], S.groups[i]]; save(); dd.innerHTML = html(); renderTabs(); } return; }
     if (e.target.closest("[data-gnew]")) { closeMenus(); newScreen(g.id); return; }
     if (e.target.closest("[data-gren]")) { closeMenus(); askName("Gruppe umbenennen", g.name, v => { g.name = v; }); return; }
     if (e.target.closest("[data-gdel]")) {
@@ -1335,7 +1379,7 @@ function openTemplates(){
     if (ta) { const src = tpl.screens.find(x => x.id === ta.dataset.tadd); if (!src) return; const c = JSON.parse(JSON.stringify(src)); c.id = uid(); c.group = ""; c.widgets.forEach(w => { w.id = uid(); (w.data.items || []).forEach(it => it.id = uid()); });
       (tpl.subjects || []).forEach(x => { if (!S.subjects.some(y => y.id === x.id)) S.subjects.push(x); });
       (tpl.bgs || []).forEach(x => { if (!S.bgs.some(y => y.src === x.src)) S.bgs.push(x); });
-      S.screens.push(c); save(); renderTabs(); toast(`«${src.name}» hinzugefügt`); return; }
+      knClean([c]); S.screens.push(c); save(); renderTabs(); toast(`«${src.name}» hinzugefügt`); return; }
     if (e.target.closest("[data-tsave]")) {
       if (!pick.size) { toast("Bitte mindestens einen Bildschirm wählen"); return; }
       const t = JSON.parse(JSON.stringify(S)); t.screens = t.screens.filter(x => pick.has(x.id)); t.screens.forEach(x => x.group = ""); t.groups = [];
