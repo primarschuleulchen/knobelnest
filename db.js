@@ -137,6 +137,13 @@
       ok(await sb.from('teacher_store').upsert({ doc: doc, data: data, updated_at: new Date().toISOString() }, { onConflict: 'teacher_id,doc' }));
     },
     storeDel: async function (doc) { ok(await sb.from('teacher_store').delete().eq('doc', doc)); },
+    sharedGet: async function (doc) {
+      var r = ok(await sb.from('shared_store').select('data').eq('doc', doc).maybeSingle());
+      return r ? r.data : null;
+    },
+    sharedSet: async function (doc, data) {
+      ok(await sb.from('shared_store').upsert({ doc: doc, data: data, updated_at: new Date().toISOString() }, { onConflict: 'doc' }));
+    },
     storeUpload: async function (blob) {
       var uid = ok(await sb.auth.getUser()).user.id;
       var ext = ((blob.type || '').split('/')[1] || 'bin').replace(/[^a-z0-9]/gi, '').slice(0, 5);

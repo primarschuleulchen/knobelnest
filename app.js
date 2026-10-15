@@ -480,7 +480,11 @@
       if (!s) { location.hash = '#/'; return; }
       app.innerHTML = '<p class="boot">Tagesfolie wird geladen …</p>';
       var cls, kids;
-      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); }
+      var me = null, tpl = null;
+      try {
+        cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid);
+        me = await DB.me(); try { tpl = await DB.sharedGet('tagesfolie-vorlage'); } catch (e2) { tpl = null; }
+      }
       catch (e) { paint('<div class="main"><div class="card stack"><h2>Tagesfolie nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
       var uid = s.user.id, base = location.href.split('#')[0];
       var doc = function (id) {
@@ -491,7 +495,8 @@
         };
       };
       window.knTagesfolie = {
-        uid: uid, className: cls ? cls.name : '',
+        uid: uid, className: cls ? cls.name : '', isAdmin: !!(me && me.is_admin), template: tpl,
+        saveTemplate: function (t) { return DB.sharedSet('tagesfolie-vorlage', JSON.parse(JSON.stringify(t))); },
         roster: (kids || []).map(function (k) { return k.name; }),
         boardUrl: base + '#/wandtafel/' + cid + '/embed',
         back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
@@ -504,7 +509,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('23') + '" title="Tagesfolie" allow="fullscreen"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('24') + '" title="Tagesfolie" allow="fullscreen"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
