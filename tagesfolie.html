@@ -502,7 +502,7 @@ const mkItems = a => a.map(t => ({ id: uid(), text: t, done: false }));
 const W = (type, x, y, w, h, data) => ({ id: uid(), type, x, y, w, h, z: 1, data: Object.assign(TYPES[type].d(), data || {}) });
 const makeSubjects = () => DEFAULT_SUBJECTS.map(([name, icon, color, long]) => ({ id: icon, name, icon, color, long }));
 function defaults(){
-  if (KN && KN.template && KN.template.screens && KN.template.screens.length) { const t = JSON.parse(JSON.stringify(KN.template)); t.active = t.screens[0].id; return t; }
+  if (KN && KN.template && KN.template.screens && KN.template.screens.length) { const t = JSON.parse(JSON.stringify(KN.template)); t.active = t.screens[0].id; t.tplGot = t.screens.map(x => x.id); return t; }
   return {
     v: 3, active: "s-morgen", subjects: makeSubjects(), bgs: [],
     cats: [
@@ -537,6 +537,22 @@ function migrate(s){
   DEFAULT_SUBJECTS.forEach(([name, icon, color, long]) => { const x = s.subjects.find(y => y.id === icon); if (!x) return; if (!x.long) { x.name = name; x.long = long; } if (OLD[icon] === x.color) x.color = color; });
   s.customFonts = s.customFonts || []; s.groups = s.groups || [];
   if (!s.lessons) s.lessons = ["08:20","09:10","10:00","10:20","11:10","13:30","14:20","15:10"];
+  s.tplGot = s.tplGot || [];
+  if (KN && KN.template && KN.template.screens) {
+    const tpl = KN.template; let n = 0;
+    tpl.screens.forEach(src => {
+      if (s.tplGot.includes(src.id)) return;
+      s.tplGot.push(src.id);
+      if (KN.isAdmin && s.screens.some(x => x.id === src.id)) return; // eigene Folien der Admin-Person (Vorlage von ihr)
+      const c = JSON.parse(JSON.stringify(src)); c.id = uid(); c.group = ""; c.widgets.forEach(w => { w.id = uid(); (w.data.items || []).forEach(it => it.id = uid()); });
+      s.screens.push(c); n++;
+    });
+    if (n) {
+      (tpl.subjects || []).forEach(x => { if (!s.subjects.some(y => y.id === x.id)) s.subjects.push(x); });
+      (tpl.bgs || []).forEach(x => { if (!s.bgs.some(y => y.src === x.src)) s.bgs.push(x); });
+      s._tplAdded = n;
+    }
+  }
   s.roster = KN && KN.roster.length ? KN.roster.slice() : (s.roster || []); s.groupSets = s.groupSets || []; s.absent = s.absent || { date: "", names: [] };
   s.bgs = s.bgs.map(b => typeof b === "string" ? { src: b, pal: null } : b);
   const keys = new Set(FONTS.map(f => f[0]).concat(s.customFonts.map(c => c.key)));
@@ -1277,7 +1293,8 @@ function openTemplates(){
   const WANT = ["guten morgen", "gruppen", "trainingszeit"], hit = S.screens.filter(x => WANT.includes(x.name.trim().toLowerCase()));
   const pick = new Set((hit.length ? hit : S.screens).map(x => x.id));
   const html = () => `${tpl ? `<h3 style="margin:0 0 6px;font-size:15px">Beispiel-Bildschirme einfügen</h3><p class="hint">Mit diesen Bildschirmen starten alle Lehrpersonen. Antippen fügt eine Kopie bei Ihnen hinzu.</p>
-    <div class="chips">${tpl.screens.map(x => `<button class="chip" data-tadd="${esc(x.id)}">+ ${esc(x.name)}</button>`).join("")}</div>` : ""}
+    <div class="chips">${tpl.screens.map(x => `<button class="chip" data-tadd="${esc(x.id)}">+ ${esc(x.name)}</button>`).join("")}</div>
+    ${!KN.isAdmin && tpl.lessons && tpl.lessons.length ? `<h3 style="margin:22px 0 6px;font-size:15px">Lektionszeiten</h3><p class="hint">Vorlage: ${tpl.lessons.filter(Boolean).map(showTime).join(" · ")}</p><button class="sbtn rose" data-tles>Lektionszeiten aus der Vorlage übernehmen</button>` : ""}` : ""}
     ${KN.isAdmin ? `<h3 style="margin:${tpl ? 22 : 0}px 0 6px;font-size:15px">Als Vorlage für alle Lehrpersonen speichern</h3><p class="hint">Wählen Sie die Bildschirme, mit denen neue Lehrpersonen starten. Klassenliste und Abwesenheiten werden nicht mitgegeben.</p>
     <div class="chips">${S.screens.map(x => `<button class="chip ${pick.has(x.id) ? "added" : ""}" data-tpick="${esc(x.id)}">${pick.has(x.id) ? "✓ " : ""}${esc(x.name)}</button>`).join("")}</div>
     <div style="margin-top:12px"><button class="sbtn rose" data-tsave>Vorlage speichern</button></div>` : ""}`;
@@ -1285,6 +1302,7 @@ function openTemplates(){
     const body = bg.querySelector(".body");
     const tp = e.target.closest("[data-tpick]");
     if (tp) { const id = tp.dataset.tpick; if (pick.has(id)) pick.delete(id); else pick.add(id); body.innerHTML = html(); return; }
+    if (e.target.closest("[data-tles]")) { S.lessons = tpl.lessons.slice(); save(); renderBoard(); toast("Lektionszeiten übernommen ✓"); return; }
     const ta = e.target.closest("[data-tadd]");
     if (ta) { const src = tpl.screens.find(x => x.id === ta.dataset.tadd); if (!src) return; const c = JSON.parse(JSON.stringify(src)); c.id = uid(); c.group = ""; c.widgets.forEach(w => { w.id = uid(); (w.data.items || []).forEach(it => it.id = uid()); });
       (tpl.subjects || []).forEach(x => { if (!S.subjects.some(y => y.id === x.id)) S.subjects.push(x); });
@@ -1294,7 +1312,7 @@ function openTemplates(){
       if (!pick.size) { toast("Bitte mindestens einen Bildschirm wählen"); return; }
       const t = JSON.parse(JSON.stringify(S)); t.screens = t.screens.filter(x => pick.has(x.id)); t.screens.forEach(x => x.group = ""); t.groups = [];
       t.roster = []; t.absent = { date: "", names: [] }; t.groupSets = []; t.active = t.screens[0].id;
-      try { await KN.saveTemplate(t); KN.template = t; toast("Vorlage gespeichert ✓"); body.innerHTML = html(); } catch (err) { toast("Speichern ging nicht: " + (err && err.message || "")); }
+      t.tplGot = []; try { await KN.saveTemplate(t); KN.template = t; S.tplGot = [...new Set((S.tplGot || []).concat(t.screens.map(x => x.id)))]; save(); toast("Vorlage gespeichert ✓"); body.innerHTML = html(); } catch (err) { toast("Speichern ging nicht: " + (err && err.message || "")); }
     }
   });
 }
@@ -1317,7 +1335,7 @@ try { navigator.wakeLock?.request("screen").catch(() => {}); } catch {}
 
 // ---------- Start ----------
 function renderAll(){ applyFont(); renderTabs(); renderBoard(); drawBg(); const b = screen().bg; if (b && !S.bgs.find(x => x.src === b)?.pal) ensurePalette(b).then(renderBoard); }
-S = migrate(lsGet() || defaults());
+S = migrate(lsGet() || defaults()); delete S._tplAdded;
 loadCustomFonts();
 if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id;
 renderAll();
@@ -1332,7 +1350,7 @@ setStatus("Gespeichert auf diesem Gerät");
     const id = await user.id(); if (!id) return;
     store = { mode: "db", col: db.collection("data/users/" + id) };
     const snap = await store.col.doc("tafel").get();
-    if (snap.exists && snap.data()?.screens) { S = migrate(snap.data()); if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id; lsSet(S); renderAll(); }
+    if (snap.exists && snap.data()?.screens) { S = migrate(snap.data()); if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id; const nAdd = S._tplAdded; delete S._tplAdded; lsSet(S); renderAll(); if (nAdd) { save(); toast(nAdd === 1 ? "1 Beispiel-Folie aus der Vorlage hinzugefügt" : nAdd + " Beispiel-Folien aus der Vorlage hinzugefügt"); } }
     else { dirty = true; await flush(); }
     loadCustomFonts();
     setStatus("Mit deinem Konto verbunden ✓");
