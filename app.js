@@ -905,7 +905,7 @@
     var c = T.cur();
     var list = T.kids.length ? '<ul class="list">' + T.kids.map(function (k) {
       var key = 'kid:' + k.id;
-      return '<li class="' + (T.fresh.has(k.id) ? 'fresh' : '') + '"><span class="avatar" style="background:' + kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' +
+      return '<li class="' + (T.fresh.has(k.id) ? 'fresh' : '') + '"><input class="kidnr" style="background:' + kidColor(k.name) + '" inputmode="numeric" maxlength="3" autocomplete="off" value="' + (k.nr != null ? k.nr : '') + '" placeholder="' + h(k.name.charAt(0)) + '" title="Nummer (freiwillig)" aria-label="Nummer von ' + h(k.name) + ' (freiwillig)" data-change="kidNr" data-id="' + k.id + '">' +
         '<b class="grow" style="font-size:18px">' + h(k.name) + '</b><span class="pwrow" role="img" aria-label="Bildpasswort: ' + h(pwLabel(k.pw)) + '">' +
         k.pw.split(',').map(function (p) { return SYM[p] ? '<span style="background:' + SYM[p].bg + '">' + symSvg(p, 24) + '</span>' : ''; }).join('') + '</span>' +
         (T.fresh.has(k.id) ? '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">Neues Passwort</span>' : '') +
@@ -918,33 +918,53 @@
       (T.kids.length ? '<button class="btn primary" data-a="printCards">' + ic(I.print) + ' Passwort-Kärtchen drucken</button>' : '') + '</div>' + list +
       '<p class="muted small">Beim Zurücksetzen bekommt das Kind drei neue Bilder. Der Fortschritt bleibt erhalten.</p></div>' +
       '<aside class="side"><form class="card stack" data-a="addKid"><h2 style="font-size:22px">Ein Kind hinzufügen</h2>' +
-      '<div class="field"><label for="kidName">Vorname oder Spitzname</label><input class="input" id="kidName" name="name" maxlength="30" placeholder="z. B. Mila" required></div>' +
+      '<div class="field"><label for="kidName">Vorname oder Spitzname</label><input class="input" id="kidName" name="name" maxlength="30" placeholder="z. B. Mila oder 12 Mila" required></div>' +
       '<button class="btn primary">Hinzufügen</button></form>' +
       '<form class="card stack" data-a="addBulk"><h2 style="font-size:22px">Ganze Klasse auf einmal</h2>' +
-      '<div class="field"><label for="kidBulk">Ein Name pro Zeile</label><textarea class="input" id="kidBulk" name="list" rows="6" placeholder="Mila&#10;Tim&#10;Aylin"></textarea></div>' +
-      '<button class="btn">Alle hinzufügen</button><p class="muted small">Tipp: Namensliste aus Excel kopieren und hier einfügen.</p></form>' +
+      '<div class="field"><label for="kidBulk">Ein Name pro Zeile</label><textarea class="input" id="kidBulk" name="list" rows="6" placeholder="Mila&#10;Tim&#10;Aylin&#10;oder mit Nummer: 1 Mila"></textarea></div>' +
+      '<button class="btn">Alle hinzufügen</button><p class="muted small">Tipp: Namensliste aus Excel kopieren und hier einfügen. Mit Nummer davor («12 Mila») wird die Liste nach Nummer sortiert.</p></form>' +
       '<div class="note"><b>Datenschutz:</b> Nur Vornamen oder Spitznamen eintragen. Keine Nachnamen, Geburtsdaten oder E-Mail-Adressen der Kinder.</div></aside></div>';
   };
+  // Kinder: zuerst nach Nummer (falls vergeben), sonst alphabetisch
+  function kidSort(a, b) {
+    var an = a.nr == null ? null : +a.nr, bn = b.nr == null ? null : +b.nr;
+    if (an != null && bn != null && an !== bn) return an - bn;
+    if ((an == null) !== (bn == null)) return an == null ? 1 : -1;
+    return a.name.localeCompare(b.name, 'de');
+  }
+  function kidBadge(k) { return k.nr != null ? String(k.nr) : k.name.charAt(0); }
+  // «12 Mila», «12. Mila» oder «12) Mila» → Nummer 12, Name Mila
+  function splitNr(line) {
+    var m = /^\s*(\d{1,3})\s*[.):\-]?\s+(\S.*)$/.exec(line);
+    return m && +m[1] >= 1 ? { nr: +m[1], name: m[2].trim() } : { nr: null, name: line.trim() };
+  }
   function kidExists(n) { return T.kids.some(function (k) { return k.name.toLowerCase() === n.toLowerCase(); }); }
   ACT.addKid = async function (f) {
-    var n = f.elements.name.value.trim(); if (!n) return;
+    var x = splitNr(f.elements.name.value), n = x.name.slice(0, 30); if (!n) return;
     if (kidExists(n)) return toast('Diesen Namen gibt es in der Klasse schon.');
-    var r = await DB.addKids(T.cls, [{ name: n, pw: randPw() }]);
+    var r = await DB.addKids(T.cls, [{ name: n, nr: x.nr, pw: randPw() }]);
     r.forEach(function (k) { T.kids.push(k); T.fresh.add(k.id); });
-    T.kids.sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); }); T.progress = null; T.tafel = null;
+    T.kids.sort(kidSort); T.progress = null; T.tafel = null;
     T.render(); var i = document.getElementById('kidName'); if (i) { i.value = ''; i.focus(); }
   };
   ACT.addBulk = async function (f) {
     var seen = {}, add = [];
     f.elements.list.value.split(/[\n,;]/).forEach(function (s) {
-      var n = s.trim().slice(0, 30); var k = n.toLowerCase();
-      if (n && !seen[k] && !kidExists(n)) { seen[k] = 1; add.push({ name: n, pw: randPw() }); }
+      var x = splitNr(s), n = x.name.slice(0, 30); var k = n.toLowerCase();
+      if (n && !seen[k] && !kidExists(n)) { seen[k] = 1; add.push({ name: n, nr: x.nr, pw: randPw() }); }
     });
     if (!add.length) return toast('Keine neuen Namen gefunden.');
     var r = await DB.addKids(T.cls, add);
     r.forEach(function (k) { T.kids.push(k); T.fresh.add(k.id); });
-    T.kids.sort(function (a, b) { return a.name.localeCompare(b.name, 'de'); }); T.progress = null; T.tafel = null;
+    T.kids.sort(kidSort); T.progress = null; T.tafel = null;
     toast(plural(r.length, 'Kind', 'Kinder') + ' hinzugefügt.'); T.render();
+  };
+  ACT.kidNr = async function (el) {
+    var k = T.kids.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!k) return;
+    var v = el.value.trim(), nr = v === '' ? null : parseInt(v, 10);
+    if (v !== '' && !(nr >= 1 && nr <= 999)) { el.value = k.nr != null ? k.nr : ''; return toast('Bitte eine Nummer von 1 bis 999 eintragen oder das Feld leer lassen.'); }
+    if (nr === k.nr || (nr == null && k.nr == null)) return;
+    await DB.setKidNr(k.id, nr); k.nr = nr; T.kids.sort(kidSort); T.progress = null; T.render();
   };
   ACT.kidPw = async function (el) {
     var k = T.kids.filter(function (x) { return x.id === el.dataset.id; })[0];
@@ -1062,7 +1082,7 @@
           }).join('');
         }).join('');
         return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
-          kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) +
+          kidColor(k.name) + ';color:#1B2A3D">' + h(kidBadge(k)) + '</span>' + h(k.name) +
           (games.some(function (g) { return !cell(P[k.id + '|' + g.id]).none; }) ? '<button class="preset" data-a="pReset" data-k="' + k.id + '" title="Fortschritt zurücksetzen" aria-label="Fortschritt von ' + h(k.name) + ' zurücksetzen">↺</button>' : '') + '</span></th>' + cells +
           '<td class="muted" style="white-space:nowrap">' + since(last) + '</td></tr>';
       }).join('') + '</tbody></table></div>';
@@ -1466,7 +1486,7 @@
   K.view_names = function () {
     return K.shell('<div class="stack" style="gap:6px"><h1>Wer bist du?</h1><p class="lead">Klasse ' + h(K.cls.class_name) + ' · Tippe auf deinen Namen.</p></div>' +
       (K.cls.kids.length ? '<div class="kid-grid">' + K.cls.kids.map(function (k) {
-        return '<button class="kid-name" data-a="kName" data-id="' + k.id + '"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span><b>' + h(k.name) + '</b></button>';
+        return '<button class="kid-name" data-a="kName" data-id="' + k.id + '"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(kidBadge(k)) + '</span><b>' + h(k.name) + '</b></button>';
       }).join('') + '</div>' : '<div class="kid-card"><p class="lead">In dieser Klasse sind noch keine Kinder eingetragen.</p></div>'), 'Anderer Code');
   };
   K.view_pw = function () {

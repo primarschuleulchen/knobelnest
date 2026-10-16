@@ -73,12 +73,13 @@
     deleteClass: async function (id) { ok(await sb.from('classes').delete().eq('id', id)); },
 
     // ---------- Kinder ----------
-    listKids: async function (cid) { return ok(await sb.from('kids').select('id,name,pw,created_at').eq('class_id', cid).order('name')); },
+    listKids: async function (cid) { return ok(await sb.from('kids').select('id,name,nr,pw,created_at').eq('class_id', cid).order('nr', { ascending: true, nullsFirst: false }).order('name')); },
     addKids: async function (cid, list) {
-      var rows = list.map(function (k) { return { class_id: cid, name: k.name, pw: k.pw }; });
-      return ok(await sb.from('kids').insert(rows).select('id,name,pw,created_at'));
+      var rows = list.map(function (k) { return { class_id: cid, name: k.name, pw: k.pw, nr: k.nr == null ? null : k.nr }; });
+      return ok(await sb.from('kids').insert(rows).select('id,name,nr,pw,created_at'));
     },
     setKidPw: async function (id, pw) { ok(await sb.from('kids').update({ pw: pw, failed: 0, locked_until: null }).eq('id', id)); },
+    setKidNr: async function (id, nr) { ok(await sb.from('kids').update({ nr: nr }).eq('id', id)); },
     deleteKid: async function (id) { ok(await sb.from('kids').delete().eq('id', id)); },
 
     // ---------- Freigaben und Fortschritt ----------
