@@ -230,6 +230,12 @@
     var m = /<head[^>]*>/i.exec(html);
     return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
+  // Spiele, die als eigener Ordner auf dem Server liegen (z. B. die Zeitreise): <meta name="knobelnest-url" content="zeitreise/index.html">
+  function gameUrl(html) {
+    var m = /<meta\s+name=["']knobelnest-url["']\s+content=["']([^"']+)["']/i.exec(html || '');
+    return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
+  }
+  var ZR_VER = '1';
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -239,13 +245,14 @@
       '</b><button class="btn sm" data-a="playerFull">Vollbild</button></div>';
     var f = document.createElement('iframe');
     f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
-    f.setAttribute('allow', 'fullscreen; autoplay');
+    f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
-    f.srcdoc = prepare(html, seed);
+    var url = gameUrl(html);
+    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + ZR_VER; else f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
-    PL = { el: p, frame: f, bar: bar, onMsg: onMsg, onClose: onClose };
+    PL = { el: p, frame: f, bar: bar, onMsg: onMsg, onClose: onClose, url: url, seed: seed || null };
   }
   function closePlayer() {
     if (!PL) return; var x = PL; PL = null;
@@ -258,6 +265,11 @@
   window.addEventListener('message', function (e) {
     if (!PL || e.source !== PL.frame.contentWindow) return;
     var d = e.data; if (!d || typeof d !== 'object') return;
+    if (PL.url && d.knobelnest && d.type === 'hello') {
+      var sd = PL.seed || {};
+      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: !PL.seed } }, '*'); } catch (x) {}
+      return;
+    }
     if (PL.onMsg) PL.onMsg(d);
   });
 
@@ -701,12 +713,84 @@
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
             (isWall(g) ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
-            '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') + '</div></div></article>';
+            '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') +
+            (isZeit(g) ? '<button class="btn primary" data-a="zrOpen" data-id="' + g.id + '">🔓 Zeiten & Fortschritt</button>' : '') + '</div></div></article>';
         }).join('') + '</div>');
     });
     return out + '</section>';
   };
   ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
+
+  // ---------- Zeitreise: welche Zeiten offen sind, pro Klasse und pro Kind ----------
+  // Neue Epochen hier auf ready: true setzen, sobald sie im Ordner zeitreise/ liegen.
+  var ZR_ERAS = [
+    { id: 'altsteinzeit', name: 'Altsteinzeit', icon: '🦣', ready: true },
+    { id: 'jungsteinzeit', name: 'Jungsteinzeit', icon: '🌾', ready: true },
+    { id: 'bronzezeit', name: 'Bronzezeit', icon: '🥉', ready: false },
+    { id: 'eisenzeit', name: 'Eisenzeit', icon: '⚒️', ready: false },
+    { id: 'roemerzeit', name: 'Römerzeit', icon: '🏛️', ready: false },
+    { id: 'mittelalter', name: 'Mittelalter', icon: '🏰', ready: false }
+  ];
+  function isZeit(g) { return /zeitreise/i.test(g.title || ''); }
+  var ZR = null;
+  function zrNorm(c) {
+    c = c && typeof c === 'object' ? c : {};
+    return { open: Array.isArray(c.open) ? c.open : ['altsteinzeit'], pass: +c.pass || 7, auto: c.auto !== false, kids: c.kids && typeof c.kids === 'object' ? c.kids : {} };
+  }
+  function zrPassed(kid, era) { var z = ((ZR.aw[kid] || {}).zr || {})[era]; return !!z && z.best != null && z.best >= ZR.cfg.pass; }
+  function zrWhy(kid, i) {
+    var e = ZR_ERAS[i], c = ZR.cfg;
+    if (!e.ready) return null;
+    if (c.open.indexOf(e.id) >= 0) return 'klasse';
+    if ((c.kids[kid] || []).indexOf(e.id) >= 0) return 'kind';
+    if (c.auto && i > 0 && zrPassed(kid, ZR_ERAS[i - 1].id)) return 'quiz';
+    return null;
+  }
+  ACT.zrOpen = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
+    toast('Wird geladen …');
+    var both = await Promise.all([DB.gameSettingsGet(T.cls, g.id), DB.listProgressGame(T.kids.map(function (k) { return k.id; }), g.id)]);
+    var aw = {}; (both[1] || []).forEach(function (r) { aw[r.kid_id] = r.award || {}; });
+    ZR = { g: g, cfg: zrNorm(both[0]), aw: aw };
+    overlay('<div class="card zr stack" role="dialog" aria-label="Zeitreise"></div>');
+    zrRender();
+  };
+  function zrRender() {
+    var box = document.querySelector('.overlay .zr'); if (!box || !ZR) return;
+    var c = ZR.cfg, ready = ZR_ERAS.filter(function (e) { return e.ready; });
+    var rows = T.kids.map(function (k) {
+      return '<tr><th scope="row">' + h(k.name) + '</th>' + ready.map(function (e) {
+        var i = ZR_ERAS.indexOf(e), why = zrWhy(k.id, i), z = ((ZR.aw[k.id] || {}).zr || {})[e.id];
+        var info = z && (z.f || z.best != null) ? '<small>' + (z.t ? z.f + '/' + z.t + ' entdeckt' : z.f + ' entdeckt') + (z.best != null ? ' · Quiz ' + z.best + '/' + z.n + (z.best >= c.pass ? ' ✓' : '') : '') + '</small>' : '';
+        var st = why === 'klasse' ? '<span class="zr-st open">offen</span>' :
+          why === 'quiz' ? '<span class="zr-st open">🔓 durch Quiz</span>' :
+          '<button class="zr-st ' + (why === 'kind' ? 'mine' : 'lock') + '" data-a="zrKid" data-k="' + k.id + '" data-e="' + e.id + '">' + (why === 'kind' ? '🔓 von Ihnen geöffnet' : '🔒 gesperrt · öffnen') + '</button>';
+        return '<td>' + st + info + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    box.innerHTML = '<div class="row" style="justify-content:space-between"><h2 style="margin:0">' + h(ZR.g.title) + ' · Klasse ' + h(T.cur().name) + '</h2><button class="btn sm" data-a="closeOverlay">Schliessen</button></div>' +
+      '<div><p class="h3" style="margin:0 0 6px">Für die ganze Klasse offen</p><div class="chips">' + ZR_ERAS.map(function (e) {
+        return e.ready ? '<button class="chip" aria-pressed="' + (c.open.indexOf(e.id) >= 0) + '" data-a="zrEra" data-e="' + e.id + '">' + e.icon + ' ' + e.name + '</button>'
+          : '<span class="chip" style="opacity:.45;cursor:default">' + e.icon + ' ' + e.name + ' · kommt bald</span>'; }).join('') + '</div></div>' +
+      '<div class="row" style="align-items:center;gap:10px"><label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-change="zrAuto" style="width:22px;height:22px"' + (c.auto ? ' checked' : '') + '> Nächste Zeit automatisch öffnen, wenn das Quiz mit mindestens</label>' +
+      '<div class="chips">' + [6, 7, 8, 9, 10].map(function (n) { return '<button class="chip" style="min-height:36px;padding:0 12px" aria-pressed="' + (c.pass === n) + '" data-a="zrPass" data-n="' + n + '"' + (c.auto ? '' : ' disabled') + '>' + n + '</button>'; }).join('') + '</div><span>von 10 Punkten gelöst ist.</span></div>' +
+      (T.kids.length ? '<div class="tablewrap"><table class="zr-table"><thead><tr><th>Kind</th>' + ready.map(function (e) { return '<th>' + e.icon + ' ' + e.name + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' :
+        '<p class="muted">Noch keine Kinder in dieser Klasse.</p>') +
+      '<p class="muted small" style="margin:0">Änderungen gelten, sobald ein Kind die Zeitreise das nächste Mal öffnet. «Entdeckt» zählt die Dinge im Forscherheft, beim Quiz steht das beste Ergebnis.</p>';
+  }
+  async function zrSave() {
+    zrRender();
+    try { await DB.gameSettingsSet(T.cls, ZR.g.id, ZR.cfg); } catch (e) { toast('Speichern ging nicht: ' + errMsg(e)); }
+  }
+  ACT.zrEra = function (el) { var o = ZR.cfg.open, i = o.indexOf(el.dataset.e); if (i >= 0) o.splice(i, 1); else o.push(el.dataset.e); return zrSave(); };
+  ACT.zrAuto = function (el) { ZR.cfg.auto = el.checked; return zrSave(); };
+  ACT.zrPass = function (el) { ZR.cfg.pass = +el.dataset.n; return zrSave(); };
+  ACT.zrKid = function (el) {
+    var k = el.dataset.k, e = el.dataset.e, l = ZR.cfg.kids[k] = ZR.cfg.kids[k] || [], i = l.indexOf(e);
+    if (i >= 0) l.splice(i, 1); else l.push(e);
+    if (!l.length) delete ZR.cfg.kids[k];
+    return zrSave();
+  };
   // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
   // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.
   function liveGames() {
@@ -1493,6 +1577,8 @@
   // Kurztext für Übersichten: "⭐ 7 · ⏱️ 3:12"
   function awardText(a) {
     if (!a) return '';
+    if (a.zr) return Object.keys(a.zr).map(function (k) { var z = a.zr[k];
+      return z.name + ': ' + (!z.open && !z.f && z.best == null ? '🔒' : (z.t ? z.f + '/' + z.t + ' entdeckt' : 'offen') + (z.best != null ? ', Quiz ' + z.best + '/' + z.n + (z.ok ? ' ✓' : '') : '')); }).join(' · ');
     var parts = [], st = typeof a.stars === 'number' ? a.stars : awardSum(a);
     if (st) parts.push('⭐ ' + st + ' ' + (st === 1 ? 'Stern' : 'Sterne'));
     if (a.best) parts.push('⏱️ Bestzeit ' + fmtTime(a.best));
@@ -1588,6 +1674,11 @@
       if (isFinite(x.stars)) a.stars = Math.max(0, Math.min(10000, Math.round(x.stars)));
       if (isFinite(x.max)) a.max = Math.round(x.max);
       if (x.best == null || isFinite(x.best)) a.best = x.best == null ? null : Math.max(0, Math.round(x.best));
+      if (x.zr && typeof x.zr === 'object') {
+        a.zr = {};
+        Object.keys(x.zr).slice(0, 12).forEach(function (k) { var z = x.zr[k] || {};
+          a.zr[String(k).slice(0, 30)] = { name: String(z.name || k).slice(0, 30), f: +z.f || 0, t: +z.t || 0, best: z.best == null ? null : +z.best, n: +z.n || 10, tries: +z.tries || 0, ok: !!z.ok, open: !!z.open }; });
+      }
       if (x.lv && typeof x.lv === 'object') { a.lv = {}; Object.keys(x.lv).slice(0, 40).forEach(function (k) { if (isFinite(x.lv[k])) a.lv[String(k).slice(0, 40)] = Math.round(x.lv[k]); }); }
       S.dirty = true;
     };
@@ -1637,7 +1728,7 @@
         var js = JSON.stringify(d.data);
         if (js.length < 190000) { save.data = d.data; save.dirty = true; } else console.warn('Spielstand zu gross, wird nicht gespeichert');
       }
-    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, { store: st.save, award: S.view() });
+    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, { store: st.save, award: S.view(), settings: st.settings || null });
     S.render();
   };
   ACT.kTafel = async function () {

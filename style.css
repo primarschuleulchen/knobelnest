@@ -417,3 +417,13 @@ b,strong{font-weight:700}
 .board.embed .matrix{gap:5px;grid-template-columns:minmax(70px,.6fr) repeat(3,minmax(0,1fr))}
 .board.embed .mx-h span.lbl{display:inline;font-size:clamp(10px,2vw,16px);line-height:1.1}
 .board.embed .mx-subj{font-size:clamp(11px,3.4vh,22px);padding:4px 8px;gap:6px;hyphens:auto;overflow-wrap:break-word}
+/* Zeitreise: Zeiten & Fortschritt */
+.zr{width:min(980px,100%);max-height:calc(100dvh - 32px);overflow:auto;gap:16px}
+.zr-table th,.zr-table td{padding:8px 12px;vertical-align:top}
+.zr-table td small{display:block;color:var(--soft);margin-top:4px}
+.zr-st{display:inline-block;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;border:1.5px solid transparent;font-family:inherit}
+.zr-st.open{background:#DDF5EA;color:#1F6B50}
+button.zr-st{cursor:pointer}
+.zr-st.lock{background:#F2F4F7;border-color:#C9D3DE;color:#4A5B70}
+.zr-st.mine{background:#FFF1C9;border-color:#E8C76A;color:#6A5420}
+.zr .zr-table button.zr-st{width:auto;height:auto;min-height:0;min-width:0;max-width:none;aspect-ratio:auto;border-radius:999px;padding:4px 12px;line-height:1.4;box-shadow:none;display:inline-block}

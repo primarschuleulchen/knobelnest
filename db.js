@@ -129,6 +129,18 @@
     raceGet: async function (id) { return ok(await sb.from('races').select('id,status,settings,starts_at').eq('id', id).single()); },
     raceRuns: async function (id) { return ok(await sb.from('race_runs').select('kid_id,pos,correct,wrong,finished_at').eq('race_id', id)); },
     // ---------- Tagesfolie (Speicher pro Lehrperson) ----------
+    // ---------- Einstellungen pro Klasse und Spiel ----------
+    gameSettingsGet: async function (cid, gid) {
+      var r = ok(await sb.from('game_settings').select('settings').eq('class_id', cid).eq('game_id', gid).maybeSingle());
+      return r ? r.settings : null;
+    },
+    gameSettingsSet: async function (cid, gid, settings) {
+      ok(await sb.from('game_settings').upsert({ class_id: cid, game_id: gid, settings: settings, updated_at: new Date().toISOString() }, { onConflict: 'class_id,game_id' }));
+    },
+    listProgressGame: async function (kidIds, gid) {
+      if (!kidIds.length) return [];
+      return ok(await sb.from('progress').select('kid_id,award,levels,last_played').eq('game_id', gid).in('kid_id', kidIds));
+    },
     storeGet: async function (doc) {
       var r = ok(await sb.from('teacher_store').select('data').eq('doc', doc).maybeSingle());
       return r ? r.data : null;
