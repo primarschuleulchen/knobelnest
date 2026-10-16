@@ -137,6 +137,11 @@
     gameSettingsSet: async function (cid, gid, settings) {
       ok(await sb.from('game_settings').upsert({ class_id: cid, game_id: gid, settings: settings, updated_at: new Date().toISOString() }, { onConflict: 'class_id,game_id' }));
     },
+    resetProgress: async function (kidId, gameIds) {
+      var q = sb.from('progress').delete().eq('kid_id', kidId);
+      if (gameIds && gameIds.length) q = q.in('game_id', gameIds);
+      ok(await q);
+    },
     listProgressGame: async function (kidIds, gid) {
       if (!kidIds.length) return [];
       return ok(await sb.from('progress').select('kid_id,award,levels,last_played').eq('game_id', gid).in('kid_id', kidIds));

@@ -261,6 +261,27 @@
     if (x.onClose) x.onClose();
   }
   ACT.closePlayer = function () { closePlayer(); };
+  // Fortschritt eines Kindes zurücksetzen (alles oder einzelne Spiele)
+  ACT.pReset = function (el) {
+    var k = T.kids.filter(function (x) { return x.id === el.dataset.k; })[0]; if (!k) return;
+    var P = {}; (T.progress || []).forEach(function (r) { if (r.kid_id === k.id) P[r.game_id] = r; });
+    var gs = T.games.filter(function (g) { return P[g.id]; });
+    overlay('<form class="card stack" style="width:min(560px,100%);max-height:calc(100dvh - 32px);overflow:auto" data-a="pResetGo" data-k="' + k.id + '">' +
+      '<h2 style="margin:0">Fortschritt von ' + h(k.name) + ' zurücksetzen</h2>' +
+      '<p class="muted" style="margin:0">Gelöscht werden Punkte, Sterne, Bestzeiten und der gespeicherte Spielstand. Das lässt sich nicht rückgängig machen.</p>' +
+      '<label class="row" style="gap:10px;font-weight:700"><input type="checkbox" data-change="pResetAll" checked style="width:22px;height:22px"> Alle Spiele (' + gs.length + ')</label>' +
+      '<div class="stack" id="pResetList" style="gap:6px;padding-left:14px;border-left:3px solid var(--line)">' + gs.map(function (g) {
+        return '<label class="row" style="gap:10px;flex-wrap:nowrap"><input type="checkbox" name="g" value="' + g.id + '" checked style="width:20px;height:20px;flex:none"> <span>' + h(g.title) + ' <span class="muted small">' + h(g.fach) + ' › ' + h(g.thema) + '</span></span></label>'; }).join('') + '</div>' +
+      '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn danger">Zurücksetzen</button></div></form>');
+  };
+  ACT.pResetAll = function (el) { Array.prototype.forEach.call(document.querySelectorAll('#pResetList input'), function (i) { i.checked = el.checked; }); };
+  ACT.pResetGo = async function (f) {
+    var boxes = Array.prototype.slice.call(f.querySelectorAll('input[name=g]')), ids = boxes.filter(function (i) { return i.checked; }).map(function (i) { return i.value; });
+    if (!ids.length) return toast('Bitte mindestens ein Spiel wählen.');
+    var all = ids.length === boxes.length, k = T.kids.filter(function (x) { return x.id === f.dataset.k; })[0];
+    await DB.resetProgress(f.dataset.k, all ? null : ids);
+    closeOverlays(); T.progress = null; toast('Fortschritt von ' + (k ? k.name : '') + ' zurückgesetzt'); T.render();
+  };
   ACT.playerFull = function () { if (!PL) return; var e = PL.el; try { (e.requestFullscreen || e.webkitRequestFullscreen).call(e); } catch (x) {} };
   window.addEventListener('message', function (e) {
     if (!PL || e.source !== PL.frame.contentWindow) return;
@@ -1041,7 +1062,8 @@
           }).join('');
         }).join('');
         return '<tr><th scope="row" style="white-space:nowrap"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="width:32px;height:32px;background:' +
-          kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span></th>' + cells +
+          kidColor(k.name) + ';color:#1B2A3D">' + h(k.name.charAt(0)) + '</span>' + h(k.name) +
+          (games.some(function (g) { return !cell(P[k.id + '|' + g.id]).none; }) ? '<button class="preset" data-a="pReset" data-k="' + k.id + '" title="Fortschritt zurücksetzen" aria-label="Fortschritt von ' + h(k.name) + ' zurücksetzen">↺</button>' : '') + '</span></th>' + cells +
           '<td class="muted" style="white-space:nowrap">' + since(last) + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     return head + table + '<p class="muted small">Spiele, die dafür vorbereitet sind, melden richtige Antworten oder den Spielstand. Bei anderen Spielen sieht man, wie oft sie geöffnet wurden. Gespeichert werden nur Vorname, Fortschritt und Datum.</p>';

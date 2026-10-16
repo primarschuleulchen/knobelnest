@@ -427,3 +427,5 @@ button.zr-st{cursor:pointer}
 .zr-st.lock{background:#F2F4F7;border-color:#C9D3DE;color:#4A5B70}
 .zr-st.mine{background:#FFF1C9;border-color:#E8C76A;color:#6A5420}
 .zr .zr-table button.zr-st{width:auto;height:auto;min-height:0;min-width:0;max-width:none;aspect-ratio:auto;border-radius:999px;padding:4px 12px;line-height:1.4;box-shadow:none;display:inline-block}
+.ptable .preset{margin-left:6px;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line2);background:#fff;color:var(--soft);font-size:16px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;padding:0;flex:none}
+.ptable .preset:hover{border-color:var(--red);color:var(--red-ink)}
