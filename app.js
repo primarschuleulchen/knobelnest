@@ -82,7 +82,7 @@
   function pwLabel(pw) { return pw.split(',').map(function (s) { return SYM[s] ? SYM[s].label : s; }).join(', '); }
 
   // Farben
-  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F28B82', 'Deutsch': '#E9D7E4', 'NMG': '#F3DDB8', 'Französisch': '#D6E8F5' };
+  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F28B82', 'Deutsch': '#E9D7E4', 'NMG': '#D3F1E4', 'Französisch': '#D6E8F5' };
   var TINTS = ['#D5EBC9', '#E1E8F8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#E4F5EC'];
   var FACH_SHORT = { 'Mathematik': 'Mathe' };
   function fachShort(f) { return FACH_SHORT[f] || f; }
@@ -640,7 +640,7 @@
   ACT.createClass = async function (f) {
     var name = f.elements.cname.value.trim(); if (!name) return;
     var c = await withFreeCode(function (code) { return DB.createClass(name, code); });
-    var d = [['Mathematik', '#2F5E9E'], ['Deutsch', '#8A4F7D'], ['Englisch', '#C0473C'], ['NMG', '#C46A1C']];
+    var d = [['Mathematik', '#2F5E9E'], ['Deutsch', '#8A4F7D'], ['Englisch', '#C0473C'], ['NMG', '#2E8B57']];
     for (var i = 0; i < d.length; i++) await DB.addSubject(c.id, { name: d[i][0], color: d[i][1], fav: true, active: true, sort: i });
     T.classes.push(c); T.cls = c.id; LS.set('kn_cls', c.id);
     await T.loadClass(); T.tab = 'kinder'; LS.set('kn_tab', 'kinder');
