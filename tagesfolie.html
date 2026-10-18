@@ -194,6 +194,7 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .t-stand{position:absolute;inset:0}
 .t-stand iframe{width:100%;height:100%;border:0;display:block;pointer-events:none}
 .kn-back{font-weight:700}
+.pill.undo:disabled{opacity:.4;cursor:default}
 .t-img{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
 .t-img img{max-width:100%;max-height:100%;object-fit:contain;border-radius:16px;box-shadow:0 3px 18px rgba(40,60,45,.15);pointer-events:none;user-select:none}
 
@@ -289,6 +290,8 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
     <button class="pill kn-back" id="knBack" style="display:none">← Knobelnest</button>
     <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>
     <div class="spacer"></div>
+    <button class="pill undo" id="undoBtn" title="Rückgängig (⌘Z)" aria-label="Rückgängig" disabled>↶ Rückgängig</button>
+    <button class="pill undo" id="redoBtn" title="Wiederholen (⇧⌘Z)" aria-label="Wiederholen" disabled>↷</button>
     <span class="status" id="status">Wird geladen …</span>
     <button class="pill" id="fontBtn">Schrift</button>
     <button class="pill" id="bgBtn">Hintergrund</button>
@@ -309,6 +312,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 // Knobelnest: Klassenliste, Speicher und Arbeitsstand-Tafel kommen aus dem Portal
 const KN = (() => { try { return window.parent !== window && window.parent.knTagesfolie || null; } catch { return null; } })();
 if (KN) window.claude = KN.claude;
+// Rückgängig: vor jeder gespeicherten Änderung wird der vorherige Stand gemerkt (der gerade gezeigte Bildschirm zählt nicht als Änderung)
+const UNDO = { back:[], fwd:[], last:null, t:0, size:0, inputAt:0 };
+document.addEventListener("input", () => { UNDO.inputAt = Date.now(); }, true);
 const $ = s => document.querySelector(s);
 const APP = document.getElementById("app");
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -632,7 +638,30 @@ const lsGet = () => { try { const v = localStorage.getItem(LS); return v ? JSON.
 const lsSet = v => { try { localStorage.setItem(LS, JSON.stringify(v)); } catch {} };
 let flushing = false, dirty = false;
 const setStatus = t => { $("#status").textContent = t; };
-function save(){ lsSet(S); dirty = true; setStatus("Speichert …"); clearTimeout(save.t); save.t = setTimeout(flush, 700); }
+function undoSnap(){ return JSON.stringify(Object.assign({}, S, { active:"" })); }
+function undoBase(){ try { UNDO.last = undoSnap(); UNDO.back = []; UNDO.fwd = []; UNDO.size = 0; updUndo(); } catch {} }
+function undoTrack(){
+  try {
+    const cur = undoSnap(); if (UNDO.last === null) { UNDO.last = cur; return; }
+    if (cur === UNDO.last) return;
+    const now = Date.now(), typing = now - (UNDO.inputAt || 0) < 400; // Tippen in Texten zählt als ein Schritt
+    if (!(typing && now - UNDO.t < 1500 && UNDO.back.length)) { UNDO.back.push(UNDO.last); UNDO.size += UNDO.last.length; }
+    while (UNDO.back.length > 40 || (UNDO.size > 30e6 && UNDO.back.length > 1)) UNDO.size -= UNDO.back.shift().length;
+    UNDO.fwd = []; UNDO.last = cur; UNDO.t = now; updUndo();
+  } catch {}
+}
+function updUndo(){ const u = document.getElementById("undoBtn"), r = document.getElementById("redoBtn"); if (u) u.disabled = !UNDO.back.length; if (r) r.disabled = !UNDO.fwd.length; }
+function undoRestore(js, msg){
+  const act = S.active, n = JSON.parse(js);
+  n.active = n.screens.some(s => s.id === act) ? act : n.screens[0].id;
+  S = n; UNDO.last = js; selId = null;
+  lsSet(S); dirty = true; setStatus("Speichert …"); clearTimeout(save.t); save.t = setTimeout(flush, 700);
+  closeMenus(); document.querySelectorAll(".sheet-bg").forEach(x => x.remove());
+  renderAll(); updUndo(); toast(msg);
+}
+function doUndo(){ if (!UNDO.back.length) return; const prev = UNDO.back.pop(); UNDO.size -= prev.length; UNDO.fwd.push(UNDO.last); undoRestore(prev, "Rückgängig gemacht"); }
+function doRedo(){ if (!UNDO.fwd.length) return; const nx = UNDO.fwd.pop(); UNDO.back.push(UNDO.last); UNDO.size += UNDO.last.length; undoRestore(nx, "Wiederhergestellt"); }
+function save(){ undoTrack(); lsSet(S); dirty = true; setStatus("Speichert …"); clearTimeout(save.t); save.t = setTimeout(flush, 700); }
 async function flush(){
   if (flushing) { save.t = setTimeout(flush, 400); return; }
   if (!dirty) return;
@@ -1390,6 +1419,14 @@ function openTemplates(){
   });
 }
 if (KN) { const b = $("#knBack"); b.style.display = ""; b.addEventListener("click", () => KN.back()); }
+$("#undoBtn").addEventListener("click", doUndo);
+$("#redoBtn").addEventListener("click", doRedo);
+document.addEventListener("keydown", e => {
+  if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "z") return;
+  const ae = document.activeElement; if (ae && ae.matches && ae.matches('[contenteditable="true"],input,textarea')) return; // im Textfeld: normales Rückgängig
+  e.preventDefault(); if (e.shiftKey) doRedo(); else doUndo();
+});
+updUndo();
 $("#fsBtn").addEventListener("click", async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await APP.requestFullscreen(); }
   catch { toast("Vollbild geht hier nicht – öffne die Seite im Browser"); }
@@ -1408,7 +1445,7 @@ try { navigator.wakeLock?.request("screen").catch(() => {}); } catch {}
 
 // ---------- Start ----------
 function renderAll(){ applyFont(); renderTabs(); renderBoard(); drawBg(); const b = screen().bg; if (b && !S.bgs.find(x => x.src === b)?.pal) ensurePalette(b).then(renderBoard); }
-S = migrate(lsGet() || defaults()); delete S._tplAdded;
+S = migrate(lsGet() || defaults()); delete S._tplAdded; undoBase();
 loadCustomFonts();
 if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id;
 renderAll();
@@ -1423,7 +1460,7 @@ setStatus("Gespeichert auf diesem Gerät");
     const id = await user.id(); if (!id) return;
     store = { mode: "db", col: db.collection("data/users/" + id) };
     const snap = await store.col.doc("tafel").get();
-    if (snap.exists && snap.data()?.screens) { S = migrate(snap.data()); if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id; const nAdd = S._tplAdded; delete S._tplAdded; lsSet(S); renderAll(); if (nAdd) { save(); toast(nAdd === 1 ? "1 Beispiel-Folie aus der Vorlage hinzugefügt" : nAdd + " Beispiel-Folien aus der Vorlage hinzugefügt"); } }
+    if (snap.exists && snap.data()?.screens) { S = migrate(snap.data()); if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id; const nAdd = S._tplAdded; delete S._tplAdded; lsSet(S); undoBase(); renderAll(); if (nAdd) { save(); toast(nAdd === 1 ? "1 Beispiel-Folie aus der Vorlage hinzugefügt" : nAdd + " Beispiel-Folien aus der Vorlage hinzugefügt"); } }
     else { dirty = true; await flush(); }
     loadCustomFonts();
     setStatus("Mit deinem Konto verbunden ✓");
