@@ -434,3 +434,11 @@ button.zr-st{cursor:pointer}
 .kidnr::placeholder{color:#1B2A3D;opacity:.6}
 .kidnr:hover{border-color:var(--line2)}
 .kidnr:focus{outline:none;border-color:var(--btn);background:#fff!important}
+@media print{
+  .pcard{display:flex;gap:5mm;align-items:center}
+  .pcard .pc-main{flex:1;min-width:0}
+  .pcard .pc-qr{flex:none;width:32mm;text-align:center}
+  .pcard .pc-qr svg{width:32mm;height:32mm;display:block}
+  .pcard .pc-qr small{font-size:8pt;color:#555}
+  .pcard .pnr{display:inline-grid;place-items:center;min-width:9mm;height:9mm;border-radius:50%;border:1.5px solid #555;font-size:13pt;margin-right:3mm;vertical-align:middle}
+}

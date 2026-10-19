@@ -542,7 +542,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('33') + '" title="Tagesfolie" allow="fullscreen"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('34') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
@@ -976,14 +976,18 @@
     await DB.deleteKid(el.dataset.id);
     T.kids = T.kids.filter(function (k) { return k.id !== el.dataset.id; }); T.progress = null; T.tafel = null; T.render();
   };
-  ACT.printCards = function () {
+  ACT.printCards = async function () {
     var c = T.cur();
-    document.getElementById('print').innerHTML = '<div class="pcards">' + T.kids.map(function (k) {
-      return '<div class="pcard"><h3>' + h(k.name) + '</h3><div class="pw">' + k.pw.split(',').map(function (p) {
+    toast('Kärtchen werden vorbereitet …');
+    // QR-Code pro Kind: führt direkt zur Bildpasswort-Eingabe dieses Kindes
+    var qrs = await Promise.all(T.kids.map(function (k) { return qrSvg(kidUrl(c.code) + '/' + k.id).catch(function () { return ''; }); }));
+    document.getElementById('print').innerHTML = '<div class="pcards">' + T.kids.map(function (k, i) {
+      return '<div class="pcard"><div class="pc-main"><h3>' + (k.nr != null ? '<span class="pnr">' + h(String(k.nr)) + '</span>' : '') + h(k.name) + '</h3><div class="pw">' + k.pw.split(',').map(function (p) {
         return SYM[p] ? '<span style="background:' + SYM[p].bg + '">' + symSvg(p, 48) + '</span>' : ''; }).join('') +
-        '</div><p>Klasse ' + h(c.name) + ' · Code <b>' + h(c.code) + '</b><br>' + h(shortUrl(kidUrl())) + '</p></div>';
+        '</div><p>Klasse ' + h(c.name) + ' · Code <b>' + h(c.code) + '</b><br>' + h(shortUrl(kidUrl())) + '</p></div>' +
+        (qrs[i] ? '<div class="pc-qr">' + qrs[i] + '<small>Mit dem iPad scannen</small></div>' : '') + '</div>';
     }).join('') + '</div>';
-    setTimeout(function () { window.print(); }, 50);
+    setTimeout(function () { window.print(); }, 150);
   };
 
   // ---------- Fortschritt ----------
@@ -1427,7 +1431,8 @@
   K.start = async function () {
     UI.view = 'kid';
     K.err = ''; K.pw = [];
-    var m = (location.hash || '').match(/^#\/klasse\/([^/?#]+)/);
+    var m = (location.hash || '').match(/^#\/klasse\/([^/?#]+)(?:\/([0-9a-f-]{36}))?/);
+    K.wantKid = m && m[2] ? m[2] : null;
     if (m) {
       var given = decodeURIComponent(m[1]);
       try { history.replaceState(null, '', location.pathname + location.search + '#/klasse'); } catch (e) {}
@@ -1436,11 +1441,15 @@
       LS.set('kn_code', given);
     }
     var s = LS.get('kn_kid');
+    if (s && K.wantKid && s.kid !== K.wantKid) { try { DB.kidLogout(s.token); } catch (e) {} LS.del('kn_kid'); s = null; }
     if (s && s.exp > Date.now()) { K.sess = s; K.step = 'home'; return K.loadHome(); }
     LS.del('kn_kid'); K.sess = null;
     var code = LS.get('kn_code');
     if (code) {
-      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names'; return K.render(); } } catch (e) {}
+      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names';
+        var wk = K.wantKid && c.kids.filter(function (k) { return k.id === K.wantKid; })[0];
+        if (wk) { K.kid = wk; K.pw = []; K.err = ''; K.step = 'pw'; } K.wantKid = null;
+        return K.render(); } } catch (e) {}
     }
     K.step = 'code'; K.render();
   };
@@ -1569,7 +1578,7 @@
         if (r.error === 'unbekannt') { LS.del('kn_code'); K.step = 'code'; }
         return K.render();
       }
-      K.sess = { token: r.token, name: r.name, code: K.code, exp: Date.now() + 11.5 * 3600 * 1000 };
+      K.sess = { token: r.token, name: r.name, code: K.code, kid: K.kid && K.kid.id, exp: Date.now() + 11.5 * 3600 * 1000 };
       LS.set('kn_kid', K.sess); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
     } finally { K.busy = false; }
   };
@@ -1614,6 +1623,11 @@
   function starPer(c, k) { var n = c.pro; Object.keys(c.proFuer || {}).forEach(function (p) { if (String(k).indexOf(p) === 0) n = c.proFuer[p]; }); return n; }
   function today() { return new Date().toLocaleDateString('sv-SE'); }
   function starRow(n, max, cls) { var o = ''; for (var i = 0; i < max; i++) o += '<span class="st' + (i < n ? '' : ' off') + (cls && i === n - 1 ? ' ' + cls : '') + '">★</span>'; return o; }
+  function fmtDay(ms) {
+    var d = new Date(ms), t = new Date(); t.setHours(0, 0, 0, 0);
+    var diff = Math.round((t - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
+    return diff === 0 ? 'heute' : diff === 1 ? 'gestern' : d.getDate() + '.' + (d.getMonth() + 1) + '.' + (d.getFullYear() !== t.getFullYear() ? d.getFullYear() : '');
+  }
   function fmtTime(ms) { var t = Math.round(ms / 1000), m = Math.floor(t / 60); t %= 60; return m + ':' + (t < 10 ? '0' : '') + t; }
   function awardSum(a) { var n = 0, lv = (a && a.lv) || {}; Object.keys(lv).forEach(function (k) { n += +lv[k] || 0; }); return n; }
   // Kurztext für Übersichten: "⭐ 7 · ⏱️ 3:12"
@@ -1623,7 +1637,8 @@
       return z.name + ': ' + (!z.open && !z.f && z.best == null ? '🔒' : (z.t ? z.f + '/' + z.t + ' entdeckt' : 'offen') + (z.best != null ? ', Quiz ' + z.best + '/' + z.n + (z.ok ? ' ✓' : '') : '')); }).join(' · ');
     var parts = [], st = typeof a.stars === 'number' ? a.stars : awardSum(a);
     if (st) parts.push('⭐ ' + st + ' ' + (st === 1 ? 'Stern' : 'Sterne'));
-    if (a.best) parts.push('⏱️ Bestzeit ' + fmtTime(a.best));
+    if (a.best) parts.push('⏱️ Bestzeit ' + fmtTime(a.best) + (a.last ? ' (zuletzt ' + fmtDay(a.last) + ')' : ''));
+    else if (a.last) parts.push('zuletzt ' + fmtDay(a.last));
     return parts.join(' · ');
   }
   function Stars(cfg, award, base) {
@@ -1715,6 +1730,7 @@
       if (!x || typeof x !== 'object') return;
       if (isFinite(x.stars)) a.stars = Math.max(0, Math.min(10000, Math.round(x.stars)));
       if (isFinite(x.max)) a.max = Math.round(x.max);
+      if (isFinite(x.last) && x.last > 0) a.last = Math.round(x.last);
       if (x.best == null || isFinite(x.best)) a.best = x.best == null ? null : Math.max(0, Math.round(x.best));
       if (x.zr && typeof x.zr === 'object') {
         a.zr = {};

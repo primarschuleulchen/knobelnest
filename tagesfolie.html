@@ -147,7 +147,33 @@ button{cursor:pointer}
 .blob::after{content:"";position:absolute;inset:0;opacity:0;background:no-repeat center/62% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 .t-list li.done .blob::after{opacity:1}
 .t-list li.done .txt{text-decoration:line-through;color:#98a19a}
-.t-list .txt{flex:1;min-width:0;overflow-wrap:break-word;hyphens:auto}
+.t-list .txt{flex:1;min-width:0;overflow-wrap:break-word;hyphens:auto;color:var(--tc,inherit)}
+/* Werkzeuge schweben rechts über dem Text, damit der Text die ganze Breite nutzt */
+.t-list li{position:relative}
+.t-list .itools{position:absolute;right:-.2em;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.95);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.12);opacity:0;pointer-events:none;transition:opacity .15s;z-index:2}
+.t-list li:hover>.itools,.t-list li:focus-within>.itools,.t-list li.dragging>.itools{opacity:1;pointer-events:auto}
+.t-list .itools .mv,.t-list .itools .ix{opacity:1}
+.t-list li.sub .txt{font-weight:700;font-size:.8em;letter-spacing:.01em;padding-top:.25em}
+.t-list li.sub{margin-top:.15em}
+.t-list li.desc{padding-left:calc(1.25em + var(--fs) * .7vh)}
+.t-list li.desc .txt{font-size:.62em;line-height:1.25;color:var(--tc,var(--muted));opacity:.9}
+.t-list.check li.desc{padding-left:calc(1.08em + var(--fs) * .7vh)}
+.mat{all:unset;box-sizing:border-box;cursor:pointer;position:relative}
+.mat.crossed svg{opacity:.55}
+.mat.crossed::after{content:"";position:absolute;left:50%;top:0;width:min(100%,120px);aspect-ratio:1;transform:translateX(-50%);pointer-events:none;
+  background:linear-gradient(to top right,transparent calc(50% - 3px),#d23a2f calc(50% - 3px),#d23a2f calc(50% + 3px),transparent calc(50% + 3px)),linear-gradient(to top left,transparent calc(50% - 3px),#d23a2f calc(50% - 3px),#d23a2f calc(50% + 3px),transparent calc(50% + 3px))}
+.mat.crossed span{text-decoration:line-through;text-decoration-color:#d23a2f;text-decoration-thickness:2px}
+.mnote{font-family:var(--hand);font-size:calc(var(--fs) * .62vh);line-height:1.2;padding:2px 5cqw 14px;outline:none;white-space:pre-wrap;text-align:center}
+.mnote:empty::before{content:attr(data-ph);color:#b5bcb6}
+.mnote.empty:not(:focus){display:none}
+.w.sel .mnote.empty{display:block}
+.swrow{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
+.swrow.sm .swatch{width:26px;height:26px}
+.swatch{width:34px;height:34px;border-radius:50%;border:2px solid rgba(0,0,0,.12);cursor:pointer;padding:0;font-size:14px;color:#6c766f}
+.swatch.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #1f2421}
+.sh3{margin:14px 0 2px;font-size:15px}
+.switem{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:4px 0;border-bottom:1px solid var(--line)}
+.switem>span{font-size:14px;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ix{opacity:0;border:0;background:none;color:#c0463c;font-size:.55em;padding:4px}
 li:hover>.ix,.pl-item:hover .ix{opacity:1}
 .t-list .mv{opacity:0;border:0;background:none;cursor:grab;color:var(--muted);font-size:.6em;padding:4px 6px;touch-action:none;border-radius:8px;line-height:1}
@@ -194,6 +220,12 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .t-stand{position:absolute;inset:0}
 .t-stand iframe{width:100%;height:100%;border:0;display:block;pointer-events:none}
 .kn-back{font-weight:700}
+.music-chip{position:absolute;left:14px;bottom:96px;z-index:40;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;box-shadow:0 4px 14px rgba(0,0,0,.1);font-size:14px}
+.music-chip[hidden]{display:none}
+.music-chip button{width:34px;height:34px;border-radius:50%;border:0;background:var(--rose);color:#fff;font-size:15px;cursor:pointer}
+.music-chip .mt{cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.music-chip .yt{position:absolute;width:2px;height:2px;opacity:.01;left:0;top:0;border:0;pointer-events:none}
+.app.idle .music-chip{opacity:.25}
 .pill.undo:disabled{opacity:.4;cursor:default}
 .t-img{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
 .t-img img{max-width:100%;max-height:100%;object-fit:contain;border-radius:16px;box-shadow:0 3px 18px rgba(40,60,45,.15);pointer-events:none;user-select:none}
@@ -214,7 +246,7 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .setrow b{flex:1;min-width:0}
 .setrow small{color:var(--muted)}
 .sheet textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:15px;line-height:1.4;resize:vertical;background:var(--paper)}
-.t-note{flex:1;overflow:auto;padding:1cqh 7cqw 4cqh;font-family:var(--hand);font-size:clamp(16px,min(9cqh,7cqw),52px);line-height:1.2;white-space:pre-wrap}
+.t-note{flex:1;overflow:auto;padding:1cqh 7cqw 4cqh;font-family:var(--hand);font-size:calc(var(--fs) * 1vh);line-height:1.2;white-space:pre-wrap}
 .w.traffic .card{background:#2d3a33}
 .t-traffic{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:4cqh 0}
 .t-traffic button{border:0;border-radius:50%;width:min(70cqw,26cqh);aspect-ratio:1;max-width:100%;opacity:.22;transition:opacity .2s,box-shadow .2s}
@@ -350,8 +382,81 @@ function balloon(id, x, y, s, [a, b, rope, basket]){
   <path d="M40 108L41 132M60 108L59 132M46 108L46 132M54 108L54 132" stroke="${rope}" stroke-width="1.2"/>
   <rect x="38" y="131" width="24" height="16" rx="3" fill="${basket}"/><path d="M38 136H62M38 141H62" stroke="#00000022" stroke-width="1.2"/></g>`;
 }
+// ---------- Hintergrund-Vorlagen in Pastell ----------
+const rngOf = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+function edgeSpots(W, H, n, seed, cx = .2, cy = .17){
+  const r = rngOf(seed), out = []; let g = 0;
+  while (out.length < n && g++ < n * 60) {
+    const x = r() * W, y = r() * H;
+    if (x > W * cx && x < W * (1 - cx) && y > H * cy && y < H * (1 - cy)) continue;
+    if (out.some(p => Math.hypot(p[0] - x, p[1] - y) < Math.min(W, H) * .085)) continue;
+    out.push([x, y, r()]);
+  }
+  return out;
+}
+const softBlobs = (W, H, list) => `<defs><filter id="wc" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${Math.round(Math.min(W, H) / 22)}"/></filter></defs><g filter="url(#wc)">${list.map(([x, y, rx, ry, c, o]) => `<ellipse cx="${x * W}" cy="${y * H}" rx="${rx * W}" ry="${ry * H}" fill="${c}" opacity="${o}"/>`).join("")}</g>`;
+const HAND = `font-family="Patrick Hand,Comic Sans MS,cursive"`;
+const BG_TPL = {
+  mathe: { name: "Mathe", base: "radial-gradient(ellipse at 45% 35%,#fdfdfb,#f1f5fa)", fill: "#f4f7fb",
+    theme: { title: "#4f7fb5", blobs: ["#8fb8e2", "#f2cd6b", "#a5cf98", "#eba7a0", "#c4a9e2", "#f3b37c"], cal: ["#4f7fb5", "#e3edf8"] },
+    draw(W, H){
+      const C = ["#8fb8e2", "#eba7a0", "#a5cf98", "#efc75e", "#c4a9e2", "#f3b37c", "#7fcabd"];
+      const T = ["7", "3", "½", "¾", "⅓", "2 · 3", "7 × 8", "+", "−", "=", "÷", "9", "1×1", "4", "0", "5 + 5", "8", "%", "6 : 2", "¼", "1", "100"];
+      const sp = edgeSpots(W, H, 30, 7), s = Math.min(W, H);
+      const shapes = `<g fill="none" stroke-width="${s * .006}" opacity=".55" stroke-linejoin="round">
+        <rect x="${W * .9}" y="${H * .42}" width="${s * .07}" height="${s * .07}" rx="${s * .008}" stroke="#8fb8e2" transform="rotate(12 ${W * .93} ${H * .46})"/>
+        <path d="M${W * .05} ${H * .44}l${s * .05} ${-s * .085}l${s * .05} ${s * .085}z" stroke="#a5cf98"/>
+        <circle cx="${W * .5}" cy="${H * .07}" r="${s * .028}" stroke="#eba7a0"/></g>`;
+      const grid = `<g opacity=".35" stroke="#8fb8e2" stroke-width="1">${Array.from({ length: 9 }, (_, i) => `<path d="M${W - s * .3 + i * s * .03} ${H} v${-s * .24}"/><path d="M${W - s * .3} ${H - i * s * .03} h${s * .3}"/>`).join("")}</g>`;
+      return softBlobs(W, H, [[0, 1, .26, .32, "#bcd6ef", .55], [1, 0, .24, .3, "#cfe6c4", .5], [1, 1, .2, .26, "#f6dcb4", .45], [0, 0, .18, .2, "#efd2e4", .45]]) + grid + shapes +
+        sp.map(([x, y, r], i) => { const t = T[i % T.length], f = s * (.045 + r * .05) * (t.length > 3 ? .7 : 1);
+          return `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" ${HAND} font-size="${f.toFixed(0)}" fill="${C[i % C.length]}" opacity=".78" text-anchor="middle" transform="rotate(${(r * 40 - 20).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})">${t}</text>`; }).join("");
+    } },
+  deutsch: { name: "Deutsch", base: "radial-gradient(ellipse at 45% 35%,#fffdf9,#f8f1ea)", fill: "#faf5ef",
+    theme: { title: "#c0675a", blobs: ["#eba7a0", "#a5cf98", "#efc75e", "#8fb8e2", "#d7b3e0", "#f3b37c"], cal: ["#c0675a", "#f8e6e1"] },
+    draw(W, H){
+      const s = Math.min(W, H), C = ["#eba7a0", "#8fb8e2", "#a5cf98", "#efc75e", "#c4a9e2", "#f3b37c"];
+      const L = "AbCdEfGhIjKlMnOpQrStUvWz".split(""), sp = edgeSpots(W, H, 24, 13, .22, .2);
+      const book = (x, y, w, h, c, rot = 0) => `<g transform="rotate(${rot} ${x} ${y})"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${s * .006}" fill="${c}"/><rect x="${x + w * .08}" y="${y + h * .2}" width="${w * .84}" height="${h * .12}" rx="2" fill="#fff" opacity=".55"/><rect x="${x + w * .08}" y="${y + h * .68}" width="${w * .84}" height="${h * .08}" rx="2" fill="#fff" opacity=".4"/></g>`;
+      const bw = s * .09, by = H - s * .02;
+      const stack = [["#eba7a0", .32, 0], ["#8fb8e2", .26, .01], ["#a5cf98", .3, -.012], ["#efc75e", .24, .006]].map(([c, w, dx], i) =>
+        `<rect x="${s * (.04 + dx)}" y="${by - (i + 1) * s * .045}" width="${s * w}" height="${s * .042}" rx="${s * .008}" fill="${c}"/><rect x="${s * (.04 + dx) + s * w * .82}" y="${by - (i + 1) * s * .045 + s * .008}" width="${s * .02}" height="${s * .026}" rx="2" fill="#fff" opacity=".6"/>`).join("");
+      const row = ["#c4a9e2", "#8fb8e2", "#eba7a0", "#efc75e", "#a5cf98"].map((c, i) => book(W - s * .06 - (5 - i) * bw * .62, H - s * .02 - s * (.2 + (i % 3) * .025), bw * .55, s * (.2 + (i % 3) * .025), c, i === 4 ? 8 : 0)).join("");
+      const open = (cx, cy, w) => `<g transform="rotate(-8 ${cx} ${cy})" opacity=".9"><path d="M${cx} ${cy}c${-w * .25} ${-w * .12} ${-w * .45} ${-w * .1} ${-w * .55} ${-w * .02}v${w * .42}c${w * .1} ${-w * .08} ${w * .3} ${-w * .1} ${w * .55} ${w * .02}z" fill="#fff" stroke="#e5c9b8" stroke-width="3"/><path d="M${cx} ${cy}c${w * .25} ${-w * .12} ${w * .45} ${-w * .1} ${w * .55} ${-w * .02}v${w * .42}c${-w * .1} ${-w * .08} ${-w * .3} ${-w * .1} ${-w * .55} ${w * .02}z" fill="#fff" stroke="#e5c9b8" stroke-width="3"/>${[0, 1, 2, 3].map(k => `<path d="M${cx - w * .45} ${cy + w * (.06 + k * .07)}q${w * .2} ${-w * .06} ${w * .38} 0M${cx + w * .07} ${cy + w * (.06 + k * .07)}q${w * .2} ${-w * .06} ${w * .38} 0" stroke="#d9c6bb" stroke-width="2" fill="none"/>`).join("")}</g>`;
+      const pencil = `<g transform="rotate(-35 ${s * .12} ${s * .14})"><rect x="${s * .02}" y="${s * .12}" width="${s * .2}" height="${s * .032}" rx="4" fill="#efc75e"/><path d="M${s * .22} ${s * .12}l${s * .045} ${s * .016}l${-s * .045} ${s * .016}z" fill="#f2d8b8"/><path d="M${s * .255} ${s * .132}l${s * .01} ${s * .004}l${-s * .01} ${s * .004}z" fill="#555"/><rect x="${s * .005}" y="${s * .12}" width="${s * .022}" height="${s * .032}" rx="4" fill="#eba7a0"/></g>`;
+      return softBlobs(W, H, [[0, 1, .26, .3, "#f3cfc6", .55], [1, 0, .22, .28, "#d6e8c9", .5], [1, 1, .22, .25, "#d6e2f3", .45], [0, 0, .2, .22, "#f6e3b5", .45]]) +
+        stack + row + open(W - s * .2, s * .14, s * .26) + pencil +
+        sp.map(([x, y, r], i) => `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" ${HAND} font-size="${(s * (.05 + r * .05)).toFixed(0)}" fill="${C[i % C.length]}" opacity=".75" text-anchor="middle" transform="rotate(${(r * 36 - 18).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})">${L[i % L.length]}</text>`).join("");
+    } },
+  klassenrat: { name: "Klassenrat", base: "radial-gradient(ellipse at 50% 40%,#fffefb,#f5f1f7)", fill: "#f8f5f8",
+    theme: { title: "#8a6fb8", blobs: ["#c4a9e2", "#efc75e", "#8fb8e2", "#eba7a0", "#a5cf98", "#f3b37c"], cal: ["#8a6fb8", "#efe8f8"] },
+    draw(W, H){
+      const s = Math.min(W, H), C = ["#eba7a0", "#efc75e", "#a5cf98", "#8fb8e2", "#c4a9e2", "#f3b37c"];
+      // Wimpelkette oben
+      const sag = s * .09, y0 = s * .03, n = Math.max(9, Math.round(W / (s * .085)));
+      const yAt = t => y0 + 4 * sag * t * (1 - t);
+      let flags = "";
+      for (let i = 0; i < n; i++) { const t0 = (i + .15) / n, t1 = (i + .85) / n, tm = (t0 + t1) / 2, x0 = t0 * W, x1 = t1 * W, xm = tm * W, ya = yAt(t0), yb = yAt(t1), ym = yAt(tm) + s * .085;
+        flags += `<path d="M${x0} ${ya}L${x1} ${yb}L${xm} ${ym}Z" fill="${C[i % C.length]}" opacity=".9"/><path d="M${x0 + (x1 - x0) * .3} ${(ya + yb) / 2 + s * .012}L${x1 - (x1 - x0) * .3} ${(ya + yb) / 2 + s * .012}" stroke="#fff" stroke-width="3" opacity=".5"/>`; }
+      const string = `<path d="M0 ${y0}Q${W / 2} ${y0 + 2 * sag} ${W} ${y0}" stroke="#b8a99a" stroke-width="3" fill="none"/>`;
+      // Kissen unten im Kreis
+      const cw = s * .22, ch = s * .15, m = Math.ceil(W / (cw * .82)) + 1;
+      let cush = "";
+      for (let i = 0; i < m; i++) { const cx = i * cw * .82 - cw * .1, cy = H - ch * 1.02 + (i % 2) * ch * .14, c = C[(i * 2 + 1) % C.length];
+        cush += `<g transform="rotate(${(i % 3 - 1) * 4} ${cx + cw / 2} ${cy + ch / 2})"><path d="M${cx} ${cy + ch * .15}Q${cx + cw / 2} ${cy - ch * .05} ${cx + cw} ${cy + ch * .15}Q${cx + cw * 1.04} ${cy + ch / 2} ${cx + cw} ${cy + ch * .85}Q${cx + cw / 2} ${cy + ch * 1.05} ${cx} ${cy + ch * .85}Q${cx - cw * .04} ${cy + ch / 2} ${cx} ${cy + ch * .15}Z" fill="${c}"/>
+          <path d="M${cx + cw * .08} ${cy + ch * .5}Q${cx + cw / 2} ${cy + ch * .42} ${cx + cw * .92} ${cy + ch * .5}" stroke="#fff" stroke-width="2.5" stroke-dasharray="7 6" fill="none" opacity=".7"/><circle cx="${cx + cw / 2}" cy="${cy + ch * .47}" r="${ch * .06}" fill="#fff" opacity=".7"/></g>`; }
+      const bubble = (x, y, w, c) => `<path d="M${x} ${y}h${w}q${w * .12} 0 ${w * .12} ${w * .12}v${w * .3}q0 ${w * .12} ${-w * .12} ${w * .12}h${-w * .55}l${-w * .14} ${w * .14}v${-w * .14}h${-w * .19}q${-w * .12} 0 ${-w * .12} ${-w * .12}v${-w * .3}q0 ${-w * .12} ${w * .12} ${-w * .12}z" fill="${c}" opacity=".55"/>`;
+      return softBlobs(W, H, [[0, .55, .2, .3, "#e6dbf3", .5], [1, .5, .2, .3, "#f6e3c4", .5], [.5, 1, .45, .18, "#f3d6dc", .35]]) +
+        string + flags + bubble(s * .05, H * .38, s * .12, "#c4a9e2") + bubble(W - s * .2, H * .45, s * .12, "#8fb8e2") + cush;
+    } }
+};
+for (const k in BG_TPL) { const t = BG_TPL[k], inner = t.draw(1600, 900);
+  t.thumb = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="${t.fill}"/>${inner}</svg>`)}") center/cover`; }
 function drawBg(){
   const bg = $("#bg"), src = S && screen().bg;
+  bg.style.background = "";
+  if (src && src.startsWith("tpl:") && BG_TPL[src.slice(4)]) { const t = BG_TPL[src.slice(4)], W = window.innerWidth, H = window.innerHeight;
+    bg.className = "bg tpl"; bg.style.background = t.base; bg.innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${t.draw(W, H)}</svg>`; return; }
   if (src) { bg.className = "bg custom"; bg.style.backgroundImage = `url("${src.replace(/"/g, "%22")}")`; bg.innerHTML = ""; return; }
   bg.className = "bg"; bg.style.backgroundImage = "";
   const W = window.innerWidth, H = window.innerHeight;
@@ -613,13 +718,14 @@ function extractPalette(src){
 }
 const palTodo = new Map();
 function ensurePalette(src){
-  if (!src) return Promise.resolve();
+  if (!src || src.startsWith("tpl:")) return Promise.resolve();
   const b = S.bgs.find(x => x.src === src); if (b?.pal) return Promise.resolve();
   if (palTodo.has(src)) return palTodo.get(src);
   const p = new Promise(res => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => { const pal = extractPalette(i); if (pal) { if (b) b.pal = pal; else S.bgs.push({ src, pal }); save(); } res(); }; i.onerror = () => res(); i.src = src; });
   palTodo.set(src, p); return p;
 }
 function theme(){
+  const tk = (screen().bg || "").startsWith("tpl:") && BG_TPL[screen().bg.slice(4)]; if (tk) return tk.theme;
   const src = screen().bg, pal = src && S.bgs.find(x => x.src === src)?.pal;
   if (!pal || !pal.length) return { title: "#e07a70", blobs: BLOBS, cal: CAL_COLORS.rose };
   // Titel: kräftigste Farbe, abgedunkelt bis sie gut lesbar ist
@@ -820,13 +926,14 @@ function openScrMenu(id, anchor){
   closeMenus();
   const r = anchor.getBoundingClientRect(), m = document.createElement("div");
   m.className = "menu"; m.style.left = Math.max(8, Math.min(r.left - 20, window.innerWidth - 236)) + "px"; m.style.top = r.bottom + 10 + "px";
-  m.innerHTML = `<button data-a="rename">Umbenennen</button><button data-a="move">In Gruppe verschieben …</button><button data-a="dup">Duplizieren</button><button data-a="reset">Alle Häkchen zurücksetzen</button><button data-a="del" class="danger">Bildschirm löschen</button>`;
+  m.innerHTML = `<button data-a="rename">Umbenennen</button><button data-a="move">In Gruppe verschieben …</button><button data-a="dup">Duplizieren</button><button data-a="reset">Alle Häkchen zurücksetzen</button><button data-a="music">🎵 Musik …</button><button data-a="del" class="danger">Bildschirm löschen</button>`;
   APP.appendChild(m);
   m.addEventListener("click", e => {
     const a = e.target.dataset.a, i = S.screens.findIndex(s => s.id === id), s = S.screens[i];
     if (!a) return;
     if (a === "rename") { closeMenus(); askName("Bildschirm umbenennen", s.name, v => { s.name = v; }); return; }
     if (a === "move") { closeMenus(); openMove(s); return; }
+    if (a === "music") { closeMenus(); openMusic(s); return; }
     if (a === "dup") { const c = clone(s); c.id = uid(); c.name = s.name + " (Kopie)"; c.widgets.forEach(w => { w.id = uid(); (w.data.items || []).forEach(it => it.id = uid()); w.data.endAt = 0; }); S.screens.splice(i + 1, 0, c); S.active = c.id; }
     if (a === "reset") { s.widgets.forEach(w => (w.data.items || []).forEach(it => { it.done = false; it.now = false; })); toast("Häkchen zurückgesetzt"); }
     if (a === "del") {
@@ -878,6 +985,37 @@ const fmt = s => { s = Math.max(0, Math.ceil(s)); return `${String(Math.floor(s 
 const timerLeft = d => d.endAt ? Math.max(0, (d.endAt - Date.now()) / 1000) : d.left;
 const subjById = id => S.subjects.find(s => s.id === id) || { name: "?", color: "#9aa39c", icon: "" };
 
+// Zeilen für Ablauf und Checkliste: normale Punkte, Untertitel und Beschreibungen
+function listRows(w, T){
+  const d = w.data, chk = w.type === "check"; let n = 0;
+  const tools = `<span class="itools"><button class="mv" data-mvit aria-label="Verschieben" title="Zum Verschieben ziehen">⠿</button><button class="ix" data-rm aria-label="Entfernen">✕</button></span>`;
+  return d.items.map(it => {
+    const txt = `<span class="txt" contenteditable="true" spellcheck="false" data-itxt>${esc(it.text)}</span>`;
+    if (it.kind === "sub" || it.kind === "desc") return `<li class="${it.kind}" data-it="${it.id}">${txt}${tools}</li>`;
+    const i = n++, c = it.cc || d.cc;
+    const blob = chk ? `<button class="blob ring" data-tick aria-label="Abhaken"${c ? ` style="background:${c};border-color:${c}"` : ""}></button>`
+      : `<button class="blob" data-tick style="background:${c || T.blobs[i % 6]};border-radius:${SHAPES[i % 4]}" aria-label="Abhaken"></button>`;
+    return `<li class="${it.done ? "done" : ""}" data-it="${it.id}">${blob}${txt}${tools}</li>`;
+  }).join("");
+}
+const TEXT_COLS = ["#1f2421","#c0463c","#d0731f","#b8920f","#2e8b57","#2f6fb3","#7a4fb0","#6c766f"];
+const DOT_COLS = ["#f4d35e","#9fd18b","#8fc1e8","#f4a7b9","#f6b77c","#c7b2e8","#7ccfc3","#d6dbd7"];
+function openStyle(w){
+  const d = w.data, hasDots = w.type === "list" || w.type === "check";
+  const sw = (attr, val, cur, label) => `<button class="swatch ${cur === val ? "on" : ""}" ${attr}="${val}" style="background:${val || "#fff"}" aria-label="${label}">${val ? "" : "–"}</button>`;
+  const html = () => `<h3 class="sh3">Schriftfarbe</h3><div class="swrow">${sw("data-tc", "", d.tc || "", "Standard")}${TEXT_COLS.map(c => sw("data-tc", c, d.tc, "Schriftfarbe")).join("")}</div>
+    ${hasDots ? `<h3 class="sh3">Farbe der Kreise (alle)</h3><div class="swrow">${sw("data-cc", "", d.cc || "", w.type === "list" ? "Bunt" : "Standard")}${DOT_COLS.map(c => sw("data-cc", c, d.cc, "Kreisfarbe")).join("")}</div>
+    <h3 class="sh3">Einzelne Punkte färben</h3>${d.items.filter(it => !it.kind).map(it => `<div class="switem"><span>${esc(it.text || "…")}</span><div class="swrow sm">${sw("data-icc", "", it.cc || "", "wie alle")}${DOT_COLS.map(c => `<button class="swatch ${it.cc === c ? "on" : ""}" data-icc="${c}" data-iid="${it.id}" style="background:${c}" aria-label="Kreisfarbe"></button>`).join("")}</div></div>`).join("").replace(/data-icc="" /g, (m) => m)}` : ""}`;
+  const fix = body => body.querySelectorAll('.switem').forEach((row, k) => { const it = d.items.filter(x => !x.kind)[k]; row.querySelector('[data-icc=""]')?.setAttribute("data-iid", it.id); });
+  const bg = sheet("Farben", html(), (e, bg) => {
+    const body = bg.querySelector(".body"), b = e.target.closest("[data-tc],[data-cc],[data-icc]"); if (!b) return;
+    if (b.hasAttribute("data-tc")) d.tc = b.dataset.tc || undefined;
+    else if (b.hasAttribute("data-cc")) d.cc = b.dataset.cc || undefined;
+    else { const it = d.items.find(x => x.id === b.dataset.iid); if (it) it.cc = b.dataset.icc || undefined; }
+    save(); rerender(w); const st = body.scrollTop; body.innerHTML = html(); fix(body); body.scrollTop = st;
+  });
+  fix(bg.querySelector(".body"));
+}
 function widgetInner(w){
   const d = w.data, T = theme();
   switch (w.type) {
@@ -892,11 +1030,11 @@ function widgetInner(w){
           ${run ? "" : `<div class="tadj"><button data-t="m-" aria-label="Eine Minute weniger">–</button><button data-t="s-" aria-label="Fünf Sekunden weniger">–</button></div>`}
           <div class="tctl"><button class="tbtn go" data-t="go">${run ? "Pause" : "Start"}</button><button class="tbtn" data-t="reset">Zurück</button>${run ? "" : `<button class="tbtn" data-t="p5">5′</button><button class="tbtn" data-t="p10">10′</button><button class="tbtn" data-t="p20">20′</button>`}</div></div></div>`; }
     case "list": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading)}</div>
-      ${d.items.length ? `<ul class="t-list">${d.items.map((it, i) => `<li class="${it.done ? "done" : ""}" data-it="${it.id}"><button class="blob" data-tick style="background:${T.blobs[i % 6]};border-radius:${SHAPES[i % 4]}" aria-label="Abhaken"></button><span class="txt" contenteditable="true" spellcheck="false" data-itxt>${esc(it.text)}</span><button class="mv" data-mvit aria-label="Verschieben" title="Zum Verschieben ziehen">⠿</button><button class="ix" data-rm aria-label="Entfernen">✕</button></li>`).join("")}</ul>` : `<div class="emptyhint">Noch leer – füge Bausteine hinzu</div>`}
-      <div class="lfoot"><button class="sbtn rose" data-lib>+ Bausteine</button><input type="text" id="add-${w.id}" placeholder="Eigener Text + Enter" aria-label="Eigenen Punkt hinzufügen"></div>`;
+      ${d.items.length ? `<ul class="t-list" style="${d.tc ? `--tc:${d.tc}` : ""}">${listRows(w, T)}</ul>` : `<div class="emptyhint">Noch leer – füge Bausteine hinzu</div>`}
+      <div class="lfoot"><button class="sbtn rose" data-lib>+ Bausteine</button><input type="text" id="add-${w.id}" placeholder="Eigener Text + Enter" aria-label="Eigenen Punkt hinzufügen"><button class="sbtn" data-addk="sub">+ Untertitel</button><button class="sbtn" data-addk="desc">+ Beschreibung</button></div>`;
     case "check": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading)}</div>
-      ${d.items.length ? `<ul class="t-list check">${d.items.map(it => `<li class="${it.done ? "done" : ""}" data-it="${it.id}"><button class="blob ring" data-tick aria-label="Abhaken"></button><span class="txt" contenteditable="true" spellcheck="false" data-itxt>${esc(it.text)}</span><button class="mv" data-mvit aria-label="Verschieben" title="Zum Verschieben ziehen">⠿</button><button class="ix" data-rm aria-label="Entfernen">✕</button></li>`).join("")}</ul>` : `<div class="emptyhint">Noch leer – schreib unten etwas hinein</div>`}
-      <div class="lfoot"><input type="text" id="add-${w.id}" placeholder="Neuer Punkt + Enter" aria-label="Punkt hinzufügen"></div>`;
+      ${d.items.length ? `<ul class="t-list check" style="${d.tc ? `--tc:${d.tc}` : ""}">${listRows(w, T)}</ul>` : `<div class="emptyhint">Noch leer – schreib unten etwas hinein</div>`}
+      <div class="lfoot"><input type="text" id="add-${w.id}" placeholder="Neuer Punkt + Enter" aria-label="Punkt hinzufügen"><button class="sbtn" data-addk="sub">+ Untertitel</button><button class="sbtn" data-addk="desc">+ Beschreibung</button></div>`;
     case "plan": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading)}</div>
       ${d.items.length ? `<div class="t-plan ${d.orient === "h" ? "h" : ""}">${d.items.map((it, pi) => { const s = subjById(it.subj), tm = it.time || lessonAt(d, pi); return `<div class="pl-item ${it.now ? "now" : ""}" data-it="${it.id}" style="--sc:${s.color};--sc-soft:${soft(s.color)}">
           <button class="pl-ico" data-now aria-label="Als aktuell markieren" style="color:${ink(s.color)}">${subjIcon(s)}</button>
@@ -905,11 +1043,12 @@ function widgetInner(w){
           <span class="pl-ops"><button data-pmove="-1" aria-label="Nach vorne">${d.orient === "h" ? "◀" : "▲"}</button><button data-pmove="1" aria-label="Nach hinten">${d.orient === "h" ? "▶" : "▼"}</button><button data-prm aria-label="Entfernen" style="color:#c0463c">✕</button></span></div>`; }).join("")}</div>` : `<div class="emptyhint">Noch keine Fächer – füge welche hinzu</div>`}
       <div class="lfoot"><button class="sbtn rose" data-subj>+ Fach / eigenes Fach</button><button class="sbtn" data-orient>${d.orient === "h" ? "Untereinander" : "Nebeneinander"}</button><button class="sbtn" data-long>${d.long ? "Kurze Namen" : "Lange Namen"}</button><button class="sbtn" data-nowclear>«jetzt» entfernen</button><button class="sbtn" data-ptoggle>${d.showTimes === false ? "Zeiten zeigen" : "Zeiten ausblenden"}</button><button class="sbtn" data-ptimes>Lektionszeiten …</button></div>`;
     case "material": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading)}</div>
-      ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<div class="mat" title="${MAT[k][0]}">${MAT[k][1]}<span>${MAT[k][0]}</span></div>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
+      ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<button class="mat${(d.crossed || []).includes(k) ? " crossed" : ""}" data-mk="${k}" title="${MAT[k][0]} – antippen zum Durchstreichen">${MAT[k][1]}<span>${MAT[k][0]}</span></button>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
+      <div class="mnote${d.note ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="note" data-ph="Anmerkung (optional)" style="${d.tc ? `color:${d.tc}` : ""}">${esc(d.note || "")}</div>
       <div class="lfoot"><button class="sbtn rose" data-mat>Material wählen</button><button class="sbtn" data-iconsonly>${d.iconsOnly ? "Mit Text" : "Nur Symbole"}</button></div>`;
     case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur im Knobelnest.</div>`;
     case "image": return `<div class="t-img">${d.src ? `<img src="${esc(d.src)}" alt="">` : ""}</div>`;
-    case "note": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift (optional)">${esc(d.heading)}</div><div class="t-note" contenteditable="true" spellcheck="false" data-f="body" data-ph="Hier schreiben …">${esc(d.body)}</div>`;
+    case "note": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift (optional)">${esc(d.heading)}</div><div class="t-note" style="${d.tc ? `color:${d.tc}` : ""}" contenteditable="true" spellcheck="false" data-f="body" data-ph="Hier schreiben …">${esc(d.body)}</div>`;
     case "symbol": { const s = SYMS[d.key] || SYMS.einzel; return `<div class="t-sym" title="Antippen zum Wechseln">${s.svg}<div class="lab">${s.lab}</div></div>`; }
     case "traffic": return `<div class="t-traffic">${[["red","#e5584c","Rot"],["yellow","#f2c14e","Gelb"],["green","#5fb36b","Grün"]].map(([k, c, l]) => `<button data-light="${k}" class="${d.on === k ? "on" : ""}" style="background:${c};color:${c}" aria-label="${l}"></button>`).join("")}</div>`;
     case "groups": {
@@ -933,12 +1072,13 @@ function widgetInner(w){
   }
   return "";
 }
-const FS_DEFAULT = { list: 3.6, check: 3.6, plan: 2.5, material: 3.4, groups: 2.8 };
+const FS_DEFAULT = { list: 3.6, check: 3.6, plan: 2.5, material: 3.4, groups: 2.8, note: 3.2 };
+const STYLED = new Set(["list", "check", "note", "material"]);
 const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
 function widgetHTML(w){
   const x = EXTRA[w.type], auto = AUTO.has(w.type);
-  return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
-    <div class="chrome"><button class="grip" data-grip aria-label="Verschieben">⠿ ${TYPES[w.type].lab}</button>${x ? `<button data-opt aria-label="${x[1]}">${x[0]}</button>` : ""}${auto ? `<button data-fsz="-1" aria-label="Schrift kleiner">A−</button><button data-fsz="1" aria-label="Schrift grösser">A+</button>` : ""}<button data-copy aria-label="Kopieren">⧉</button><button data-close aria-label="Entfernen">✕</button></div>
+  return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${w.type === "note" ? `--fs:${w.fs || FS_DEFAULT.note};` : ""}${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
+    <div class="chrome"><button class="grip" data-grip aria-label="Verschieben">⠿ ${TYPES[w.type].lab}</button>${x ? `<button data-opt aria-label="${x[1]}">${x[0]}</button>` : ""}${STYLED.has(w.type) ? `<button data-style aria-label="Farben">🎨</button>` : ""}${auto || w.type === "note" ? `<button data-fsz="-1" aria-label="Schrift kleiner">A−</button><button data-fsz="1" aria-label="Schrift grösser">A+</button>` : ""}<button data-copy aria-label="Kopieren">⧉</button><button data-close aria-label="Entfernen">✕</button></div>
     <div class="card">${widgetInner(w)}</div><div class="rs" data-rs="xy" aria-hidden="true"></div><div class="rse" data-rs="x" aria-hidden="true"></div><div class="rsb" data-rs="y" aria-hidden="true"></div></div>`;
 }
 function renderBoard(){
@@ -1031,7 +1171,7 @@ $("#board").addEventListener("click", e => {
   }
   if (w.type === "symbol" && e.target.closest(".t-sym")) { openSymbols(w); return; }
   if (e.target.closest("[data-tick]")) { const li = e.target.closest("[data-it]"), it = d.items.find(i => i.id === li.dataset.it); it.done = !it.done; li.classList.toggle("done", it.done);
-    if (w.type === "check") { // erledigte nach oben, offene rutschen nach unten
+    if (w.type === "check" && !d.items.some(i => i.kind)) { // erledigte nach oben, offene rutschen nach unten
       const ul = li.parentElement, before = new Map([...ul.children].map(n => [n.dataset.it, n.getBoundingClientRect().top]));
       d.items = [...d.items.filter(i => i.done), ...d.items.filter(i => !i.done)]; save(); rerender(w);
       const nul = document.querySelector(`[data-w="${w.id}"] .t-list`);
@@ -1053,6 +1193,14 @@ $("#board").addEventListener("click", e => {
   if (pm) { const i = d.items.findIndex(x => x.id === e.target.closest("[data-it]").dataset.it), j = i + +pm.dataset.pmove; if (j >= 0 && j < d.items.length) { [d.items[i], d.items[j]] = [d.items[j], d.items[i]]; save(); rerender(w); } return; }
   if (e.target.closest("[data-prm]")) { d.items = d.items.filter(i => i.id !== e.target.closest("[data-it]").dataset.it); save(); rerender(w); return; }
   if (e.target.closest("[data-mat]")) { openMaterial(w); return; }
+  const mk = w.type === "material" && e.target.closest(".mat[data-mk]");
+  if (mk) { const k = mk.dataset.mk, c = d.crossed || []; d.crossed = c.includes(k) ? c.filter(x => x !== k) : [...c, k]; mk.classList.toggle("crossed"); save(); return; }
+  if (e.target.closest("[data-style]")) { openStyle(w); return; }
+  const ak = e.target.closest("[data-addk]");
+  if (ak) { const inp = document.getElementById("add-" + w.id), v = (inp?.value || "").trim(), kind = ak.dataset.addk;
+    const it = { id: uid(), text: v || (kind === "sub" ? "Untertitel" : "Beschreibung"), done: false, kind }; d.items.push(it); save(); rerender(w);
+    const el = document.querySelector(`[data-w="${w.id}"] [data-it="${it.id}"] .txt`); if (el) { el.focus(); if (!v) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } }
+    return; }
   if (e.target.closest("[data-iconsonly]")) { d.iconsOnly = !d.iconsOnly; save(); rerender(w); return; }
   const light = e.target.closest("[data-light]");
   if (light) { d.on = d.on === light.dataset.light ? "" : light.dataset.light; save(); rerender(w); return; }
@@ -1101,7 +1249,7 @@ $("#board").addEventListener("keydown", e => {
     w.data.items.push({ id: uid(), text: e.target.value.trim(), done: false }); save(); rerender(w);
     document.getElementById("add-" + w.id)?.focus(); return;
   }
-  if (e.key === "Enter" && (e.target.hasAttribute("data-itxt") || e.target.hasAttribute("data-ptime") || (e.target.dataset.f && e.target.dataset.f !== "body"))) { e.preventDefault(); e.target.blur(); }
+  if (e.key === "Enter" && (e.target.hasAttribute("data-itxt") || e.target.hasAttribute("data-ptime") || (e.target.dataset.f && e.target.dataset.f !== "body" && e.target.dataset.f !== "note"))) { e.preventDefault(); e.target.blur(); }
 });
 $("#board").addEventListener("focusout", e => {
   if (e.target.dataset?.f === "heading") { const w = findW(e.target); if (w) { w.data.heading = e.target.innerText.trim(); save(); setTimeout(() => rerender(w), 0); } return; }
@@ -1223,7 +1371,7 @@ function openSymbols(w){
   });
 }
 function openMaterial(w){
-  const html = () => `<p class="hint">Antippen wählt das Material aus oder ab.</p><div class="tiles">${MAT_ORDER.map(k => `<button data-mk="${k}" class="${w.data.keys.includes(k) ? "on" : ""}">${MAT[k][1]}${MAT[k][0]}</button>`).join("")}</div>`;
+  const html = () => `<p class="hint">Antippen wählt das Material aus oder ab. Im Feld selbst streichst du ein Material durch, indem du es antippst (z. B. Radiergummi beim Korrigieren).</p><div class="tiles">${MAT_ORDER.map(k => `<button data-mk="${k}" class="${w.data.keys.includes(k) ? "on" : ""}">${MAT[k][1]}${MAT[k][0]}</button>`).join("")}</div>`;
   sheet("Material wählen", html(), (e, bg) => {
     const b = e.target.closest("[data-mk]"); if (!b) return;
     const k = b.dataset.mk, keys = w.data.keys;
@@ -1369,6 +1517,7 @@ function openBackground(){
   const sc = screen();
   const html = () => `<p class="hint">Wähle einen Hintergrund für «${esc(sc.name)}» oder lade ein eigenes Bild hoch.</p>
     <div class="bgtiles"><button data-bgsel="" class="${!sc.bg ? "on" : ""}" style="background:radial-gradient(ellipse at 0% 100%,#a9cfa0,transparent 60%),radial-gradient(ellipse at 100% 0%,#b7d8cf,transparent 60%),#faf8f2"><span class="lab">Aquarell (Standard)</span></button>
+    ${Object.entries(BG_TPL).map(([k, t]) => `<button data-bgtpl="${k}" class="${sc.bg === "tpl:" + k ? "on" : ""}" style='background:${t.thumb}'><span class="lab">${t.name}</span></button>`).join("")}
     ${S.bgs.map((b, i) => `<button data-bgsel="${i}" class="${sc.bg === b.src ? "on" : ""}" style="background-image:url('${esc(b.src)}')"><span class="del" data-bgdel="${i}" aria-label="Entfernen">✕</span></button>`).join("")}
     <button data-bgup style="display:flex;align-items:center;justify-content:center;background:#fff;font-family:var(--hand);font-size:22px;border-style:dashed">+ Bild hochladen</button></div>
     <label class="chk"><input type="checkbox" id="bgall" ${all ? "checked" : ""}> Für alle Bildschirme verwenden</label>`;
@@ -1379,6 +1528,8 @@ function openBackground(){
     const del = e.target.closest("[data-bgdel]");
     if (del) { e.stopPropagation(); const src = S.bgs[+del.dataset.bgdel].src; S.bgs.splice(+del.dataset.bgdel, 1); S.screens.forEach(s => { if (s.bg === src) s.bg = ""; }); save(); drawBg(); renderBoard(); refresh(); return; }
     if (e.target.closest("[data-bgup]")) { const img = await uploadImage(2200); if (!img) return; S.bgs.push({ src: img.src, pal: extractPalette(img.canvas) }); apply(img.src); refresh(); toast("Die Farben passen sich jetzt dem Bild an"); return; }
+    const tp = e.target.closest("[data-bgtpl]");
+    if (tp) { apply("tpl:" + tp.dataset.bgtpl); refresh(); return; }
     const sel = e.target.closest("[data-bgsel]");
     if (sel) { apply(sel.dataset.bgsel === "" ? "" : S.bgs[+sel.dataset.bgsel].src); refresh(); }
   });
@@ -1444,7 +1595,75 @@ window.addEventListener("resize", () => { clearTimeout(drawBg.t); drawBg.t = set
 try { navigator.wakeLock?.request("screen").catch(() => {}); } catch {}
 
 // ---------- Start ----------
-function renderAll(){ applyFont(); renderTabs(); renderBoard(); drawBg(); const b = screen().bg; if (b && !S.bgs.find(x => x.src === b)?.pal) ensurePalette(b).then(renderBoard); }
+// ---------- Musik ----------
+const MUS = { key: "", el: null, kind: "", playing: false };
+const ytId = u => { const m = String(u || "").match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/); return m ? m[1] : (/^[\w-]{11}$/.test(String(u || "").trim()) ? String(u).trim() : null); };
+function musicChip(){
+  let c = document.getElementById("musicChip");
+  if (!c) { c = document.createElement("div"); c.id = "musicChip"; c.className = "music-chip"; APP.appendChild(c);
+    c.addEventListener("click", e => { if (e.target.closest("[data-mtoggle]")) musicToggle(); if (e.target.closest("[data-medit]")) openMusic(screen()); }); }
+  return c;
+}
+function musicRender(){
+  const m = screen().music, c = musicChip();
+  if (!m) { c.hidden = true; return; }
+  c.hidden = false;
+  c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern">♪ ${esc(m.name || "Musik")}</span>`;
+  if (MUS.kind === "yt" && MUS.el && !c.contains(MUS.el)) c.appendChild(MUS.el);
+}
+function ytCmd(func){ try { MUS.el.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*"); } catch {} }
+function musicStop(){
+  if (MUS.el) { try { if (MUS.kind === "file") { MUS.el.pause(); MUS.el.src = ""; } } catch {} MUS.el.remove?.(); }
+  MUS.el = null; MUS.key = ""; MUS.kind = ""; MUS.playing = false;
+}
+function musicToggle(){
+  if (!MUS.el) { syncMusic(true); return; }
+  if (MUS.kind === "file") { if (MUS.el.paused) MUS.el.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => {}); else { MUS.el.pause(); MUS.playing = false; musicRender(); } return; }
+  if (MUS.playing) { ytCmd("pauseVideo"); MUS.playing = false; } else { ytCmd("playVideo"); MUS.playing = true; }
+  musicRender();
+}
+function syncMusic(force){
+  const m = screen().music, key = m ? (m.type + ":" + (m.id || m.src)) : "";
+  if (key === MUS.key && !force) { musicRender(); return; }
+  musicStop();
+  if (m) {
+    MUS.key = key; MUS.kind = m.type;
+    if (m.type === "file") {
+      const a = new Audio(m.src); a.loop = true; MUS.el = a;
+      a.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => { MUS.playing = false; musicRender(); });
+    } else {
+      const f = document.createElement("iframe");
+      f.className = "yt"; f.allow = "autoplay; encrypted-media"; f.title = "Musik";
+      f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1&loop=1&playlist=${m.id}&controls=0&enablejsapi=1&playsinline=1`;
+      MUS.el = f; MUS.playing = true;
+    }
+  }
+  musicRender();
+}
+function openMusic(s){
+  const html = () => `<p class="hint">Die Musik läuft im Hintergrund, solange dieser Bildschirm offen ist. Unten links kannst du sie pausieren.</p>
+    ${s.music ? `<p style="margin:0 0 10px"><b>Jetzt:</b> ♪ ${esc(s.music.name || "Musik")} <button class="sbtn" data-mrm>Musik entfernen</button></p>` : ""}
+    <h3 class="sh3">YouTube-Link</h3><div class="addrow"><input type="text" id="mus-yt" placeholder="https://www.youtube.com/watch?v=…" aria-label="YouTube-Link"><button class="sbtn rose" data-myt>Übernehmen</button></div>
+    <h3 class="sh3">Oder Audiodatei hochladen</h3><div class="addrow"><button class="sbtn" data-mup>🎵 Datei wählen (MP3, M4A …)</button></div>
+    <input type="file" id="mus-file" accept="audio/*" hidden>`;
+  const set = mus => { s.music = mus; save(); if (s.id === S.active) syncMusic(true); };
+  sheet("Musik für «" + s.name + "»", html(), async (e, bg) => {
+    const body = bg.querySelector(".body");
+    if (e.target.closest("[data-mrm]")) { delete s.music; save(); if (s.id === S.active) syncMusic(true); body.innerHTML = html(); return; }
+    if (e.target.closest("[data-myt]")) { const id = ytId($("#mus-yt").value); if (!id) { toast("Das ist kein YouTube-Link"); return; } set({ type: "yt", id, name: "YouTube" }); toast("Musik gespeichert ♪"); body.innerHTML = html(); return; }
+    if (e.target.closest("[data-mup]")) {
+      const inp = $("#mus-file"); inp.value = "";
+      inp.onchange = async () => { const f = inp.files[0]; if (!f) return;
+        if (f.size > 25e6) { toast("Die Datei ist zu gross (höchstens 25 MB)"); return; }
+        toast("Musik wird hochgeladen …");
+        let src = null;
+        if (assets) { try { const up = await assets.upload(f); src = up.url; } catch {} }
+        if (!src) { if (f.size > 6e6) { toast("Hochladen ging nicht. Bitte eine kleinere Datei wählen."); return; } src = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); }); }
+        set({ type: "file", src, name: f.name.replace(/\.[^.]+$/, "").slice(0, 40) }); toast("Musik gespeichert ♪"); body.innerHTML = html(); };
+      inp.click(); return; }
+  });
+}
+function renderAll(){ syncMusic(); applyFont(); renderTabs(); renderBoard(); drawBg(); const b = screen().bg; if (b && !S.bgs.find(x => x.src === b)?.pal) ensurePalette(b).then(renderBoard); }
 S = migrate(lsGet() || defaults()); delete S._tplAdded; undoBase();
 loadCustomFonts();
 if (!S.screens.some(s => s.id === S.active)) S.active = S.screens[0].id;
