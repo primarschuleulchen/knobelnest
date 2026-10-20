@@ -442,3 +442,14 @@ button.zr-st{cursor:pointer}
   .pcard .pc-qr small{font-size:8pt;color:#555}
   .pcard .pnr{display:inline-grid;place-items:center;min-width:9mm;height:9mm;border-radius:50%;border:1.5px solid #555;font-size:13pt;margin-right:3mm;vertical-align:middle}
 }
+
+/* Vocibox-Anzeige (Nomen-Werkstatt) */
+.vbx{display:flex;flex-direction:column;gap:6px;width:100%}
+.vbr{display:flex;flex-direction:column;gap:3px}
+.vbn{font-size:13px;font-weight:600}
+.vbf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+.vbf i{font-style:normal;display:flex;align-items:baseline;justify-content:center;gap:4px;border-radius:6px;padding:3px 2px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;background:#FDF1C7;color:#2B2300}
+.vbf i small{font-size:10px;font-weight:500;opacity:.65}
+.vbf i.f2{background:#F8E39A}.vbf i.f3{background:#F1D06A}.vbf i.f4{background:#E9BE3E}.vbf i.f5{background:#D9A514}
+.vbf i.z{background:#F1F2F4;color:#9AA3AD}
+.big-tile .vbn{font-size:15px}.big-tile .vbf i{font-size:16px;padding:5px 2px}

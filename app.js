@@ -82,13 +82,14 @@
   function pwLabel(pw) { return pw.split(',').map(function (s) { return SYM[s] ? SYM[s].label : s; }).join(', '); }
 
   // Farben
-  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F28B82', 'Deutsch': '#E9D7E4', 'NMG': '#D3F1E4', 'Französisch': '#D6E8F5' };
+  var FACH_COL = { 'Mathematik': '#CFDDF0', 'Englisch': '#F28B82', 'Deutsch': '#F7E3A1', 'NMG': '#D3F1E4', 'Französisch': '#D6E8F5' };
   var TINTS = ['#D5EBC9', '#E1E8F8', '#E3D5F0', '#F3E2A6', '#CBE6EE', '#E4F5EC'];
   var FACH_SHORT = { 'Mathematik': 'Mathe' };
   function fachShort(f) { return FACH_SHORT[f] || f; }
   // Knopf-Farbe pro Fach (dunklerer Ton der Fachfarbe); sonst das normale Blau
-  var FACH_BTN = { 'Englisch': '#CC5046' };
-  function fachBtn(f) { return FACH_BTN[f] ? 'background:' + FACH_BTN[f] + ';' : ''; }
+  var FACH_BTN = { 'Englisch': '#CC5046', 'Deutsch': '#E9B824' };
+  var FACH_INK = { 'Deutsch': '#2B2300' };
+  function fachBtn(f) { return (FACH_BTN[f] ? 'background:' + FACH_BTN[f] + ';' : '') + (FACH_INK[f] ? 'color:' + FACH_INK[f] + ';' : ''); }
   function isWall(g) { return /wandtafel/i.test((g.stufe || '') + ' ' + (g.fach || '') + ' ' + (g.thema || '')); }
   function fachColor(f) { if (/wandtafel/i.test(f || '')) return '#E2E5EA'; return FACH_COL[f] || TINTS[hash(f) % TINTS.length]; }
   var KID_TINTS = ['#F6C9A8', '#CFDDF0', '#CFE5C6', '#D3F1E4', '#E3D5F0', '#F3E2A6'];
@@ -1044,6 +1045,7 @@
         lines = ['<span class="small">' + (p.total ? p.done + ' von ' + p.total + ' geschafft' : p.attempts ? p.correct + ' richtig, ' + (p.attempts - p.correct) + ' falsch' : 'geöffnet (' + p.plays + '×)') + '</span>'];
       }
       var aw = awardText(p.award);
+      var vb = vbHTML(p.award); if (vb) lines.unshift(vb);
       if (aw) lines.unshift('<span class="small" style="font-weight:700">' + h(aw) + '</span>');
       return { html: lines.join('') };
     }
@@ -1544,7 +1546,7 @@
       return '<article class="big-tile' + (extra ? ' extra' : '') + '" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px">' + h(g.thema) +
         (extra ? '<span class="zusatz">★ Zusatz</span>' : '') + '</div>' +
         '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
-        (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') +
+        (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') + vbHTML(g.award) +
         (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span style="font-size:17px">' + h(label) + '</span>' +
         '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px;' + fachBtn(g.fach) + '" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
     }).join('') + '</div>', 'Zurück');
@@ -1641,6 +1643,14 @@
     else if (a.last) parts.push('zuletzt ' + fmtDay(a.last));
     return parts.join(' · ');
   }
+  // Vocibox: pro Box eine Zeile mit den Fächern 1–5
+  function vbHTML(a) {
+    if (!a || !a.vb) return '';
+    return '<span class="vbx">' + Object.keys(a.vb).map(function (k) { var v = a.vb[k];
+      return '<span class="vbr"><span class="vbn">📦 ' + h(v.name) + '</span><span class="vbf">' + v.c.map(function (n, i) {
+        return '<i class="f' + (i + 1) + (n ? '' : ' z') + '" title="Fach ' + (i + 1) + ': ' + n + ' Wörter"><small>' + (i + 1) + '</small>' + n + '</i>'; }).join('') + '</span></span>';
+    }).join('') + '</span>';
+  }
   function Stars(cfg, award, base) {
     var S = { cfg: cfg, a: award && typeof award === 'object' ? award : {}, level: null, round: null, dirty: false, total: base || 0 };
     ['lv', 'box', 'boxDay', 'starDay'].forEach(function (k) { if (!S.a[k] || typeof S.a[k] !== 'object') S.a[k] = {}; });
@@ -1736,6 +1746,11 @@
         a.zr = {};
         Object.keys(x.zr).slice(0, 12).forEach(function (k) { var z = x.zr[k] || {};
           a.zr[String(k).slice(0, 30)] = { name: String(z.name || k).slice(0, 30), f: +z.f || 0, t: +z.t || 0, best: z.best == null ? null : +z.best, n: +z.n || 10, tries: +z.tries || 0, ok: !!z.ok, open: !!z.open }; });
+      }
+      if (x.vb && typeof x.vb === 'object') {
+        a.vb = {};
+        Object.keys(x.vb).slice(0, 8).forEach(function (k) { var v = x.vb[k] || {};
+          a.vb[String(k).slice(0, 30)] = { name: String(v.name || k).slice(0, 40), c: (Array.isArray(v.c) ? v.c : []).slice(0, 8).map(function (n) { return Math.max(0, Math.round(+n || 0)); }), lock: Math.max(0, Math.round(+v.lock || 0)) }; });
       }
       if (x.lv && typeof x.lv === 'object') { a.lv = {}; Object.keys(x.lv).slice(0, 40).forEach(function (k) { if (isFinite(x.lv[k])) a.lv[String(k).slice(0, 40)] = Math.round(x.lv[k]); }); }
       S.dirty = true;
