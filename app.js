@@ -188,7 +188,7 @@
 
   // Spiel-Player (Spiel läuft abgeschirmt in einem iframe)
   // Läuft im Spiel (iframe): Speicher nachbilden, gespeicherten Stand laden, Meldungen an das Portal
-  function shimMain(seed, aw) {
+  function shimMain(seed, aw, lvls) {
     function send(m) { try { m.knobelnest = 1; parent.postMessage(m, '*'); } catch (e) {} }
     function mem(init, onchange) {
       var m = {}, k;
@@ -215,6 +215,8 @@
     // Sterne pro Level lesen: knobelnest.sterne('Mittel · Ablesen') -> { have, max }; bei Änderung kommt das Ereignis 'knobelnest-sterne'
     var AW = aw && typeof aw === 'object' ? aw : { lv: {}, max: 0 };
     window.knobelnest.sterne = function (k) { return { have: +((AW.lv || {})[k]) || 0, max: +AW.max || 0 }; };
+    // Bisheriger Stand pro Level aus dem Portal: { 'Level': { c: richtig, a: Versuche } }
+    window.knobelnest.levels = function () { return lvls && typeof lvls === 'object' ? lvls : {}; };
     window.knobelnest.alle = function () { return { lv: AW.lv || {}, max: +AW.max || 0 }; };
     window.addEventListener('message', function (e) {
       if (e.source !== parent || !e.data || !e.data.knobelnestAward) return;
@@ -227,7 +229,7 @@
     seed = seed || {};
     var aw = seed.award || { lv: {}, max: starMax(starCfg(html)) };
     var J = function (v) { return JSON.stringify(v == null ? null : v).replace(/</g, '\\u003c'); };
-    var tag = '<script>(' + shimMain.toString() + ')(' + J(seed.store) + ',' + J(aw) + ');<\/script>';
+    var tag = '<script>(' + shimMain.toString() + ')(' + J(seed.store) + ',' + J(aw) + ',' + J(seed.levels || {}) + ');<\/script>';
     var m = /<head[^>]*>/i.exec(html);
     return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
@@ -1801,7 +1803,7 @@
         var js = JSON.stringify(d.data);
         if (js.length < 190000) { save.data = d.data; save.dirty = true; } else console.warn('Spielstand zu gross, wird nicht gespeichert');
       }
-    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, { store: st.save, award: S.view(), settings: st.settings || null });
+    }, async function () { clearInterval(t); await flush(); K.loadHome(); }, { store: st.save, award: S.view(), settings: st.settings || null, levels: g.levels || {} });
     S.render();
   };
   ACT.kTafel = async function () {
