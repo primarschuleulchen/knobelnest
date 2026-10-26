@@ -545,7 +545,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('34') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('35') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
