@@ -311,6 +311,8 @@
     if (m) return W.start(m[1], !!m[2]);
     var mf = hs.match(/^#\/tagesfolie\/([0-9a-f-]{36})/);
     if (mf) return F.start(mf[1]);
+    var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
+    if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
     var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
@@ -605,6 +607,78 @@
       paint('<div class="folie"><iframe src="hausaufgaben.html?v=' + HEFT_VER + '" title="Hausaufgabenheft" allow="fullscreen"></iframe></div>');
     }
   };
+  // ===================================================================
+  // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
+  // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
+  // ===================================================================
+  var PIN_VER = '1';
+  function pinBridge(o) {
+    // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
+    var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
+    function snapColl(name) {
+      var m = data[name] || {};
+      return { docs: Object.keys(m).map(function (id) { var v = m[id]; return { id: id, exists: true, data: function () { return name === 'votes' ? o.voteDoc(id, v) : JSON.parse(JSON.stringify(v)); } }; }) };
+    }
+    function snapDoc(coll, id) {
+      var v = (data[coll] || {})[id];
+      return { id: id, exists: v != null, data: function () { return v == null ? null : coll === 'votes' ? o.voteDoc(id, v) : JSON.parse(JSON.stringify(v)); } };
+    }
+    function emit() { subs.forEach(function (x) { var sn = x.f(), j = JSON.stringify(x.doc ? sn.data() : sn.docs.map(function (d) { return [d.id, d.data()]; })); if (j !== x.last) { x.last = j; try { x.cb(sn); } catch (e) {} } }); }
+    async function refresh() { try { var d = await o.load(); if (d) data = d; } catch (e) {} emit(); }
+    function watch(f, cb, isDoc) {
+      var x = { f: f, cb: cb, doc: isDoc, last: null }; subs.push(x);
+      if (!iv) { refresh(); iv = setInterval(function () { if (!o.active()) { clearInterval(iv); return; } if (!document.hidden) refresh(); }, o.every || 4000); }
+      else { var sn = f(); x.last = JSON.stringify(isDoc ? sn.data() : sn.docs.map(function (d) { return [d.id, d.data()]; })); setTimeout(function () { cb(sn); }, 0); }
+      return function () { subs = subs.filter(function (y) { return y !== x; }); };
+    }
+    function merge(a, b) { var r = JSON.parse(JSON.stringify(a || {})); Object.keys(b || {}).forEach(function (k) { var v = b[k]; r[k] = v && typeof v === 'object' && !Array.isArray(v) && r[k] && typeof r[k] === 'object' && !Array.isArray(r[k]) ? Object.assign({}, r[k], v) : v; }); return r; }
+    var db = {
+      collection: function (name) { return {
+        add: async function (obj) { var id = await o.add(name, JSON.parse(JSON.stringify(obj))); await refresh(); return { id: id }; },
+        onSnapshot: function (cb) { return watch(function () { return snapColl(name); }, cb, false); }
+      }; },
+      doc: function (path) { var p = String(path).split('/'), coll = p[0], id = p[1]; return {
+        get: async function () { await refresh(); return snapDoc(coll, id); },
+        set: async function (obj) { if (coll === 'votes') await o.vote(JSON.parse(JSON.stringify(obj))); else await o.put(coll, id, JSON.parse(JSON.stringify(obj))); await refresh(); },
+        update: async function (patch) { await o.put(coll, id, merge((data[coll] || {})[id], patch)); await refresh(); },
+        delete: async function () { await o.put(coll, id, null); await refresh(); },
+        onSnapshot: function (cb) { return watch(function () { return snapDoc(coll, id); }, cb, true); }
+      }; }
+    };
+    return db;
+  }
+  var P = {
+    start: async function (cid) {
+      UI.view = 'pin';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      app.innerHTML = '<p class="boot">Pinnwand wird geladen …</p>';
+      var cls, kids;
+      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) { cls = null; }
+      if (!cls) { paint('<div class="main"><div class="card stack"><h2>Pinnwand nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      var key = 'pin-' + cid, uid = s.user.id;
+      var roster = (kids || []).slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; });
+      var nameOf = {}; roster.forEach(function (k) { nameOf[k.id] = k.name; });
+      var db = pinBridge({
+        active: function () { return UI.view === 'pin'; },
+        load: async function () { var d = (await DB.storeGet(key)) || {}; return { boards: d.boards || {}, ideas: d.ideas || {}, settings: d.settings || {}, votes: d.votes || {} }; },
+        put: function (coll, id, obj) { if (coll === 'votes') return Promise.resolve(); return DB.pinPut(cid, coll, id, obj); },
+        add: async function (coll, obj) { var id = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); await DB.pinPut(cid, coll, id, obj); return id; },
+        vote: async function () {},
+        voteDoc: function (id, v) { return { name: nameOf[id] || 'Kind', r: JSON.parse(JSON.stringify((v && v.r) || {})), at: v && v.at }; }
+      });
+      window.knPin = {
+        mode: 'teacher', name: 'Lehrperson', roster: roster,
+        back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
+        claude: { use: async function (n) {
+          if (n === 'db') return db;
+          if (n === 'user') return { me: async function () { return { id: uid, isOwner: true, canEdit: true }; } };
+          return null;
+        } }
+      };
+      paint('<div class="folie"><iframe src="pinnwand.html?v=' + PIN_VER + '" title="Klassen-Pinnwand" allow="fullscreen"></iframe></div>');
+    }
+  };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
 
   // ===================================================================
@@ -744,7 +818,7 @@
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
-      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a><a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a></div></div></section>';
+      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a><a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a><a class="btn" href="#/pinnwand/' + T.cls + '">📌 Pinnwand</a></div></div></section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -1522,6 +1596,8 @@
   };
   // Gibt es ein Hausaufgabenheft für diese Klasse? Dann erscheint die Agenda-Kachel
   K.checkHeft = async function () {
+    try { var pd = await DB.kidPin(K.sess.token); var hp = !!(pd && pd.boards && Object.keys(pd.boards).length); if (hp !== !!K.pinOk) { K.pinOk = hp; if (K.step === 'home') K.render(); } }
+    catch (e) {}
     try { var d = await DB.kidHeft(K.sess.token); var has = !!(d && d.entries); if (has !== !!K.heftOk) { K.heftOk = has; if (K.step === 'home') K.render(); } }
     catch (e) {}
   };
@@ -1590,7 +1666,9 @@
       '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
         '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
-      '<span><b>Unsere Tafel</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button></div>', 'Abmelden');
+      '<span><b>Unsere Tafel</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>' +
+      (K.pinOk ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
+        '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') + '</div>', 'Abmelden');
   };
   K.view_thema = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
@@ -1641,6 +1719,30 @@
     };
     return '<div class="folie"><iframe src="hausaufgaben.html?v=' + HEFT_VER + '" title="Hausaufgabenheft"></iframe></div>';
   };
+  K.view_pin = function () {
+    var kid = K.home && K.home.kid; if (!kid) { K.step = 'home'; return K.view_home(); }
+    var me = kid.id;
+    var db = pinBridge({
+      active: function () { return UI.view === 'kid' && K.step === 'pin'; }, every: 5000,
+      load: async function () { var d = await DB.kidPin(K.sess.token); if (!d) return null; var v = {}; if (d.my) v[me] = d.my;
+        return { boards: d.boards || {}, ideas: d.ideas || {}, settings: { main: { labels: d.labels || {} } }, votes: v }; },
+      put: function () { var e = new Error('Nicht erlaubt'); e.code = 'forbidden'; return Promise.reject(e); },
+      add: async function (coll, obj) { if (coll !== 'ideas') throw new Error('Nicht erlaubt'); return DB.kidPinIdea(K.sess.token, obj.boardId, obj.text); },
+      vote: async function (body) { await DB.kidPinVote(K.sess.token, { r: body.r || {} }); },
+      voteDoc: function (id, v) { return { name: kid.name, r: JSON.parse(JSON.stringify((v && v.r) || {})), at: v && v.at }; }
+    });
+    window.knPin = {
+      mode: 'kid', name: kid.name, roster: [],
+      back: function () { ACT.kBack(); },
+      claude: { use: async function (n) {
+        if (n === 'db') return db;
+        if (n === 'user') return { me: async function () { return { id: me, isOwner: false, canEdit: false }; } };
+        return null;
+      } }
+    };
+    return '<div class="folie"><iframe src="pinnwand.html?v=' + PIN_VER + '" title="Pinnwand"></iframe></div>';
+  };
+  ACT.kPin = function () { K.step = 'pin'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
@@ -1691,6 +1793,7 @@
         K.step = th.length === 1 ? 'home' : 'thema'; break;
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
       case 'heft': K.step = 'home'; K.render(); break;
+      case 'pin': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }

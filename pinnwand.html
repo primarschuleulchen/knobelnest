@@ -1,0 +1,795 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Klassen-Pinnwand</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: wie Tagesfolien und Hausaufgabentafel – Aquarellpapier als Grund, weisse runde Karten, Pillen-Knöpfe in Rosé.
+   Darauf hängen die Ideen als pastellige Zettel. Bewusst nur hell, damit es am Beamer gleich aussieht wie die Folien. */
+:root{
+  color-scheme:light;
+  --paper:#fbfaf6; --ink:#1f2421; --muted:#6c766f; --line:#e3e6df; --card:#ffffff;
+  --rose:#ec9d95; --rose-deep:#d9776d; --rose-soft:#fcefed; --leaf:#7ea56a; --leaf-soft:#e9f1e3; --sky:#8fb0cf; --sky-soft:#e8f0f8; --leaf-deep:#6a9058;
+  --note-ink:#1f2421;
+  --n1:#fdf1c2; --n2:#fcefed; --n3:#e3eef8; --n4:#e9f1e3; --n5:#efe8f7;
+  --ja:#6f9a5f; --teils:#d9a21a; --nein:#e07a70;
+  --shadow:0 3px 18px rgba(40,60,45,.12);
+  --note-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 16px -6px rgba(40,60,45,.28);
+  --ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  --bubble:"Fredoka","Nunito",system-ui,sans-serif;
+  --pinw:118px;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{color:var(--ink);font:15px/1.5 var(--ui);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 48px;min-height:100%;
+  background:
+  radial-gradient(ellipse 38% 45% at 0% 100%,rgba(160,203,150,.55),transparent 70%),
+  radial-gradient(ellipse 35% 40% at 100% 0%,rgba(178,214,204,.6),transparent 70%),
+  radial-gradient(ellipse 30% 38% at 100% 100%,rgba(176,200,226,.55),transparent 70%),
+  radial-gradient(ellipse 25% 22% at 8% 0%,rgba(207,226,216,.5),transparent 70%),
+  radial-gradient(ellipse at 40% 30%,#fffefb,#f6f4ec) var(--paper);background-attachment:fixed}
+.wrap{width:100%;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:400}
+h2,h3{font-family:var(--hand);font-size:1.7rem;line-height:1.1}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-block:6px 2px}
+header.top h1,.pres-title{flex:1 1 auto;font-family:var(--bubble);font-weight:700;font-size:clamp(30px,5vw,46px);line-height:1;color:#a9cdeb;letter-spacing:.01em;
+  text-shadow:0 2px 0 #3f5f86,2px 0 0 #3f5f86,-2px 0 0 #3f5f86,0 -2px 0 #3f5f86,2px 2px 0 #3f5f86,-2px 2px 0 #3f5f86,2px -2px 0 #3f5f86,-2px -2px 0 #3f5f86,0 5px 0 rgba(63,95,134,.35);padding-bottom:4px}
+.status{font-size:12.5px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.75);padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;border-radius:50%;background:#b9c2bb}
+.status.live i{background:var(--leaf)}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:rgba(255,255,255,.9);border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;color:var(--ink)}
+.seg button:hover{border-color:var(--leaf)}
+.seg button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+
+.panel{background:var(--card);border-radius:22px;padding:18px 22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.sub{color:var(--muted);font-size:.92rem;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grow{flex:1 1 260px;min-width:0}
+.field{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;width:100%}
+.field:focus{border-color:var(--rose);outline:none;box-shadow:0 0 0 3px var(--rose-soft)}
+textarea.field{border-radius:16px;resize:vertical;min-height:76px;font-family:var(--hand);font-size:1.3rem;line-height:1.3;background:#fffefa}
+.btn{border:1px solid var(--leaf);border-radius:999px;padding:7px 18px;font-weight:800;background:var(--leaf);color:#fff}
+.btn:hover{background:var(--leaf-deep);border-color:var(--leaf-deep)}
+.btn.ghost{background:#fff;border-color:var(--line);color:var(--ink);font-weight:700}
+.btn.ghost:hover{border-color:var(--leaf);background:var(--leaf-soft)}
+.btn.go{background:var(--leaf);border-color:var(--leaf)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:4px 13px;font-size:.88rem}
+.chip-name{display:inline-flex;gap:8px;align-items:center;font-weight:700;margin:0;font-family:var(--hand);font-size:1.3rem}
+.linkbtn{border:0;background:none;color:var(--leaf-deep);font-family:var(--ui);font-size:.85rem;font-weight:700;text-decoration:underline;padding:0}
+
+.tools-set{display:flex;flex-wrap:wrap;gap:6px}
+.tg{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.85rem;font-weight:700;background:#fff;cursor:pointer;user-select:none}
+.tg input{accent-color:var(--leaf);margin:0}
+.tg:has(input:checked){border-color:var(--leaf);background:var(--leaf-soft)}
+
+.queue{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.lp-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.lp-grid{grid-template-columns:minmax(0,1fr)}}
+.tools-bar{padding-block:12px;gap:6px}
+.empty-line{font-family:var(--hand);font-size:1.2rem;color:#a7ada8;margin:0}
+.qitem{background:var(--rose-soft);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.qitem .txt{font-family:var(--hand);font-size:1.35rem;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.by{font-size:.85rem;color:var(--muted);margin:0}
+.badge{display:inline-block;background:var(--leaf);color:#fff;border-radius:999px;font-size:.8rem;padding:1px 10px;margin-left:6px;vertical-align:middle;font-family:var(--ui);font-weight:800}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:rgba(255,255,255,.9);border-radius:999px;padding:7px 18px;font-weight:800;font-size:15px;color:var(--ink)}
+.tabs button:hover{border-color:var(--leaf)}
+.tabs button[aria-selected="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+
+.board{columns:280px;column-gap:20px;padding-top:6px}
+.note{break-inside:avoid;margin:0 0 22px;padding:22px 16px 14px;color:var(--note-ink);box-shadow:var(--note-shadow);position:relative;display:flex;flex-direction:column;gap:10px;border-radius:6px 6px 18px 6px}
+.note::before{content:"";position:absolute;top:-8px;left:50%;width:74px;height:20px;margin-left:-37px;background:rgba(255,255,255,.55);border-left:1px dashed rgba(0,0,0,.08);border-right:1px dashed rgba(0,0,0,.08);transform:rotate(-2deg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.note:nth-child(3n){transform:rotate(-.6deg)} .note:nth-child(3n+1){transform:rotate(.5deg)}
+.c0{background:var(--n1)}.c1{background:var(--n2)}.c2{background:var(--n3)}.c3{background:var(--n4)}.c4{background:var(--n5)}
+.note .txt{font-family:var(--hand);font-size:1.5rem;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.note .by{color:var(--muted)}
+.tool{display:flex;flex-direction:column;gap:5px;border-top:1.5px dotted rgba(31,36,33,.2);padding-top:8px}
+.tool-l{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.scale{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.scale button{border:0;border-radius:999px;padding:5px 0;font-weight:800;font-size:.85rem;background:rgba(255,255,255,.75);color:var(--ink);font-variant-numeric:tabular-nums}
+.scale button:hover{background:#fff}
+.scale button[aria-pressed="true"]{background:var(--leaf);color:#fff}
+.agree{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.agree button{border:0;border-radius:12px;padding:6px 2px;font-weight:800;font-size:.8rem;line-height:1.15;background:rgba(255,255,255,.75);color:var(--ink)}
+.agree button:hover{background:#fff}
+.agree button[data-v="ja"][aria-pressed="true"]{background:var(--ja);color:#fff}
+.agree button[data-v="teils"][aria-pressed="true"]{background:var(--teils);color:#fff}
+.agree button[data-v="nein"][aria-pressed="true"]{background:var(--nein);color:#fff}
+.note textarea{border:0;border-radius:12px;background:rgba(255,255,255,.75);padding:8px 10px;font-family:var(--hand);font-size:1.15rem;color:var(--ink);resize:vertical;min-height:56px;width:100%}
+.note textarea:focus{outline:none;box-shadow:0 0 0 2px var(--rose)}
+.note textarea::placeholder{color:#a7ada8}
+.stat{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:12px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.75)}
+.stack span{display:block;height:100%}
+.legend{display:flex;gap:10px;font-size:.78rem;font-weight:700;flex-wrap:wrap}
+.legend b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:0}
+.cm{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
+.cm li{background:rgba(255,255,255,.75);border-radius:10px;padding:4px 9px;font-family:var(--hand);font-size:1.08rem;line-height:1.2;overflow-wrap:anywhere}
+.cm b{font-family:var(--ui);font-size:.8rem;font-weight:800}
+.note .foot{display:flex;flex-wrap:wrap;gap:5px;align-items:center;justify-content:space-between}
+.note .tg{background:rgba(255,255,255,.7);border-color:transparent;font-size:.78rem;padding:3px 10px}
+.note .tg:has(input:checked){background:#fff;border-color:var(--leaf)}
+.del{border:0;background:transparent;color:#c0463c;font-weight:700;font-size:.82rem;text-decoration:underline;padding:2px}
+.del.arm{background:#c0463c;color:#fff;border-radius:999px;padding:3px 10px;text-decoration:none}
+
+.sbar{padding:22px 6px 0}
+.sbar-track{position:relative;height:14px;border-radius:999px;background:rgba(255,255,255,.8);background-image:repeating-linear-gradient(90deg,rgba(31,36,33,.14) 0 1.5px,transparent 1.5px 10%)}
+.sbar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--sky),var(--leaf));transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.sbar-mark{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1.5px;background:var(--ink);border-radius:2px;transition:left .5s cubic-bezier(.2,.8,.2,1)}
+.sbar-mark span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:3px;background:var(--rose);color:#fff;font-weight:800;font-size:.78rem;padding:0 8px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sbar-axis{position:relative;height:16px;margin-top:3px}
+.sbar-axis span{position:absolute;transform:translateX(-50%);font-size:.7rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.sbar-note{margin:0 -6px;font-size:.78rem;font-weight:700;color:var(--muted)}
+
+.empty{background:var(--card);border-radius:22px;padding:30px 22px;text-align:center;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;align-items:center}
+.empty h3{color:var(--muted);font-size:1.9rem}
+
+/* Barometer */
+.baro{background:var(--card);border-radius:22px;padding:18px 22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;min-width:0}
+.baro h2{font-size:1.7rem}
+.tray{display:flex;flex-wrap:wrap;gap:10px;min-height:78px;padding:12px;border:2px dashed var(--line);border-radius:18px;background:var(--paper)}
+.tray .pin{position:relative;left:auto;top:auto}
+.tray-empty{color:var(--muted);font-family:var(--hand);font-size:1.15rem;align-self:center;margin:0}
+.track-wrap{overflow-x:auto;padding-bottom:4px}
+.track-inner{min-width:520px}
+.track{position:relative;border-radius:18px;background:linear-gradient(90deg,var(--rose-soft),#fffefa 50%,var(--leaf-soft));box-shadow:inset 0 0 0 1px var(--line);min-height:120px;transition:height .25s}
+.track.hot{outline:2px dashed var(--rose);outline-offset:3px}
+.axis{position:relative;height:44px;margin-inline:calc(var(--pinw)/2)}
+.axis span{position:absolute;top:0;transform:translateX(-50%);font-family:var(--hand);font-size:1.15rem;line-height:1;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:center;color:var(--muted)}
+.axis span::before{content:"";width:2px;height:8px;background:var(--line);margin-bottom:3px}
+.axis .ends{position:absolute;top:24px;transform:none;white-space:nowrap;font-family:var(--ui);font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.ends.l{left:calc(var(--pinw)/-2);color:var(--nein)} .ends.r{right:calc(var(--pinw)/-2);color:var(--ja)}
+.pin{position:absolute;width:var(--pinw);min-height:54px;padding:6px 9px 5px;border-radius:5px 5px 12px 5px;color:var(--note-ink);box-shadow:var(--note-shadow);font-family:var(--hand);font-size:1.02rem;line-height:1.1;touch-action:none;user-select:none;display:flex;flex-direction:column;justify-content:space-between;gap:2px}
+.pin[data-drag]{cursor:grab}
+.pin .pt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.pin .pv{font-family:var(--ui);font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--muted)}
+.pin.dragging{opacity:.25}
+.drag-ghost{position:fixed;z-index:50;pointer-events:none;transform:rotate(-3deg) scale(1.06);opacity:.95}
+.kbd{font-size:.82rem;color:var(--muted);margin:0}
+
+.rank-wrap{overflow-x:auto}
+table.rank{width:100%;border-collapse:collapse;min-width:620px;font-variant-numeric:tabular-nums}
+.rank th{text-align:left;font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+.rank td{padding:9px 8px;border-bottom:1px dashed var(--line);vertical-align:middle}
+.rank .pos{font-family:var(--bubble);font-weight:700;font-size:1.35rem;width:48px;color:var(--rose-deep)}
+.rank .it{font-family:var(--hand);font-size:1.25rem;line-height:1.15}
+.rank .sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.mbar{width:110px;height:8px;border-radius:99px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--sky),var(--leaf))}
+.num{font-weight:800}
+.dash{color:#b3b9b4}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;z-index:60;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.qtxt-row{display:flex;gap:8px;align-items:flex-start}
+.edit-btn{border:0;background:none;color:var(--leaf-deep);font-weight:700;font-size:.82rem;text-decoration:underline;padding:2px}
+.edit-box{display:flex;flex-direction:column;gap:6px}
+.edit-box textarea{font-family:var(--hand);font-size:1.3rem;line-height:1.2}
+details.settings>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+details.settings>summary::-webkit-details-marker{display:none}
+details.settings>summary h2::after{content:" ›";color:var(--muted);display:inline-block;transition:transform .2s}
+details.settings[open]>summary h2::after{transform:rotate(90deg)}
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px 16px;margin-top:12px}
+.lb-grid label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.lb-grid .wide{grid-column:1/-1}
+.lb-grid .field{font-family:var(--hand);font-size:1.15rem}
+.pres-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.pres-title{flex:1 1 auto;margin:0;white-space:nowrap;font-size:clamp(30px,4.5vw,52px)}
+body.present header.top{display:none}
+body.present .wrap{max-width:1500px}
+.present-on .note .txt{font-size:2rem}
+.present-on .board{columns:330px}
+.present-on .cm li{font-size:1.3rem}
+.present-on .rank .it{font-size:1.5rem}
+.present-on .pin{font-size:1.15rem}
+.boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.bcard{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0;text-align:left;border:0;color:var(--ink)}
+button.bcard{cursor:pointer;transition:transform .15s,box-shadow .15s}
+button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,45,.18)}
+.bcard h3{font-size:1.75rem;overflow-wrap:anywhere}
+.minis{display:flex;height:46px;align-items:flex-end;gap:0}
+.minis i{width:40px;height:34px;border-radius:3px 3px 8px 3px;box-shadow:0 2px 5px rgba(40,60,45,.18);margin-right:-10px}
+.minis i:nth-child(1){transform:rotate(-7deg)} .minis i:nth-child(2){transform:rotate(4deg) translateY(-6px)} .minis i:nth-child(3){transform:rotate(-2deg)}
+.vis{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 10px;border-radius:999px;align-self:flex-start}
+.vis i{width:8px;height:8px;border-radius:50%}
+.vis.on{background:var(--leaf-soft);color:var(--leaf-deep)} .vis.on i{background:var(--leaf)}
+.vis.off{background:#f1f1ee;color:var(--muted)} .vis.off i{background:#b9c2bb}
+.bcard .foot{display:flex;justify-content:space-between;gap:8px;border-top:1px dashed var(--line);padding-top:8px;margin-top:auto}
+.bhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.bhead h2{font-size:2.1rem;flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.overview-empty{font-family:var(--hand);font-size:1.4rem;color:var(--muted);text-align:center;padding:24px}
+@media (max-width:560px){:root{--pinw:96px}.panel,.baro{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Knobelnest */
+.peekrow select{min-height:44px}
+.peeknote{margin:0;color:var(--leaf-deep, #3f6b39)}
+body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
+body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
+#knBack{margin-right:4px}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="btn ghost small" type="button" id="knBack" hidden>← Knobelnest</button>
+    <h1>Klassen-Pinnwand</h1>
+    <span class="status" id="status"><i></i><span>Verbinde …</span></span>
+    <div class="seg" id="roleSeg" hidden>
+      <button type="button" data-act="role" data-v="lp" aria-pressed="true">Lehrperson</button>
+      <button type="button" data-act="role" data-v="kind" aria-pressed="false">Kinder-Ansicht</button>
+      <button type="button" data-act="role" data-v="show" aria-pressed="false">Präsentieren</button>
+    </div>
+  </header>
+  <main id="app" class="wrap" style="gap:18px">
+    <div class="empty"><h3>Pinnwand wird geladen …</h3></div>
+  </main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+// Knobelnest: Speicher, Kinder und Rolle kommen aus dem Portal. Kinder sehen nie Namen.
+const KN = (() => { try { return window.parent !== window && window.parent.knPin || null; } catch { return null; } })();
+if (KN) window.claude = KN.claude;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const TOOL_NAMES = { rate: "Bewertung 1–10", agree: "Zustimmung", comment: "Kommentar", baro: "Nur im Barometer" };
+const AGREE = [["ja"], ["teils"], ["nein"]];
+const DEF_LABELS = {
+  rateQ: "Wie gut findest du das? 1 bis 10", agreeQ: "Stimmst du zu?",
+  ja: "Stimme zu", teils: "Teilweise", nein: "Stimme nicht zu",
+  commentQ: "Dein Kommentar", commentPh: "Was denkst du dazu?",
+  baroHint: "Zieh jeden Zettel auf die Skala: links gefällt er dir nicht, rechts gefällt er dir sehr. So entsteht deine eigene Rangliste.",
+  baroL: "gefällt mir nicht", baroR: "gefällt mir sehr"
+};
+const LABEL_FIELDS = [
+  ["rateQ", "Frage zur Bewertung 1–10"], ["agreeQ", "Frage zur Zustimmung"],
+  ["ja", "Knopf 1 (Zustimmung)"], ["teils", "Knopf 2 (teilweise)"], ["nein", "Knopf 3 (keine Zustimmung)"],
+  ["commentQ", "Überschrift Kommentar"], ["commentPh", "Hilfstext im Kommentarfeld"],
+  ["baroL", "Barometer links (0)"], ["baroR", "Barometer rechts (10)"], ["baroHint", "Anleitung zum Barometer", "wide"]
+];
+const L = () => ({ ...DEF_LABELS, ...(S.labels || {}) });
+const fmt = n => n == null ? "–" : n.toLocaleString("de-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const colorOf = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return "c" + (h % 5); };
+
+let db = null, user = null, myId = null, isTeacher = false;
+const S = {
+  view: "kind", tab: "board", rankBy: "baro",
+  ideas: new Map(), votes: new Map(),
+  my: { name: KN ? KN.name : ls.get("pw-name", ""), r: {} }, peek: "",
+  live: false, loaded: false,
+  defaults: ls.get("pw-tools2", { rate: true, agree: true, comment: true, baro: false }),
+  armed: null, editName: false, labels: {}, editing: null, showSettings: false, skipKeep: false,
+  boards: new Map(), board: null, renaming: null
+};
+const inBoard = i => (i.boardId || "") === S.board;
+const curBoard = () => S.boards.get(S.board);
+const myKey = () => myId || "local";
+
+/* ---------- store ---------- */
+async function addIdea(data) {
+  if (db) { await db.collection("ideas").add(data); }
+  else { S.ideas.set("i" + Math.random().toString(36).slice(2, 9), data); render(); }
+}
+async function addBoard(data) {
+  if (db) return (await db.collection("boards").add(data)).id;
+  const id = "b" + Math.random().toString(36).slice(2, 9); S.boards.set(id, data); return id;
+}
+async function patchBoard(id, patch) {
+  if (db) await db.doc("boards/" + id).update(patch);
+  else { S.boards.set(id, { ...S.boards.get(id), ...patch }); render(); }
+}
+async function removeBoard(id) {
+  for (const [iid, i] of [...S.ideas]) if (i.boardId === id) await removeIdea(iid);
+  if (db) await db.doc("boards/" + id).delete(); else { S.boards.delete(id); render(); }
+}
+async function patchIdea(id, patch) {
+  if (db) await db.doc("ideas/" + id).update(patch);
+  else { const cur = S.ideas.get(id); S.ideas.set(id, { ...cur, ...patch, tools: { ...(cur.tools || {}), ...(patch.tools || {}) } }); render(); }
+}
+async function removeIdea(id) {
+  if (db) await db.doc("ideas/" + id).delete();
+  else { S.ideas.delete(id); render(); }
+}
+let dirty = false, saving = false, timer = null;
+function touchMy(delay = 600) {
+  dirty = true; clearTimeout(timer); timer = setTimeout(flush, delay);
+}
+async function flush() {
+  if (saving || !dirty) return;
+  dirty = false;
+  if (!db || !myId) return;
+  saving = true;
+  const body = JSON.parse(JSON.stringify(S.my)); body.at = Date.now();
+  try { await db.doc("votes/" + myId).set(body); }
+  catch (e) { failed(e); }
+  saving = false;
+  if (dirty) flush();
+}
+function failed(e) {
+  if (e && e.code === "invalid_argument") toast("Speichern nicht erlaubt. Die Lehrperson muss dir beim Teilen das Recht «Mitwirken» geben.");
+  else if (e && e.code === "quota_exceeded") toast("Die Pinnwand ist voll. Bitte alte Zettel löschen.");
+  else toast("Konnte nicht speichern. Bitte gleich nochmals versuchen.");
+}
+function myVote(id) { if (S.peek) return {}; return (S.my.r[id] ||= {}); }
+function peekHTML() {
+  if (!KN || !isTeacher) return "";
+  const voted = new Set([...S.votes.keys()]);
+  return `<div class="row peekrow"><label class="grow"><span class="sub">Ansicht von</span><select class="field" id="peekSel" data-act="peek">
+    <option value="">Vorschau (ohne Kind)</option>${KN.roster.map(k => `<option value="${esc(k.id)}" ${S.peek === k.id ? "selected" : ""}>${esc(k.name)}${voted.has(k.id) ? " ✓" : ""}</option>`).join("")}</select></label></div>
+    ${S.peek ? `<p class="sub peeknote">So sieht ${esc((KN.roster.find(k => k.id === S.peek) || {}).name || "")} die Pinnwand: mit den eigenen Stimmen und Kommentaren. Hier kann nichts geändert werden.</p>` : ""}`;
+}
+function setPeek(id) {
+  S.peek = id || "";
+  const k = KN.roster.find(x => x.id === S.peek), v = S.peek ? S.votes.get(S.peek) : null;
+  S.my = S.peek ? { name: k ? k.name : "", r: JSON.parse(JSON.stringify((v && v.r) || {})) } : { name: KN.name, r: {} };
+  document.body.classList.toggle("peeking", !!S.peek);
+}
+
+/* ---------- aggregate ---------- */
+function aggregate() {
+  const all = new Map(S.votes); all.set(myKey(), S.my);
+  const res = {};
+  for (const [id, i] of S.ideas) if (i.status === "ok" && inBoard(i)) res[id] = { rate: [], baro: [], agree: { ja: 0, teils: 0, nein: 0 }, comments: [], voters: new Set() };
+  let kids = 0;
+  for (const [uid, v] of all) {
+    const r = v && v.r || {}; let any = false;
+    for (const id in r) {
+      const a = res[id], x = r[id]; if (!a || !x) continue;
+      if (typeof x.rate === "number") { a.rate.push(x.rate); any = true; a.voters.add(uid); }
+      if (typeof x.baro === "number") { a.baro.push(x.baro); any = true; a.voters.add(uid); }
+      if (x.agree in a.agree) { a.agree[x.agree]++; any = true; a.voters.add(uid); }
+      if (x.comment && x.comment.trim()) { a.comments.push({ name: v.name || "Ohne Namen", text: x.comment.trim() }); any = true; }
+    }
+    if (any) kids++;
+  }
+  const avg = a => a.length ? a.reduce((s, n) => s + n, 0) / a.length : null;
+  for (const id in res) { const a = res[id]; a.rateAvg = avg(a.rate); a.baroAvg = avg(a.baro); a.n = a.voters.size; }
+  return { res, kids };
+}
+
+/* ---------- render ---------- */
+function approved() {
+  return [...S.ideas].filter(([, i]) => i.status === "ok" && inBoard(i)).sort((a, b) => (a[1].okAt || a[1].at || 0) - (b[1].okAt || b[1].at || 0));
+}
+function toolsOf(i) { return i.tools || {}; }
+
+function render() {
+  // remember focus + pin positions
+  const ae = document.activeElement, fid = ae && ae.id, sel = ae && "selectionStart" in ae ? [ae.selectionStart, ae.selectionEnd] : null;
+  const prev = {}; document.querySelectorAll(".track .pin").forEach(p => prev[p.dataset.id] = p.getBoundingClientRect());
+
+  const st = $("#status");
+  st.className = "status" + (S.live ? " live" : "");
+  st.lastElementChild.textContent = S.live ? "Live" : "Vorschau – wird nicht gespeichert";
+  $("#roleSeg").hidden = !isTeacher;
+  $("#roleSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S.view)));
+
+  const keep = {}; if (!S.skipKeep) document.querySelectorAll("#app [data-keep]").forEach(el => { if (el.id) keep[el.id] = el.value; }); S.skipKeep = false;
+  if (S.board && !S.boards.has(S.board)) S.board = null;
+  if (S.board && S.view === "kind" && !isTeacher && !curBoard().visible) { S.board = null; toast("Diese Pinnwand ist im Moment nicht offen."); }
+  if (!S.board && S.view === "show") S.view = "lp";
+  $("#roleSeg").querySelector('[data-v="show"]').hidden = !S.board;
+  document.body.classList.toggle("present", S.view === "show");
+  $("#app").classList.toggle("present-on", S.view === "show");
+  $("#app").innerHTML = !S.board ? (S.view === "lp" ? overviewTeacher() : overviewKid()) : S.view === "lp" ? teacherHTML() : S.view === "show" ? presentHTML() : kidHTML();
+  for (const k in keep) { const el = document.getElementById(k); if (el) el.value = keep[k]; }
+  layoutTracks();
+
+  if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); if (sel && "setSelectionRange" in el) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.querySelectorAll(".track .pin").forEach(p => {
+      const a = prev[p.dataset.id]; if (!a) return; const b = p.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) p.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: "none" }], { duration: 550, easing: "cubic-bezier(.2,.8,.2,1)" });
+    });
+  }
+}
+
+function tabsHTML(labels) {
+  return `<div class="tabs" role="tablist">${labels.map(([k, l]) => `<button type="button" role="tab" data-act="tab" data-v="${k}" aria-selected="${S.tab === k}">${l}</button>`).join("")}</div>`;
+}
+
+/* ----- Übersicht ----- */
+function boardsSorted(onlyVisible) {
+  return [...S.boards].filter(([, b]) => !onlyVisible || b.visible).sort((a, b) => (b[1].at || 0) - (a[1].at || 0));
+}
+function counts(bid) {
+  let ok = 0, pend = 0; for (const [, i] of S.ideas) if ((i.boardId || "") === bid) { if (i.status === "ok") ok++; else if (i.status === "pending") pend++; }
+  return { ok, pend };
+}
+const minis = id => { const c = colorOf(id), n = +c.slice(1); return `<div class="minis" aria-hidden="true"><i class="c${n}"></i><i class="c${(n + 1) % 5}"></i><i class="c${(n + 2) % 5}"></i></div>`; };
+const visPill = v => `<span class="vis ${v ? "on" : "off"}"><i></i>${v ? "Für Kinder sichtbar" : "Versteckt"}</span>`;
+function boardHead() {
+  const b = curBoard(); if (!b) return "";
+  const teacher = S.view === "lp";
+  return `<div class="bhead"><button class="btn ghost" type="button" data-act="home">← Alle Pinnwände</button><h2>${esc(b.title)}</h2>${teacher ? `${visPill(b.visible)}<button class="btn ${b.visible ? "ghost" : ""} small" type="button" data-act="vis" data-id="${S.board}">${b.visible ? "Verstecken" : "Für Kinder sichtbar machen"}</button>` : ""}</div>`;
+}
+function overviewTeacher() {
+  const list = boardsSorted(false);
+  return `<section class="panel"><div><h2>Neue Pinnwand</h2><p class="sub">Eine neue Pinnwand ist zuerst versteckt. So können Sie in Ruhe Zettel vorbereiten und sie dann für die Kinder sichtbar machen.</p></div>
+    <div class="row"><input class="field grow" id="newBoard" data-keep maxlength="60" placeholder="z. B. Ideen für die Schulreise"><button class="btn" type="button" data-act="newboard">Erstellen</button></div></section>
+  ${list.length ? `<div class="boards">${list.map(([id, b]) => {
+    const c = counts(id);
+    const head = S.renaming === id
+      ? `<div class="edit-box"><input class="field" id="rn-${id}" data-keep maxlength="60" value="${esc(b.title)}"><div class="row"><button class="btn small" type="button" data-act="saverename" data-id="${id}">Speichern</button><button class="btn ghost small" type="button" data-act="cancelrename">Abbrechen</button></div></div>`
+      : `<h3>${esc(b.title)}</h3>`;
+    return `<article class="bcard">${minis(id)}${visPill(b.visible)}${head}
+      <p class="sub">${c.ok} ${c.ok === 1 ? "Zettel" : "Zettel"} an der Pinnwand${c.pend ? ` · <b style="color:var(--leaf-deep)">${c.pend} ${c.pend === 1 ? "wartet" : "warten"} auf Freigabe</b>` : ""}</p>
+      <div class="row"><button class="btn" type="button" data-act="open" data-id="${id}">Öffnen</button><button class="btn ghost small" type="button" data-act="vis" data-id="${id}">${b.visible ? "Verstecken" : "Sichtbar machen"}</button></div>
+      <div class="foot">${S.renaming === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="rename" data-id="${id}">Umbenennen</button>`}<button class="del ${S.armed === "b:" + id ? "arm" : ""}" type="button" data-act="delboard" data-id="${id}">${S.armed === "b:" + id ? "Mit allen Zetteln löschen?" : "Löschen"}</button></div>
+    </article>`;
+  }).join("")}</div>` : `<div class="empty"><h3>Noch keine Pinnwand</h3><p class="sub">Geben Sie oben einen Namen ein und klicken Sie auf «Erstellen».</p></div>`}`;
+}
+function overviewKid() {
+  const list = boardsSorted(true);
+  return `<section class="panel"><h2>Unsere Pinnwände</h2><p class="sub">Tippe auf eine Pinnwand, um sie zu öffnen.</p></section>
+  ${list.length ? `<div class="boards">${list.map(([id, b]) => `<button class="bcard" type="button" data-act="open" data-id="${id}">${minis(id)}<h3>${esc(b.title)}</h3><p class="sub">${counts(id).ok} Zettel</p></button>`).join("")}</div>`
+    : `<div class="empty"><h3>Im Moment ist keine Pinnwand offen</h3><p class="sub">Sobald die Lehrperson eine Pinnwand freigibt, erscheint sie hier.</p></div>`}`;
+}
+
+/* ----- Kinder ----- */
+function kidHTML() {
+  const name = S.my.name;
+  const mine = [...S.ideas].filter(([, i]) => i.status === "pending" && inBoard(i) && i.uid === (S.peek || myKey()));
+  const nameBlock = KN ? peekHTML() : !name || S.editName
+    ? `<div class="row"><label class="grow"><span class="sub">Wie heisst du?</span><input class="field" id="nameIn" data-keep maxlength="30" placeholder="Dein Vorname" value="${esc(name)}"></label><button class="btn" type="button" data-act="setname">Speichern</button></div>`
+    : `<p class="chip-name">Ich bin ${esc(name)} <button class="linkbtn" type="button" data-act="editname">ändern</button></p>`;
+  const noSave = S.live && !myId ? `<p class="sub"><b>Hinweis:</b> Du bist nicht angemeldet. Deine Ideen und Stimmen werden nicht gespeichert.</p>` : "";
+  let html = boardHead() + `<section class="panel"><h2>Meine Idee</h2>${nameBlock}${noSave}
+    <label for="ideaIn" class="sub">Schreib deine Idee auf. Die Lehrperson schaut sie an und hängt sie dann an die Pinnwand.</label>
+    <textarea class="field" id="ideaIn" maxlength="280" placeholder="Meine Idee ist …">${esc(ls.get("pw-draft", ""))}</textarea>
+    <div class="row"><button class="btn" type="button" data-act="send">Idee abschicken</button>${mine.length ? `<span class="sub">${mine.length === 1 ? "1 Idee wartet" : mine.length + " Ideen warten"} auf Freigabe: ${mine.map(([, i]) => "«" + esc(i.text.slice(0, 40)) + (i.text.length > 40 ? "…" : "") + "»").join(", ")}</span>` : ""}</div>
+  </section>`;
+  const items = approved();
+  const boardItems = items.filter(([, i]) => !toolsOf(i).baro);
+  const hasBaro = boardItems.length < items.length;
+  if (!items.length) return html + tabsHTML([["board", "Pinnwand"]]) + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3><p class="sub">Sobald die Lehrperson Ideen freigibt, erscheinen sie hier.</p></div>`;
+  if (S.tab === "baro" && !hasBaro) S.tab = "board";
+  if (S.tab === "board" && !boardItems.length) S.tab = "baro";
+  const tabs = []; if (boardItems.length) tabs.push(["board", "Pinnwand"]); if (hasBaro) tabs.push(["baro", "Mein Barometer"]);
+  html += tabsHTML(tabs);
+  if (S.tab === "baro") return html + kidBaroHTML(items);
+  return html + `<div class="board">${boardItems.map(([id, i]) => kidNote(id, i)).join("")}</div>`;
+}
+function kidNote(id, i) {
+  const t = toolsOf(i), v = S.my.r[id] || {};
+  let h = `<article class="note ${colorOf(id)}"><p class="txt">${esc(i.text)}</p>`;
+  if (t.rate) h += `<div class="tool"><span class="tool-l">${esc(L().rateQ)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
+  if (t.agree) h += `<div class="tool"><span class="tool-l">${esc(L().agreeQ)}</span><div class="agree">${AGREE.map(([k]) => `<button type="button" data-act="agree" data-id="${id}" data-v="${k}" aria-pressed="${v.agree === k}">${esc(L()[k])}</button>`).join("")}</div></div>`;
+  if (t.comment) h += `<div class="tool"><label class="tool-l" for="c-${id}">${esc(L().commentQ)}</label><textarea id="c-${id}" data-act="comment" data-id="${id}" maxlength="400" placeholder="${esc(L().commentPh)}">${esc(v.comment || "")}</textarea></div>`;
+  return h + `</article>`;
+}
+function pinHTML(id, i, val, label, drag) {
+  return `<div class="pin ${colorOf(id)}" id="pin-${id}" data-id="${id}" ${val != null ? `data-val="${val}"` : ""} ${drag ? `data-drag tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${val ?? ""}" aria-label="${esc(i.text.slice(0, 60))}"` : ""}><span class="pt">${esc(i.text)}</span>${label ? `<span class="pv">${label}</span>` : ""}</div>`;
+}
+function axisHTML() {
+  return `<div class="axis">${Array.from({ length: 11 }, (_, k) => `<span style="left:${k * 10}%">${k}</span>`).join("")}<span class="ends l">${esc(L().baroL)}</span><span class="ends r">${esc(L().baroR)}</span></div>`;
+}
+function kidBaroHTML(items) {
+  const list = items.filter(([, i]) => toolsOf(i).baro);
+  const tray = list.filter(([id]) => typeof (S.my.r[id] || {}).baro !== "number");
+  const placed = list.filter(([id]) => typeof (S.my.r[id] || {}).baro === "number");
+  return `<section class="baro">
+    <div><h2>Mein Barometer</h2><p class="sub">${esc(L().baroHint)}</p></div>
+    <div class="tray" id="tray" aria-label="Noch nicht platziert">${tray.length ? tray.map(([id, i]) => pinHTML(id, i, null, "", true)).join("") : `<p class="tray-empty">Alle Zettel sind platziert. Zieh einen hierher zurück, um ihn wegzunehmen.</p>`}</div>
+    <div class="track-wrap"><div class="track-inner"><div class="track" id="track">${placed.map(([id, i]) => pinHTML(id, i, S.my.r[id].baro, fmt(S.my.r[id].baro), true)).join("")}</div>${axisHTML()}</div></div>
+    <p class="kbd">Mit der Tastatur: Zettel anwählen, dann Pfeiltasten links/rechts. Entf nimmt ihn weg.</p>
+  </section>`;
+}
+
+/* ----- Lehrperson ----- */
+function toolToggles(prefix, t, id) {
+  return `<div class="tools-set">${Object.entries(TOOL_NAMES).map(([k, l]) => `<label class="tg"><input type="checkbox" id="${prefix}-${k}" data-act="${id ? "tool" : "deftool"}" ${id ? `data-id="${id}"` : ""} data-k="${k}" ${t[k] ? "checked" : ""}>${l}</label>`).join("")}</div>`;
+}
+function teacherHTML() {
+  const pend = [...S.ideas].filter(([, i]) => i.status === "pending" && inBoard(i)).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
+  const { res, kids } = aggregate();
+  let html = boardHead() + `<section class="panel tools-bar"><div class="row"><span class="tool-l" style="margin-right:4px">Werkzeuge für neue Zettel</span>${toolToggles("def", S.defaults)}</div><p class="sub">Gilt für freigegebene Ideen und für Ihre eigenen Zettel. Pro Zettel können Sie es später noch ändern.</p></section>
+  ${settingsHTML()}
+  <div class="lp-grid">
+  <section class="panel">
+    <div><h2>Zur Freigabe ${pend.length ? `<span class="badge">${pend.length}</span>` : ""}</h2><p class="sub">Ideen der Kinder kommen hier an. Mit «Freigeben» hängt die Idee an der Pinnwand.</p></div>
+    ${pend.length ? `<div class="queue">${pend.map(([id, i]) => `<div class="qitem">${S.editing === id ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}<p class="by">von ${esc(i.by || "Ohne Namen")}</p>
+      <div class="row"><button class="btn small" type="button" data-act="approve" data-id="${id}">Freigeben</button>${S.editing === id ? "" : `<button class="btn ghost small" type="button" data-act="edit" data-id="${id}">Bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich löschen?" : "Ablehnen"}</button></div></div>`).join("")}</div>`
+      : `<p class="empty-line">Im Moment wartet keine Idee.</p>`}
+  </section>
+  <section class="panel">
+    <div><h2>Selbst anpinnen</h2><p class="sub">Eine Frage, ein Vorschlag oder ein Thema – Ihr Zettel hängt sofort an der Pinnwand.</p></div>
+    <label for="lpIdea" class="tool-l">Text auf dem Zettel</label>
+    <textarea class="field" id="lpIdea" data-keep maxlength="280" rows="3" placeholder="z. B. Wohin soll die Schulreise gehen?"></textarea>
+    <div class="row" style="justify-content:flex-end"><span class="sub">Strg + Enter heftet auch an</span><button class="btn" type="button" data-act="lpadd">Anpinnen</button></div>
+  </section>
+  </div>`;
+  const items = approved();
+  html += tabsHTML([["board", "Pinnwand"], ["baro", "Barometer"], ["rank", "Rangliste"]]);
+  if (!items.length) return html + `<div class="empty"><h3>Die Pinnwand ist noch leer</h3><p class="sub">Geben Sie oben eine Idee frei oder heften Sie selbst einen Zettel an. Zum Ausprobieren können Sie oben auf «Kinder-Ansicht» wechseln.</p></div>`;
+  if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids);
+  if (S.tab === "rank") return html + rankHTML(items, res);
+  const boardItems = items.filter(([, i]) => !toolsOf(i).baro), nb = items.length - boardItems.length;
+  return html + `<p class="sub" style="color:var(--ink);font-weight:700;margin:0">${kids} ${kids === 1 ? "Kind hat" : "Kinder haben"} bisher mitgemacht.${nb ? ` ${nb} ${nb === 1 ? "Zettel hängt" : "Zettel hängen"} nur im Barometer.` : ""}</p>` +
+    (boardItems.length ? `<div class="board">${boardItems.map(([id, i]) => teacherNote(id, i, res[id])).join("")}</div>` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3><p class="sub">Sie finden sie unter «Barometer».</p></div>`);
+}
+function editBox(id, i) {
+  return `<div class="edit-box"><label class="tool-l" for="ed-${id}">Text verbessern</label><textarea class="field" id="ed-${id}" data-keep maxlength="280" rows="3">${esc(i.text)}</textarea>
+    <div class="row"><button class="btn small" type="button" data-act="saveedit" data-id="${id}">Speichern</button><button class="btn ghost small" type="button" data-act="canceledit">Abbrechen</button></div></div>`;
+}
+function settingsHTML() {
+  const l = L();
+  return `<details class="panel settings" id="settingsBox" ${S.showSettings ? "open" : ""}><summary><h2>Texte für die Kinder</h2><span class="sub">Fragen und Knöpfe, wie sie die Kinder auf den Zetteln sehen. Gilt für alle Zettel.</span></summary>
+    <div class="lb-grid">${LABEL_FIELDS.map(([k, t, w]) => `<label class="${w || ""}"><span class="tool-l">${t}</span>${w ? `<textarea class="field" id="lb-${k}" data-keep rows="2" maxlength="300">${esc(l[k])}</textarea>` : `<input class="field" id="lb-${k}" data-keep maxlength="80" value="${esc(l[k])}">`}</label>`).join("")}</div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost small" type="button" data-act="resetlabels">Standardtexte</button><button class="btn" type="button" data-act="savelabels">Texte speichern</button></div>
+  </details>`;
+}
+function teacherNote(id, i, a, present) {
+  const t = toolsOf(i);
+  let h = `<article class="note ${colorOf(id)}">${S.editing === id && !present ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}${i.by && !present ? `<p class="by">– ${esc(i.by)}</p>` : ""}`;
+  if (t.baro) h += `<div class="tool"><span class="tool-l">Barometer</span>${scaleBar(a.baroAvg, a.baro.length + " platziert")}</div>`;
+  else {
+  if (t.rate) h += `<div class="tool"><span class="tool-l">Bewertung 1–10</span>${scaleBar(a.rateAvg, a.rate.length + (a.rate.length === 1 ? " Stimme" : " Stimmen"))}</div>`;
+  if (t.agree) {
+    const tot = a.agree.ja + a.agree.teils + a.agree.nein, p = k => tot ? a.agree[k] / tot * 100 : 0;
+    h += `<div class="tool"><span class="tool-l">Zustimmung</span><div class="stack" role="img" aria-label="${a.agree.ja} stimmen zu, ${a.agree.teils} teilweise, ${a.agree.nein} nicht"><span style="width:${p("ja")}%;background:var(--ja)"></span><span style="width:${p("teils")}%;background:var(--teils)"></span><span style="width:${p("nein")}%;background:var(--nein)"></span></div>
+      <div class="legend"><span><b style="background:var(--ja)"></b>${esc(L().ja)} ${a.agree.ja}</span><span><b style="background:var(--teils)"></b>${esc(L().teils)} ${a.agree.teils}</span><span><b style="background:var(--nein)"></b>${esc(L().nein)} ${a.agree.nein}</span></div></div>`;
+  }
+  if (t.comment) h += `<div class="tool"><span class="tool-l">Kommentare (${a.comments.length})</span>${a.comments.length ? `<ul class="cm">${a.comments.map(c => `<li>${present ? "" : `<b>${esc(c.name)}:</b> `}${esc(c.text)}</li>`).join("")}</ul>` : `<span class="by">Noch keine Kommentare.</span>`}</div>`;
+  }
+  if (present) return h + `</article>`;
+  h += `<div class="tool"><span class="tool-l">Werkzeuge auf diesem Zettel</span>${toolToggles("t-" + id, t, id)}${t.baro ? `<span class="by">Dieser Zettel ist nur im Barometer zu sehen.</span>` : ""}<div class="foot">${S.editing === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="edit" data-id="${id}">Text bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich entfernen?" : "Zettel entfernen"}</button></div></div>`;
+  return h + `</article>`;
+}
+function presentHTML() {
+  const { res, kids } = aggregate();
+  const items = approved();
+  const boardItems = items.filter(([, i]) => !toolsOf(i).baro), hasBaro = boardItems.length < items.length;
+  if (S.tab === "board" && !boardItems.length && hasBaro) S.tab = "baro";
+  if (S.tab === "baro" && !items.length) S.tab = "board";
+  const tabs = [["board", "Ergebnisse"]]; if (hasBaro) tabs.push(["baro", "Barometer"]); tabs.push(["rank", "Rangliste"]);
+  if (S.tab === "baro" && !hasBaro) S.tab = "board";
+  let html = `<div class="pres-bar"><h1 class="pres-title">${esc(curBoard()?.title || "Unsere Ergebnisse")}</h1>${tabsHTML(tabs)}<button class="btn ghost" type="button" data-act="fullscreen">Vollbild</button><button class="btn" type="button" data-act="role" data-v="lp">Präsentation beenden</button></div>`;
+  if (!items.length) return html + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3></div>`;
+  if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids, true);
+  if (S.tab === "rank") return html + rankHTML(items, res);
+  return html + (boardItems.length ? `<div class="board">${boardItems.map(([id, i]) => teacherNote(id, i, res[id], true)).join("")}</div>` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3></div>`);
+}
+function scaleBar(v, note) {
+  const w = v == null ? 0 : Math.max(0, Math.min(10, v)) * 10;
+  return `<div class="sbar" role="img" aria-label="${v == null ? "Noch keine Stimmen" : "Durchschnitt " + fmt(v) + " von 10"}">
+    <div class="sbar-track"><div class="sbar-fill" style="width:${w}%"></div>${v == null ? "" : `<div class="sbar-mark" style="left:${w}%"><span>${fmt(v)}</span></div>`}</div>
+    <div class="sbar-axis">${Array.from({ length: 11 }, (_, k) => `<span style="left:${k * 10}%">${k}</span>`).join("")}</div>
+    <p class="sbar-note">${v == null ? "Noch keine Stimmen" : "Durchschnitt · " + note}</p></div>`;
+}
+function teacherBaroHTML(items, res, kids, present) {
+  const list = items.filter(([, i]) => toolsOf(i).baro);
+  const placed = list.filter(([id]) => res[id].baroAvg != null);
+  return `<section class="baro">
+    <div><h2>${present ? "Unser Barometer" : "Gesamt-Barometer der Klasse"}</h2><p class="sub">Jeder Zettel steht beim Durchschnitt aller Kinder. Wenn ein Kind seinen Zettel verschiebt, wandert er hier mit.</p></div>
+    ${placed.length ? "" : `<p class="tray-empty">${list.length ? "Noch hat kein Kind einen Zettel auf sein Barometer gezogen." : "Noch kein Zettel im Barometer. Haken Sie bei einem Zettel «Nur im Barometer» an."}</p>`}
+    <div class="track-wrap"><div class="track-inner"><div class="track" id="track">${placed.map(([id, i]) => pinHTML(id, i, res[id].baroAvg, "Ø " + fmt(res[id].baroAvg) + " · " + res[id].baro.length + " Kinder", false)).join("")}</div>${axisHTML()}</div></div>
+  </section>
+  ${list.length && !present ? `<section class="panel"><h2>Zettel im Barometer</h2><p class="sub">Diese Zettel sehen die Kinder nur im Barometer, nicht an der Pinnwand. Hier können Sie Werkzeuge ändern oder einen Zettel entfernen.</p></section>
+  <div class="board">${list.map(([id, i]) => teacherNote(id, i, res[id])).join("")}</div>` : ""}`;
+}
+function rankHTML(items, res) {
+  const list = items.filter(([, i]) => toolsOf(i).rate && !toolsOf(i).baro).map(([id, i]) => ({ id, i, a: res[id] }))
+    .sort((x, y) => (y.a.rateAvg ?? -1) - (x.a.rateAvg ?? -1) || (y.a.rate.length - x.a.rate.length));
+  if (!list.length) return `<div class="empty"><h3>Noch keine Rangliste</h3><p class="sub">In der Rangliste stehen die Zettel mit der Bewertung 1–10.</p></div>`;
+  const anyAgree = list.some(({ i }) => toolsOf(i).agree);
+  let pos = 0, last = null, shown = 0;
+  return `<section class="panel">
+    <div><h2>Rangliste</h2><p class="sub">Sortiert nach der durchschnittlichen Bewertung von 1 bis 10. Sie ändert sich, sobald Kinder abstimmen.</p></div>
+    <div class="rank-wrap"><table class="rank"><thead><tr><th>Rang</th><th>Zettel</th><th>Ø Bewertung</th>${anyAgree ? "<th>Zustimmung</th>" : ""}<th>Stimmen</th></tr></thead><tbody>
+    ${list.map(({ id, i, a }) => {
+      const v = a.rateAvg; shown++; if (v == null) pos = null; else if (v !== last) { pos = shown; last = v; }
+      const tot = a.agree.ja + a.agree.teils + a.agree.nein, p = k => tot ? a.agree[k] / tot * 100 : 0;
+      return `<tr><td class="pos">${pos == null ? `<span class="dash">–</span>` : pos + "."}</td><td class="it"><span class="sw ${colorOf(id)}"></span>${esc(i.text)}</td>
+      <td>${v == null ? `<span class="dash">–</span>` : `<div class="row" style="gap:10px;flex-wrap:nowrap"><span class="num">${fmt(v)}</span><div class="mbar" style="width:160px"><i style="width:${v * 10}%"></i></div></div>`}</td>
+      ${anyAgree ? `<td>${tot ? `<div class="stack" style="width:110px" title="${esc(L().ja)} ${a.agree.ja} · ${esc(L().teils)} ${a.agree.teils} · ${esc(L().nein)} ${a.agree.nein}"><span style="width:${p("ja")}%;background:var(--ja)"></span><span style="width:${p("teils")}%;background:var(--teils)"></span><span style="width:${p("nein")}%;background:var(--nein)"></span></div>` : `<span class="dash">–</span>`}</td>` : ""}
+      <td class="num">${a.rate.length}</td></tr>`;
+    }).join("")}</tbody></table></div>
+  </section>`;
+}
+
+/* ---------- Barometer-Layout ---------- */
+function layoutTracks() {
+  const tr = $("#track"); if (!tr) return;
+  const pins = [...tr.querySelectorAll(".pin")];
+  const W = tr.clientWidth, pw = pins[0] ? pins[0].offsetWidth : 110, inset = pw / 2, laneH = 66, gap = 6;
+  const xs = pins.map(p => ({ p, x: inset + (+p.dataset.val / 10) * (W - 2 * inset) })).sort((a, b) => a.x - b.x);
+  const ends = [];
+  for (const o of xs) {
+    let lane = ends.findIndex(e => e + gap <= o.x - pw / 2);
+    if (lane < 0) { lane = ends.length; ends.push(0); }
+    ends[lane] = o.x + pw / 2;
+    o.p.style.left = (o.x - pw / 2) + "px"; o.p.style.top = (12 + lane * laneH) + "px";
+  }
+  tr.style.height = Math.max(120, 24 + Math.max(1, ends.length) * laneH) + "px";
+}
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(layoutTracks, 120); });
+
+/* ---------- Drag ---------- */
+let drag = null;
+document.addEventListener("pointerdown", e => {
+  const pin = e.target.closest(".pin[data-drag]"); if (!pin || e.button > 0) return;
+  e.preventDefault();
+  const r = pin.getBoundingClientRect();
+  const g = pin.cloneNode(true); g.removeAttribute("id"); g.classList.add("drag-ghost"); g.style.width = r.width + "px"; g.style.left = r.left + "px"; g.style.top = r.top + "px";
+  document.body.appendChild(g); pin.classList.add("dragging");
+  drag = { id: pin.dataset.id, pin, g, dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width };
+});
+document.addEventListener("pointermove", e => {
+  if (!drag) return;
+  drag.g.style.left = (e.clientX - drag.dx) + "px"; drag.g.style.top = (e.clientY - drag.dy) + "px";
+  const tr = $("#track"); if (tr) tr.classList.toggle("hot", overTrack(e, tr));
+});
+function overTrack(e, tr) { const r = tr.getBoundingClientRect(); return e.clientX >= r.left - 20 && e.clientX <= r.right + 20 && e.clientY >= r.top - 30 && e.clientY <= r.bottom + 50; }
+function endDrag(e, cancel) {
+  if (!drag) return;
+  const { id, g, pin, dx, w } = drag; drag = null; g.remove(); pin.classList.remove("dragging");
+  const tr = $("#track"), tray = $("#tray"); if (tr) tr.classList.remove("hot");
+  if (cancel) return;
+  if (tr && overTrack(e, tr)) {
+    const r = tr.getBoundingClientRect(), inset = w / 2;
+    const cx = e.clientX - dx + w / 2;
+    let v = (cx - r.left - inset) / (r.width - 2 * inset) * 10;
+    v = Math.max(0, Math.min(10, Math.round(v * 2) / 2));
+    myVote(id).baro = v; touchMy(300); render();
+  } else if (tray) {
+    const r = tray.getBoundingClientRect();
+    if (e.clientY >= r.top - 20 && e.clientY <= r.bottom + 20) { delete myVote(id).baro; touchMy(300); render(); }
+  }
+}
+document.addEventListener("pointerup", e => endDrag(e, false));
+document.addEventListener("pointercancel", e => endDrag(e, true));
+
+/* ---------- Events ---------- */
+const app = $("#app");
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.matches("input,textarea")) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  if (act === "role" && KN && S.peek) setPeek("");
+  if (act === "role") { if (S.view === "show" && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); S.view = b.dataset.v; S.tab = "board"; S.editing = null; render(); scrollTo(0, 0); }
+  else if (act === "fullscreen") { const d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); else if (d.requestFullscreen) d.requestFullscreen().catch(() => toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers.")); else toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers."); }
+  else if (act === "edit") { S.editing = id; render(); const el = document.getElementById("ed-" + id); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+  else if (act === "home") { S.board = null; S.editing = null; render(); scrollTo(0, 0); }
+  else if (act === "open") { S.board = id; S.tab = "board"; S.editing = null; render(); scrollTo(0, 0); }
+  else if (act === "newboard") {
+    const inp = $("#newBoard"), title = inp.value.trim(); if (!title) { toast("Bitte geben Sie der Pinnwand einen Namen."); inp.focus(); return; }
+    b.disabled = true;
+    try { const nid = await addBoard({ title, visible: false, at: Date.now() }); inp.value = ""; S.board = nid; S.tab = "board"; render(); scrollTo(0, 0); toast("Pinnwand erstellt. Sie ist noch versteckt."); }
+    catch (err) { failed(err); b.disabled = false; }
+  }
+  else if (act === "vis") {
+    const bd = S.boards.get(id); if (!bd) return;
+    try { await patchBoard(id, { visible: !bd.visible }); toast(bd.visible ? "Versteckt – die Kinder sehen diese Pinnwand nicht mehr." : "Sichtbar – die Kinder sehen diese Pinnwand jetzt."); } catch (err) { failed(err); }
+  }
+  else if (act === "rename") { S.renaming = id; render(); const el = document.getElementById("rn-" + id); el?.focus(); el?.select(); }
+  else if (act === "cancelrename") { S.renaming = null; render(); }
+  else if (act === "saverename") {
+    const v = (document.getElementById("rn-" + id)?.value || "").trim(); if (!v) return;
+    S.renaming = null; try { await patchBoard(id, { title: v }); } catch (err) { failed(err); } render();
+  }
+  else if (act === "delboard") {
+    const key = "b:" + id;
+    if (S.armed !== key) { S.armed = key; render(); setTimeout(() => { if (S.armed === key) { S.armed = null; render(); } }, 4000); return; }
+    S.armed = null;
+    try { await removeBoard(id); toast("Pinnwand gelöscht."); } catch (err) { failed(err); }
+  }
+  else if (act === "canceledit") { S.editing = null; render(); }
+  else if (act === "saveedit") {
+    const el = document.getElementById("ed-" + id), text = el ? el.value.trim() : "";
+    if (!text) { toast("Der Zettel braucht einen Text."); el?.focus(); return; }
+    S.editing = null;
+    try { await patchIdea(id, { text }); toast("Text gespeichert."); } catch (err) { failed(err); }
+    render();
+  }
+  else if (act === "savelabels") {
+    const labels = {};
+    for (const [k] of LABEL_FIELDS) { const v = (document.getElementById("lb-" + k)?.value || "").trim(); if (v && v !== DEF_LABELS[k]) labels[k] = v; }
+    try { await saveLabels(labels); toast("Texte gespeichert. Die Kinder sehen sie sofort."); } catch (err) { failed(err); }
+  }
+  else if (act === "resetlabels") {
+    try { await saveLabels({}); S.skipKeep = true; render(); toast("Standardtexte wiederhergestellt."); } catch (err) { failed(err); }
+  }
+  else if (act === "tab") { S.tab = b.dataset.v; render(); }
+  else if (act === "rankby") { S.rankBy = b.dataset.v; render(); }
+  else if (act === "editname") { S.editName = true; render(); $("#nameIn")?.focus(); }
+  else if (act === "setname") {
+    const v = $("#nameIn").value.trim(); if (!v) { toast("Bitte schreib deinen Namen."); return; }
+    S.my.name = v; S.editName = false; ls.set("pw-name", v); touchMy(0); render();
+  }
+  else if (act === "send" && S.peek) { toast("In der Ansicht eines Kindes kann nichts abgeschickt werden."); }
+  else if (act === "send") {
+    const ta = $("#ideaIn"), text = ta.value.trim();
+    if (!text) { toast("Schreib zuerst deine Idee auf."); ta.focus(); return; }
+    if (!S.my.name) { toast("Schreib oben zuerst deinen Namen."); $("#nameIn")?.focus(); return; }
+    b.disabled = true;
+    try { await addIdea({ text, by: S.my.name, uid: myKey(), boardId: S.board, status: "pending", at: Date.now() }); ls.set("pw-draft", ""); ta.value = ""; toast("Danke! Deine Idee ist bei der Lehrperson."); }
+    catch (err) { failed(err); b.disabled = false; }
+  }
+  else if (act === "rate") { const v = +b.dataset.v, m = myVote(id); if (m.rate === v) delete m.rate; else m.rate = v; touchMy(400); render(); }
+  else if (act === "agree") { const v = b.dataset.v, m = myVote(id); if (m.agree === v) delete m.agree; else m.agree = v; touchMy(400); render(); }
+  else if (act === "approve") {
+    try { await patchIdea(id, { status: "ok", tools: { ...S.defaults }, okAt: Date.now() }); toast("Freigegeben – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
+  }
+  else if (act === "del") {
+    if (S.armed !== id) { S.armed = id; render(); setTimeout(() => { if (S.armed === id) { S.armed = null; render(); } }, 4000); return; }
+    S.armed = null;
+    try { await removeIdea(id); } catch (err) { failed(err); }
+  }
+  else if (act === "lpadd") {
+    const inp = $("#lpIdea"), text = inp.value.trim(); if (!text) { inp.focus(); return; }
+    try { await addIdea({ text, by: "Lehrperson", uid: myKey(), boardId: S.board, status: "ok", tools: { ...S.defaults }, at: Date.now(), okAt: Date.now() }); inp.value = ""; toast("Angepinnt – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
+  }
+});
+document.addEventListener("change", async e => {
+  const el = e.target;
+  if (el.id === "peekSel") { setPeek(el.value); render(); return; }
+  if (el.dataset.act === "deftool") { S.defaults[el.dataset.k] = el.checked; ls.set("pw-tools2", S.defaults); }
+  else if (el.dataset.act === "tool") { try { await patchIdea(el.dataset.id, { tools: { [el.dataset.k]: el.checked } }); } catch (err) { failed(err); el.checked = !el.checked; } }
+});
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.dataset.act === "comment") { myVote(el.dataset.id).comment = el.value; touchMy(900); }
+  else if (el.id === "ideaIn") ls.set("pw-draft", el.value);
+});
+document.addEventListener("keydown", e => {
+  const pin = e.target.closest && e.target.closest(".pin[data-drag]");
+  if (pin) {
+    const m = myVote(pin.dataset.id), cur = typeof m.baro === "number" ? m.baro : null;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); m.baro = Math.max(0, Math.min(10, (cur ?? 5) + (e.key === "ArrowRight" ? .5 : -.5) * (cur == null ? 0 : 1))); touchMy(500); render(); }
+    else if ((e.key === "Delete" || e.key === "Backspace") && cur != null) { e.preventDefault(); delete m.baro; touchMy(300); render(); }
+    return;
+  }
+  if (e.key === "Escape" && S.view === "show" && !document.fullscreenElement) { S.view = "lp"; S.tab = "board"; render(); return; }
+  if (e.key === "Enter" && e.target.id === "newBoard") { e.preventDefault(); $('[data-act="newboard"]').click(); }
+  if (e.key === "Enter" && e.target.id && e.target.id.startsWith("rn-")) { e.preventDefault(); $(`[data-act="saverename"][data-id="${e.target.id.slice(3)}"]`)?.click(); }
+  if (e.key === "Enter" && e.target.id === "nameIn") { e.preventDefault(); $('[data-act="setname"]').click(); }
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.id === "lpIdea") { e.preventDefault(); $('[data-act="lpadd"]').click(); }
+});
+
+document.addEventListener("toggle", e => { if (e.target.id === "settingsBox") S.showSettings = e.target.open; }, true);
+async function saveLabels(labels) {
+  if (db) await db.doc("settings/main").set({ labels, at: Date.now() });
+  S.labels = labels; render();
+}
+let tt; function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 3600); }
+
+if (KN) { const kb = $("#knBack"); kb.hidden = false; if (KN.mode === "kid") kb.textContent = "← Zurück"; kb.onclick = () => KN.back(); }
+/* ---------- Start ---------- */
+async function start() {
+  render();
+  if (!window.claude || !window.claude.use) { S.view = "lp"; isTeacher = true; render(); return; }
+  [db, user] = await Promise.all([claude.use("db").catch(() => null), claude.use("user").catch(() => null)]);
+  if (user) {
+    const me = await user.me();
+    isTeacher = !!(me.isOwner || me.canEdit); myId = me.id;
+  }
+  if (!db) { isTeacher = true; S.view = "lp"; render(); return; }
+  S.view = isTeacher ? "lp" : "kind"; S.live = true;
+  db.collection("boards").onSnapshot(snap => { S.boards = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
+  db.collection("ideas").onSnapshot(snap => { S.ideas = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => toast("Verbindung zur Pinnwand unterbrochen. Bitte neu laden."));
+  db.doc("settings/main").onSnapshot(d => { S.labels = d.exists ? (d.data().labels || {}) : {}; render(); }, () => {});
+  if (isTeacher) db.collection("votes").onSnapshot(snap => { S.votes = new Map(snap.docs.map(d => [d.id, d.data()])); if (KN && S.peek) setPeek(S.peek); render(); }, () => {});
+  if (myId) db.doc("votes/" + myId).onSnapshot(d => {
+    if (dirty || saving) return;
+    const data = d.exists ? JSON.parse(JSON.stringify(d.data())) : null;
+    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} }; if (data.name) ls.set("pw-name", data.name); }
+    render();
+  }, () => {});
+  render();
+}
+start();
+})();
+</script>
+
+</body></html>

@@ -460,3 +460,5 @@ button.zr-st{cursor:pointer}
 /* Hausaufgaben und Tafel nebeneinander, je halb so breit */
 .tile-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;width:100%}
 .tile-pair>.tafel-tile{width:auto;min-width:0}
+.pin-tile{background:#F6E7C8}
+.pin-tile span span{color:#7A5634}
