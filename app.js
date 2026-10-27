@@ -611,7 +611,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '2';
+  var PIN_VER = '3';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -625,6 +625,7 @@
     }
     function emit() { subs.forEach(function (x) { var sn = x.f(), j = JSON.stringify(x.doc ? sn.data() : sn.docs.map(function (d) { return [d.id, d.data()]; })); if (j !== x.last) { x.last = j; try { x.cb(sn); } catch (e) {} } }); }
     async function refresh() { try { var d = await o.load(); if (d) data = d; } catch (e) {} emit(); }
+    var st = null; function soon() { clearTimeout(st); st = setTimeout(refresh, 450); }
     function watch(f, cb, isDoc) {
       var x = { f: f, cb: cb, doc: isDoc, last: null }; subs.push(x);
       if (!iv) { refresh(); iv = setInterval(function () { if (!o.active()) { clearInterval(iv); return; } if (!document.hidden) refresh(); }, o.every || 4000); }
@@ -634,14 +635,20 @@
     function merge(a, b) { var r = JSON.parse(JSON.stringify(a || {})); Object.keys(b || {}).forEach(function (k) { var v = b[k]; r[k] = v && typeof v === 'object' && !Array.isArray(v) && r[k] && typeof r[k] === 'object' && !Array.isArray(r[k]) ? Object.assign({}, r[k], v) : v; }); return r; }
     var db = {
       collection: function (name) { return {
-        add: async function (obj) { var id = await o.add(name, JSON.parse(JSON.stringify(obj))); await refresh(); return { id: id }; },
+        add: async function (obj) {
+          var id = await o.add(name, JSON.parse(JSON.stringify(obj)));
+          // sofort lokal eintragen: eine neue Pinnwand muss gleich da sein, ein neuer Zettel erst nach dem Leeren des Eingabefelds
+          data[name] = data[name] || {}; data[name][id] = JSON.parse(JSON.stringify(obj));
+          if (name === 'boards') emit(); else setTimeout(emit, 0);
+          soon(); return { id: id };
+        },
         onSnapshot: function (cb) { return watch(function () { return snapColl(name); }, cb, false); }
       }; },
       doc: function (path) { var p = String(path).split('/'), coll = p[0], id = p[1]; return {
         get: async function () { await refresh(); return snapDoc(coll, id); },
-        set: async function (obj) { if (coll === 'votes') await o.vote(JSON.parse(JSON.stringify(obj))); else await o.put(coll, id, JSON.parse(JSON.stringify(obj))); await refresh(); },
-        update: async function (patch) { await o.put(coll, id, merge((data[coll] || {})[id], patch)); await refresh(); },
-        delete: async function () { await o.put(coll, id, null); await refresh(); },
+        set: async function (obj) { if (coll === 'votes') await o.vote(JSON.parse(JSON.stringify(obj))); else await o.put(coll, id, JSON.parse(JSON.stringify(obj))); soon(); },
+        update: async function (patch) { var m = merge((data[coll] || {})[id], patch); if (data[coll]) data[coll][id] = m; await o.put(coll, id, m); soon(); },
+        delete: async function () { await o.put(coll, id, null); soon(); },
         onSnapshot: function (cb) { return watch(function () { return snapDoc(coll, id); }, cb, true); }
       }; }
     };

@@ -212,6 +212,13 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 #knBack{margin-right:4px}
+.sortgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:6px 2px}
+.sortcard{margin:0;padding:12px 12px 12px 12px;min-height:96px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:6px}
+.sortcard span{font-family:var(--hand);font-size:1.1rem;line-height:1.15;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.sortcard em{font-style:normal;font-size:.75rem;color:var(--muted)}
+.sortcard .snum{position:absolute;top:-10px;left:-8px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:.85rem}
+.sortcard.sdrag{cursor:grabbing;z-index:5;box-shadow:0 14px 30px rgba(0,0,0,.22);transition:none}
+.sortcard:focus-visible{outline:3px solid var(--leaf, #7ea56a);outline-offset:3px}
 .one{display:flex;flex-direction:column;gap:12px}
 .one-stage{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px}
 .one-big{max-width:920px;width:100%;justify-self:center}
@@ -374,7 +381,8 @@ function aggregate() {
 
 /* ---------- render ---------- */
 function approved() {
-  return [...S.ideas].filter(([, i]) => i.status === "ok" && inBoard(i)).sort((a, b) => (a[1].okAt || a[1].at || 0) - (b[1].okAt || b[1].at || 0));
+  const ord = i => typeof i.order === "number" ? i.order : 1e9;
+  return [...S.ideas].filter(([, i]) => i.status === "ok" && inBoard(i)).sort((a, b) => ord(a[1]) - ord(b[1]) || (a[1].okAt || a[1].at || 0) - (b[1].okAt || b[1].at || 0));
 }
 function toolsOf(i) { return i.tools || {}; }
 
@@ -526,10 +534,11 @@ function teacherHTML() {
   </section>
   </div>`;
   const items = approved();
-  html += tabsHTML([["board", "Pinnwand"], ["baro", "Barometer"], ["rank", "Rangliste"]]);
+  html += tabsHTML([["board", "Pinnwand"], ["sort", "Sortieren"], ["baro", "Barometer"], ["rank", "Rangliste"]]);
   if (!items.length) return html + `<div class="empty"><h3>Die Pinnwand ist noch leer</h3><p class="sub">Geben Sie oben eine Idee frei oder heften Sie selbst einen Zettel an. Zum Ausprobieren können Sie oben auf «Kinder-Ansicht» wechseln.</p></div>`;
   if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids);
   if (S.tab === "rank") return html + rankHTML(items, res);
+  if (S.tab === "sort") return html + sortHTML(items);
   const boardItems = items.filter(([, i]) => !toolsOf(i).baro), nb = items.length - boardItems.length;
   return html + `<p class="sub" style="color:var(--ink);font-weight:700;margin:0">${kids} ${kids === 1 ? "Kind hat" : "Kinder haben"} bisher mitgemacht.${nb ? ` ${nb} ${nb === 1 ? "Zettel hängt" : "Zettel hängen"} nur im Barometer.` : ""}</p>` +
     (boardItems.length ? `<div class="board">${boardItems.map(([id, i]) => teacherNote(id, i, res[id])).join("")}</div>` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3><p class="sub">Sie finden sie unter «Barometer».</p></div>`);
@@ -589,6 +598,50 @@ function oneHTML(items, res) {
   </section>`;
 }
 function oneStep(d) { S.oneIdx = (S.oneIdx || 0) + d; render(); const c = document.querySelector(".one-mini.cur"); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }); }
+function sortHTML(items) {
+  return `<section class="panel"><div><h2>Nach Wichtigkeit sortieren</h2><p class="sub">Ziehen Sie die Zettel in die gewünschte Reihenfolge: der wichtigste zuerst. So hängen sie danach an der Pinnwand, beim Präsentieren und bei den Kindern.</p></div>
+    <div class="sortgrid" id="sortGrid">${items.map(([id, i], k) => `<div class="sortcard note ${colorOf(id)}" data-sid="${id}" tabindex="0" role="listitem" aria-label="${k + 1}. ${esc(i.text)}"><b class="snum">${k + 1}</b><span>${esc(i.text)}</span>${toolsOf(i).baro ? `<em>Barometer</em>` : ""}</div>`).join("")}</div>
+    <p class="sub">Auf dem iPad: Zettel antippen, halten und ziehen. Mit der Tastatur: Zettel anwählen, dann Pfeiltasten.</p></section>`;
+}
+let sdrag = null;
+function sortNumbers(){ document.querySelectorAll("#sortGrid .sortcard").forEach((c, k) => { c.querySelector(".snum").textContent = k + 1; }); }
+async function sortSave(){
+  const ids = [...document.querySelectorAll("#sortGrid .sortcard")].map(c => c.dataset.sid), jobs = [];
+  ids.forEach((id, k) => { const i = S.ideas.get(id); if (i && i.order !== k) { i.order = k; jobs.push(id); } });
+  if (!jobs.length) return;
+  try { await Promise.all(jobs.map(id => patchIdea(id, { order: S.ideas.get(id).order }))); toast("Reihenfolge gespeichert."); } catch (err) { failed(err); }
+}
+document.addEventListener("pointerdown", e => {
+  const c = e.target.closest && e.target.closest("#sortGrid .sortcard"); if (!c || e.button > 0) return;
+  e.preventDefault(); c.setPointerCapture?.(e.pointerId);
+  sdrag = { c, x: e.clientX, y: e.clientY, moved: false }; c.classList.add("sdrag");
+});
+document.addEventListener("pointermove", e => {
+  if (!sdrag) return;
+  const { c } = sdrag, dx = e.clientX - sdrag.x, dy = e.clientY - sdrag.y;
+  if (!sdrag.moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+  sdrag.moved = true; c.style.transform = `translate(${dx}px,${dy}px) rotate(-2deg)`;
+  c.style.pointerEvents = "none"; const over = document.elementFromPoint(e.clientX, e.clientY); c.style.pointerEvents = "";
+  const t = over && over.closest && over.closest("#sortGrid .sortcard");
+  if (!t || t === c) return;
+  const r = t.getBoundingClientRect(), before = e.clientY < r.top || (e.clientY <= r.bottom && e.clientX < r.left + r.width / 2);
+  const r0 = c.getBoundingClientRect();
+  t.parentNode.insertBefore(c, before ? t : t.nextSibling);
+  const r1 = c.getBoundingClientRect(); sdrag.x += r1.left - r0.left; sdrag.y += r1.top - r0.top;
+  c.style.transform = `translate(${e.clientX - sdrag.x}px,${e.clientY - sdrag.y}px) rotate(-2deg)`;
+  sortNumbers();
+});
+function sortEnd(){ if (!sdrag) return; const { c, moved } = sdrag; sdrag = null; c.classList.remove("sdrag"); c.style.transform = ""; if (moved) sortSave(); }
+document.addEventListener("pointerup", sortEnd);
+document.addEventListener("pointercancel", sortEnd);
+document.addEventListener("keydown", e => {
+  const c = e.target.closest && e.target.closest("#sortGrid .sortcard"); if (!c) return;
+  const prev = c.previousElementSibling, next = c.nextElementSibling;
+  if ((e.key === "ArrowLeft" || e.key === "ArrowUp") && prev) { e.preventDefault(); c.parentNode.insertBefore(c, prev); }
+  else if ((e.key === "ArrowRight" || e.key === "ArrowDown") && next) { e.preventDefault(); c.parentNode.insertBefore(next, c); }
+  else return;
+  c.focus(); sortNumbers(); clearTimeout(sortSave.t); sortSave.t = setTimeout(sortSave, 700);
+});
 function scaleBar(v, note) {
   const w = v == null ? 0 : Math.max(0, Math.min(10, v)) * 10;
   return `<div class="sbar" role="img" aria-label="${v == null ? "Noch keine Stimmen" : "Durchschnitt " + fmt(v) + " von 10"}">
