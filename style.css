@@ -457,3 +457,6 @@ button.zr-st{cursor:pointer}
 /* Hausaufgabenheft-Kachel der Kinder */
 .heft-tile{background:#DCEBD3}
 .heft-tile span span{color:#3F5E33}
+/* Hausaufgaben und Tafel nebeneinander, je halb so breit */
+.tile-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;width:100%}
+.tile-pair>.tafel-tile{width:auto;min-width:0}
