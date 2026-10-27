@@ -221,6 +221,10 @@ textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:
 .selfck.on{border-color:#3f9a52;background:#3f9a52;color:#fff}
 .selfck.on svg{width:75%;height:75%;stroke-width:3.4}
 .e:hover .selfck:not(.on){border-color:#3f9a52}
+.kedit{flex:none;align-self:center;border:0;background:none;width:calc(var(--lh)*.7);height:calc(var(--lh)*.7);min-width:24px;min-height:24px;border-radius:8px;color:var(--muted);opacity:.5;display:inline-flex;align-items:center;justify-content:center;padding:3px;margin-left:auto}
+.kedit svg{width:100%;height:100%}
+.e:hover .kedit,.kedit:focus-visible{opacity:1;background:#fff}
+.kst + .kedit{margin-left:4px}
 .sc .ico{position:absolute;top:3px;left:50%;transform:translateX(-50%);width:18px;height:18px}
 .sc[data-s]:not([data-s="offen"]){border-color:var(--sc);background:color-mix(in srgb,var(--sc) 9%,#fff)}
 .smenu{position:fixed;z-index:80;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.16);padding:6px;min-width:250px}
@@ -314,9 +318,8 @@ textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:
 }
 /* Knobelnest */
 #knBack{font-weight:700}
-.kidmode #who,.kidmode #repBtn,.kidmode #klasseBtn,.kidmode #beamerBtn,.kidmode #status,.kidmode .dadd{display:none!important}
+.kidmode #who,.kidmode #repBtn,.kidmode #klasseBtn,.kidmode #beamerBtn,.kidmode #status{display:none!important}
 .kidmode .e{cursor:default}
-.kidmode .empty{display:none}
 </style>
 
 <div class="app" id="app">
@@ -448,7 +451,7 @@ async function flush(){
 }
 
 // ---------- Rendern ----------
-const visible = e => !who || !e.for || !e.for.length || e.for.includes(who);
+const visible = e => e.by ? who === e.by : !who || !e.for || !e.for.length || e.for.includes(who);
 const forList = e => (e.for && e.for.length) ? S.sus.filter(s => e.for.includes(s.id)) : S.sus;
 function counts(e){
   const c = { gemacht:0, bad:0, offen:0, total:0 };
@@ -462,7 +465,7 @@ function entryHTML(e){
     return `<div class="e" role="button" tabindex="0" draggable="true" data-id="${e.id}" style="--c:${ink}"><span class="sticker" style="--k:${k.k}">${I[k.i]}${esc(textOf(e.title) || k.label)}</span>${zeitHTML(e)}${e.details ? `<div class="ed">${fmtDetails(e.details)}</div>` : ""}${attsHTML(e)}</div>`;
   }
   const mark = e.mark && MARKS[e.mark] ? MARKS[e.mark] : (e.type === "lernkontrolle" && e.mark !== "none" ? MARKS.gelb : null);
-  const txt = `${e.fach ? esc(e.fach) + ": " : ""}${fmtTitle(e.title)}`;
+  const txt = `${e.fach ? esc(e.fach) + ": " : ""}${e.by ? esc(e.title) : fmtTitle(e.title)}`;
   let chips = "";
   // Ansicht eines Kindes: Aufgabe nach Kontrolle grün, gelb oder rot unterlegt, Symbol am Zeilenende
   let kst = "", kbg = "";
@@ -479,7 +482,7 @@ function entryHTML(e){
   }
   const fw = (e.for && e.for.length && !who) ? `<span class="forwho">(${e.for.length} SuS)</span>` : "";
   const lk = e.type === "lernkontrolle" ? `<span class="lkmark" title="Lernkontrolle">${I.test}</span>` : "";
-  return `<div class="e" role="button" tabindex="0" draggable="true" data-id="${e.id}" style="--c:${ink}${kbg}"><div class="eline">${selfHTML(e)}${lk}<span class="et">${mark ? `<span class="hl" style="--m:${mark}">${txt}</span>` : txt}${zeitHTML(e)}</span>${fw}<span class="chips">${chips}</span>${kst}</div>${e.details ? `<div class="ed">${fmtDetails(e.details)}</div>` : ""}${attsHTML(e)}</div>`;
+  return `<div class="e" role="button" tabindex="0" draggable="true" data-id="${e.id}" style="--c:${ink}${kbg}"><div class="eline">${selfHTML(e)}${lk}<span class="et">${mark ? `<span class="hl" style="--m:${mark}">${txt}</span>` : txt}${zeitHTML(e)}</span>${fw}<span class="chips">${chips}</span>${kst}${e.by && who === e.by ? `<button class="kedit" data-kedit="${e.id}" type="button" aria-label="Eigene Aufgabe bearbeiten" title="bearbeiten">${I.pen}</button>` : ""}</div>${e.details ? `<div class="ed">${e.by ? plainDetails(e.details) : fmtDetails(e.details)}</div>` : ""}${e.by ? "" : attsHTML(e)}</div>`;
 }
 const attUrl = a => a.url || ("/_blob/" + a.id);
 const attsHTML = e => (e.atts && e.atts.length) ? `<div class="atts">${e.atts.map(a => `<a class="att${a.link ? " lnk" : ""}" href="${esc(attUrl(a))}" target="_blank" rel="noopener" draggable="false" title="${esc(a.name)} öffnen">${a.link ? I.link : I.clip}<span>${esc(a.name)}</span></a>`).join("")}</div>` : "";
@@ -533,6 +536,7 @@ const textOf = h => { const t = document.createElement("template"); t.innerHTML 
 const fmtTitle = s => isRich(s) ? rich(s, true, true) : esc(s || "");
 // Kind hakt selbst ab (nur in der Ansicht eines Kindes): Kreis links, nach dem Antippen grüner Haken
 const selfHTML = e => (!who || e.type !== "aufgabe") ? "" : (e.selbst && e.selbst[who]) ? `<span class="selfck on" title="Du hast abgehakt">${I.check}</span>` : "";
+const plainDetails = t => String(t || "").split("\n").map(l => `<div>${esc(l) || "<br>"}</div>`).join("");
 const zeitHTML = e => { const z = String(e.zeit || "").trim(); if (!z) return ""; return ` <span class="tm">(${esc(/^\d+$/.test(z) ? z + " Min." : z)})</span>`; };
 const fmtDetails = s => rich(toEditDetails(s), false, true);
 function dayHTML(d, n){
@@ -602,7 +606,9 @@ document.addEventListener("keydown", e => {
 });
 $("#spread").addEventListener("click", e => {
   const add = e.target.closest("[data-add]");
-  if (add) { openEntry(null, add.dataset.add); return; }
+  if (add) { if (who) openKidEntry(null, add.dataset.add); else openEntry(null, add.dataset.add); return; }
+  const ke = e.target.closest("[data-kedit]");
+  if (ke) { openKidEntry(ke.dataset.kedit); return; }
   if (e.target.closest("a.att")) return;
   const ks = e.target.closest(".kst");
   if (ks) { const en0 = S.entries.find(x => x.id === ks.dataset.kst); if (en0) { if (kpopEl) closeKpop(); else openKpop(ks, en0); } return; }
@@ -612,7 +618,7 @@ $("#spread").addEventListener("click", e => {
 });
 $("#spread").addEventListener("keydown", e => { const ks = e.target.closest(".kst"); if (ks && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); const en0 = S.entries.find(x => x.id === ks.dataset.kst); if (en0) openKpop(ks, en0); } });
 $("#spread").addEventListener("keydown", e => { if (e.target.closest(".kst")) return; const en = e.target.closest(".e"); if (en && (e.key === "Enter" || e.key === " ") && e.target === en) { e.preventDefault(); openEntry(en.dataset.id); } });
-$("#spread").addEventListener("dblclick", e => { const db = e.target.closest(".db"); if (db && !e.target.closest(".e")) openEntry(null, db.dataset.drop); });
+$("#spread").addEventListener("dblclick", e => { const db = e.target.closest(".db"); if (db && !e.target.closest(".e")) { if (who) openKidEntry(null, db.dataset.drop); else openEntry(null, db.dataset.drop); } });
 // Ziehen zwischen Tagen (Alt/Option = kopieren)
 let dragId = null;
 $("#spread").addEventListener("dragstart", e => { if (KIDM) { e.preventDefault(); return; } const en = e.target.closest(".e"); if (!en) return; dragId = en.dataset.id; en.classList.add("drag"); e.dataTransfer.effectAllowed = "copyMove"; try { e.dataTransfer.setData("text/plain", dragId); } catch {} });
@@ -893,6 +899,45 @@ function openMenu(anchor, pick, o = {}){
   const h = ev => { if (!menuEl) { document.removeEventListener("pointerdown", h, true); return; } if (!menuEl.contains(ev.target)) { closeMenu(); document.removeEventListener("pointerdown", h, true); } };
   setTimeout(() => document.addEventListener("pointerdown", h, true), 0);
 }
+// Kinder tragen eigene Aufgaben ein: nur schwarz, nur Text; sichtbar nur in der Ansicht dieses Kindes
+function openKidEntry(id, date){
+  if (KN && !KIDM) { if (!id) openEntry(null, date); return; }
+  const kid = S.sus.find(s => s.id === who); if (!kid) return;
+  let e = id ? S.entries.find(x => x.id === id && x.by === who) : null;
+  const isNew = !e;
+  const d = e ? clone(e) : { id:uid(), date, type:"aufgabe", by:who, for:[who], fach:"", title:"", details:"", ink:"schwarz", mark:"", status:{} };
+  openPanel(isNew ? `Eigene Aufgabe · ${kid.name}` : `${d.fach ? d.fach + ": " : ""}${d.title}`, [["k","k"]], "k", (t, pb) => {
+    pb.innerHTML = `
+      <div class="hint">Diese Aufgabe siehst nur du, ${esc(kid.name)}.</div>
+      <div><span class="lbl">Fach</span><div class="row">${FAECHER.map(f => `<button class="opt${d.fach === f ? " on" : ""}" data-f="${f}" type="button">${f}</button>`).join("")}</div></div>
+      <div><label class="lbl" for="ktIn">Aufgabe</label><input class="inp hand" id="ktIn" maxlength="120" value="${esc(d.title)}" placeholder="z. B. Buch fertig lesen" style="color:${INKS.schwarz}"></div>
+      <div><label class="lbl" for="kdIn">Mehr dazu · freiwillig</label><textarea class="inp" id="kdIn" maxlength="600" style="color:${INKS.schwarz}" placeholder="z. B. Seite 40 bis 52">${esc(d.details)}</textarea></div>
+      <div><span class="lbl">Tag</span><div class="mini"><input class="inp" type="date" id="kDate" value="${d.date}" style="width:auto"><span class="hint">${longDate(d.date)}</span></div></div>`;
+    pb.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { d.fach = d.fach === b.dataset.f ? "" : b.dataset.f; pb.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x.dataset.f === d.fach)); });
+    const ti = pb.querySelector("#ktIn");
+    ti.oninput = () => d.title = ti.value;
+    ti.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); pf().querySelector("#okB").click(); } };
+    pb.querySelector("#kdIn").oninput = ev => d.details = ev.target.value;
+    pb.querySelector("#kDate").onchange = ev => { if (ev.target.value) { d.date = ev.target.value; ev.target.nextElementSibling.textContent = longDate(d.date); } };
+    if (isNew) setTimeout(() => ti.focus(), 30);
+  }, (t, pfEl) => {
+    pfEl.innerHTML = `<button class="btn go" id="okB">${isNew ? "Eintragen" : "Speichern"}</button><button class="btn" data-close>Abbrechen</button><span style="flex:1"></span>${isNew ? "" : `<button class="btn danger" id="delB">Löschen</button>`}`;
+    pfEl.querySelector("[data-close]").onclick = closePanel;
+    pfEl.querySelector("#okB").onclick = () => {
+      d.title = d.title.trim(); d.details = d.details.trim(); d.ink = "schwarz"; d.mark = ""; d.type = "aufgabe"; d.by = who; d.for = [who]; delete d.atts;
+      if (!d.title) { toast("Schreib zuerst die Aufgabe"); return; }
+      if (isNew) { d.order = Math.max(0, ...S.entries.filter(x => x.date === d.date).map(x => (x.order ?? 0) + 1)); S.entries.push(d); }
+      else Object.assign(e, d);
+      if (KIDM) KN.own(d, false); else save(); render(); closePanel(); toast(isNew ? "Eingetragen" : "Gespeichert");
+    };
+    const del = pfEl.querySelector("#delB");
+    if (del) del.onclick = () => {
+      if (!del.classList.contains("sure")) { del.classList.add("sure"); del.textContent = "Wirklich löschen?"; return; }
+      S.entries = S.entries.filter(x => x.id !== d.id); if (KIDM) KN.own({ id:d.id }, true); else save(); render(); closePanel(); toast("Gelöscht");
+    };
+  });
+  function pf(){ return document.getElementById("pf"); }
+}
 function openKlasse(){
   if (KIDM) return;
   const d = { klasse:S.klasse, list:S.sus.map(s => s.name).join("\n"), settings:clone(S.settings) };
@@ -981,7 +1026,7 @@ function presetRange(p){
 function items(){
   const out = [];
   for (const e of S.entries) {
-    if (e.type !== "aufgabe" || e.from || e.date < R_.from || e.date > R_.to) continue;
+    if (e.type !== "aufgabe" || e.from || e.by || e.date < R_.from || e.date > R_.to) continue;
     for (const s of forList(e)) { if (R_.kid && s.id !== R_.kid) continue; out.push({ e, s, cat:catOf(e, s.id) }); }
   }
   return out.sort((a, b) => a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : (a.s.name > b.s.name ? 1 : -1));

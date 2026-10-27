@@ -554,7 +554,7 @@
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '2';
+  var HEFT_VER = '3';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -576,10 +576,12 @@
         get: async function () { var d = await DB.storeGet(key); return { exists: d != null, data: function () { return d; } }; },
         set: async function (v) {
           v = JSON.parse(JSON.stringify(v));
-          // «selbst» (von den Kindern abgehakt) gehört den Kindern: immer den Stand vom Server nehmen
-          try { var cur = await DB.storeGet(key), sb = {};
-            ((cur && cur.entries) || []).forEach(function (e) { if (e && e.selbst) sb[e.id] = e.selbst; });
-            (v.entries || []).forEach(function (e) { if (sb[e.id]) e.selbst = sb[e.id]; else delete e.selbst; });
+          // Was den Kindern gehört, kommt immer vom Server: ihre Haken («selbst») und ihre eigenen Aufgaben («by»)
+          try { var cur = await DB.storeGet(key), sb = {}, own = [];
+            ((cur && cur.entries) || []).forEach(function (e) { if (!e) return; if (e.by) own.push(e); else if (e.selbst) sb[e.id] = e.selbst; });
+            v.entries = (v.entries || []).filter(function (e) { return !e.by; });
+            v.entries.forEach(function (e) { if (sb[e.id]) e.selbst = sb[e.id]; else delete e.selbst; });
+            v.entries = v.entries.concat(own);
           } catch (e) {}
           await DB.storeSet(key, v);
         },
@@ -1625,6 +1627,10 @@
     };
     window.knHeft = {
       mode: 'kid', key: 'kind-' + kid.id, kidId: kid.id, className: '', roster: [],
+      own: function (e, del) {
+        var x = del ? { id: e.id } : { id: e.id, date: e.date, fach: e.fach || '', title: e.title, details: e.details || '', order: e.order || 0 };
+        DB.kidHeftOwn(K.sess.token, x, !!del).then(function (ok) { if (!ok) toast('Das konnte nicht gespeichert werden.'); }).catch(function () { toast('Das konnte nicht gespeichert werden.'); });
+      },
       tick: function (id, on) { DB.kidHeftTick(K.sess.token, id, on).catch(function () { toast('Der Haken konnte nicht gespeichert werden.'); }); },
       back: function () { ACT.kBack(); },
       claude: { use: async function (name) {
