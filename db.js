@@ -106,6 +106,7 @@
     kidLogin: async function (code, kid, pw) { return ok(await sb.rpc('kid_login', { p_code: code, p_kid: kid, p_pw: pw })); },
     kidLogout: async function (token) { try { await sb.rpc('kid_logout', { p_token: token }); } catch (e) {} },
     kidHome: async function (token) { return ok(await sb.rpc('kid_home', { p_token: token })); },
+    kidHeft: async function (token) { return ok(await sb.rpc('kid_heft', { p_token: token })); },
     kidGame: async function (token, gid) { return ok(await sb.rpc('kid_game', { p_token: token, p_game: gid })); },
     kidReport: async function (token, gid, r) {
       return ok(await sb.rpc('kid_report', { p_token: token, p_game: gid, p_correct: r.correct || 0, p_attempts: r.attempts || 0,

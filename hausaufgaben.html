@@ -1,0 +1,1231 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hausaufgabenheft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Amatic+SC:wght@700&family=Nunito:wght@400;600;700;800&family=Andika:wght@400;700&family=Playpen+Sans:wght@400;600&family=Comic+Neue:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: aufgeschlagene Schulagenda über den ganzen Bildschirm. Links Mo–Mi, rechts Do, Fr und Sa|So nebeneinander.
+   Wie die Tagesfolien bewusst nur hell, damit es am Beamer gleich aussieht. */
+:root{
+  color-scheme:light;
+  --paper:#fbfaf6; --ink:#1f2421; --muted:#6c766f; --line:#e3e6df; --card:#ffffff;
+  --rose:#ec9d95; --rose-soft:#fcefed; --leaf:#7ea56a; --leaf-soft:#e9f1e3; --sky:#8fb0cf; --sky-deep:#5f8fbf;
+  --sheet:#fffefa; --rule:#c4c9c2;
+  --cover:#87ad74; --cover2:#6f9a5f;
+  --ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  --bubble:"Fredoka","Nunito",system-ui,sans-serif;
+  --lh:34px;
+}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;overflow:hidden}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+
+.app{position:relative;height:100%;display:flex;flex-direction:column}
+.bg{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(ellipse 38% 45% at 0% 100%,rgba(160,203,150,.55),transparent 70%),
+  radial-gradient(ellipse 35% 40% at 100% 0%,rgba(178,214,204,.6),transparent 70%),
+  radial-gradient(ellipse 30% 38% at 100% 100%,rgba(176,200,226,.55),transparent 70%),
+  radial-gradient(ellipse 25% 22% at 8% 0%,rgba(207,226,216,.5),transparent 70%),
+  radial-gradient(ellipse at 40% 30%,#fffefb,#f6f4ec)}
+
+/* Leiste oben */
+.top{position:relative;z-index:30;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 6px;transition:opacity .3s}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;height:36px;padding:0 14px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill:hover{background:var(--leaf-soft)}
+.pill.ic{width:36px;padding:0;justify-content:center;font-size:18px;font-weight:800;color:var(--muted)}
+.pill.rose{background:var(--rose);border-color:var(--rose);color:#fff}
+.pill.rose:hover{background:#e48a81}
+.wk{font-family:var(--hand);font-size:24px;padding:0 6px;white-space:nowrap}
+.wk small{font-family:var(--ui);font-size:13px;font-weight:700;color:var(--muted);margin-left:6px}
+.sp{flex:1}
+.status{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+select.pill{appearance:none;padding-right:30px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236c766f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center/11px}
+.datepick{position:relative}
+.datepick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.beamer .top{opacity:0}
+.beamer .top:hover{opacity:1}
+
+/* Buch */
+.stage{position:relative;flex:1;min-height:0;display:flex;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:6px 16px}
+.book{position:relative;flex:1;min-width:0;border-radius:22px;padding:clamp(10px,1.6vw,22px);
+  background:radial-gradient(circle,rgba(255,255,255,.22) 1.6px,transparent 2.2px) 0 0/14px 14px,linear-gradient(160deg,var(--cover),var(--cover2));
+  box-shadow:0 10px 34px rgba(40,60,45,.22),inset 0 0 0 2px rgba(255,255,255,.18)}
+.spread{position:relative;height:100%;display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,1.4vw,20px)}
+.page{position:relative;background:var(--sheet);border-radius:8px;box-shadow:0 1px 0 rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.08);display:flex;flex-direction:column;min-height:0;padding:calc(var(--lh)*.35) clamp(12px,1.6vw,26px) calc(var(--lh)*.3)}
+.page.l{background:linear-gradient(to left,rgba(0,0,0,.07),transparent 5%),var(--sheet)}
+.page.r{background:linear-gradient(to right,rgba(0,0,0,.07),transparent 5%),var(--sheet)}
+.ribbon{position:absolute;z-index:4;left:50%;top:-6px;bottom:-34px;width:clamp(8px,.8vw,12px);transform:translateX(-50%) rotate(.6deg);
+  background:repeating-linear-gradient(170deg,#4aa3d6 0 3px,#3b93c7 3px 6px);border-radius:2px;box-shadow:1px 2px 4px rgba(0,0,0,.18);pointer-events:none}
+.ribbon::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:12px;background:inherit;clip-path:polygon(0 0,100% 0,100% 100%,50% 45%,0 100%)}
+.phead{height:calc(var(--lh)*1.3);flex:none;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.big{font-family:var(--bubble);font-weight:700;font-size:calc(var(--lh)*1.05);line-height:1;color:#a9cdeb;white-space:nowrap;
+  text-shadow:0 2px 0 #3f5f86,2px 0 0 #3f5f86,-2px 0 0 #3f5f86,0 -2px 0 #3f5f86,2px 2px 0 #3f5f86,-2px 2px 0 #3f5f86,2px -2px 0 #3f5f86,-2px -2px 0 #3f5f86,0 5px 0 rgba(63,95,134,.35);
+  transform:translateY(calc(var(--lh)*-.15))}
+.r .phead{justify-content:flex-end}
+.klasse{font-family:var(--hand);color:var(--muted);font-size:calc(var(--lh)*.55);align-self:center}
+
+.days{flex:1;min-height:0;display:flex;flex-direction:column}
+.weekend{display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,1.4vw,22px)}
+.day{position:relative;height:calc(var(--lh) * var(--n));display:flex;flex-direction:column;min-width:0}
+.dh{height:var(--lh);flex:none;display:flex;align-items:flex-end;gap:6px;padding-bottom:calc(var(--lh)*.12);
+  background:radial-gradient(circle at 50% calc(100% - 1px),var(--rule) .9px,transparent 1.4px) 0 0/5px var(--lh) repeat-x}
+.dname{font-family:var(--ui);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:clamp(11px,calc(var(--lh)*.4),17px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.today .dname{background:var(--rose);color:#fff;border-radius:999px;padding:1px 10px 0}
+.dadd{margin-left:auto;border:0;background:none;width:calc(var(--lh)*.8);height:calc(var(--lh)*.8);min-width:26px;min-height:26px;border-radius:999px;color:var(--muted);font-size:calc(var(--lh)*.6);font-weight:700;line-height:1;opacity:.35;display:flex;align-items:center;justify-content:center;transition:opacity .15s,background .15s}
+.day:hover .dadd,.dadd:focus-visible{opacity:1}
+.dadd:hover{background:var(--leaf-soft);color:var(--ink)}
+.beamer .dadd{opacity:0}
+.db{flex:1;min-height:0;overflow:auto;scrollbar-width:none;
+  background:radial-gradient(circle at 50% calc(100% - 1px),var(--rule) .9px,transparent 1.4px) 0 0/5px var(--lh) repeat;background-attachment:local}
+.db::-webkit-scrollbar{display:none}
+.db.over{background-color:var(--leaf-soft)}
+.empty{font-family:var(--hand);color:#b0b6b1;font-size:calc(var(--lh)*.55);line-height:var(--lh);padding-left:4px}
+
+/* Einträge */
+.e{position:relative;display:block;width:100%;text-align:left;border:0;background:none;padding:0 4px;border-radius:6px;cursor:pointer;color:var(--c,#27489a)}
+.e:hover{background:rgba(143,176,207,.12)}
+.kst{margin-left:auto;flex:none;align-self:center;width:calc(var(--lh)*.72);height:calc(var(--lh)*.72);display:inline-flex;position:relative;top:calc(var(--lh)*-.1)}
+.kst svg{width:100%;height:100%}
+.two{display:flex;flex-direction:column;align-items:center;width:100%;height:100%;gap:1px}
+.two>span{flex:1;min-height:0;display:flex;width:100%;justify-content:center}
+.two svg{width:100%;height:100%}
+.kst.has2{width:calc(var(--lh)*.5);height:calc(var(--lh)*.94);top:calc(var(--lh)*-.04);background:#fff;border-radius:8px;padding:1px}
+.sc.two .ico{width:40px;height:18px}
+.sc.two .two{flex-direction:row-reverse;gap:4px}
+.sc .ico{display:inline-flex}
+.sc .ico svg{width:100%;height:100%}
+.legend-first{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.legend-first i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e39a2d}
+.kst{cursor:pointer;border-radius:50%}
+.kst:hover{transform:scale(1.15)}
+.kpop{position:fixed;z-index:85;width:min(320px,calc(100vw - 24px));background:#fff;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.18);border:2px solid var(--kc);padding:14px 16px;font-family:var(--hand);font-size:22px;line-height:1.25}
+.kpop .kh{display:flex;align-items:center;gap:8px;color:var(--kc);font-family:var(--ui);font-weight:800;font-size:15px;margin-bottom:6px}
+.kpop .kh svg{width:24px;height:24px}
+.kpop .klog{display:flex;flex-direction:column;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+.kpop .klog .kh{margin:0;padding:3px 0}
+.kpop .klog .kh+.kh{position:relative;padding-left:0}
+.kpop .klog .kh+.kh::before{content:"";position:absolute;left:11px;top:-7px;height:8px;border-left:2px dotted #c9cfca}
+.kpop .kn{margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--kc) 10%,#fff);font-size:20px}
+.kpop .kn small{display:block;font-family:var(--ui);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.smenu .nrow textarea{flex:1;border:1px solid var(--line);border-radius:10px;padding:5px 8px;min-height:54px;resize:vertical;font:inherit;font-size:14px}
+.chips:empty{display:none}
+.e.drag{opacity:.4}
+.eline{display:flex;align-items:baseline;gap:.35em;font-family:var(--hand);font-size:calc(var(--lh)*.7);line-height:var(--lh);min-height:var(--lh);position:relative;top:calc(var(--lh)*.12)}
+.et{min-width:0;overflow-wrap:anywhere}
+.hl{padding:0 .2em;margin:0 -.1em;border-radius:3px 8px 4px 9px;background:linear-gradient(176deg,transparent 18%,var(--m) 19%,var(--m) 82%,transparent 83%);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.ed{font-family:var(--hand);font-size:calc(var(--lh)*.6);line-height:var(--lh);padding:0 0 0 1.4em;position:relative;top:calc(var(--lh)*.2);overflow-wrap:anywhere}
+.ed div,.ed li{min-height:var(--lh)}
+.ed ul,.ed ol,.rt ul,.rt ol{margin:0;padding-left:1.15em}
+.ed blockquote,.rt blockquote{margin:0 0 0 1.3em;padding:0}
+.et b,.ed b{font-weight:700;-webkit-text-stroke:.03em currentColor}
+.rt{font-family:var(--hand);min-height:44px;cursor:text;overflow-wrap:anywhere}
+.rt b{-webkit-text-stroke:.03em currentColor}
+.rt.t{font-size:22px;padding:6px 12px}
+.rt.dt{font-size:20px;line-height:1.35;min-height:110px}
+.rt:empty::before{content:attr(data-ph);color:#b3b9b4}
+.lrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lrow .lbl{margin:0}
+.fold{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.fold:hover,.fold.on{background:var(--leaf-soft);color:var(--ink);border-color:var(--leaf)}
+.fold i{font-style:normal;display:inline-block;transition:transform .15s}
+.fold.on i{transform:rotate(180deg)}
+.fbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:6px;margin-bottom:6px;border:1px solid var(--line);border-radius:12px;background:#fbfcfa}
+.fbar .fb{border:0;background:none;min-width:32px;height:32px;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;gap:4px}
+.fbar .fb:hover{background:var(--leaf-soft)}
+.fbar .sw{width:24px;height:24px}
+.fbar[hidden]{display:none}
+.fbar .brk{flex-basis:100%;height:0}
+.fbar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.fbar .grp{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.ed a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.att.lnk svg{color:var(--sky-deep)}
+.tools{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.tools .opt{padding:3px 11px;font-size:13px}
+.chips{margin-left:auto;line-height:1.4;max-height:var(--lh);display:flex;gap:4px;flex:none;align-self:center}
+.chip{font-family:var(--ui);font-size:clamp(10px,calc(var(--lh)*.32),13px);font-weight:800;border-radius:999px;padding:1px 8px;background:#fff;border:1px solid var(--line);color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.chip.ok{color:#2f8a45;border-color:#cfe6d2;background:#f2faf3}
+.chip.bad{color:#c0463c;border-color:#f1d3cf;background:#fdf3f1}
+.chip.ghost{opacity:0;transition:opacity .15s}
+.e:hover .chip.ghost{opacity:1}
+.beamer .chips{display:none}
+.sticker{display:inline-flex;align-items:center;gap:.35em;font-family:var(--ui);font-weight:800;color:#fff;font-size:calc(var(--lh)*.44);line-height:1;height:calc(var(--lh)*.72);padding:0 .7em;border-radius:6px;background:var(--k);box-shadow:0 2px 0 rgba(0,0,0,.12);transform:rotate(-1.2deg);margin:calc(var(--lh)*.14) 0}
+.sticker svg{width:1.1em;height:1.1em}
+.lkmark{width:.8em;height:.8em;flex:none;color:#e07a70;align-self:center}
+.atts{display:flex;flex-wrap:wrap;align-items:center;gap:calc(var(--lh)*.32) 6px;padding:calc(var(--lh)*.16) 0 calc(var(--lh)*.16) 1.4em}
+.att{display:inline-flex;align-items:center;gap:4px;max-width:100%;height:calc(var(--lh)*.68);padding:0 10px 0 7px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-family:var(--ui);font-weight:700;font-size:clamp(11px,calc(var(--lh)*.36),14px)}
+.att:hover{background:var(--leaf-soft);border-color:var(--leaf)}
+.att svg{width:1.15em;height:1.15em;flex:none;color:#c0463c}
+.att span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alist{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.arow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:6px 8px 6px 12px}
+.arow a{flex:1;min-width:0;color:var(--ink);font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arow a:hover{text-decoration:underline}
+.tm{white-space:nowrap;opacity:.85;font-size:.92em}
+.forwho{font-size:.7em;color:var(--muted);font-family:var(--ui);font-weight:700}
+
+/* Seitenpanel (Bearbeiten) */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(31,36,33,.12)}
+.panel{position:fixed;z-index:61;top:0;right:0;bottom:0;width:min(460px,100vw);background:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.16);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px);animation:slide .18s ease-out}
+@keyframes slide{from{transform:translateX(30px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}}
+.ph{display:flex;align-items:center;gap:8px;padding:14px 16px 8px}
+.ph h2{margin:0;font-family:var(--hand);font-weight:400;font-size:28px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{border:0;background:none;width:36px;height:36px;border-radius:999px;font-size:22px;color:var(--muted)}
+.x:hover{background:var(--leaf-soft)}
+.ptabs{display:flex;gap:6px;padding:0 16px 10px;border-bottom:1px solid var(--line)}
+.ptab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 14px;font-weight:700;font-size:14px}
+.ptab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pb{flex:1;overflow:auto;padding:14px 16px 18px;display:flex;flex-direction:column;gap:16px}
+.pf{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
+.lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;display:block}
+.inp{width:100%;border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fff}
+.inp:focus{border-color:var(--sky);outline:none;box-shadow:0 0 0 3px rgba(143,176,207,.25)}
+.inp.hand{font-family:var(--hand);font-size:22px;padding:6px 12px}
+textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:20px;line-height:1.35}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.opt{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.opt:hover{background:var(--leaf-soft)}
+.opt.on{background:var(--leaf-soft);border-color:var(--leaf);color:#3c6a2f}
+.opt svg{width:18px;height:18px}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);padding:0}
+.sw.on{box-shadow:0 0 0 2.5px var(--ink)}
+.sw.none{background:linear-gradient(135deg,#fff 45%,#d0493f 46%,#d0493f 54%,#fff 55%)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.btn:hover{background:var(--leaf-soft)}
+.btn.go{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.btn.go:hover{background:#6c9558}
+.btn.danger{color:#c0463c}
+.btn.danger.sure{background:#c0463c;border-color:#c0463c;color:#fff}
+.mini{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mini input{width:auto}
+.hint{font-size:13px;color:var(--muted)}
+
+/* Kontrolle */
+.sumrow{display:flex;gap:6px;flex-wrap:wrap}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px}
+.sc{position:relative;border:1px solid var(--line);border-radius:12px;background:#fff;padding:20px 6px 7px;text-align:center;font-weight:700;font-size:14px;min-width:0}
+.sc .nm{border:0;background:none;width:100%;padding:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sc .q{position:absolute;top:3px;border:0;background:none;width:24px;height:22px;border-radius:6px;color:#9aa39c;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0}
+.sc .q svg{width:15px;height:15px}
+.sc .q:hover{background:var(--leaf-soft);color:var(--ink)}
+.sc .q.no{left:3px}.sc .q.yes{right:3px}
+.sc .ico{position:absolute;top:3px;left:50%;transform:translateX(-50%);width:18px;height:18px}
+.sc[data-s]:not([data-s="offen"]){border-color:var(--sc);background:color-mix(in srgb,var(--sc) 9%,#fff)}
+.smenu{position:fixed;z-index:80;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.16);padding:6px;min-width:250px}
+.smenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:8px;font-size:14px}
+.smenu button:hover{background:var(--leaf-soft)}
+.smenu svg{width:20px;height:20px;flex:none}
+.smenu .mh{font-size:13px;color:var(--muted);padding:6px 10px 4px}
+.smenu .mh b{color:var(--ink)}
+.smenu .nrow[hidden]{display:none}
+.smenu .nrow{display:flex;gap:6px;align-items:center;padding:4px 10px 8px}
+.smenu .nrow input{flex:1;border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+.smenu .nrow button{width:auto;background:var(--leaf);color:#fff;font-weight:700;padding:6px 12px;border-radius:999px}
+.smenu .nrow button:hover{background:#6c9558}
+.chip.warn{color:#a8661a;border-color:#f0dcc0;background:#fdf6ec}
+.nbox{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fcfdfb}
+.forgrid{display:flex;flex-wrap:wrap;gap:5px}
+.forgrid .opt{font-size:13px;padding:4px 10px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;opacity:0;transition:.2s;z-index:90;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* schmal: Seiten untereinander, Seite scrollt */
+/* Auswertung */
+.report{position:fixed;inset:0;z-index:40;background:var(--paper);overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.report .bg{position:fixed}
+.rwrap{position:relative;max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px;display:flex;flex-direction:column;gap:16px}
+.rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rtop h1{margin:0;font-family:var(--bubble);font-weight:700;font-size:34px;color:#a9cdeb;text-shadow:0 2px 0 #3f5f86,2px 0 0 #3f5f86,-2px 0 0 #3f5f86,0 -2px 0 #3f5f86,2px 2px 0 #3f5f86,-2px 2px 0 #3f5f86,2px -2px 0 #3f5f86,-2px -2px 0 #3f5f86;flex:1;min-width:0}
+.rcard{background:#fff;border-radius:20px;box-shadow:0 3px 18px rgba(40,60,45,.1);padding:16px 18px;min-width:0}
+.rcard h2{margin:0 0 10px;font-family:var(--hand);font-weight:400;font-size:26px;line-height:1.1}
+.rcard h2 small{font-family:var(--ui);font-size:13px;color:var(--muted);font-weight:700;margin-left:8px}
+.filters{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end}
+.fgrp{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fgrp .row{gap:5px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:#fff}
+.seg button{border:0;background:none;border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--ink);color:#fff}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.tile{border:1.5px solid var(--line);background:#fff;border-radius:16px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile:hover{border-color:var(--tc)}
+.tile.on{border-color:var(--tc);box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 25%,transparent);background:color-mix(in srgb,var(--tc) 6%,#fff)}
+.tile .tn{font-family:var(--bubble);font-weight:600;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tile .tl{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--muted)}
+.tile .tl svg{width:16px;height:16px;flex:none;color:var(--tc)}
+.tile.zero{opacity:.55}
+.dlist{display:flex;flex-direction:column}
+.drow{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;padding:9px 6px;border-top:1px solid var(--line);text-align:left;border-left:0;border-right:0;border-bottom:0;background:none;width:100%}
+.drow:hover{background:var(--leaf-soft)}
+.drow .dd{font-weight:800;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.drow .dt{font-family:var(--hand);font-size:21px;line-height:1.15;color:#27489a;min-width:0;overflow-wrap:anywhere}
+.drow .dx{font-size:13px;font-weight:700;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.drow .dn{grid-column:2 / -1;font-size:13px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:800;border:1px solid color-mix(in srgb,var(--tc) 40%,#fff);color:color-mix(in srgb,var(--tc) 80%,#000);background:color-mix(in srgb,var(--tc) 8%,#fff);white-space:nowrap}
+.tag svg{width:13px;height:13px}
+.empty2{color:var(--muted);font-size:14px;padding:8px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.chartbox{overflow-x:auto;position:relative}
+.chartbox svg{display:block}
+.chartbox text{font-family:var(--ui);font-size:12px;fill:var(--muted)}
+.chartbox .pct{font-weight:800;fill:var(--ink)}
+.chartbox .hit{fill:transparent;cursor:pointer}
+.chartbox .hit:hover,.chartbox .hit:focus{fill:rgba(143,176,207,.14);outline:none}
+.ctip{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:9px 12px;font-size:13px;pointer-events:none;min-width:190px}
+.ctip b{display:block;margin-bottom:4px}
+.ctip div{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.ctip div span{display:inline-flex;align-items:center;gap:6px}
+.ctip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ktable{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.ktable th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:right;padding:6px 8px;font-weight:800;white-space:nowrap}
+.ktable th:first-child,.ktable td:first-child{text-align:left}
+.ktable td{padding:7px 8px;border-top:1px solid var(--line);text-align:right}
+.ktable tr.kr{cursor:pointer}
+.ktable tr.kr:hover td{background:var(--leaf-soft)}
+.bar{display:inline-flex;width:110px;height:10px;border-radius:999px;overflow:hidden;vertical-align:middle;gap:2px;background:#eef0ec}
+.bar i{display:block;height:100%}
+.rgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (max-width:820px){.drow{grid-template-columns:70px minmax(0,1fr)}.drow .dx{grid-column:2;justify-content:flex-start}.rtop h1{font-size:26px}}
+
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100%}
+  .stage{padding-inline:max(8px,env(safe-area-inset-left,0px)) max(8px,env(safe-area-inset-right,0px))}
+  .spread{grid-template-columns:1fr;height:auto}
+  .ribbon{display:none}
+  .day{height:auto;min-height:calc(var(--lh) * var(--n))}
+  .db{overflow:visible}
+  .wk{font-size:20px}
+  .hide-s{display:none}
+}
+/* Knobelnest */
+#knBack{font-weight:700}
+.kidmode #who,.kidmode #repBtn,.kidmode #klasseBtn,.kidmode #beamerBtn,.kidmode #status,.kidmode .dadd{display:none!important}
+.kidmode .e{cursor:default}
+.kidmode .empty{display:none}
+</style>
+
+<div class="app" id="app">
+  <div class="bg"></div>
+  <div class="top" id="top">
+    <button class="pill" id="knBack" hidden>← Knobelnest</button>
+    <button class="pill ic" id="prev" aria-label="Vorherige Woche">‹</button>
+    <div class="wk" id="wk"></div>
+    <button class="pill ic" id="next" aria-label="Nächste Woche">›</button>
+    <button class="pill" id="todayBtn">Heute</button>
+    <label class="pill ic datepick" title="Datum wählen" aria-label="Datum wählen">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <input type="date" id="jump">
+    </label>
+    <span class="sp"></span>
+    <span class="status hide-s" id="status">Lädt …</span>
+    <select class="pill" id="who" aria-label="Ansicht für"></select>
+    <button class="pill" id="repBtn">Auswertung</button>
+    <button class="pill" id="klasseBtn"></button>
+    <button class="pill rose" id="beamerBtn">Beamer</button>
+  </div>
+  <div class="stage">
+    <div class="book" id="book">
+      <div class="spread" id="spread"></div>
+      <div class="ribbon"></div>
+    </div>
+  </div>
+</div>
+<div class="report" id="report" hidden><div class="bg"></div><div class="rwrap" id="rwrap"></div></div>
+<div class="ctip" id="ctip" hidden></div>
+<div id="layer"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+// Knobelnest: Kinder, Speicher und Anhänge kommen aus dem Portal. KIDM = Ansicht eines Kindes (nur lesen)
+const KN = (() => { try { return window.parent !== window && window.parent.knHeft || null; } catch { return null; } })();
+if (KN) window.claude = KN.claude;
+const KIDM = !!(KN && KN.mode === "kid");
+if (KIDM) document.documentElement.classList.add("kidmode");
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const MO = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2000); }
+
+// ---------- Icons ----------
+const I = {
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6"/><path d="M5 10a8 8 0 1 1 2 7"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  boxcheck:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M7.5 12.5l3 3 6-7"/></svg>',
+  ab:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13l3-9 3 9M3 10h4"/><path d="M11 4h3.5a2.3 2.3 0 0 1 0 4.5H11zM11 8.5h4a2.3 2.3 0 0 1 0 4.5h-4z"/><path d="M12 19l3 3 7-8"/></svg>',
+  part:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.4 1.8 3-.2.9 2.9 2.4 1.8-1 2.8 1 2.8-2.4 1.8-.9 2.9-3-.2L12 21.5l-2.4-1.8-3 .2-.9-2.9-2.4-1.8 1-2.8-1-2.8 2.4-1.8.9-2.9 3 .2z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  test:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10l1.5 1.5 2.5-2.5M8.5 16l1.5 1.5 2.5-2.5M15 10.5h1M15 16.5h1"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  bed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/></svg>',
+  bang:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg>',
+  cake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V13a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8M3 21h18M4 16c2 1.5 3.3 1.5 5.3 0s3.4-1.5 5.4 0 3.3 1.5 5.3 0M8 11V8M12 11V8M16 11V8"/></svg>',
+  clip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5l-8.2 8.2a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>',
+  newtask:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M9 15l6.5-6.5M10 8.5h5.5V14"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></svg>'
+};
+const ST = {
+  gemacht:{ label:"gemacht", c:"#3f9a52", i:"check" },
+  nicht:{ label:"nicht erledigt", c:"#d0493f", i:"x" },
+  offen:{ label:"noch nicht kontrolliert", c:"#8a948d", i:"undo" },
+  spaet:{ label:"zu spät abgegeben", c:"#e39a2d", i:"clock" },
+  nachher:{ label:"nicht gemacht, aber erledigt", c:"#d0493f", i:"boxcheck" },
+  korr:{ label:"noch korrigieren", c:"#e39a2d", i:"ab" },
+  teil:{ label:"teilweise gemacht", c:"#e39a2d", i:"part" },
+  neu:{ label:"neue Aufgabe auf …", c:"#d0493f", i:"newtask" }
+};
+const KIND = {
+  aufgabe:{ label:"Aufgabe", i:"pen" },
+  lernkontrolle:{ label:"Lernkontrolle", i:"test", k:"#e07a70" },
+  termin:{ label:"Termin", i:"cal", k:"#9b84c4" },
+  ferien:{ label:"Ferien", i:"sun", k:"#6fae6a" },
+  schulfrei:{ label:"schulfrei", i:"bed", k:"#5f9a98" },
+  geburtstag:{ label:"Geburtstag", i:"cake", k:"#e3a04a" }
+};
+const INKS = { blau:"#27489a", schwarz:"#24272b", rot:"#c23a33", gruen:"#2f7a45" };
+const MARKS = { gelb:"rgba(244,247,80,.85)", gruen:"rgba(160,236,110,.7)", rosa:"rgba(255,160,200,.7)", blau:"rgba(140,210,255,.7)", orange:"rgba(255,190,100,.75)", rot:"rgba(255,110,100,.6)" };
+const FAECHER = ["D","M","F","E","NMG","BG","TTG","MU","BS"];
+const COVERS = { gruen:["#87ad74","#6f9a5f"], rose:["#e9a49b","#d9867c"], himmel:["#8fb0cf","#6f93b8"], lila:["#a690cf","#8a73b8"], sand:["#d6ad6e","#c0924f"], petrol:["#5f9a98","#4a817f"] };
+const FONTS = { "Patrick Hand":'"Patrick Hand","Comic Sans MS",cursive', "Playpen Sans":'"Playpen Sans","Comic Sans MS",cursive', "Andika":'"Andika",system-ui,sans-serif', "Comic Neue":'"Comic Neue","Comic Sans MS",cursive' };
+
+// ---------- Datum ----------
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monday = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const w = (x.getDay() + 6) % 7; return addDays(x, -w); };
+function isoWeek(d){ const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t - y0) / 864e5 + 1) / 7); }
+const longDate = s => { const d = parse(s); return `${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`; };
+const shortDate = s => { const d = parse(s); return `${WD[d.getDay()].slice(0,2)} ${d.getDate()}.${d.getMonth()+1}.`; };
+
+// ---------- Zustand ----------
+const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse", sus:[], settings:{ lines:8, font:"Patrick Hand", cover:"gruen" }, entries:[] });
+let S = EMPTY(), week = monday(new Date()), who = KIDM ? KN.kidId : "", beamer = false;
+let store = { mode:"local", ref:null }, loaded = false, assets = null;
+const LS = "hausaufgabentafel1" + (KN ? "-" + KN.key : "");
+const lsGet = () => { try { const v = localStorage.getItem(LS); return v ? JSON.parse(v) : null; } catch { return null; } };
+const lsSet = v => { try { localStorage.setItem(LS, JSON.stringify(v)); } catch {} };
+const setStatus = t => { $("#status").textContent = t; };
+const knSus = d => KN && !KIDM ? KN.roster.map(k => ({ id:k.id, name:k.name })) : d;
+function norm(d){ const e = EMPTY(); d = d && typeof d === "object" ? clone(d) : {}; return { klasse: d.klasse || e.klasse, sus: knSus(Array.isArray(d.sus) ? d.sus : []), settings: Object.assign(e.settings, d.settings || {}), entries: Array.isArray(d.entries) ? d.entries : [], kidNotes: d.kidNotes && typeof d.kidNotes === "object" ? d.kidNotes : {} }; }
+let dirty = false, flushing = false, lastWrite = "";
+function save(){ if (KIDM) return; lsSet(S); dirty = true; setStatus("Speichert …"); clearTimeout(save.t); save.t = setTimeout(flush, 600); }
+async function flush(){
+  if (flushing) { save.t = setTimeout(flush, 400); return; }
+  if (!dirty) return;
+  flushing = true; dirty = false;
+  try {
+    if (store.mode === "db") { lastWrite = JSON.stringify(S); await store.ref.set(clone(S)); }
+    setStatus(store.mode === "db" ? "Gespeichert ✓" : "Gespeichert auf diesem Gerät");
+  } catch (e) {
+    if (e && (e.code === "not_granted" || e.code === "forbidden" || e.code === "permission_denied")) { store.mode = "local"; setStatus("Nur ansehen – Änderungen bleiben auf diesem Gerät"); }
+    else { dirty = true; setStatus("Nicht gespeichert – neuer Versuch …"); save.t = setTimeout(flush, 4000); }
+  }
+  flushing = false;
+}
+
+// ---------- Rendern ----------
+const visible = e => !who || !e.for || !e.for.length || e.for.includes(who);
+const forList = e => (e.for && e.for.length) ? S.sus.filter(s => e.for.includes(s.id)) : S.sus;
+function counts(e){
+  const c = { gemacht:0, bad:0, offen:0, total:0 };
+  for (const s of forList(e)) { const st = (e.status || {})[s.id] || "offen"; c.total++; if (st === "gemacht" || st === "nachher") c.gemacht++; else if (st === "offen") c.offen++; else c.bad++; }
+  return c;
+}
+function entryHTML(e){
+  const k = KIND[e.type] || KIND.aufgabe;
+  const ink = INKS[e.ink] || INKS.blau;
+  if (k.k && e.type !== "lernkontrolle") {
+    return `<div class="e" role="button" tabindex="0" draggable="true" data-id="${e.id}" style="--c:${ink}"><span class="sticker" style="--k:${k.k}">${I[k.i]}${esc(textOf(e.title) || k.label)}</span>${zeitHTML(e)}${e.details ? `<div class="ed">${fmtDetails(e.details)}</div>` : ""}${attsHTML(e)}</div>`;
+  }
+  const mark = e.mark && MARKS[e.mark] ? MARKS[e.mark] : (e.type === "lernkontrolle" && e.mark !== "none" ? MARKS.gelb : null);
+  const txt = `${e.fach ? esc(e.fach) + ": " : ""}${fmtTitle(e.title)}`;
+  let chips = "";
+  // Ansicht eines Kindes: Aufgabe nach Kontrolle grün, gelb oder rot unterlegt, Symbol am Zeilenende
+  let kst = "", kbg = "";
+  const kStat = who && e.type === "aufgabe" ? (e.status || {})[who] : null;
+  if (kStat && ST[kStat] && kStat !== "offen") {
+    const m = ST[kStat], f = firstOf(e, who), lab = kStat === "neu" && e.neuAuf && e.neuAuf[who] ? `neue Aufgabe auf ${shortDate(e.neuAuf[who])}` : f ? `nachgeholt · zuerst ${ST[f].label}` : m.label;
+    kbg = f ? `;background:${stripes(f)};` : `;background:color-mix(in srgb,${m.c} 17%,transparent);box-shadow:inset 0 0 0 ${f ? 2 : 1.5}px color-mix(in srgb,${f ? ST[f].c : m.c} ${f ? 70 : 45}%,transparent)`;
+    kst = `<span class="kst${f ? " has2" : ""}" role="button" tabindex="0" data-kst="${e.id}" style="color:${m.c}" title="${esc(lab)}" aria-label="${esc(lab)} – Erklärung zeigen">${stackHTML(m, f)}</span>`;
+  }
+  if (e.type === "aufgabe" && S.sus.length && !who) {
+    const c = counts(e);
+    if (c.offen === c.total) chips = `<span class="chip ghost">${I.check.replace("<svg", '<svg width="11" height="11"')} kontrollieren</span>`;
+    else chips = `<span class="chip ok">✓ ${c.gemacht}/${c.total}</span>${c.bad ? `<span class="chip warn">✗ ${c.bad}</span>` : ""}`;
+  }
+  const fw = (e.for && e.for.length && !who) ? `<span class="forwho">(${e.for.length} SuS)</span>` : "";
+  const lk = e.type === "lernkontrolle" ? `<span class="lkmark" title="Lernkontrolle">${I.test}</span>` : "";
+  return `<div class="e" role="button" tabindex="0" draggable="true" data-id="${e.id}" style="--c:${ink}${kbg}"><div class="eline">${lk}<span class="et">${mark ? `<span class="hl" style="--m:${mark}">${txt}</span>` : txt}${zeitHTML(e)}</span>${fw}<span class="chips">${chips}</span>${kst}</div>${e.details ? `<div class="ed">${fmtDetails(e.details)}</div>` : ""}${attsHTML(e)}</div>`;
+}
+const attUrl = a => a.url || ("/_blob/" + a.id);
+const attsHTML = e => (e.atts && e.atts.length) ? `<div class="atts">${e.atts.map(a => `<a class="att${a.link ? " lnk" : ""}" href="${esc(attUrl(a))}" target="_blank" rel="noopener" draggable="false" title="${esc(a.name)} öffnen">${a.link ? I.link : I.clip}<span>${esc(a.name)}</span></a>`).join("")}</div>` : "";
+// Formatierter Text: nur fett, kursiv, unterstrichen, Stift- und Leuchtstiftfarben aus der Palette, Listen und Zeilen bleiben erhalten
+const linkify = t => esc(t).replace(/\b(https?:\/\/[^\s<]+[^\s<.,;:!?)"'])/g, '<a href="$1" target="_blank" rel="noopener" draggable="false">$1</a>');
+const hexRGB = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+const parseCol = c => { const m = String(c || "").match(/rgba?\(([^)]+)\)/); if (m) return m[1].split(",").map(parseFloat); return /^#[0-9a-f]{6}$/i.test(c) ? hexRGB(c) : null; };
+const near = (a, b) => a && b && Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[2]-b[2]) < 14;
+const inkKey = c => { const p = parseCol(c); return p ? Object.keys(INKS).find(k => near(p, hexRGB(INKS[k]))) : null; };
+const markKey = c => { const p = parseCol(c); if (!p || p[3] === 0) return null; return Object.keys(MARKS).find(k => near(p, parseCol(MARKS[k]))); };
+function rich(html, inline, show){
+  const t = document.createElement("template"); t.innerHTML = html || "";
+  const walk = n => { let o = ""; for (const c of n.childNodes) o += one(c); return o; };
+  const one = n => {
+    if (n.nodeType === 3) return show ? linkify(n.nodeValue) : esc(n.nodeValue);
+    if (n.nodeType !== 1) return "";
+    const tag = n.tagName.toLowerCase();
+    if (/^(script|style|template|iframe|object|svg|img)$/.test(tag)) return "";
+    if (tag === "br") return inline ? " " : "<br>";
+    if (tag === "a") return walk(n);
+    let w = walk(n); const st = n.style || {};
+    const fw = st.fontWeight; if (fw === "bold" || +fw >= 600 || tag === "b" || tag === "strong") w = `<b>${w}</b>`;
+    if (st.fontStyle === "italic" || tag === "i" || tag === "em") w = `<i>${w}</i>`;
+    if (String(st.textDecorationLine || st.textDecoration || "").includes("underline") || tag === "u") w = `<u>${w}</u>`;
+    const ik = inkKey(st.color || n.getAttribute("color")); if (ik) w = `<span style="color:${INKS[ik]}">${w}</span>`;
+    const mk = markKey(st.backgroundColor); if (mk) w = show ? `<span class="hl" style="--m:${MARKS[mk]}">${w}</span>` : `<span style="background-color:${MARKS[mk]}">${w}</span>`;
+    if (inline) return w;
+    if (tag === "div" || tag === "p") return `<div>${w || "<br>"}</div>`;
+    if (tag === "ul" || tag === "ol" || tag === "li" || tag === "blockquote") return `<${tag}>${w}</${tag}>`;
+    return w;
+  };
+  return walk(t.content).trim();
+}
+const isRich = s => /[<&]/.test(String(s || ""));
+function legacyToHTML(t){
+  let out = "", list = null; const close = () => { if (list) { out += `</${list}>`; list = null; } };
+  for (const line of String(t || "").split("\n")) {
+    const m = line.match(/^(\s*)(.*)$/), ind = m[1].replace(/\t/g, "  ").length, rest = m[2]; let r;
+    if ((r = rest.match(/^[-•*]\s+(.*)$/))) { if (list !== "ul") { close(); out += "<ul>"; list = "ul"; } out += `<li>${esc(r[1])}</li>`; continue; }
+    if ((r = rest.match(/^\d{1,2}[.)]\s+(.*)$/))) { if (list !== "ol") { close(); out += "<ol>"; list = "ol"; } out += `<li>${esc(r[1])}</li>`; continue; }
+    close();
+    let txt = esc(rest); if ((r = rest.match(/^(?:->|→|=>)\s?(.*)$/))) txt = "↳ " + esc(r[1]);
+    const div = `<div>${txt || "<br>"}</div>`;
+    out += ind >= 2 ? `<blockquote>${div}</blockquote>` : div;
+  }
+  close(); return out;
+}
+const toEditTitle = s => isRich(s) ? rich(s, true, false) : esc(s || "");
+const toEditDetails = s => isRich(s) ? rich(s, false, false) : legacyToHTML(s);
+const textOf = h => { const t = document.createElement("template"); t.innerHTML = isRich(h) ? h : esc(h || ""); return t.content.textContent || ""; };
+const fmtTitle = s => isRich(s) ? rich(s, true, true) : esc(s || "");
+const zeitHTML = e => { const z = String(e.zeit || "").trim(); if (!z) return ""; return ` <span class="tm">(${esc(/^\d+$/.test(z) ? z + " Min." : z)})</span>`; };
+const fmtDetails = s => rich(toEditDetails(s), false, true);
+function dayHTML(d, n){
+  const s = iso(d), today = s === iso(new Date());
+  const list = S.entries.filter(e => e.date === s && visible(e)).sort((a,b) => (a.order ?? 0) - (b.order ?? 0));
+  const label = `${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`;
+  const emptyHint = (!loaded || list.length) ? "" : (s === iso(week) && !weekHasEntries() ? `<div class="empty">Noch nichts eingetragen – tippe auf ＋</div>` : "");
+  return `<section class="day${today ? " today" : ""}" style="--n:${n}" data-date="${s}">
+    <div class="dh"><span class="dname">${label}</span><button class="dadd" data-add="${s}" aria-label="Eintrag am ${label} hinzufügen">＋</button></div>
+    <div class="db" data-drop="${s}">${list.map(entryHTML).join("")}${emptyHint}</div></section>`;
+}
+function weekHasEntries(){ const a = iso(week), b = iso(addDays(week, 6)); return S.entries.some(e => e.date >= a && e.date <= b && visible(e)); }
+function render(){
+  if (KN && !KIDM) S.sus = knSus(S.sus);
+  if (KIDM) who = KN.kidId;
+  const n = Math.max(5, Math.min(12, S.settings.lines | 0 || 8));
+  const sun = addDays(week, 6), kw = isoWeek(week);
+  const m1 = MO[week.getMonth()], m2 = MO[sun.getMonth()];
+  $("#wk").innerHTML = `Woche ${kw}<small>${week.getDate()}.${week.getMonth()+1}. – ${sun.getDate()}.${sun.getMonth()+1}.${sun.getFullYear()}</small>`;
+  const c = COVERS[S.settings.cover] || COVERS.gruen;
+  const book = $("#book");
+  book.style.setProperty("--cover", c[0]); book.style.setProperty("--cover2", c[1]);
+  document.documentElement.style.setProperty("--hand", FONTS[S.settings.font] || FONTS["Patrick Hand"]);
+  $("#spread").innerHTML = `
+    <div class="page l"><div class="phead"><span class="big">${m1 === m2 ? m1 : m1 + "/" + m2}</span></div>
+      <div class="days">${[0,1,2].map(i => dayHTML(addDays(week, i), n)).join("")}</div></div>
+    <div class="page r"><div class="phead"><span class="big">Woche ${kw}</span></div>
+      <div class="days">${dayHTML(addDays(week, 3), n)}${dayHTML(addDays(week, 4), n)}<div class="weekend">${dayHTML(addDays(week, 5), n)}${dayHTML(addDays(week, 6), n)}</div></div></div>`;
+  $("#klasseBtn").textContent = S.klasse;
+  const w = $("#who");
+  w.innerHTML = `<option value="">Alle SuS</option>` + S.sus.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  if (KIDM) who = KN.kidId; else if (!S.sus.some(s => s.id === who)) who = "";
+  w.value = who;
+  fit();
+}
+// Zeilenhöhe so wählen, dass drei Tage genau auf eine Seite passen
+function fit(){
+  const book = $("#book");
+  if (matchMedia("(max-width:820px)").matches) { book.style.setProperty("--lh", "30px"); return; }
+  const n = Math.max(5, Math.min(12, S.settings.lines | 0 || 8));
+  const sh = $("#spread").clientHeight;
+  // Seite = Kopf (1.3 lh) + 3 Tage (3n lh) + Polster (0.65 lh)
+  const lh = Math.max(18, Math.floor(sh / (3 * n + 1.3 + .7) * 10) / 10);
+  book.style.setProperty("--lh", lh + "px");
+}
+new ResizeObserver(() => fit()).observe(document.getElementById("book"));
+
+// ---------- Interaktion: Woche ----------
+if (KN) { const b = $("#knBack"); b.hidden = false; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
+$("#prev").onclick = () => { week = addDays(week, -7); render(); };
+$("#next").onclick = () => { week = addDays(week, 7); render(); };
+$("#todayBtn").onclick = () => { week = monday(new Date()); render(); };
+$("#jump").onchange = e => { if (e.target.value) { week = monday(parse(e.target.value)); render(); } };
+$("#who").onchange = e => { who = e.target.value; render(); };
+$("#klasseBtn").onclick = openKlasse;
+$("#beamerBtn").onclick = () => {
+  beamer = !beamer; document.getElementById("app").classList.toggle("beamer", beamer); document.body.classList.toggle("beamer", beamer);
+  $("#beamerBtn").textContent = beamer ? "Bearbeiten" : "Beamer";
+  try { if (beamer && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!beamer && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {}
+};
+document.addEventListener("keydown", e => {
+  if (e.target.closest("input,textarea,select,[contenteditable]")) { if (e.key === "Escape") closePanel(); return; }
+  if (e.key === "Escape") closePanel();
+  if ($("#layer").innerHTML || !$("#report").hidden) return;
+  if (e.key === "ArrowLeft") $("#prev").click();
+  if (e.key === "ArrowRight") $("#next").click();
+});
+$("#spread").addEventListener("click", e => {
+  const add = e.target.closest("[data-add]");
+  if (add) { openEntry(null, add.dataset.add); return; }
+  if (e.target.closest("a.att")) return;
+  const ks = e.target.closest(".kst");
+  if (ks) { const en0 = S.entries.find(x => x.id === ks.dataset.kst); if (en0) { if (kpopEl) closeKpop(); else openKpop(ks, en0); } return; }
+  const en = e.target.closest(".e");
+  if (en) { const wantCheck = !!e.target.closest(".chip"); openEntry(en.dataset.id, null, wantCheck ? "kontrolle" : "eintrag"); }
+});
+$("#spread").addEventListener("keydown", e => { const ks = e.target.closest(".kst"); if (ks && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); const en0 = S.entries.find(x => x.id === ks.dataset.kst); if (en0) openKpop(ks, en0); } });
+$("#spread").addEventListener("keydown", e => { if (e.target.closest(".kst")) return; const en = e.target.closest(".e"); if (en && (e.key === "Enter" || e.key === " ") && e.target === en) { e.preventDefault(); openEntry(en.dataset.id); } });
+$("#spread").addEventListener("dblclick", e => { const db = e.target.closest(".db"); if (db && !e.target.closest(".e")) openEntry(null, db.dataset.drop); });
+// Ziehen zwischen Tagen (Alt/Option = kopieren)
+let dragId = null;
+$("#spread").addEventListener("dragstart", e => { if (KIDM) { e.preventDefault(); return; } const en = e.target.closest(".e"); if (!en) return; dragId = en.dataset.id; en.classList.add("drag"); e.dataTransfer.effectAllowed = "copyMove"; try { e.dataTransfer.setData("text/plain", dragId); } catch {} });
+$("#spread").addEventListener("dragend", () => { dragId = null; document.querySelectorAll(".drag,.over").forEach(x => x.classList.remove("drag","over")); });
+$("#spread").addEventListener("dragover", e => { const db = e.target.closest(".db"); if (!db || !dragId) return; e.preventDefault(); document.querySelectorAll(".over").forEach(x => x !== db && x.classList.remove("over")); db.classList.add("over"); });
+$("#spread").addEventListener("drop", e => {
+  const db = e.target.closest(".db"); if (!db || !dragId) return; e.preventDefault();
+  const en = S.entries.find(x => x.id === dragId); if (!en) return;
+  const to = db.dataset.drop, order = Math.max(0, ...S.entries.filter(x => x.date === to).map(x => (x.order ?? 0) + 1));
+  if (e.altKey) { const c = clone(en); c.id = uid(); c.date = to; c.status = {}; c.order = order; S.entries.push(c); toast("Kopiert auf " + shortDate(to)); }
+  else if (en.date !== to) { en.date = to; en.order = order; toast("Verschoben auf " + shortDate(to)); }
+  save(); render();
+});
+
+// ---------- Panel ----------
+const layer = $("#layer");
+function closePanel(){ layer.innerHTML = ""; closeMenu(); }
+function openPanel(title, tabs, active, bodyFn, footFn){
+  const draw = tab => {
+    layer.innerHTML = `<div class="scrim" data-close></div><aside class="panel" role="dialog" aria-label="${esc(title)}">
+      <div class="ph"><h2>${esc(title)}</h2><button class="x" data-close aria-label="Schliessen">×</button></div>
+      ${tabs.length > 1 ? `<div class="ptabs">${tabs.map(t => `<button class="ptab${t[0] === tab ? " on" : ""}" data-tab="${t[0]}">${t[1]}</button>`).join("")}</div>` : ""}
+      <div class="pb" id="pb"></div><div class="pf" id="pf"></div></aside>`;
+    layer.querySelectorAll("[data-close]").forEach(b => b.onclick = closePanel);
+    layer.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => draw(b.dataset.tab));
+    bodyFn(tab, $("#pb")); footFn(tab, $("#pf"));
+  };
+  draw(active);
+}
+function openEntry(id, date, tab = "eintrag"){
+  if (KIDM) return;
+  let e = id ? S.entries.find(x => x.id === id) : null;
+  const isNew = !e;
+  const d = e ? clone(e) : { id:uid(), date, type:"aufgabe", fach:"", title:"", details:"", ink:"blau", mark:"", for:[], status:{} };
+  const removed = [];
+  const commit = () => {
+    if (!textOf(d.title).trim() && !textOf(d.details).trim() && !(d.atts || []).length) return false;
+    dropAssets(removed, d.id);
+    if (isNew) { d.order = Math.max(0, ...S.entries.filter(x => x.date === d.date).map(x => (x.order ?? 0) + 1)); S.entries.push(d); e = d; }
+    else Object.assign(e, d);
+    save(); render(); return true;
+  };
+  const tabs = [["eintrag","Eintrag"]].concat(d.type === "aufgabe" && S.sus.length ? [["kontrolle","Kontrolle"]] : []);
+  if (!tabs.find(t => t[0] === tab)) tab = "eintrag";
+  openPanel(isNew ? "Neuer Eintrag" : (d.fach ? d.fach + ": " : "") + (textOf(d.title) || "Eintrag"), tabs, tab, (t, pb) => {
+    if (t === "kontrolle") { drawKontrolle(isNew ? d : e, pb); return; }
+    pb.innerHTML = `
+      <div><span class="lbl">Art</span><div class="row" id="kinds">${Object.entries(KIND).map(([k,v]) => `<button class="opt${d.type === k ? " on" : ""}" data-k="${k}" style="${v.k ? `color:${d.type === k ? "" : v.k}` : ""}">${I[v.i]}${v.label}</button>`).join("")}</div></div>
+      <div id="fachBox"${d.type === "aufgabe" || d.type === "lernkontrolle" ? "" : " hidden"}><span class="lbl">Fach</span><div class="row">${FAECHER.map(f => `<button class="opt${d.fach === f ? " on" : ""}" data-f="${f}">${f}</button>`).join("")}<input class="inp" id="fachIn" style="width:90px" placeholder="anderes" value="${FAECHER.includes(d.fach) ? "" : esc(d.fach)}"></div></div>
+      <div id="penBox"><span class="lbl">Stift und Leuchtstift · Grundeinstellung</span><div class="row">${Object.entries(INKS).map(([k,v]) => `<button class="sw${d.ink === k ? " on" : ""}" data-ink="${k}" style="background:${v}" aria-label="Stift ${k}"></button>`).join("")}<span style="width:14px"></span><button class="sw none${!d.mark || d.mark === "none" ? " on" : ""}" data-mark="none" aria-label="kein Leuchtstift"></button>${Object.entries(MARKS).map(([k,v]) => `<button class="sw${d.mark === k ? " on" : ""}" data-mark="${k}" style="background:${v}" aria-label="Leuchtstift ${k}"></button>`).join("")}</div></div>
+      <div><div class="lrow"><span class="lbl" id="tLbl">Titel</span><button class="fold" type="button" data-fold="tBar" aria-expanded="false">Aa Bearbeiten <i>▾</i></button></div>${fbar("tBar", "tIn", false)}<div class="inp rt t" id="tIn" contenteditable="true" role="textbox" aria-labelledby="tLbl" data-ph="z. B. Übungsheft S. 38/39" style="color:${INKS[d.ink] || INKS.blau}">${toEditTitle(d.title)}</div></div>
+      <div class="mini"><label class="lbl" for="zIn" style="margin:0;display:inline-flex;align-items:center;gap:5px"><span style="width:15px;height:15px;display:inline-flex">${I.clock}</span>Zeit</label><input class="inp" id="zIn" style="width:150px;padding:6px 10px" placeholder="z. B. 20 Min." value="${esc(d.zeit || "")}"><span class="hint">leer lassen = keine Klammer</span></div>
+      <div><div class="lrow"><span class="lbl" id="dLbl">Aufgabendetails</span><button class="fold" type="button" data-fold="dBar" aria-expanded="false">Aa Bearbeiten · Listen <i>▾</i></button></div>${fbar("dBar", "dIn", true)}<div class="inp rt dt" id="dIn" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="dLbl" data-ph="Nr. 7–9 lösen" style="color:${INKS[d.ink] || INKS.blau}">${toEditDetails(d.details)}</div><div class="hint">Text markieren, dann unter «Bearbeiten» fett, unterstrichen, Farbe oder Leuchtstift wählen. Webadressen werden auf der Tafel zu Links.</div></div>
+      <div><span class="lbl">Anhänge</span><div class="alist" id="aList"></div>
+        <div class="mini"><label class="btn" for="aIn" id="aBtn" style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:16px;display:inline-flex">${I.clip}</span>PDF oder Bild anhängen</label><input type="file" id="aIn" accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,audio/*,video/*" multiple hidden><span class="hint" id="aHint"></span></div>
+        <div class="mini" style="margin-top:8px"><input class="inp" id="lUrl" type="url" placeholder="https://… Link einfügen" style="flex:2;min-width:160px"><input class="inp" id="lName" placeholder="Name (freiwillig)" style="flex:1;min-width:120px"><button class="btn" id="lAdd" type="button" style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:16px;display:inline-flex;color:var(--sky-deep)">${I.link}</span>Link hinzufügen</button></div></div>
+      ${S.sus.length ? `<div><span class="lbl">Für</span><div class="forgrid" id="forG"><button class="opt${!d.for.length ? " on" : ""}" data-for="">Alle</button>${S.sus.map(s => `<button class="opt${d.for.includes(s.id) ? " on" : ""}" data-for="${s.id}">${esc(s.name)}</button>`).join("")}</div></div>` : ""}
+      <div><span class="lbl">Datum</span><div class="mini"><input class="inp" type="date" id="dateIn" value="${d.date}"><span class="hint">${longDate(d.date)}</span></div></div>
+      ${isNew ? "" : `<div><span class="lbl">Kopieren und wiederholen</span>
+        <div class="mini"><input class="inp" type="date" id="copyIn" value="${iso(addDays(parse(d.date), 7))}"><button class="btn" id="copyB">Kopieren</button></div>
+        <div class="mini" style="margin-top:8px">jede Woche, <input class="inp" type="number" id="repN" min="1" max="40" value="4" style="width:70px"> mal <button class="btn" id="repB">Wiederholen</button></div></div>`}`;
+    const reKind = () => { pb.querySelector("#fachBox").hidden = !(d.type === "aufgabe" || d.type === "lernkontrolle"); };
+    pb.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { d.type = b.dataset.k; pb.querySelectorAll("[data-k]").forEach(x => { x.classList.toggle("on", x === b); x.style.color = x === b || !KIND[x.dataset.k].k ? "" : KIND[x.dataset.k].k; }); reKind(); });
+    pb.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { d.fach = d.fach === b.dataset.f ? "" : b.dataset.f; pb.querySelector("#fachIn").value = ""; pb.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x.dataset.f === d.fach)); });
+    pb.querySelector("#fachIn").oninput = ev => { d.fach = ev.target.value.trim(); pb.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x.dataset.f === d.fach)); };
+    pb.querySelector("#zIn").oninput = ev => { d.zeit = ev.target.value.trim(); };
+    const tEl = pb.querySelector("#tIn"), dEl = pb.querySelector("#dIn");
+    const syncT = () => { d.title = textOf(tEl.innerHTML).trim() ? rich(tEl.innerHTML, true, false) : ""; };
+    const syncD = () => { d.details = textOf(dEl.innerHTML).trim() ? rich(dEl.innerHTML, false, false) : ""; };
+    tEl.oninput = syncT; dEl.oninput = syncD;
+    tEl.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); syncT(); if (commit()) closePanel(); } };
+    const plainPaste = (el, oneLine) => el.addEventListener("paste", ev => { ev.preventDefault(); let t = ev.clipboardData ? ev.clipboardData.getData("text/plain") : ""; if (oneLine) t = t.replace(/\s*\n\s*/g, " "); document.execCommand("insertText", false, t); });
+    plainPaste(tEl, true); plainPaste(dEl, false);
+    pb.querySelectorAll("[data-fold]").forEach(b => b.onclick = () => { const bar = pb.querySelector("#" + b.dataset.fold); bar.hidden = !bar.hidden; b.classList.toggle("on", !bar.hidden); b.setAttribute("aria-expanded", String(!bar.hidden)); });
+    pb.querySelectorAll(".fbar").forEach(bar => {
+      const ed = pb.querySelector("#" + bar.dataset.ed);
+      bar.addEventListener("mousedown", ev => { if (ev.target.closest("button")) ev.preventDefault(); });
+      bar.addEventListener("click", ev => {
+        const b = ev.target.closest("button"); if (!b) return;
+        const sel = getSelection();
+        if (!sel.rangeCount || !ed.contains(sel.anchorNode)) { ed.focus(); const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
+        try {
+          if (b.dataset.cmd) { document.execCommand("styleWithCSS", false, false); document.execCommand(b.dataset.cmd, false, null); }
+          else if (b.dataset.fc) { document.execCommand("styleWithCSS", false, true); document.execCommand("foreColor", false, b.dataset.fc); }
+          else if (b.dataset.hc) { document.execCommand("styleWithCSS", false, true); document.execCommand("hiliteColor", false, b.dataset.hc); }
+          else if (b.dataset.arrow) document.execCommand("insertText", false, "↳ ");
+        } catch {}
+        (ed === tEl ? syncT : syncD)();
+      });
+    });
+    pb.querySelectorAll("[data-ink]").forEach(b => b.onclick = () => { d.ink = b.dataset.ink; tEl.style.color = dEl.style.color = INKS[d.ink]; pb.querySelectorAll("[data-ink]").forEach(x => x.classList.toggle("on", x === b)); });
+    pb.querySelectorAll("[data-mark]").forEach(b => b.onclick = () => { d.mark = b.dataset.mark; pb.querySelectorAll("[data-mark]").forEach(x => x.classList.toggle("on", x === b)); });
+    pb.querySelectorAll("[data-for]").forEach(b => b.onclick = () => {
+      const v = b.dataset.for;
+      if (!v) d.for = []; else d.for = d.for.includes(v) ? d.for.filter(x => x !== v) : d.for.concat(v);
+      if (d.for.length === S.sus.length) d.for = [];
+      pb.querySelectorAll("[data-for]").forEach(x => x.classList.toggle("on", x.dataset.for ? d.for.includes(x.dataset.for) : !d.for.length));
+    });
+    pb.querySelector("#dateIn").onchange = ev => { if (ev.target.value) { d.date = ev.target.value; ev.target.nextElementSibling.textContent = longDate(d.date); } };
+    if (!isNew) {
+      pb.querySelector("#copyB").onclick = () => { const to = pb.querySelector("#copyIn").value; if (!to) return; const c = clone(d); c.id = uid(); c.date = to; c.status = {}; S.entries.push(c); save(); render(); toast("Kopiert auf " + shortDate(to)); };
+      pb.querySelector("#repB").onclick = () => { const k = Math.max(1, Math.min(40, +pb.querySelector("#repN").value || 1)); for (let i = 1; i <= k; i++) { const c = clone(d); c.id = uid(); c.date = iso(addDays(parse(d.date), 7 * i)); c.status = {}; S.entries.push(c); } save(); render(); toast(`${k}× wiederholt`); };
+    }
+    d.atts = d.atts || [];
+    const drawAtts = () => {
+      pb.querySelector("#aList").innerHTML = d.atts.map((a, i) => `<div class="arow"><span style="width:18px;height:18px;display:inline-flex;color:${a.link ? "var(--sky-deep)" : "#c0463c"}">${a.link ? I.link : I.clip}</span><a href="${esc(attUrl(a))}" target="_blank" rel="noopener">${esc(a.name)}</a><button class="x" data-rm="${i}" aria-label="${esc(a.name)} entfernen" style="width:30px;height:30px;font-size:18px">×</button></div>`).join("");
+      pb.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { const a = d.atts.splice(+b.dataset.rm, 1)[0]; if (a) removed.push(a); drawAtts(); });
+    };
+    drawAtts();
+    const aHint = pb.querySelector("#aHint");
+    const addLink = () => {
+      let u = pb.querySelector("#lUrl").value.trim(); if (!u) return;
+      if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+      let nm = pb.querySelector("#lName").value.trim();
+      if (!nm) { try { const x = new URL(u); nm = x.hostname.replace(/^www\./, "") + (x.pathname.length > 1 ? x.pathname.replace(/\/$/, "") : ""); } catch { aHint.textContent = "Diese Adresse stimmt nicht."; return; } if (nm.length > 40) nm = nm.slice(0, 38) + "…"; }
+      d.atts.push({ link:true, url:u, name:nm }); pb.querySelector("#lUrl").value = ""; pb.querySelector("#lName").value = ""; aHint.textContent = ""; drawAtts();
+    };
+    pb.querySelector("#lAdd").onclick = addLink;
+    pb.querySelector("#lUrl").onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); addLink(); } };
+    pb.querySelector("#lName").onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); addLink(); } };
+    if (!assets) { pb.querySelector("#aBtn").style.opacity = ".5"; aHint.textContent = "Anhänge gehen erst, wenn die Tafel online gespeichert wird."; }
+    pb.querySelector("#aIn").onchange = async ev => {
+      const files = [...ev.target.files]; ev.target.value = "";
+      if (!assets || !files.length) return;
+      for (const f of files) {
+        aHint.textContent = `Lädt ${f.name} hoch …`;
+        try { const r = await assets.upload(f); d.atts.push({ id:r.id, url:r.url, name:f.name, type:r.contentType || f.type }); drawAtts(); aHint.textContent = ""; }
+        catch (err) { aHint.textContent = (err && err.code === "too_large") || f.size > 20 * 1048576 ? `${f.name} ist zu gross (höchstens 20 MB).` : `${f.name} konnte nicht hochgeladen werden.`; }
+      }
+    };
+    if (isNew) setTimeout(() => pb.querySelector("#tIn").focus(), 30);
+  }, (t, pf) => {
+    if (t === "kontrolle") { pf.innerHTML = `<button class="btn go" data-close>Fertig</button>`; pf.querySelector("[data-close]").onclick = closePanel; return; }
+    pf.innerHTML = `<button class="btn go" id="okB">${isNew ? "Eintragen" : "Speichern"}</button><button class="btn" data-close>Abbrechen</button><span class="sp" style="flex:1"></span>${isNew ? "" : `<button class="btn danger" id="delB">Löschen</button>`}`;
+    pf.querySelector("[data-close]").onclick = closePanel;
+    pf.querySelector("#okB").onclick = () => { if (commit()) { closePanel(); toast(isNew ? "Eingetragen" : "Gespeichert"); } else toast("Schreib zuerst einen Titel"); };
+    const del = pf.querySelector("#delB");
+    if (del) del.onclick = () => {
+      if (!del.classList.contains("sure")) { del.classList.add("sure"); del.textContent = "Wirklich löschen?"; setTimeout(() => { if (del.isConnected) { del.classList.remove("sure"); del.textContent = "Löschen"; } }, 3500); return; }
+      S.entries = S.entries.filter(x => x.id !== d.id); dropAssets((e && e.atts) || [], null); save(); render(); closePanel(); toast("Gelöscht");
+    };
+  });
+}
+const KID_TEXT = {
+  gemacht:"Super, du hast die Aufgabe gemacht!",
+  nicht:"Du hast diese Aufgabe nicht gemacht. Hole sie bitte nach.",
+  spaet:"Du hast die Aufgabe zu spät abgegeben. Gib sie nächstes Mal pünktlich ab.",
+  nachher:"Du hattest die Aufgabe nicht gemacht, hast sie aber nachgeholt.",
+  korr:"Du musst die Aufgabe noch korrigieren. Schau die Fehler an und verbessere sie.",
+  teil:"Du hast nur einen Teil gemacht. Löse die Aufgabe bitte fertig.",
+  neu:"Du hast die Aufgabe nicht gemacht. Sie steht neu am {d} in deiner Agenda."
+};
+let kpopEl = null;
+function closeKpop(){ if (kpopEl) { kpopEl.remove(); kpopEl = null; } }
+function openKpop(anchor, e){
+  closeKpop();
+  const st = (e.status || {})[who]; if (!st || !ST[st]) return;
+  const m = ST[st], d = e.neuAuf && e.neuAuf[who] ? longDate(e.neuAuf[who]) : "einem anderen Tag";
+  const note = e.notes && e.notes[who];
+  kpopEl = document.createElement("div"); kpopEl.className = "kpop"; kpopEl.style.setProperty("--kc", m.c); kpopEl.setAttribute("role", "dialog");
+  const f = firstOf(e, who);
+  const txt = f ? `Super, du hast die Aufgabe nachgeholt! Zuerst war sie: ${ST[f].label}.` : KID_TEXT[st].replace("{d}", d);
+  const head = f
+    ? `<div class="klog"><div class="kh" style="color:${ST.gemacht.c}">${I.check}nachgeholt</div><div class="kh" style="color:${ST[f].c}">${I[ST[f].i]}zuerst: ${esc(f === "neu" ? "nicht gemacht" : ST[f].label)}</div></div>`
+    : `<div class="kh">${I[m.i]}${esc(st === "neu" ? "neue Aufgabe" : m.label)}</div>`;
+  kpopEl.innerHTML = `${head}<div>${esc(txt)}</div>${note ? `<div class="kn"><small>Notiz von deiner Lehrperson</small>${esc(note)}</div>` : ""}`;
+  document.body.appendChild(kpopEl);
+  const r = anchor.getBoundingClientRect(), w = kpopEl.offsetWidth, h = kpopEl.offsetHeight;
+  kpopEl.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.right - w)) + "px";
+  kpopEl.style.top = (r.bottom + h + 12 > innerHeight ? Math.max(12, r.top - h - 8) : r.bottom + 8) + "px";
+  const hdl = ev => { if (kpopEl && !kpopEl.contains(ev.target) && !ev.target.closest(".kst")) { closeKpop(); document.removeEventListener("pointerdown", hdl, true); } };
+  setTimeout(() => document.addEventListener("pointerdown", hdl, true), 0);
+}
+// War die Aufgabe zuerst nicht (ganz) gemacht und wurde später nachgeholt, bleibt der erste Status in e.first gespeichert
+const firstOf = (e, sid) => (e.status || {})[sid] === "gemacht" && e.first && e.first[sid] && ST[e.first[sid]] ? e.first[sid] : null;
+// Nachgeholt: oben der Haken, darunter das ursprüngliche Zeichen; Feld grün und in der ersten Farbe gestreift
+const stackHTML = (m, f) => f ? `<span class="two"><span style="color:${m.c}">${I[m.i]}</span><span style="color:${ST[f].c}">${I[ST[f].i]}</span></span>` : I[m.i];
+const stripes = (f, a = 20) => `repeating-linear-gradient(135deg,color-mix(in srgb,${ST.gemacht.c} ${a}%,#fff) 0 9px,color-mix(in srgb,${ST[f].c} ${a + 6}%,#fff) 9px 18px)`;
+const PROBLEM = ["nicht","teil","korr","spaet","neu","nachher"];
+function setStatus2(e, sid, st){
+  const cur = (e.status || {})[sid];
+  e.status = e.status || {};
+  if (st === "offen") { delete e.status[sid]; if (e.neuAuf) delete e.neuAuf[sid]; if (e.first) delete e.first[sid]; return; }
+  if (st === "gemacht" && cur && PROBLEM.includes(cur)) { e.first = e.first || {}; if (!e.first[sid]) e.first[sid] = cur; }
+  e.status[sid] = st;
+  // Nachholaufgabe erledigt: auch die ursprüngliche Aufgabe als nachgeholt markieren
+  if (e.from && st === "gemacht") { const o = S.entries.find(x => x.id === e.from); if (o && o.status && o.status[sid] === "neu") setStatus2(o, sid, "gemacht"); }
+}
+const NOTDONE = ["nicht","teil","korr","spaet","nachher","neu"];
+const nextSchoolDay = iso0 => { let x = addDays(parse(iso0), 1); while (x.getDay() === 0 || x.getDay() === 6) x = addDays(x, 1); return iso(x); };
+// Für Kinder, die eine Aufgabe nicht gemacht haben: dieselbe Aufgabe an einem anderen Tag nur für sie eintragen
+function makeNeu(e, sids, date){
+  if (!sids.length || !date) return;
+  let c = S.entries.find(x => x.from === e.id && x.date === date);
+  if (c) c.for = [...new Set([...(c.for || []), ...sids])];
+  else { c = clone(e); c.id = uid(); c.date = date; c.status = {}; c.for = sids.slice(); c.from = e.id; delete c.neuAuf; c.order = Math.max(0, ...S.entries.filter(x => x.date === date).map(x => (x.order ?? 0) + 1)); S.entries.push(c); }
+  e.neuAuf = e.neuAuf || {};
+  for (const sid of sids) { e.status[sid] = "neu"; e.neuAuf[sid] = date; }
+  save(); render(); toast(`Neu eingetragen auf ${shortDate(date)}`);
+}
+function drawKontrolle(e, pb){
+  e.status = e.status || {};
+  const kids = forList(e);
+  const c = counts(e);
+  const stLabel = (st, sid) => st === "neu" && e.neuAuf && e.neuAuf[sid] ? `neue Aufgabe auf ${shortDate(e.neuAuf[sid])}` : firstOf(e, sid) ? `nachgeholt · zuerst ${ST[firstOf(e, sid)].label}` : ST[st].label;
+  const missing = kids.filter(s => ["nicht","teil"].includes(e.status[s.id]));
+  pb.innerHTML = `
+    <div class="sumrow"><span class="chip ok">✓ ${c.gemacht} gemacht</span>${c.bad ? `<span class="chip warn">${c.bad} nicht gemacht</span>` : ""}<span class="chip">${c.offen} noch nicht kontrolliert</span></div>
+    <div><span class="lbl">Alle noch nicht kontrollierten</span><div class="row">
+      <button class="opt" data-bulk="gemacht" style="color:${ST.gemacht.c}">${I.check} gemacht</button>
+      <button class="opt" data-bulk="nicht" style="color:${ST.nicht.c}">${I.x} nicht erledigt</button>
+      <button class="opt" data-bulk="reset">${I.undo} alle zurücksetzen</button></div></div>
+    <div><span class="lbl">SuS · ✕ für nicht gemacht, Name für alle Möglichkeiten</span><div class="sgrid">${kids.map(s => {
+      const st = e.status[s.id] || "offen", m = ST[st];
+      const right = st === "offen"
+        ? `<button class="q yes" data-q="gemacht" data-sid="${s.id}" aria-label="${esc(s.name)} gemacht" title="gemacht">${I.check}</button>`
+        : `<button class="q yes" data-q="offen" data-sid="${s.id}" aria-label="${esc(s.name)} zurücksetzen" title="zurücksetzen">${I.undo}</button>`;
+      const f0 = firstOf(e, s.id);
+      return `<div class="sc${f0 ? " two" : ""}" data-s="${st}" style="--sc:${m.c}${f0 ? `;background:${stripes(f0, 16)}` : ""}"><button class="q no" data-no="${s.id}" aria-label="${esc(s.name)} nicht gemacht" title="nicht gemacht …">${I.x}</button>${st !== "offen" ? `<span class="ico" style="color:${m.c}">${stackHTML(m, firstOf(e, s.id))}</span>` : ""}${right}<button class="nm" data-sid="${s.id}" title="${esc(stLabel(st, s.id))}">${S.sus.indexOf(s) + 1} · ${esc(s.name)}</button></div>`;
+    }).join("")}</div><div class="legend-first" style="margin-top:8px"><i style="background:${stripes("teil", 30)};border-radius:3px;width:16px"></i>gestreift = nachgeholt oder verbessert; das Zeichen links vom Haken zeigt, wie es zuerst war</div></div>
+    ${missing.length ? `<div class="nbox"><span class="lbl" style="margin:0">Nicht gemacht · als neue Aufgabe eintragen</span>
+      <div class="forgrid">${missing.map(s => `<button class="opt on" type="button" data-nk="${s.id}">${esc(s.name)}</button>`).join("")}</div>
+      <div class="mini"><span>${I.newtask.replace("<svg", '<svg width="18" height="18" style="color:#d0493f;vertical-align:-4px"')} neue Aufgabe auf</span><input class="inp" type="date" id="nDate" value="${nextSchoolDay(e.date)}" style="width:auto"><button class="btn go" id="nGo" type="button">Eintragen</button></div>
+      <div class="hint">Die Aufgabe erscheint am gewählten Tag nur für diese Kinder.</div></div>` : ""}`;
+  const redraw = () => drawKontrolle(e, pb);
+  const set = (sid, st) => { setStatus2(e, sid, st); save(); render(); redraw(); };
+  const neuOne = sid => date => { makeNeu(e, [sid], date); redraw(); };
+  pb.querySelectorAll("[data-q]").forEach(b => b.onclick = () => set(b.dataset.sid, b.dataset.q));
+  pb.querySelectorAll("[data-no]").forEach(b => b.onclick = ev => { const sid = b.dataset.no, s0 = S.sus.find(x => x.id === sid); openMenu(ev.currentTarget, st => set(sid, st), { keys:["nicht","teil","korr","spaet","nachher"], title:s0 ? s0.name : "", neu:neuOne(sid), date:nextSchoolDay(e.date), note:(e.notes || {})[sid] || "", onNote:t => { e.notes = e.notes || {}; if (t) e.notes[sid] = t; else delete e.notes[sid]; save(); toast("Notiz gespeichert"); } }); });
+  pb.querySelectorAll(".nm").forEach(b => b.onclick = ev => { const sid = b.dataset.sid, s0 = S.sus.find(x => x.id === sid); openMenu(ev.currentTarget, st => set(sid, st), { keys:["gemacht","nicht","teil","korr","spaet","nachher","offen"], title:s0 ? s0.name : "", neu:neuOne(sid), date:nextSchoolDay(e.date), note:(e.notes || {})[sid] || "", onNote:t => { e.notes = e.notes || {}; if (t) e.notes[sid] = t; else delete e.notes[sid]; save(); toast("Notiz gespeichert"); } }); });
+  pb.querySelectorAll("[data-nk]").forEach(b => b.onclick = () => b.classList.toggle("on"));
+  const go = pb.querySelector("#nGo");
+  if (go) go.onclick = () => { const sids = [...pb.querySelectorAll("[data-nk].on")].map(x => x.dataset.nk); const dt = pb.querySelector("#nDate").value; if (!sids.length) { toast("Wähle mindestens ein Kind"); return; } makeNeu(e, sids, dt); redraw(); };
+  pb.querySelectorAll("[data-bulk]").forEach(b => b.onclick = () => {
+    const v = b.dataset.bulk;
+    if (v === "reset") { e.status = {}; e.neuAuf = {}; e.first = {}; } else for (const s of kids) if (!e.status[s.id]) e.status[s.id] = v;
+    save(); render(); redraw();
+  });
+}
+// Datei nur löschen, wenn kein anderer Eintrag sie noch braucht (Kopien teilen Anhänge)
+function dropAssets(list, keepId){
+  if (!assets) return;
+  for (const a of list) {
+    if (a.link || !a.id) continue;
+    const used = S.entries.some(x => x.id !== keepId && (x.atts || []).some(b => b.id === a.id));
+    if (!used) assets.delete(a.id).catch(() => {});
+  }
+}
+function fbar(id, ed, lists){
+  const bi = `<button class="fb" type="button" data-cmd="bold" title="fett" aria-label="fett"><b>B</b></button><button class="fb" type="button" data-cmd="italic" title="kursiv" aria-label="kursiv"><i style="font-family:Georgia,serif">I</i></button><button class="fb" type="button" data-cmd="underline" title="unterstrichen" aria-label="unterstrichen"><u>U</u></button>`;
+  const ink = `<span class="grp">Stift</span>` + Object.entries(INKS).map(([k,v]) => `<button class="sw" type="button" data-fc="${v}" style="background:${v}" title="Stift ${k}" aria-label="Stift ${k}"></button>`).join("");
+  const mk = `<span class="grp">Leuchtstift</span><button class="sw none" type="button" data-hc="transparent" title="Leuchtstift weg" aria-label="Leuchtstift weg"></button>` + Object.entries(MARKS).map(([k,v]) => `<button class="sw" type="button" data-hc="${v}" style="background:${v}" title="Leuchtstift ${k}" aria-label="Leuchtstift ${k}"></button>`).join("");
+  const li = lists ? `<span class="brk"></span><span class="grp">Listen</span><button class="fb" type="button" data-cmd="insertUnorderedList" title="Aufzählung">• Aufzählung</button><button class="fb" type="button" data-cmd="insertOrderedList" title="Nummerierung">1. Nummerierung</button><button class="fb" type="button" data-arrow="1" title="Pfeil">↳ Pfeil</button><button class="fb" type="button" data-cmd="indent" title="einrücken">→|</button><button class="fb" type="button" data-cmd="outdent" title="ausrücken">|←</button>` : "";
+  return `<div class="fbar" id="${id}" data-ed="${ed}" hidden>${bi}<span class="sep"></span>${ink}<span class="sep"></span>${mk}${li}</div>`;
+}
+let menuEl = null;
+function closeMenu(){ if (menuEl) { menuEl.remove(); menuEl = null; } }
+function openMenu(anchor, pick, o = {}){
+  closeMenu();
+  const keys = o.keys || Object.keys(ST).filter(k => k !== "neu");
+  menuEl = document.createElement("div"); menuEl.className = "smenu";
+  menuEl.innerHTML = (o.title ? `<div class="mh">Status für <b>${esc(o.title)}</b>:</div>` : "")
+    + keys.map(k => `<button data-st="${k}"><span style="color:${ST[k].c}">${I[ST[k].i]}</span>${ST[k].label}</button>`).join("")
+    + (o.onNote ? `<div class="mh" style="padding-top:8px;border-top:1px solid var(--line);margin-top:4px">Notiz für das Kind (freiwillig)</div><div class="nrow nnote"><textarea aria-label="Notiz für das Kind" placeholder="z. B. Nr. 8 und 9 fehlen noch">${esc(o.note || "")}</textarea><button type="button">Speichern</button></div>` : "")
+    + (o.neu ? `<button data-neu="1"><span style="color:${ST.neu.c}">${I.newtask}</span>neue Aufgabe auf …</button><div class="nrow" hidden><input type="date" value="${o.date || ""}" aria-label="Datum"><button type="button">Eintragen</button></div>` : "");
+  document.body.appendChild(menuEl);
+  const place = () => { const r = anchor.getBoundingClientRect(), mw = menuEl.offsetWidth, mh = menuEl.offsetHeight;
+    menuEl.style.left = Math.max(8, Math.min(innerWidth - mw - 8, r.left)) + "px";
+    menuEl.style.top = (r.bottom + mh + 8 > innerHeight ? Math.max(8, r.top - mh - 4) : r.bottom + 4) + "px"; };
+  place();
+  menuEl.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { pick(b.dataset.st); closeMenu(); });
+  const nn = menuEl.querySelector(".nnote");
+  if (nn) nn.querySelector("button").onclick = () => { o.onNote(nn.querySelector("textarea").value.trim()); closeMenu(); };
+  const nb = menuEl.querySelector("[data-neu]");
+  if (nb) { const row = menuEl.querySelector(".nrow:not(.nnote)");
+    nb.onclick = () => { row.hidden = false; place(); row.querySelector("input").focus(); };
+    row.querySelector("button").onclick = () => { const v = row.querySelector("input").value; if (!v) return; closeMenu(); o.neu(v); }; }
+  const h = ev => { if (!menuEl) { document.removeEventListener("pointerdown", h, true); return; } if (!menuEl.contains(ev.target)) { closeMenu(); document.removeEventListener("pointerdown", h, true); } };
+  setTimeout(() => document.addEventListener("pointerdown", h, true), 0);
+}
+function openKlasse(){
+  if (KIDM) return;
+  const d = { klasse:S.klasse, list:S.sus.map(s => s.name).join("\n"), settings:clone(S.settings) };
+  openPanel("Klasse und Aussehen", [["k","k"]], "k", (t, pb) => {
+    pb.innerHTML = `
+      <div><label class="lbl" for="kIn">Name der Klasse</label><input class="inp hand" id="kIn" value="${esc(d.klasse)}"></div>
+      ${KN ? `<div><span class="lbl">Schülerinnen und Schüler</span><div class="hint" style="margin-top:0">Die Kinder kommen aus dem Knobelnest (${S.sus.length}). Neue Kinder trägst du dort unter «Kinder» ein.</div></div>
+      <div><span class="lbl">Aufgaben übernehmen</span><div class="row"><label class="btn" style="cursor:pointer">Datei importieren …<input type="file" id="impIn" accept=".json,application/json" hidden></label></div><div class="hint" id="impHint">Aufgaben aus der bisherigen Hausaufgabentafel. Kontrollen und Notizen werden über den Vornamen den Kindern zugeordnet.</div></div>` : `<div><label class="lbl" for="sIn">Schülerinnen und Schüler · eine Person pro Zeile</label><textarea class="inp" id="sIn" style="min-height:220px;font-family:var(--ui);font-size:15px">${esc(d.list)}</textarea><div class="hint">Die Reihenfolge ergibt die Nummern. Bereits kontrollierte Aufgaben bleiben erhalten, solange der Name gleich bleibt.</div></div>`}
+      <div><span class="lbl">Zeilen pro Tag</span><div class="row">${[[6,"gross"],[8,"mittel"],[10,"klein"]].map(([n,l]) => `<button class="opt${d.settings.lines === n ? " on" : ""}" data-l="${n}">${l} · ${n}</button>`).join("")}</div></div>
+      <div><span class="lbl">Handschrift</span><div class="row">${Object.entries(FONTS).map(([k,v]) => `<button class="opt${d.settings.font === k ? " on" : ""}" data-font="${k}" style="font-family:${esc(v)};font-size:17px">${k}</button>`).join("")}</div></div>
+      <div><span class="lbl">Umschlag</span><div class="row">${Object.entries(COVERS).map(([k,v]) => `<button class="sw${d.settings.cover === k ? " on" : ""}" data-cov="${k}" style="background:linear-gradient(160deg,${v[0]},${v[1]})" aria-label="Umschlag ${k}"></button>`).join("")}</div></div>`;
+    pb.querySelector("#kIn").oninput = ev => d.klasse = ev.target.value;
+    const sIn = pb.querySelector("#sIn"); if (sIn) sIn.oninput = ev => d.list = ev.target.value;
+    const impIn = pb.querySelector("#impIn");
+    if (impIn) impIn.onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ""; if (!f) return;
+      try { pb.querySelector("#impHint").textContent = importHeft(JSON.parse(await f.text())); }
+      catch { pb.querySelector("#impHint").textContent = "Diese Datei konnte nicht gelesen werden."; } };
+    pb.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { d.settings.lines = +b.dataset.l; pb.querySelectorAll("[data-l]").forEach(x => x.classList.toggle("on", x === b)); });
+    pb.querySelectorAll("[data-font]").forEach(b => b.onclick = () => { d.settings.font = b.dataset.font; pb.querySelectorAll("[data-font]").forEach(x => x.classList.toggle("on", x === b)); });
+    pb.querySelectorAll("[data-cov]").forEach(b => b.onclick = () => { d.settings.cover = b.dataset.cov; pb.querySelectorAll("[data-cov]").forEach(x => x.classList.toggle("on", x === b)); });
+  }, (t, pf) => {
+    pf.innerHTML = `<button class="btn go" id="okB">Speichern</button><button class="btn" data-close>Abbrechen</button>`;
+    pf.querySelector("[data-close]").onclick = closePanel;
+    pf.querySelector("#okB").onclick = () => {
+      S.klasse = d.klasse.trim() || "Meine Klasse";
+      if (KN) { S.settings = d.settings; save(); render(); closePanel(); toast("Gespeichert"); return; }
+      const names = d.list.split("\n").map(x => x.replace(/^\s*\d+\s*[-–.·)]\s*/, "").trim()).filter(Boolean);
+      const pool = S.sus.slice();
+      S.sus = names.map(n => { const i = pool.findIndex(s => s.name === n); return i >= 0 ? pool.splice(i, 1)[0] : { id:uid(), name:n }; });
+      S.settings = d.settings; save(); render(); closePanel(); toast("Gespeichert");
+    };
+  });
+}
+
+// ---------- Import aus der bisherigen Hausaufgabentafel ----------
+function importHeft(raw){
+  const src = norm(raw && raw.data && raw.data.entries ? raw.data : raw);
+  const key = n => String(n || "").normalize("NFC").replace(/^\s*\d+\s*[-–.·)]?\s*/, "").trim().toLowerCase();
+  const byName = {}; S.sus.forEach(k => { byName[key(k.name)] = k.id; });
+  const map = {}, miss = [];
+  (Array.isArray(raw && raw.data ? raw.data.sus : raw.sus) ? (raw.data ? raw.data.sus : raw.sus) : []).forEach(s0 => { const id = byName[key(s0.name)]; if (id) map[s0.id] = id; else miss.push(s0.name); });
+  const remap = o => { const r = {}; if (o && typeof o === "object") Object.keys(o).forEach(k => { if (map[k]) r[map[k]] = o[k]; }); return r; };
+  const have = new Set(S.entries.map(e => e.id)); let n = 0;
+  src.entries.forEach(e0 => {
+    if (have.has(e0.id)) return;
+    const e = clone(e0);
+    ["status", "notes", "first", "neuAuf"].forEach(k => { if (e[k]) e[k] = remap(e[k]); });
+    if (Array.isArray(e.for) && e.for.length) { e.for = e.for.map(x => map[x]).filter(Boolean); if (!e.for.length) return; }
+    S.entries.push(e); n++;
+  });
+  S.kidNotes = Object.assign(S.kidNotes || {}, remap(src.kidNotes));
+  if (n && src.settings) S.settings = Object.assign(S.settings, src.settings);
+  save(); render();
+  return `${n} ${n === 1 ? "Eintrag" : "Einträge"} übernommen · ${Object.keys(map).length} von ${Object.keys(map).length + miss.length} Kindern zugeordnet` + (miss.length ? `. Nicht gefunden: ${miss.join(", ")}` : ".");
+}
+
+// ---------- Auswertung ----------
+const CATS = [
+  { k:"gemacht", label:"gemacht", c:"#3f9a52", i:"check" },
+  { k:"nachgeholt", label:"nachgeholt", c:"#3f9a52", i:"check", stripe:true },
+  { k:"teil", label:"teilweise gemacht", c:"#e39a2d", i:"part" },
+  { k:"korr", label:"noch korrigieren", c:"#e39a2d", i:"ab" },
+  { k:"spaet", label:"zu spät abgegeben", c:"#e39a2d", i:"clock" },
+  { k:"nicht", label:"nicht erledigt", c:"#d0493f", i:"x" },
+  { k:"neu", label:"neue Aufgabe auf …", c:"#d0493f", i:"newtask" },
+  { k:"offen", label:"noch nicht kontrolliert", c:"#8a948d", i:"undo" }
+];
+const CATMAP = Object.fromEntries(CATS.map(c => [c.k, c]));
+// Gruppen fürs Diagramm (Reihenfolge fix): auf Anhieb gemacht, nachgeholt, teilweise/korrigieren/zu spät, nicht gemacht
+const GROUPS = [
+  { k:"g", label:"auf Anhieb gemacht", c:"#3f9a52", cats:["gemacht"] },
+  { k:"n", label:"nachgeholt", c:"url(#stripeNG)", sw:"repeating-linear-gradient(135deg,#3f9a52 0 3px,#e39a2d 3px 6px)", cats:["nachgeholt"] },
+  { k:"t", label:"teilweise · korrigieren · zu spät", c:"#e39a2d", cats:["teil","korr","spaet"] },
+  { k:"x", label:"nicht gemacht", c:"#d0493f", cats:["nicht","neu"] }
+];
+const catOf = (e, sid) => { const st = (e.status || {})[sid] || "offen"; if (st === "gemacht") return firstOf(e, sid) ? "nachgeholt" : "gemacht"; if (st === "nachher") return "nachgeholt"; return CATMAP[st] ? st : "offen"; };
+const R_ = { kid:"", from:"", to:"", preset:"4w", group:"w", cat:"gemacht", all:false };
+function presetRange(p){
+  const t = new Date(), mon = monday(t);
+  if (p === "w") return [iso(mon), iso(addDays(mon, 6))];
+  if (p === "4w") return [iso(addDays(mon, -21)), iso(addDays(mon, 6))];
+  if (p === "m") return [iso(new Date(t.getFullYear(), t.getMonth(), 1)), iso(new Date(t.getFullYear(), t.getMonth() + 1, 0))];
+  const y = t.getMonth() >= 7 ? t.getFullYear() : t.getFullYear() - 1;
+  return [`${y}-08-01`, iso(addDays(mon, 6))];
+}
+function items(){
+  const out = [];
+  for (const e of S.entries) {
+    if (e.type !== "aufgabe" || e.from || e.date < R_.from || e.date > R_.to) continue;
+    for (const s of forList(e)) { if (R_.kid && s.id !== R_.kid) continue; out.push({ e, s, cat:catOf(e, s.id) }); }
+  }
+  return out.sort((a, b) => a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : (a.s.name > b.s.name ? 1 : -1));
+}
+function buckets(){
+  const list = [], end = parse(R_.to);
+  let d = parse(R_.from);
+  if (R_.group === "w") d = monday(d);
+  if (R_.group === "m") d = new Date(d.getFullYear(), d.getMonth(), 1);
+  for (let guard = 0; d <= end && guard < 400; guard++) {
+    if (R_.group === "d") { const wd = d.getDay(); if (wd !== 0 && wd !== 6) list.push({ a:iso(d), b:iso(d), label:`${WD[wd].slice(0,2)} ${d.getDate()}.${d.getMonth()+1}.`, l1:WD[wd].slice(0,2), l2:`${d.getDate()}.${d.getMonth()+1}.` }); d = addDays(d, 1); }
+    else if (R_.group === "w") { list.push({ a:iso(d), b:iso(addDays(d, 6)), label:`KW ${isoWeek(d)}`, l1:`KW ${isoWeek(d)}`, l2:`${d.getDate()}.${d.getMonth()+1}.` }); d = addDays(d, 7); }
+    else { const z = new Date(d.getFullYear(), d.getMonth() + 1, 0); list.push({ a:iso(d), b:iso(z), label:MO[d.getMonth()] + " " + d.getFullYear(), l1:MO[d.getMonth()].slice(0,3), l2:String(d.getFullYear()) }); d = new Date(d.getFullYear(), d.getMonth() + 1, 1); }
+  }
+  return list;
+}
+function chartSVG(all){
+  const bs = buckets().map(b => {
+    const its = all.filter(x => x.e.date >= b.a && x.e.date <= b.b && x.cat !== "offen");
+    const n = Object.fromEntries(GROUPS.map(g => [g.k, its.filter(x => g.cats.includes(x.cat)).length]));
+    return { ...b, n, tot:its.length };
+  });
+  const slot0 = R_.group === "d" ? 44 : 64, H = 244, top = 26, bot = 44, ph = H - top - bot, left = 38;
+  const avail = Math.max(320, ($("#rwrap").clientWidth || 900) - 70), W = Math.max(avail, left + bs.length * slot0 + 10), slot = bs.length ? Math.min(140, (W - left - 10) / bs.length) : slot0, bw = Math.min(46, slot * .55);
+  let g = `<defs><pattern id="stripeNG" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#3f9a52"/><rect width="4" height="8" fill="#e39a2d"/></pattern></defs>`;
+  for (const p of [0, 50, 100]) { const y = top + ph * (1 - p / 100); g += `<line x1="${left}" x2="${W - 4}" y1="${y}" y2="${y}" stroke="#e3e6df" stroke-width="1"${p ? ' stroke-dasharray="2 4"' : ""}/><text x="${left - 6}" y="${y + 4}" text-anchor="end">${p}%</text>`; }
+  bs.forEach((b, i) => {
+    const x = left + i * slot + (slot - bw) / 2, cx = x + bw / 2;
+    if (b.tot) {
+      let y = top + ph; const segs = GROUPS.filter(gr => b.n[gr.k]);
+      segs.forEach((gr, j) => {
+        const h = ph * b.n[gr.k] / b.tot, gap = j < segs.length - 1 ? 2 : 0, last = j === segs.length - 1;
+        const yy = y - h, hh = Math.max(0, h - gap);
+        g += last ? `<path d="M${x} ${yy + hh}V${yy + Math.min(4, hh)}Q${x} ${yy} ${x + 4} ${yy}H${x + bw - 4}Q${x + bw} ${yy} ${x + bw} ${yy + Math.min(4, hh)}V${yy + hh}Z" fill="${gr.c}"/>` : `<rect x="${x}" y="${yy + gap}" width="${bw}" height="${hh}" fill="${gr.c}"/>`;
+        y = yy;
+      });
+      const pct = Math.round(100 * b.n.g / b.tot);
+      g += `<text class="pct" x="${cx}" y="${top - 8}" text-anchor="middle">${pct}%</text>`;
+    } else g += `<text x="${cx}" y="${top + ph - 6}" text-anchor="middle">–</text>`;
+    g += `<text x="${cx}" y="${H - 24}" text-anchor="middle" style="font-weight:700">${esc(b.l1)}</text><text x="${cx}" y="${H - 8}" text-anchor="middle">${esc(b.l2)}</text>`;
+    g += `<rect class="hit" tabindex="0" data-b="${i}" x="${left + i * slot}" y="0" width="${slot}" height="${H}" rx="8"/>`;
+  });
+  return { html:`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Anteil gemachter Aufgaben pro ${R_.group === "d" ? "Tag" : R_.group === "w" ? "Woche" : "Monat"}">${g}</svg>`, bs };
+}
+function renderReport(){
+  const all = items(), kid = S.sus.find(s => s.id === R_.kid);
+  const cnt = Object.fromEntries(CATS.map(c => [c.k, all.filter(x => x.cat === c.k).length]));
+  const sel = all.filter(x => x.cat === R_.cat), sc = CATMAP[R_.cat];
+  const ch = chartSVG(all);
+  const presets = [["w","Diese Woche"],["4w","Letzte 4 Wochen"],["m","Dieser Monat"],["j","Seit Sommerferien"]];
+  const kidRows = R_.kid ? "" : S.sus.map(s => {
+    const mine = all.filter(x => x.s.id === s.id), n = k => mine.filter(x => GROUPS.find(g => g.k === k).cats.includes(x.cat)).length;
+    const done = mine.filter(x => x.cat !== "offen").length, q = done ? Math.round(100 * n("g") / done) : null;
+    const seg = k => done ? `<i style="width:${100 * n(k) / done}%;background:${GROUPS.find(g => g.k === k).sw || GROUPS.find(g => g.k === k).c}"></i>` : "";
+    return `<tr class="kr" data-kid="${s.id}" tabindex="0"><td><b>${S.sus.indexOf(s) + 1}</b> · ${esc(s.name)}</td><td>${n("g")}</td><td>${n("n")}</td><td>${n("t")}</td><td>${n("x")}</td><td>${mine.length - done}</td><td>${q === null ? "–" : q + "%"}</td><td><span class="bar">${seg("g")}${seg("n")}${seg("t")}${seg("x")}</span></td></tr>`;
+  }).join("");
+  $("#rwrap").innerHTML = `
+    <div class="rtop"><button class="pill" id="repBack">‹ Zur Agenda</button><h1>Auswertung</h1><span class="hint" id="pdfHint"></span><button class="pill rose" id="pdfBtn">${I.pen.replace("<svg", '<svg width="16" height="16"')} ${R_.kid ? "Für Eltern drucken (PDF)" : "Für alle Eltern drucken (PDF)"}</button></div>
+    <div class="rcard filters">
+      <div class="fgrp"><span class="lbl">Kind</span><select class="pill" id="rKid"><option value="">Ganze Klasse</option>${S.sus.map(s => `<option value="${s.id}"${s.id === R_.kid ? " selected" : ""}>${S.sus.indexOf(s) + 1} · ${esc(s.name)}</option>`).join("")}</select></div>
+      <div class="fgrp"><span class="lbl">Zeitraum</span><div class="row">${presets.map(([k,l]) => `<button class="opt${R_.preset === k ? " on" : ""}" data-pre="${k}">${l}</button>`).join("")}</div></div>
+      <div class="fgrp"><span class="lbl">von – bis</span><div class="row"><input class="inp" type="date" id="rFrom" value="${R_.from}" style="width:auto;padding:6px 10px"><span>–</span><input class="inp" type="date" id="rTo" value="${R_.to}" style="width:auto;padding:6px 10px"></div></div>
+    </div>
+    ${kid ? `<div class="rcard"><label class="lbl" for="kNote">Bemerkung der Lehrperson · wird im PDF für die Eltern mitgedruckt</label><textarea class="inp" id="kNote" rows="3" style="font-family:var(--ui);font-size:15px;min-height:80px;resize:vertical" placeholder="z. B. Hausaufgabenstunde wäre eine Idee. Häufig fehlen Aufgaben in Mathematik.">${esc((S.kidNotes || {})[kid.id] || "")}</textarea><div class="hint" id="kNoteHint">Wird automatisch gespeichert und bleibt für dieses Kind, auch wenn du den Zeitraum wechselst.</div></div>` : ""}
+    <div class="rcard"><h2>${kid ? esc(kid.name) : "Ganze Klasse"}<small>${shortDate(R_.from)} – ${shortDate(R_.to)} · ${all.length} ${kid ? "Aufgaben" : "Aufgaben × Kinder"}</small></h2>
+      <div class="tiles">${CATS.map(c => `<button class="tile${R_.cat === c.k ? " on" : ""}${cnt[c.k] ? "" : " zero"}" data-cat="${c.k}" style="--tc:${c.c}${c.stripe ? `;background-image:linear-gradient(#fff,#fff),repeating-linear-gradient(135deg,#3f9a52 0 4px,#e39a2d 4px 8px);background-origin:border-box;background-clip:padding-box,border-box;border-color:transparent` : ""}"><span class="tn">${cnt[c.k]}</span><span class="tl">${I[c.i]}${c.label.replace(" …", "")}</span></button>`).join("")}</div></div>
+    <div class="rcard"><h2>${esc(sc.label.replace(" …", ""))}<small>${sel.length} ${sel.length === 1 ? "Eintrag" : "Einträge"} · antippen öffnet die Aufgabe</small></h2>
+      <div class="dlist">${sel.length ? sel.slice(0, R_.all ? 9999 : 8).map(x => {
+        const e = x.e, f = firstOf(e, x.s.id) || ((e.status || {})[x.s.id] === "nachher" ? "nicht" : null);
+        const extra = [];
+        if (!R_.kid) extra.push(`<span class="tag" style="--tc:#6c766f">${esc(x.s.name)}</span>`);
+        if (x.cat === "neu" && e.neuAuf && e.neuAuf[x.s.id]) extra.push(`<span class="tag" style="--tc:#d0493f">${I.newtask} neu auf ${shortDate(e.neuAuf[x.s.id])}</span>`);
+        if (x.cat === "nachgeholt" && f) extra.push(`<span class="tag" style="--tc:${ST[f].c}">${I[ST[f].i]} zuerst ${esc(f === "neu" ? "nicht gemacht" : ST[f].label)}${e.neuAuf && e.neuAuf[x.s.id] ? `, nachgeholt am ${shortDate(e.neuAuf[x.s.id])}` : ""}</span>`);
+        const note = e.notes && e.notes[x.s.id];
+        return `<button class="drow" data-open="${e.id}"><span class="dd">${shortDate(e.date)}</span><span class="dt">${e.fach ? esc(e.fach) + ": " : ""}${esc(textOf(e.title))}${e.zeit ? ` <span style="opacity:.8">(${esc(/^\d+$/.test(e.zeit) ? e.zeit + " Min." : e.zeit)})</span>` : ""}</span><span class="dx">${extra.join("")}</span>${note ? `<span class="dn">Notiz: ${esc(note)}</span>` : ""}</button>`;
+      }).join("") + (sel.length > 8 && !R_.all ? `<button class="btn" id="showAll" style="align-self:flex-start;margin-top:10px">Alle ${sel.length} zeigen</button>` : "") : `<div class="empty2">In diesem Zeitraum nichts mit «${esc(sc.label.replace(" …", ""))}».</div>`}</div></div>
+    <div class="rcard"><h2>Verlauf<small>Anteil der kontrollierten Aufgaben · Zahl oben = auf Anhieb gemacht</small></h2>
+      <div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="legend" style="margin:0">${GROUPS.map(gr => `<span><i style="background:${gr.sw || gr.c}"></i>${gr.label}</span>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Einteilung">${[["d","Tag"],["w","Woche"],["m","Monat"]].map(([k,l]) => `<button class="${R_.group === k ? "on" : ""}" data-grp="${k}">${l}</button>`).join("")}</div></div>
+      <div class="chartbox" id="chartbox">${ch.html}</div></div>
+    ${R_.kid ? "" : `<div class="rcard"><h2>Pro Kind<small>antippen zeigt die Auswertung für dieses Kind</small></h2><div style="overflow-x:auto"><table class="ktable"><thead><tr><th>Kind</th><th>gemacht</th><th>nachgeholt</th><th>teilw. · korr. · spät</th><th>nicht</th><th>offen</th><th>auf Anhieb</th><th></th></tr></thead><tbody>${kidRows}</tbody></table></div></div>`}`;
+  $("#repBack").onclick = closeReport;
+  $("#pdfBtn").onclick = makePDF;
+  const kN = $("#kNote");
+  if (kN) kN.oninput = () => { S.kidNotes = S.kidNotes || {}; const v = kN.value.trim(); if (v) S.kidNotes[R_.kid] = kN.value; else delete S.kidNotes[R_.kid]; save(); $("#kNoteHint").textContent = "Gespeichert."; };
+  $("#rKid").onchange = ev => { R_.kid = ev.target.value; renderReport(); };
+  document.querySelectorAll("[data-pre]").forEach(b => b.onclick = () => { R_.preset = b.dataset.pre; [R_.from, R_.to] = presetRange(R_.preset); renderReport(); });
+  $("#rFrom").onchange = ev => { if (ev.target.value) { R_.from = ev.target.value; R_.preset = ""; if (R_.to < R_.from) R_.to = R_.from; renderReport(); } };
+  $("#rTo").onchange = ev => { if (ev.target.value) { R_.to = ev.target.value; R_.preset = ""; if (R_.to < R_.from) R_.from = R_.to; renderReport(); } };
+  document.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { R_.cat = b.dataset.cat; R_.all = false; renderReport(); });
+  const sa = $("#showAll"); if (sa) sa.onclick = () => { R_.all = true; renderReport(); };
+  document.querySelectorAll("[data-grp]").forEach(b => b.onclick = () => { R_.group = b.dataset.grp; renderReport(); });
+  document.querySelectorAll("tr.kr").forEach(r => { const go = () => { R_.kid = r.dataset.kid; renderReport(); $("#report").scrollTop = 0; }; r.onclick = go; r.onkeydown = ev => { if (ev.key === "Enter") go(); }; });
+  document.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { const e = S.entries.find(x => x.id === b.dataset.open); if (!e) return; closeReport(); week = monday(parse(e.date)); if (R_.kid) who = R_.kid; render(); openEntry(e.id, null, "kontrolle"); });
+  const tip = $("#ctip");
+  const show = (el, i) => { const b = ch.bs[i], r = el.getBoundingClientRect();
+    tip.innerHTML = `<b>${esc(b.label)} · ${shortDate(b.a)}${b.a !== b.b ? " – " + shortDate(b.b) : ""}</b>` + (b.tot ? GROUPS.map(gr => `<div><span><i style="background:${gr.sw || gr.c}"></i>${gr.label}</span><b style="margin:0">${b.n[gr.k]}</b></div>`).join("") : "<div>noch nichts kontrolliert</div>");
+    tip.hidden = false; const w = tip.offsetWidth; tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px"; tip.style.top = Math.max(8, r.top - tip.offsetHeight + 20) + "px"; };
+  document.querySelectorAll("#chartbox .hit").forEach(h => { const i = +h.dataset.b; h.addEventListener("mouseenter", () => show(h, i)); h.addEventListener("focus", () => show(h, i)); h.addEventListener("mouseleave", () => tip.hidden = true); h.addEventListener("blur", () => tip.hidden = true); });
+}
+// ---------- PDF für die Eltern (eine Seite pro Kind, mit Unterschriftenfeld) ----------
+let jspdfP = null;
+const loadJsPDF = () => jspdfP || (jspdfP = new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"; sc.onload = () => ok(window.jspdf.jsPDF); sc.onerror = () => { jspdfP = null; bad(); }; document.head.appendChild(sc); }));
+const pdfTxt = t => String(t || "").replace(/[–—]/g, "-").replace(/↳/g, "->").replace(/…/g, "...").replace(/×/g, "x").replace(/[^\x20-\xFF\n]/g, "");
+const dmy = s0 => { const d = parse(s0); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; };
+const hexArr = h => hexRGB(h);
+function pdfKid(doc, kid){
+  const W = 210, M = 18, CW = W - 2 * M;
+  const saveKid = R_.kid; R_.kid = kid.id; const all = items(); R_.kid = saveKid;
+  const n = k => all.filter(x => GROUPS.find(g => g.k === k).cats.includes(x.cat)).length;
+  const offen = all.filter(x => x.cat === "offen").length, done = all.length - offen;
+  let y = 22;
+  doc.setTextColor(31, 36, 33);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(19); doc.text("Hausaufgaben-Übersicht", M, y);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(108, 118, 111); doc.text(pdfTxt(S.klasse), W - M, y, { align:"right" });
+  y += 9; doc.setTextColor(31, 36, 33); doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.text(pdfTxt(kid.name), M, y);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.text(`Zeitraum: ${dmy(R_.from)} - ${dmy(R_.to)}   ·   ${all.length} Aufgaben, davon ${done} kontrolliert`.replace("·", "|"), M + 0, y + 6);
+  y += 14;
+  // Kacheln
+  const bw = (CW - 9) / 4;
+  GROUPS.forEach((g, i) => {
+    const x = M + i * (bw + 3);
+    doc.setDrawColor(227, 230, 223); doc.setLineWidth(.3); doc.roundedRect(x, y, bw, 20, 2.5, 2.5, "S");
+    pdfFill(doc, g, x + 3, y + 4, 4, 4);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(31, 36, 33); doc.text(String(n(g.k)), x + 9, y + 9.2);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.2); doc.setTextColor(108, 118, 111);
+    doc.text(doc.splitTextToSize(pdfTxt(g.label), bw - 6), x + 3, y + 14.5);
+  });
+  y += 24;
+  doc.setFontSize(9); doc.setTextColor(108, 118, 111);
+  doc.text(`${done ? Math.round(100 * n("g") / done) : 0}% der kontrollierten Aufgaben auf Anhieb gemacht.${offen ? `  ${offen} noch nicht kontrolliert.` : ""}`, M, y + 2);
+  y += 9;
+  // Verlauf
+  const bs = buckets().map(b => { const its = all.filter(x => x.e.date >= b.a && x.e.date <= b.b && x.cat !== "offen"); return { ...b, n:Object.fromEntries(GROUPS.map(g => [g.k, its.filter(x => g.cats.includes(x.cat)).length])), tot:its.length }; });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(31, 36, 33);
+  doc.text(`Verlauf pro ${R_.group === "d" ? "Tag" : R_.group === "w" ? "Woche" : "Monat"}`, M, y); y += 4;
+  const ch = 38, left = M + 9, slot = Math.min(16, (CW - 9) / Math.max(1, bs.length)), barW = slot * .6;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(108, 118, 111);
+  [0, 50, 100].forEach(p => { const yy = y + 5 + ch * (1 - p / 100); doc.setDrawColor(227, 230, 223); doc.line(left, yy, left + slot * bs.length, yy); doc.text(p + "%", left - 1.5, yy + 1, { align:"right" }); });
+  bs.forEach((b, i) => {
+    const x = left + i * slot + (slot - barW) / 2;
+    if (b.tot) {
+      let yy = y + 5 + ch;
+      GROUPS.forEach(g => { if (!b.n[g.k]) return; const h = ch * b.n[g.k] / b.tot; pdfFill(doc, g, x, yy - h, barW, Math.max(0, h - .5)); yy -= h; });
+      doc.setTextColor(31, 36, 33); doc.setFont("helvetica", "bold"); doc.text(Math.round(100 * b.n.g / b.tot) + "%", x + barW / 2, y + 3.4, { align:"center" }); doc.setFont("helvetica", "normal");
+    }
+    doc.setTextColor(108, 118, 111);
+    if (bs.length <= 26 || i % 2 === 0) { doc.text(pdfTxt(b.l1), x + barW / 2, y + ch + 9, { align:"center" }); doc.text(pdfTxt(b.l2), x + barW / 2, y + ch + 12.2, { align:"center" }); }
+  });
+  y += ch + 20;
+  // Legende
+  doc.setFontSize(8); let lx = M;
+  GROUPS.forEach(g => { pdfFill(doc, g, lx, y - 2.6, 3, 3); doc.setTextColor(108, 118, 111); doc.text(pdfTxt(g.label), lx + 4.5, y); lx += doc.getTextWidth(pdfTxt(g.label)) + 10; });
+  y += 9;
+  // Liste
+  const list = all.filter(x => x.cat !== "gemacht" && x.cat !== "offen").sort((a, b) => a.e.date < b.e.date ? -1 : 1);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(31, 36, 33);
+  doc.text(list.length ? "Was nicht ganz geklappt hat" : "Alle kontrollierten Aufgaben wurden auf Anhieb gemacht.", M, y); y += 5;
+  const kn = pdfTxt(((S.kidNotes || {})[kid.id] || "").trim());
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  const noteLines = kn ? doc.splitTextToSize(kn, CW - 10) : [], noteH = kn ? 9 + noteLines.length * 4.7 + 8 : 0;
+  const sigH = 20 + noteH, pageEnd = 297 - 14;
+  if (list.length) {
+    doc.setFontSize(8); doc.setTextColor(108, 118, 111); doc.setFont("helvetica", "bold");
+    doc.text("DATUM", M, y); doc.text("AUFGABE", M + 22, y); doc.text("STATUS", M + 112, y); y += 2;
+    doc.setDrawColor(227, 230, 223); doc.line(M, y, W - M, y); y += 4.5;
+    for (const x of list) {
+      const e = x.e, c = CATMAP[x.cat], f = firstOf(e, kid.id) || ((e.status || {})[kid.id] === "nachher" ? "nicht" : null);
+      let st = x.cat === "nachgeholt" && f ? `nachgeholt (zuerst ${f === "neu" ? "nicht gemacht" : ST[f].label})` : x.cat === "neu" && e.neuAuf && e.neuAuf[kid.id] ? `nicht gemacht, neu auf ${shortDate(e.neuAuf[kid.id])}` : c.label.replace(" …", "");
+      const note = e.notes && e.notes[kid.id];
+      const t1 = doc.splitTextToSize(pdfTxt(`${e.fach ? e.fach + ": " : ""}${textOf(e.title)}`), 86), t2 = doc.splitTextToSize(pdfTxt(st + (note ? ` - Notiz: ${note}` : "")), CW - 112);
+      const h = Math.max(t1.length, t2.length) * 4.2 + 2.2;
+      if (y + h > pageEnd) { doc.addPage(); y = 22; }
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(31, 36, 33);
+      doc.text(shortDate(e.date), M, y); doc.text(t1, M + 22, y);
+      const g = GROUPS.find(gg => gg.cats.includes(x.cat)); pdfFill(doc, g, M + 112, y - 2.6, 3, 3);
+      doc.text(t2, M + 117, y);
+      y += h; doc.setDrawColor(238, 240, 236); doc.line(M, y - 3.4, W - M, y - 3.4);
+    }
+  }
+  // Bemerkung der Lehrperson und Unterschrift
+  if (y + sigH > pageEnd) { doc.addPage(); y = 22; } else y = Math.max(y + 6, pageEnd - sigH);
+  doc.setDrawColor(200, 205, 200); doc.setLineWidth(.3);
+  if (kn) {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(31, 36, 33); doc.text("Bemerkung der Lehrperson", M, y);
+    const bh = noteLines.length * 4.7 + 6;
+    doc.setFillColor(246, 248, 243); doc.setDrawColor(227, 230, 223); doc.roundedRect(M, y + 3, CW, bh, 2.5, 2.5, "FD");
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.text(noteLines, M + 5, y + 8.5);
+    y += noteH; doc.setDrawColor(200, 205, 200);
+  }
+  y += 12;
+  doc.line(M, y, M + 95, y); doc.line(M + 110, y, W - M, y);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(108, 118, 111);
+  doc.text("Unterschrift einer erziehungsberechtigten Person", M, y + 4.5); doc.text("Datum", M + 110, y + 4.5);
+  doc.setFontSize(7.5); doc.text(`Erstellt am ${dmy(iso(new Date()))}`, W - M, 297 - 8, { align:"right" });
+}
+function pdfFill(doc, g, x, y, w, h){
+  if (h <= 0 || w <= 0) return;
+  if (g.k === "n") { // gestreift grün/orange
+    const st = 1.1; for (let yy = 0, i = 0; yy < h; yy += st, i++) { const c = i % 2 ? hexArr("#e39a2d") : hexArr("#3f9a52"); doc.setFillColor(...c); doc.rect(x, y + yy, w, Math.min(st, h - yy), "F"); }
+    return;
+  }
+  doc.setFillColor(...hexArr(g.c)); doc.rect(x, y, w, h, "F");
+}
+async function makePDF(){
+  const hint = $("#pdfHint"), btn = $("#pdfBtn");
+  const dl = window.claude?.use ? await window.claude.use("downloads").catch(() => null) : null;
+  if (!dl) { hint.textContent = "Das PDF lässt sich nur in der veröffentlichten Tafel speichern."; return; }
+  const kids = R_.kid ? S.sus.filter(s => s.id === R_.kid) : S.sus;
+  if (!kids.length) { hint.textContent = "Trag zuerst die Kinder der Klasse ein."; return; }
+  btn.disabled = true; hint.textContent = "PDF wird erstellt …";
+  try {
+    const JsPDF = await loadJsPDF();
+    const doc = new JsPDF({ unit:"mm", format:"a4" });
+    kids.forEach((k, i) => { if (i) doc.addPage(); pdfKid(doc, k); });
+    const nm = (R_.kid ? kids[0].name : S.klasse).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "_");
+    await dl.save({ filename:`Hausaufgaben_${nm}_${R_.from}_bis_${R_.to}.pdf`, data:doc.output("arraybuffer") });
+    hint.textContent = "PDF gespeichert. Öffne es und drucke es aus.";
+  } catch (err) {
+    hint.textContent = err && err.code === "declined" ? "" : !window.jspdf ? "Das PDF-Werkzeug konnte nicht geladen werden. Versuch es nochmals." : "Das PDF konnte nicht gespeichert werden.";
+  }
+  btn.disabled = false;
+}
+function openReport(){
+  if (KIDM) return; if (!R_.from) [R_.from, R_.to] = presetRange(R_.preset); R_.kid = who || R_.kid; closePanel(); $("#report").hidden = false; renderReport(); }
+function closeReport(){ $("#report").hidden = true; $("#ctip").hidden = true; }
+$("#repBtn").onclick = openReport;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#report").hidden && !$("#layer").innerHTML) closeReport(); });
+
+// ---------- Laden ----------
+const cached = lsGet();
+if (cached) { S = norm(cached); loaded = true; }
+render();
+setStatus(cached ? "Gespeichert auf diesem Gerät" : "Lädt …");
+(async () => {
+  try {
+    if (!window.claude?.use) throw 0;
+    const db = await window.claude.use("db");
+    if (!db) throw 0;
+    store = { mode:"db", ref:db.doc("agenda/klasse") };
+    window.claude.use("assets").then(a => { assets = a; }).catch(() => {});
+    const snap = await store.ref.get();
+    if (snap.exists) { S = norm(snap.data()); lsSet(S); }
+    else if (cached && (cached.entries?.length || cached.sus?.length)) { dirty = true; flush(); }
+    loaded = true; render(); setStatus("Gespeichert ✓");
+    store.ref.onSnapshot(s => {
+      if (!s.exists || dirty || flushing) return;
+      const j = JSON.stringify(s.data()); if (j === lastWrite || j === JSON.stringify(S)) return;
+      S = norm(s.data()); lsSet(S); if (!layer.innerHTML) render();
+    }, () => {});
+  } catch { loaded = true; render(); setStatus("Gespeichert auf diesem Gerät"); }
+})();
+})();
+</script>
+
+</body></html>

@@ -453,3 +453,7 @@ button.zr-st{cursor:pointer}
 .vbf i.f2{background:#F8E39A}.vbf i.f3{background:#F1D06A}.vbf i.f4{background:#E9BE3E}.vbf i.f5{background:#D9A514}
 .vbf i.z{background:#F1F2F4;color:#9AA3AD}
 .big-tile .vbn{font-size:15px}.big-tile .vbf i{font-size:16px;padding:5px 2px}
+
+/* Hausaufgabenheft-Kachel der Kinder */
+.heft-tile{background:#DCEBD3}
+.heft-tile span span{color:#3F5E33}

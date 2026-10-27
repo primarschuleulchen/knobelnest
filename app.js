@@ -311,6 +311,8 @@
     if (m) return W.start(m[1], !!m[2]);
     var mf = hs.match(/^#\/tagesfolie\/([0-9a-f-]{36})/);
     if (mf) return F.start(mf[1]);
+    var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
+    if (mh) return H.start(mh[1]);
     var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
     if (ms) return S.start(ms[1]);
     return T.start();
@@ -545,7 +547,48 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('35') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('36') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
+    }
+  };
+  // ===================================================================
+  // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
+  // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
+  // ===================================================================
+  var HEFT_VER = '1';
+  function heftDownloads() {
+    return { save: async function (o) {
+      var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
+      a.href = u; a.download = o.filename || 'Hausaufgaben.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+    } };
+  }
+  var H = {
+    start: async function (cid) {
+      UI.view = 'heft';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      app.innerHTML = '<p class="boot">Hausaufgabenheft wird geladen …</p>';
+      var cls, kids;
+      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); }
+      catch (e) { cls = null; }
+      if (!cls) { paint('<div class="main"><div class="card stack"><h2>Hausaufgabenheft nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      var key = 'hat-' + cid;
+      var doc = {
+        get: async function () { var d = await DB.storeGet(key); return { exists: d != null, data: function () { return d; } }; },
+        set: async function (v) { await DB.storeSet(key, JSON.parse(JSON.stringify(v))); },
+        onSnapshot: function () { return function () {}; }
+      };
+      window.knHeft = {
+        mode: 'teacher', key: cid, className: 'Klasse ' + cls.name,
+        roster: (kids || []).slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; }),
+        back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
+        claude: { use: async function (name) {
+          if (name === 'db') return { doc: function () { return doc; }, collection: function () { return { doc: function () { return doc; } }; } };
+          if (name === 'assets') return { upload: async function (blob) { var u = await DB.storeUpload(blob); return { id: u, url: u, contentType: blob.type }; }, delete: async function () {} };
+          if (name === 'downloads') return heftDownloads();
+          return null;
+        } }
+      };
+      paint('<div class="folie"><iframe src="hausaufgaben.html?v=' + HEFT_VER + '" title="Hausaufgabenheft" allow="fullscreen"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
@@ -687,7 +730,7 @@
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
-      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a></div></div></section>';
+      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a><a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a></div></div></section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -1460,8 +1503,13 @@
   K.loadHome = async function () {
     try { K.home = await DB.kidHome(K.sess.token); }
     catch (e) { return K.sessionLost(e); }
-    K.render(); K.checkRace();
+    K.render(); K.checkRace(); K.checkHeft();
     if (!K.raceWatch) K.raceWatch = setInterval(function () { if (K.sess && UI.view === 'kid' && K.step === 'home' && !document.hidden) K.checkRace(); }, 4000);
+  };
+  // Gibt es ein Hausaufgabenheft für diese Klasse? Dann erscheint die Agenda-Kachel
+  K.checkHeft = async function () {
+    try { var d = await DB.kidHeft(K.sess.token); var has = !!(d && d.entries); if (has !== !!K.heftOk) { K.heftOk = has; if (K.step === 'home') K.render(); } }
+    catch (e) {}
   };
   K.sessionLost = function (e) {
     if (/Anmeldung|session/i.test((e && e.message) || '')) {
@@ -1524,6 +1572,9 @@
     return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
+      (K.heftOk ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="9" y="7" width="46" height="52" rx="6" fill="#87ad74"/><rect x="14" y="7" width="41" height="52" rx="4" fill="#6f9a5f"/><rect x="18" y="11" width="33" height="44" rx="3" fill="#fbfaf6"/><path d="M23 21h23M23 28h23M23 35h17M23 42h20" stroke="#c9d3c4" stroke-width="2.4" stroke-linecap="round"/><path d="M23 21h12" stroke="#2f6fd0" stroke-width="2.6" stroke-linecap="round"/><path d="M23 35h9" stroke="#d0493f" stroke-width="2.6" stroke-linecap="round"/><path d="M41 40l3 3 6-7" fill="none" stroke="#3f9a52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
+        '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
       '<span><b>Unsere Tafel</b><span>Zeig, wo du im Wochenplan stehst, und finde Hilfe.</span></span></button>', 'Abmelden');
   };
@@ -1553,6 +1604,25 @@
         '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px;' + fachBtn(g.fach) + '" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
     }).join('') + '</div>', 'Zurück');
   };
+  K.view_heft = function () {
+    var kid = K.home && K.home.kid; if (!kid) { K.step = 'home'; return K.view_home(); }
+    var doc = {
+      get: async function () { var d = await DB.kidHeft(K.sess.token); return { exists: d != null, data: function () { return d; } }; },
+      set: async function () { var e = new Error('Nur lesen'); e.code = 'forbidden'; throw e; },
+      onSnapshot: function () { return function () {}; }
+    };
+    window.knHeft = {
+      mode: 'kid', key: 'kind-' + kid.id, kidId: kid.id, className: '', roster: [],
+      back: function () { ACT.kBack(); },
+      claude: { use: async function (name) {
+        if (name === 'db') return { doc: function () { return doc; } };
+        if (name === 'downloads') return heftDownloads();
+        return null;
+      } }
+    };
+    return '<div class="folie"><iframe src="hausaufgaben.html?v=' + HEFT_VER + '" title="Hausaufgabenheft"></iframe></div>';
+  };
+  ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
     return board(K.tafel, 'kid');
@@ -1601,6 +1671,7 @@
       case 'games': var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
         K.step = th.length === 1 ? 'home' : 'thema'; break;
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
+      case 'heft': K.step = 'home'; K.render(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }
