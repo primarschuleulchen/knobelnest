@@ -212,6 +212,9 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 #knBack{margin-right:4px}
+.board{columns:auto!important;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px 20px;align-items:start}
+.board>.note{margin:0}
+.present-on .board{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
 .cm li{position:relative}
 .cmdel{margin-left:8px;border:0;background:rgba(255,255,255,.7);border-radius:999px;padding:1px 8px;font-size:.8rem;color:var(--muted);cursor:pointer;vertical-align:middle}
 .cmdel:hover{color:#b23b31;background:#fff}
