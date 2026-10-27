@@ -212,14 +212,27 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 #knBack{margin-right:4px}
+html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .pcats{display:flex;flex-direction:column;gap:12px;height:calc(100vh - 150px);min-height:420px}
 @media (max-width:1180px){.pcats{height:calc(100vh - 200px)}}
 .pc-head{display:flex;align-items:center;gap:16px}
 .pc-title{flex:1;margin:0;font-family:var(--bubble, inherit);font-size:clamp(28px,4vw,48px);color:var(--ink);border-bottom:4px solid var(--leaf, #7ea56a);padding-bottom:4px}
 .pc-count{color:var(--muted);font-weight:700}
 .pc-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-template-rows:repeat(var(--r),minmax(0,1fr));gap:clamp(8px,1.4vw,18px)}
-.pcard{margin:0;min-height:0;overflow:hidden;padding:clamp(10px,1.6vh,22px) clamp(12px,1.4vw,22px);justify-content:center;gap:6px}
-.pc-t{margin:0;font-family:var(--hand);line-height:1.15;font-size:calc(min(calc(11vh / var(--r)), calc(6.5vw / var(--c)), 3.2rem) * var(--k, 1));overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.pcard{margin:0;min-height:0;overflow:hidden;padding:clamp(10px,1.6vh,20px) clamp(12px,1.4vw,20px);justify-content:flex-start;gap:clamp(4px,.8vh,8px)}
+.pc-row{display:flex;gap:clamp(8px,1vw,16px);flex:none}
+.pc-row>*{flex:1 1 0;min-width:0}
+.pc-bar{display:flex;flex-direction:column;gap:2px}
+.pc-lab,.pc-n,.pc-none{font-size:min(calc(2.6vh / var(--r) + .55rem), 1rem);font-weight:700;opacity:.8}
+.pc-none{margin:0;font-weight:600}
+.pc-track{height:min(calc(1.6vh / var(--r) + 6px), 14px);border-radius:99px;background:rgba(255,255,255,.85);overflow:hidden}
+.pc-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sky),var(--leaf))}
+.pc-agree{display:flex;flex-direction:column;gap:2px}
+.pc-agree .stack{height:min(calc(1.6vh / var(--r) + 6px), 14px)}
+.pc-cm{flex:1;min-height:0;overflow:auto;margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.pc-cm li{font-family:var(--hand);font-size:min(calc(3vh / var(--r) + .6rem), 1.3rem);line-height:1.15;background:rgba(255,255,255,.65);border-radius:8px;padding:3px 8px}
+.pc-cm li.lpc{border-left:4px solid var(--leaf, #7ea56a);font-weight:700}
+.pc-t{margin:0;flex:none;font-family:var(--hand);line-height:1.15;font-size:calc(min(calc(8vh / var(--r)), calc(7vw / var(--c)), 2.6rem) * var(--k, 1));overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .pc-s{margin:0;font-weight:700;font-size:min(calc(3.4vh / var(--r) + .5rem), 1.1rem);opacity:.7}
 .pc-l{margin:0;font-family:var(--hand);font-size:min(calc(4vh / var(--r) + .5rem), 1.3rem);border-left:4px solid var(--leaf, #7ea56a);padding-left:8px;background:rgba(255,255,255,.6);border-radius:6px}
 .pc-note{background:#fff;border-radius:16px;border-left:6px solid var(--leaf, #7ea56a);padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
@@ -793,13 +806,21 @@ function catsHTML(items, res) {
   const slides = catSlides(items); if (!slides.length) return `<div class="empty"><h3>Noch keine Kategorien</h3></div>`;
   S.catIdx = Math.max(0, Math.min(slides.length - 1, S.catIdx || 0));
   const { c, list } = slides[S.catIdx], n = list.length;
-  const cols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : n <= 20 ? 5 : 6, rows = Math.max(1, Math.ceil(n / cols));
-  const card = ([id, i]) => { const a = res[id], p = [];
-    if (a && a.rateAvg != null) p.push("Ø " + fmt(a.rateAvg));
-    if (a) { const t = a.agree.ja + a.agree.teils + a.agree.nein; if (t) p.push(Math.round(a.agree.ja / t * 100) + "% Zustimmung"); }
-    if (a && a.baroAvg != null) p.push("Barometer " + fmt(a.baroAvg));
-    const L = (i.text || "").length, k = L > 110 ? .58 : L > 75 ? .7 : L > 45 ? .85 : 1;
-    return `<article class="note ${colorOf(id)} pcard" style="--k:${k}"><p class="pc-t">${esc(i.text)}</p>${p.length ? `<p class="pc-s">${p.join(" · ")}</p>` : ""}${Array.isArray(i.lp) && i.lp.length ? `<p class="pc-l">${esc(i.lp[i.lp.length - 1].t)}</p>` : ""}</article>`; };
+  const cols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 4 ? 2 : n <= 6 ? 3 : n <= 8 ? 4 : n <= 12 ? 4 : n <= 15 ? 5 : n <= 20 ? 5 : 6, rows = Math.max(1, Math.ceil(n / cols));
+  const bar = (label, v, cls, n) => v == null ? "" : `<div class="pc-bar ${cls || ""}"><span class="pc-lab">${label} <b>${fmt(v)}</b>${n ? ` · ${n} ${n === 1 ? "Stimme" : "Stimmen"}` : ""}</span><div class="pc-track"><i style="width:${Math.max(0, Math.min(10, v)) * 10}%"></i></div></div>`;
+  const card = ([id, i]) => { const a = res[id], t = toolsOf(i), L = (i.text || "").length, k = L > 110 ? .58 : L > 75 ? .7 : L > 45 ? .85 : 1;
+    let h = `<article class="note ${colorOf(id)} pcard" style="--k:${k}"><p class="pc-t">${esc(i.text)}</p>`;
+    if (a) {
+      const row = [];
+      if (t.baro) row.push(bar("Barometer", a.baroAvg, "", a.baro.length));
+      if (t.rate && !t.baro) row.push(a.rateAvg == null ? `<span class="pc-none">Bewertung: noch keine Stimmen</span>` : bar("Ø", a.rateAvg, "", a.rate.length));
+      if (t.agree && !t.baro) { const tot = a.agree.ja + a.agree.teils + a.agree.nein, q = x => tot ? a.agree[x] / tot * 100 : 0;
+        if (tot) row.push(`<div class="pc-agree"><span class="pc-lab"><b style="color:var(--ja)">●</b>${a.agree.ja} <b style="color:var(--teils)">●</b>${a.agree.teils} <b style="color:var(--nein)">●</b>${a.agree.nein}</span><div class="stack"><span style="width:${q("ja")}%;background:var(--ja)"></span><span style="width:${q("teils")}%;background:var(--teils)"></span><span style="width:${q("nein")}%;background:var(--nein)"></span></div></div>`); }
+      if (row.length) h += `<div class="pc-row">${row.join("")}</div>`;
+      const lp = Array.isArray(i.lp) ? i.lp : [];
+      if (lp.length || (t.comment && a.comments.length)) h += `<ul class="pc-cm">${lp.map(c => `<li class="lpc">${esc(c.t)}</li>`).join("")}${t.comment ? a.comments.map(c => `<li>${esc(c.text)}</li>`).join("") : ""}</ul>`;
+    }
+    return h + `</article>`; };
   return `<section class="pcats">
     <div class="pc-head"><button class="one-nav" type="button" data-act="catprev" aria-label="Vorherige Kategorie" ${S.catIdx ? "" : "disabled"}>‹</button>
       <h2 class="pc-title">${c ? esc(c.title) : "Weitere"}</h2>
