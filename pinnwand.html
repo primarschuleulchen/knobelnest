@@ -212,6 +212,22 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 #knBack{margin-right:4px}
+.pcats{display:flex;flex-direction:column;gap:12px;height:calc(100vh - 150px);min-height:420px}
+@media (max-width:1180px){.pcats{height:calc(100vh - 200px)}}
+.pc-head{display:flex;align-items:center;gap:16px}
+.pc-title{flex:1;margin:0;font-family:var(--bubble, inherit);font-size:clamp(28px,4vw,48px);color:var(--ink);border-bottom:4px solid var(--leaf, #7ea56a);padding-bottom:4px}
+.pc-count{color:var(--muted);font-weight:700}
+.pc-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-template-rows:repeat(var(--r),minmax(0,1fr));gap:clamp(8px,1.4vw,18px)}
+.pcard{margin:0;min-height:0;overflow:hidden;padding:clamp(10px,1.6vh,22px) clamp(12px,1.4vw,22px);justify-content:center;gap:6px}
+.pc-t{margin:0;font-family:var(--hand);line-height:1.15;font-size:calc(min(calc(11vh / var(--r)), calc(6.5vw / var(--c)), 3.2rem) * var(--k, 1));overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.pc-s{margin:0;font-weight:700;font-size:min(calc(3.4vh / var(--r) + .5rem), 1.1rem);opacity:.7}
+.pc-l{margin:0;font-family:var(--hand);font-size:min(calc(4vh / var(--r) + .5rem), 1.3rem);border-left:4px solid var(--leaf, #7ea56a);padding-left:8px;background:rgba(255,255,255,.6);border-radius:6px}
+.pc-note{background:#fff;border-radius:16px;border-left:6px solid var(--leaf, #7ea56a);padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.pc-note textarea{width:100%;font-family:var(--hand);font-size:clamp(1.1rem,2.2vh,1.6rem);min-height:3.2em;border:0;background:#fbfaf6}
+.pc-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pc-chip{border:1.5px solid var(--line, #e3e6df);background:#fff;border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;color:var(--ink)}
+.pc-chip small{opacity:.6;margin-left:4px}
+.pc-chip.cur{background:var(--leaf, #7ea56a);border-color:var(--leaf, #7ea56a);color:#fff}
 .lpc .lpc-t{margin:0;font-family:var(--hand);font-size:1.15rem;line-height:1.25;background:rgba(255,255,255,.75);border-left:4px solid var(--leaf, #7ea56a);border-radius:8px;padding:6px 10px}
 .present-on .lpc .lpc-t{font-size:1.4rem}
 .present-on .one-big .lpc .lpc-t{font-size:1.7rem}
@@ -611,13 +627,14 @@ function presentHTML() {
   const boardItems = items.filter(([, i]) => !toolsOf(i).baro), hasBaro = boardItems.length < items.length;
   if (S.tab === "board" && !boardItems.length && hasBaro) S.tab = "baro";
   if (S.tab === "baro" && !items.length) S.tab = "board";
-  const tabs = [["board", "Ergebnisse"], ["one", "Einzeln"]]; if (hasBaro) tabs.push(["baro", "Barometer"]); tabs.push(["rank", "Rangliste"]);
+  const tabs = cats().length ? [["cats", "Kategorien"], ["board", "Ergebnisse"], ["one", "Einzeln"]] : [["board", "Ergebnisse"], ["one", "Einzeln"]]; if (hasBaro) tabs.push(["baro", "Barometer"]); tabs.push(["rank", "Rangliste"]);
   if (S.tab === "baro" && !hasBaro) S.tab = "board";
   let html = `<div class="pres-bar"><h1 class="pres-title">${esc(curBoard()?.title || "Unsere Ergebnisse")}</h1>${tabsHTML(tabs)}<button class="btn ghost" type="button" data-act="fullscreen">Vollbild</button><button class="btn" type="button" data-act="role" data-v="lp">Präsentation beenden</button></div>`;
   if (!items.length) return html + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3></div>`;
   if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids, true);
   if (S.tab === "rank") return html + rankHTML(items, res);
   if (S.tab === "one") return html + oneHTML(items, res);
+  if (S.tab === "cats") return html + catsHTML(items, res);
   return html + (boardItems.length ? `${groupedBoard(boardItems, ([id, i]) => teacherNote(id, i, res[id], true))}` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3></div>`);
 }
 function oneHTML(items, res) {
@@ -767,6 +784,33 @@ function lpcHTML(id, i, readOnly, kid) {
        <div class="row" style="justify-content:flex-end"><button class="btn ghost small" type="button" data-act="lpcclose">Abbrechen</button><button class="btn small" type="button" data-act="lpcadd" data-id="${id}">Kommentieren</button></div>`
     : `<button class="edit-btn" type="button" data-act="lpcopen" data-id="${id}">+ Kommentar der Lehrperson</button>`}</div>`;
 }
+function catSlides(items) {
+  const cs = cats(), out = cs.map(c => ({ c, list: items.filter(([, i]) => i.cat === c.id) }));
+  const rest = items.filter(([, i]) => catIdx(i) >= 1e6); if (rest.length) out.push({ c: null, list: rest });
+  return out;
+}
+function catsHTML(items, res) {
+  const slides = catSlides(items); if (!slides.length) return `<div class="empty"><h3>Noch keine Kategorien</h3></div>`;
+  S.catIdx = Math.max(0, Math.min(slides.length - 1, S.catIdx || 0));
+  const { c, list } = slides[S.catIdx], n = list.length;
+  const cols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : n <= 20 ? 5 : 6, rows = Math.max(1, Math.ceil(n / cols));
+  const card = ([id, i]) => { const a = res[id], p = [];
+    if (a && a.rateAvg != null) p.push("Ø " + fmt(a.rateAvg));
+    if (a) { const t = a.agree.ja + a.agree.teils + a.agree.nein; if (t) p.push(Math.round(a.agree.ja / t * 100) + "% Zustimmung"); }
+    if (a && a.baroAvg != null) p.push("Barometer " + fmt(a.baroAvg));
+    const L = (i.text || "").length, k = L > 110 ? .58 : L > 75 ? .7 : L > 45 ? .85 : 1;
+    return `<article class="note ${colorOf(id)} pcard" style="--k:${k}"><p class="pc-t">${esc(i.text)}</p>${p.length ? `<p class="pc-s">${p.join(" · ")}</p>` : ""}${Array.isArray(i.lp) && i.lp.length ? `<p class="pc-l">${esc(i.lp[i.lp.length - 1].t)}</p>` : ""}</article>`; };
+  return `<section class="pcats">
+    <div class="pc-head"><button class="one-nav" type="button" data-act="catprev" aria-label="Vorherige Kategorie" ${S.catIdx ? "" : "disabled"}>‹</button>
+      <h2 class="pc-title">${c ? esc(c.title) : "Weitere"}</h2>
+      <span class="pc-count">${S.catIdx + 1} / ${slides.length}</span>
+      <button class="one-nav" type="button" data-act="catnext" aria-label="Nächste Kategorie" ${S.catIdx < slides.length - 1 ? "" : "disabled"}>›</button></div>
+    <div class="pc-grid" style="--c:${cols};--r:${rows}">${n ? list.map(card).join("") : `<p class="sortempty">In dieser Kategorie hängt noch kein Zettel.</p>`}</div>
+    ${c ? `<div class="pc-note"><label class="tool-l" for="pcn-${c.id}">Beschluss</label><textarea class="field" id="pcn-${c.id}" data-keep data-catnote="${c.id}" rows="2" maxlength="1000" placeholder="Hier den Beschluss der Klasse festhalten …">${esc(c.note || "")}</textarea></div>` : ""}
+    <div class="pc-chips">${slides.map((s, k) => `<button type="button" class="pc-chip${k === S.catIdx ? " cur" : ""}" data-act="catgo" data-i="${k}">${s.c ? esc(s.c.title) : "Weitere"} <small>${s.list.length}</small></button>`).join("")}</div>
+  </section>`;
+}
+function catStep(d) { S.catIdx = (S.catIdx || 0) + d; render(); }
 function scaleBar(v, note) {
   const w = v == null ? 0 : Math.max(0, Math.min(10, v)) * 10;
   return `<div class="sbar" role="img" aria-label="${v == null ? "Noch keine Stimmen" : "Durchschnitt " + fmt(v) + " von 10"}">
@@ -863,7 +907,7 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b || b.matches("input,textarea")) return;
   const act = b.dataset.act, id = b.dataset.id;
   if (act === "role" && KN && S.peek) setPeek("");
-  if (act === "role") { if (S.view === "show" && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); S.view = b.dataset.v; S.tab = "board"; S.editing = null; render(); scrollTo(0, 0); }
+  if (act === "role") { if (S.view === "show" && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); S.view = b.dataset.v; S.tab = b.dataset.v === "show" && cats().length ? "cats" : "board"; S.editing = null; render(); scrollTo(0, 0); }
   else if (act === "fullscreen") { const d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); else if (d.requestFullscreen) d.requestFullscreen().catch(() => toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers.")); else toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers."); }
   else if (act === "edit") { S.editing = id; render(); const el = document.getElementById("ed-" + id); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   else if (act === "home") { S.board = null; S.editing = null; render(); scrollTo(0, 0); }
@@ -963,6 +1007,9 @@ document.addEventListener("click", async e => {
     ids.forEach(x => { const i = S.ideas.get(x); if (i) Object.assign(i, { status: "ok", tools: { ...S.defaults }, okAt: now }); }); render();
     try { await Promise.all(ids.map(x => patchIdea(x, { status: "ok", tools: { ...S.defaults }, okAt: now }))); toast(ids.length === 1 ? "1 Idee freigegeben." : ids.length + " Ideen freigegeben."); } catch (err) { failed(err); }
   }
+  else if (act === "catgo") { S.catIdx = +b.dataset.i; render(); }
+  else if (act === "catprev") catStep(-1);
+  else if (act === "catnext") catStep(1);
   else if (act === "tab") { S.tab = b.dataset.v; render(); }
   else if (act === "rankby") { S.rankBy = b.dataset.v; render(); }
   else if (act === "editname") { S.editName = true; render(); $("#nameIn")?.focus(); }
@@ -1014,6 +1061,9 @@ document.addEventListener("keydown", e => {
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); m.baro = Math.max(0, Math.min(10, (cur ?? 5) + (e.key === "ArrowRight" ? .5 : -.5) * (cur == null ? 0 : 1))); touchMy(500); render(); }
     else if ((e.key === "Delete" || e.key === "Backspace") && cur != null) { e.preventDefault(); delete m.baro; touchMy(300); render(); }
     return;
+  }
+  if (S.view === "show" && S.tab === "cats" && !(e.target.closest && e.target.closest("input,textarea,select")) && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown"].includes(e.key)) {
+    e.preventDefault(); catStep(e.key === "ArrowLeft" || e.key === "PageUp" ? -1 : 1); return;
   }
   if (S.view === "show" && S.tab === "one" && !(e.target.closest && e.target.closest("input,textarea,select")) && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", " "].includes(e.key)) {
     e.preventDefault(); oneStep(e.key === "ArrowLeft" || e.key === "PageUp" ? -1 : 1); return;
