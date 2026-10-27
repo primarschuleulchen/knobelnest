@@ -554,7 +554,7 @@
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '1';
+  var HEFT_VER = '2';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -574,8 +574,20 @@
       var key = 'hat-' + cid;
       var doc = {
         get: async function () { var d = await DB.storeGet(key); return { exists: d != null, data: function () { return d; } }; },
-        set: async function (v) { await DB.storeSet(key, JSON.parse(JSON.stringify(v))); },
-        onSnapshot: function () { return function () {}; }
+        set: async function (v) {
+          v = JSON.parse(JSON.stringify(v));
+          // «selbst» (von den Kindern abgehakt) gehört den Kindern: immer den Stand vom Server nehmen
+          try { var cur = await DB.storeGet(key), sb = {};
+            ((cur && cur.entries) || []).forEach(function (e) { if (e && e.selbst) sb[e.id] = e.selbst; });
+            (v.entries || []).forEach(function (e) { if (sb[e.id]) e.selbst = sb[e.id]; else delete e.selbst; });
+          } catch (e) {}
+          await DB.storeSet(key, v);
+        },
+        onSnapshot: function (cb) {
+          var iv = setInterval(async function () { if (document.hidden || UI.view !== 'heft') return;
+            try { var d = await DB.storeGet(key); if (d) cb({ exists: true, data: function () { return d; } }); } catch (e) {} }, 30000);
+          return function () { clearInterval(iv); };
+        }
       };
       window.knHeft = {
         mode: 'teacher', key: cid, className: 'Klasse ' + cls.name,
@@ -1576,7 +1588,7 @@
       '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
         '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
-      '<span><b>Unsere Tafel</b><span>Zeig, wo du im Wochenplan stehst, und finde Hilfe.</span></span></button></div>', 'Abmelden');
+      '<span><b>Unsere Tafel</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button></div>', 'Abmelden');
   };
   K.view_thema = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
@@ -1613,6 +1625,7 @@
     };
     window.knHeft = {
       mode: 'kid', key: 'kind-' + kid.id, kidId: kid.id, className: '', roster: [],
+      tick: function (id, on) { DB.kidHeftTick(K.sess.token, id, on).catch(function () { toast('Der Haken konnte nicht gespeichert werden.'); }); },
       back: function () { ACT.kBack(); },
       claude: { use: async function (name) {
         if (name === 'db') return { doc: function () { return doc; } };
