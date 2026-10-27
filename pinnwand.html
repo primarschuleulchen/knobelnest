@@ -212,6 +212,10 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 #knBack{margin-right:4px}
+.lpc .lpc-t{margin:0;font-family:var(--hand);font-size:1.15rem;line-height:1.25;background:rgba(255,255,255,.75);border-left:4px solid var(--leaf, #7ea56a);border-radius:8px;padding:6px 10px}
+.present-on .lpc .lpc-t{font-size:1.4rem}
+.present-on .one-big .lpc .lpc-t{font-size:1.7rem}
+.lpc textarea{min-height:56px}
 .autosort{gap:8px;align-items:center;margin:4px 0 8px}
 .sortcard .score{font-style:normal;font-size:.75rem;font-weight:700;color:var(--ink);opacity:.7}
 .board{columns:auto!important;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px 20px;align-items:start}
@@ -503,6 +507,7 @@ function kidNote(id, i) {
   let h = `<article class="note ${colorOf(id)}"><p class="txt">${esc(i.text)}</p>`;
   if (t.rate) h += `<div class="tool"><span class="tool-l">${esc(L().rateQ)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
   if (t.agree) h += `<div class="tool"><span class="tool-l">${esc(L().agreeQ)}</span><div class="agree">${AGREE.map(([k]) => `<button type="button" data-act="agree" data-id="${id}" data-v="${k}" aria-pressed="${v.agree === k}">${esc(L()[k])}</button>`).join("")}</div></div>`;
+  h += lpcHTML(id, i, true, true);
   if (t.comment) h += `<div class="tool"><label class="tool-l" for="c-${id}">${esc(L().commentQ)}</label><textarea id="c-${id}" data-act="comment" data-id="${id}" maxlength="400" placeholder="${esc(L().commentPh)}">${esc(v.comment || "")}</textarea></div>`;
   return h + `</article>`;
 }
@@ -581,6 +586,7 @@ function teacherNote(id, i, a, present) {
   }
   if (t.comment) h += `<div class="tool"><span class="tool-l">Kommentare (${a.comments.length})</span>${a.comments.length ? `<ul class="cm">${a.comments.map(c => `<li>${present ? "" : `<b>${esc(c.name)}:</b> `}${esc(c.text)}${present ? "" : `<button class="cmdel ${S.armed === "c:" + id + ":" + c.uid ? "arm" : ""}" type="button" data-act="cmdel" data-id="${id}" data-uid="${esc(c.uid)}" title="Kommentar entfernen">${S.armed === "c:" + id + ":" + c.uid ? "Entfernen?" : "✕"}</button>`}</li>`).join("")}</ul>` : `<span class="by">Noch keine Kommentare.</span>`}</div>`;
   }
+  h += lpcHTML(id, i, present);
   if (present) return h + `</article>`;
   h += `<div class="tool"><span class="tool-l">Werkzeuge auf diesem Zettel</span>${toolToggles("t-" + id, t, id)}${t.baro ? `<span class="by">Dieser Zettel ist nur im Barometer zu sehen.</span>` : ""}<div class="foot">${S.editing === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="edit" data-id="${id}">Text bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich entfernen?" : "Zettel entfernen"}</button></div></div>`;
   return h + `</article>`;
@@ -685,6 +691,18 @@ function qbulkHTML(pend) {
   const n = S.qsel.size, all = n && n === pend.length;
   return `<div class="row qbulk"><label class="qpick"><input type="checkbox" data-act="qall" ${all ? "checked" : ""}> Alle auswählen</label>
     ${n ? `<span class="sub">${n} ausgewählt</span><button class="btn small" type="button" data-act="qok">Freigeben</button><button class="del ${S.armed === "q" ? "arm" : ""}" type="button" data-act="qdel">${S.armed === "q" ? `Wirklich ${n} löschen?` : "Löschen"}</button>` : ""}</div>`;
+}
+function lpcHTML(id, i, readOnly, kid) {
+  const list = Array.isArray(i.lp) ? i.lp : [];
+  if (readOnly && !list.length) return "";
+  const head = `<span class="tool-l">${kid ? "Von deiner Lehrperson" : "Kommentar der Lehrperson"}</span>`;
+  const items = list.map((c, k) => `<p class="lpc-t">${esc(c.t)}${readOnly ? "" : `<button class="cmdel ${S.armed === "l:" + id + ":" + k ? "arm" : ""}" type="button" data-act="lpcdel" data-id="${id}" data-k="${k}" title="Kommentar löschen">${S.armed === "l:" + id + ":" + k ? "Löschen?" : "✕"}</button>`}</p>`).join("");
+  if (readOnly) return `<div class="tool lpc">${head}${items}</div>`;
+  const open = S.lpcOpen === id;
+  return `<div class="tool lpc">${list.length ? head + items : ""}${open
+    ? `<label class="tool-l" for="lpc-${id}">Ihr Kommentar</label><textarea class="field" id="lpc-${id}" data-keep rows="2" maxlength="400" placeholder="z. B. Gute Idee, das schauen wir an!"></textarea>
+       <div class="row" style="justify-content:flex-end"><button class="btn ghost small" type="button" data-act="lpcclose">Abbrechen</button><button class="btn small" type="button" data-act="lpcadd" data-id="${id}">Kommentieren</button></div>`
+    : `<button class="edit-btn" type="button" data-act="lpcopen" data-id="${id}">+ Kommentar der Lehrperson</button>`}</div>`;
 }
 function scaleBar(v, note) {
   const w = v == null ? 0 : Math.max(0, Math.min(10, v)) * 10;
@@ -829,6 +847,23 @@ document.addEventListener("click", async e => {
   else if (act === "oneprev") oneStep(-1);
   else if (act === "onenext") oneStep(1);
   else if (act === "autosort") { autoSort(b.dataset.by); }
+  else if (act === "lpcopen") { S.lpcOpen = id; render(); document.getElementById("lpc-" + id)?.focus(); }
+  else if (act === "lpcclose") { S.lpcOpen = null; render(); }
+  else if (act === "lpcadd") {
+    const el = document.getElementById("lpc-" + id), t = el ? el.value.trim() : "";
+    if (!t) { el?.focus(); return; }
+    const idea = S.ideas.get(id); if (!idea) return;
+    const lp = [...(Array.isArray(idea.lp) ? idea.lp : []), { t, at: Date.now() }];
+    el.value = ""; S.lpcOpen = null; idea.lp = lp; render();
+    try { await patchIdea(id, { lp }); toast("Kommentar gespeichert. Die Kinder sehen ihn."); } catch (err) { failed(err); }
+  }
+  else if (act === "lpcdel") {
+    const key = "l:" + id + ":" + b.dataset.k;
+    if (S.armed !== key) { S.armed = key; render(); setTimeout(() => { if (S.armed === key) { S.armed = null; render(); } }, 4000); return; }
+    S.armed = null; const idea = S.ideas.get(id); if (!idea) return;
+    const lp = (Array.isArray(idea.lp) ? idea.lp : []).filter((_, k) => k !== +b.dataset.k); idea.lp = lp; render();
+    try { await patchIdea(id, { lp }); toast("Kommentar gelöscht."); } catch (err) { failed(err); }
+  }
   else if (act === "cmdel") {
     const key = "c:" + id + ":" + b.dataset.uid;
     if (S.armed !== key) { S.armed = key; render(); setTimeout(() => { if (S.armed === key) { S.armed = null; render(); } }, 4000); return; }
