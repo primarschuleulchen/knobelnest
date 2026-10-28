@@ -224,17 +224,17 @@ html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .pc-row{display:flex;gap:clamp(8px,1vw,16px);flex:none}
 .pc-row>*{flex:1 1 0;min-width:0}
 .pc-bar{display:flex;flex-direction:column;gap:2px}
-.pc-lab,.pc-n,.pc-none{font-size:calc(min(calc(2.6vh / var(--r) + .55rem), 1rem) * var(--z, 1));font-weight:700;opacity:.8}
+.pc-lab,.pc-n,.pc-none{font-size:max(12px, calc(var(--tf, 28px) * .48));font-weight:700;opacity:.8}
 .pc-none{margin:0;font-weight:600}
-.pc-track{height:min(calc(1.6vh / var(--r) + 6px), 14px);border-radius:99px;background:rgba(255,255,255,.85);overflow:hidden}
+.pc-track{height:max(6px, calc(var(--tf, 28px) * .3));border-radius:99px;background:rgba(255,255,255,.85);overflow:hidden}
 .pc-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sky),var(--leaf))}
 .pc-agree{display:flex;flex-direction:column;gap:2px}
-.pc-agree .stack{height:min(calc(1.6vh / var(--r) + 6px), 14px)}
+.pc-agree .stack{height:max(6px, calc(var(--tf, 28px) * .3))}
 .pc-cm{flex:1 1 auto;min-height:0;overflow:auto;margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
 .pc-cm{gap:3px}
-.pc-cm li{font-family:var(--hand);font-size:calc(min(calc(1.6vh / var(--r) + .62rem), 1.2rem) * var(--z, 1));line-height:1.12;background:rgba(255,255,255,.65);border-radius:8px;padding:2px 7px}
+.pc-cm li{font-family:var(--hand);font-size:max(13px, calc(var(--tf, 28px) * .62));line-height:1.15;background:rgba(255,255,255,.65);border-radius:8px;padding:2px 7px}
 .pc-cm li.lpc{border-left:4px solid var(--leaf, #7ea56a);font-weight:700}
-.pc-t{margin:0;flex:0 1 auto;min-height:1.2em;font-family:var(--hand);line-height:1.15;font-size:calc(min(calc(6vh / var(--r)), calc(6vw / var(--c)), 2.2rem) * var(--k, 1) * var(--z, 1));overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.pc-t{margin:0;flex:none;font-family:var(--hand);line-height:1.15;font-size:var(--tf, 28px);overflow-wrap:anywhere}
 .pc-s{margin:0;font-weight:700;font-size:min(calc(3.4vh / var(--r) + .5rem), 1.1rem);opacity:.7}
 .pc-l{margin:0;font-family:var(--hand);font-size:min(calc(4vh / var(--r) + .5rem), 1.3rem);border-left:4px solid var(--leaf, #7ea56a);padding-left:8px;background:rgba(255,255,255,.6);border-radius:6px}
 .pc-note{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;border-left:6px solid var(--leaf, #7ea56a);padding:6px 12px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
@@ -251,6 +251,7 @@ html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .pc-ob{font-family:var(--hand);font-size:clamp(1rem, calc(3.4vw / var(--c)), 1.9rem);line-height:1.25;white-space:pre-wrap}
 .pc-ob em{display:block;font-family:var(--ui);font-style:normal;font-size:.55em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--leaf-deep, #4d7a42);margin-bottom:2px}
 .pc-ob.none{color:var(--muted);font-style:italic}
+@media (max-height:820px){.pcats .pc-chips{display:none}.pcats{gap:8px}}
 .pc-chip.cur{background:var(--leaf, #7ea56a);border-color:var(--leaf, #7ea56a);color:#fff}
 .lpc .lpc-t{margin:0;font-family:var(--hand);font-size:1.15rem;line-height:1.25;background:rgba(255,255,255,.75);border-left:4px solid var(--leaf, #7ea56a);border-radius:8px;padding:6px 10px}
 .present-on .lpc .lpc-t{font-size:1.4rem}
@@ -854,13 +855,32 @@ function catsHTML(items, res) {
 }
 function fitCats() {
   const box = document.querySelector(".pcats .pc-grid"); if (!box) return;
-  const ok = () => [...box.querySelectorAll(".pcard")].every(c => {
-    if (c.scrollHeight > c.clientHeight + 2) return false;
+  const cards = [...box.querySelectorAll(".pcard")], n = cards.length; if (!n) return;
+  const ok = need => cards.every(c => {
+    if (c.scrollHeight > c.clientHeight + 1 || c.scrollWidth > c.clientWidth + 1) return false;
     const u = c.querySelector(".pc-cm"); if (!u) return true;
-    const r = u.getBoundingClientRect(), lis = [...u.children], need = Math.min(4, lis.length);
-    return lis.slice(0, need).every(li => li.getBoundingClientRect().bottom <= r.bottom + 1);
+    const r = u.getBoundingClientRect(), lis = [...u.children];
+    return lis.slice(0, Math.min(need, lis.length)).every(li => li.getBoundingClientRect().bottom <= r.bottom + 1);
   });
-  for (let z = 1; z >= .55; z -= .05) { box.style.setProperty("--z", z.toFixed(2)); if (ok()) return; }
+  const search = need => {
+    const best = { tf: 0, c: Math.min(n, 4) };
+    for (let c = 1; c <= Math.min(n, 6); c++) {
+      const r = Math.ceil(n / c); if (c > 1 && Math.ceil(n / (c - 1)) === r) continue; // gleiche Zeilenzahl mit weniger Spalten ist breiter
+      if (c > 1 && box.clientWidth / c < 270) continue; // zu schmale Zettel lesen sich schlecht
+      box.style.setProperty("--c", c); box.style.setProperty("--r", r);
+      let lo = 12, hi = 76;
+      box.style.setProperty("--tf", lo + "px"); if (!ok(need)) continue;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; box.style.setProperty("--tf", m + "px"); if (ok(need)) lo = m; else hi = m; }
+      if (lo > best.tf) { best.tf = lo; best.c = c; }
+    }
+    return best;
+  };
+  // Zuerst 4 Kommentare ganz sichtbar; wird die Aussage dafür zu klein, weniger Kommentare (der Rest scrollt im Zettel)
+  let best = search(4);
+  if (best.tf < 24) { const b2 = search(2); if (b2.tf > best.tf) best = b2; }
+  if (best.tf < 20) { const b0 = search(0); if (b0.tf > best.tf) best = b0; }
+  if (!best.tf) best.tf = 12;
+  box.style.setProperty("--c", best.c); box.style.setProperty("--r", Math.ceil(n / best.c)); box.style.setProperty("--tf", best.tf + "px");
 }
 addEventListener("resize", () => { clearTimeout(fitCats.t); fitCats.t = setTimeout(fitCats, 150); });
 function catStep(d) { S.catIdx = (S.catIdx || 0) + d; render(); }
