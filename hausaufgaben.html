@@ -1273,7 +1273,7 @@ setStatus(cached ? "Gespeichert auf diesem Gerät" : "Lädt …");
     else if (cached && (cached.entries?.length || cached.sus?.length)) { dirty = true; flush(); }
     loaded = true; render(); setStatus("Gespeichert ✓");
     store.ref.onSnapshot(s => {
-      if (!s.exists || dirty || flushing) return;
+      if (!s.exists || dirty || flushing || (layer && layer.innerHTML)) return;
       const j = JSON.stringify(s.data()); if (j === lastWrite || j === JSON.stringify(S)) return;
       S = norm(s.data()); lsSet(S); if (!layer.innerHTML) render();
     }, () => {});

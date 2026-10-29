@@ -336,17 +336,17 @@ const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const TOOL_NAMES = { rate: "Bewertung 1–10", agree: "Zustimmung", comment: "Kommentar", baro: "Nur im Barometer" };
+const TOOL_NAMES = { rate: "Bewertung 1–10", rate2: "Bewertung 2", agree: "Zustimmung", comment: "Kommentar", baro: "Nur im Barometer" };
 const AGREE = [["ja"], ["teils"], ["nein"]];
 const DEF_LABELS = {
-  rateQ: "Wie gut findest du das? 1 bis 10", agreeQ: "Stimmst du zu?",
+  rateQ: "Wie gut findest du das? 1 bis 10", rate2Q: "Wie wichtig ist dir das? 1 bis 10", agreeQ: "Stimmst du zu?",
   ja: "Stimme zu", teils: "Teilweise", nein: "Stimme nicht zu",
   commentQ: "Dein Kommentar", commentPh: "Was denkst du dazu?",
   baroHint: "Zieh jeden Zettel auf die Skala: links gefällt er dir nicht, rechts gefällt er dir sehr. So entsteht deine eigene Rangliste.",
   baroL: "gefällt mir nicht", baroR: "gefällt mir sehr"
 };
 const LABEL_FIELDS = [
-  ["rateQ", "Frage zur Bewertung 1–10"], ["agreeQ", "Frage zur Zustimmung"],
+  ["rateQ", "Frage zur Bewertung 1–10"], ["rate2Q", "Frage zur Bewertung 2"], ["agreeQ", "Frage zur Zustimmung"],
   ["ja", "Knopf 1 (Zustimmung)"], ["teils", "Knopf 2 (teilweise)"], ["nein", "Knopf 3 (keine Zustimmung)"],
   ["commentQ", "Überschrift Kommentar"], ["commentPh", "Hilfstext im Kommentarfeld"],
   ["baroL", "Barometer links (0)"], ["baroR", "Barometer rechts (10)"], ["baroHint", "Anleitung zum Barometer", "wide"]
@@ -434,13 +434,14 @@ function setPeek(id) {
 function aggregate() {
   const all = new Map(S.votes); all.set(myKey(), S.my);
   const res = {};
-  for (const [id, i] of S.ideas) if (i.status === "ok" && inBoard(i)) res[id] = { rate: [], baro: [], agree: { ja: 0, teils: 0, nein: 0 }, comments: [], voters: new Set() };
+  for (const [id, i] of S.ideas) if (i.status === "ok" && inBoard(i)) res[id] = { rate: [], rate2: [], baro: [], agree: { ja: 0, teils: 0, nein: 0 }, comments: [], voters: new Set() };
   let kids = 0;
   for (const [uid, v] of all) {
     const r = v && v.r || {}; let any = false;
     for (const id in r) {
       const a = res[id], x = r[id]; if (!a || !x) continue;
       if (typeof x.rate === "number") { a.rate.push(x.rate); any = true; a.voters.add(uid); }
+      if (typeof x.rate2 === "number") { a.rate2.push(x.rate2); any = true; a.voters.add(uid); }
       if (typeof x.baro === "number") { a.baro.push(x.baro); any = true; a.voters.add(uid); }
       if (x.agree in a.agree) { a.agree[x.agree]++; any = true; a.voters.add(uid); }
       if (x.comment && x.comment.trim()) { const hd = (S.ideas.get(id) || {}).hide || {}; if (hd[uid] !== x.comment.trim()) a.comments.push({ name: v.name || "Ohne Namen", text: x.comment.trim(), uid }); any = true; }
@@ -448,7 +449,7 @@ function aggregate() {
     if (any) kids++;
   }
   const avg = a => a.length ? a.reduce((s, n) => s + n, 0) / a.length : null;
-  for (const id in res) { const a = res[id]; a.rateAvg = avg(a.rate); a.baroAvg = avg(a.baro); a.n = a.voters.size; }
+  for (const id in res) { const a = res[id]; a.rateAvg = avg(a.rate); a.rate2Avg = avg(a.rate2); a.baroAvg = avg(a.baro); a.n = a.voters.size; }
   return { res, kids };
 }
 
@@ -562,6 +563,7 @@ function kidNote(id, i) {
   const t = toolsOf(i), v = S.my.r[id] || {};
   let h = `<article class="note ${colorOf(id)}"><p class="txt">${esc(i.text)}</p>`;
   if (t.rate) h += `<div class="tool"><span class="tool-l">${esc(L().rateQ)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
+  if (t.rate2) h += `<div class="tool"><span class="tool-l">${esc(L().rate2Q)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate2" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate2 === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
   if (t.agree) h += `<div class="tool"><span class="tool-l">${esc(L().agreeQ)}</span><div class="agree">${AGREE.map(([k]) => `<button type="button" data-act="agree" data-id="${id}" data-v="${k}" aria-pressed="${v.agree === k}">${esc(L()[k])}</button>`).join("")}</div></div>`;
   h += lpcHTML(id, i, true, true);
   if (t.comment) h += `<div class="tool"><label class="tool-l" for="c-${id}">${esc(L().commentQ)}</label><textarea id="c-${id}" data-act="comment" data-id="${id}" maxlength="400" placeholder="${esc(L().commentPh)}">${esc(v.comment || "")}</textarea></div>`;
@@ -634,7 +636,8 @@ function teacherNote(id, i, a, present) {
   let h = `<article class="note ${colorOf(id)}">${S.editing === id && !present ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}${i.by && !present ? `<p class="by">– ${esc(i.by)}</p>` : ""}`;
   if (t.baro) h += `<div class="tool"><span class="tool-l">Barometer</span>${scaleBar(a.baroAvg, a.baro.length + " platziert")}</div>`;
   else {
-  if (t.rate) h += `<div class="tool"><span class="tool-l">Bewertung 1–10</span>${scaleBar(a.rateAvg, a.rate.length + (a.rate.length === 1 ? " Stimme" : " Stimmen"))}</div>`;
+  if (t.rate) h += `<div class="tool"><span class="tool-l">${t.rate2 ? esc(shortQ(L().rateQ)) : "Bewertung 1–10"}</span>${scaleBar(a.rateAvg, a.rate.length + (a.rate.length === 1 ? " Stimme" : " Stimmen"))}</div>`;
+  if (t.rate2) h += `<div class="tool"><span class="tool-l">${esc(shortQ(L().rate2Q))}</span>${scaleBar(a.rate2Avg, a.rate2.length + (a.rate2.length === 1 ? " Stimme" : " Stimmen"))}</div>`;
   if (t.agree) {
     const tot = a.agree.ja + a.agree.teils + a.agree.nein, p = k => tot ? a.agree[k] / tot * 100 : 0;
     h += `<div class="tool"><span class="tool-l">Zustimmung</span><div class="stack" role="img" aria-label="${a.agree.ja} stimmen zu, ${a.agree.teils} teilweise, ${a.agree.nein} nicht"><span style="width:${p("ja")}%;background:var(--ja)"></span><span style="width:${p("teils")}%;background:var(--teils)"></span><span style="width:${p("nein")}%;background:var(--nein)"></span></div>
@@ -710,16 +713,18 @@ function sortHTML(items) {
     ${secs}
     <p class="sub">Auf dem iPad: Zettel antippen, halten und ziehen, auch in eine andere Kategorie. Mit der Tastatur: Zettel anwählen, dann Pfeiltasten.</p></section>`;
 }
-const AUTOSORT = [["rate", "nach Bewertung"], ["agree", "nach Zustimmung"], ["baro", "nach Barometer"]];
+const AUTOSORT = [["rate", "nach Bewertung"], ["rate2", "nach Bewertung 2"], ["agree", "nach Zustimmung"], ["baro", "nach Barometer"]];
 function scoreOf(a, by) {
   if (!a) return null;
   if (by === "rate") return a.rateAvg;
+  if (by === "rate2") return a.rate2Avg;
   if (by === "baro") return a.baroAvg;
   const t = a.agree.ja + a.agree.teils + a.agree.nein; return t ? (a.agree.ja + a.agree.teils * .5) / t * 100 : null;
 }
 function scoreLine(id, i) {
   const a = aggregate().res[id], t = toolsOf(i), p = [];
   if (a && a.rateAvg != null) p.push("Ø " + fmt(a.rateAvg));
+  if (a && a.rate2Avg != null) p.push("Ø2 " + fmt(a.rate2Avg));
   const z = scoreOf(a, "agree"); if (z != null) p.push(Math.round(z) + "% Zustimmung");
   if (a && a.baroAvg != null) p.push("Barometer " + fmt(a.baroAvg));
   return p.length ? `<em class="score">${p.join(" · ")}</em>` : "";
@@ -839,7 +844,8 @@ function catsHTML(items, res) {
     if (a) {
       const row = [];
       if (t.baro) row.push(bar("Barometer", a.baroAvg, "", a.baro.length));
-      if (t.rate && !t.baro) row.push(a.rateAvg == null ? `<span class="pc-none">Bewertung: noch keine Stimmen</span>` : bar("Ø", a.rateAvg, "", a.rate.length));
+      if (t.rate && !t.baro) row.push(a.rateAvg == null ? `<span class="pc-none">Bewertung: noch keine Stimmen</span>` : bar(t.rate2 ? esc(shortQ(L().rateQ)) : "Ø", a.rateAvg, "", a.rate.length));
+      if (t.rate2 && !t.baro) row.push(a.rate2Avg == null ? `<span class="pc-none">${esc(shortQ(L().rate2Q))} noch keine Stimmen</span>` : bar(esc(shortQ(L().rate2Q)), a.rate2Avg, "", a.rate2.length));
       if (t.agree && !t.baro) { const tot = a.agree.ja + a.agree.teils + a.agree.nein, q = x => tot ? a.agree[x] / tot * 100 : 0;
         if (tot) row.push(`<div class="pc-agree"><span class="pc-lab"><b style="color:var(--ja)">●</b>${a.agree.ja} <b style="color:var(--teils)">●</b>${a.agree.teils} <b style="color:var(--nein)">●</b>${a.agree.nein}</span><div class="stack"><span style="width:${q("ja")}%;background:var(--ja)"></span><span style="width:${q("teils")}%;background:var(--teils)"></span><span style="width:${q("nein")}%;background:var(--nein)"></span></div></div>`); }
       if (row.length) h += `<div class="pc-row">${row.join("")}</div>`;
@@ -884,6 +890,7 @@ function fitCats() {
 }
 addEventListener("resize", () => { clearTimeout(fitCats.t); fitCats.t = setTimeout(fitCats, 150); });
 function catStep(d) { S.catIdx = (S.catIdx || 0) + d; render(); }
+function shortQ(q) { return String(q || "").replace(/\s*1\s*(bis|–|-)\s*10\.?\s*$/i, "").trim(); }
 function scaleBar(v, note) {
   const w = v == null ? 0 : Math.max(0, Math.min(10, v)) * 10;
   return `<div class="sbar" role="img" aria-label="${v == null ? "Noch keine Stimmen" : "Durchschnitt " + fmt(v) + " von 10"}">
@@ -1099,6 +1106,7 @@ document.addEventListener("click", async e => {
     try { await addIdea({ text, by: S.my.name, uid: myKey(), boardId: S.board, status: "pending", at: Date.now() }); ls.set("pw-draft", ""); ta.value = ""; toast("Danke! Deine Idee ist bei der Lehrperson."); }
     catch (err) { failed(err); b.disabled = false; }
   }
+  else if (act === "rate2") { const v = +b.dataset.v, m = myVote(id); if (m.rate2 === v) delete m.rate2; else m.rate2 = v; touchMy(400); render(); }
   else if (act === "rate") { const v = +b.dataset.v, m = myVote(id); if (m.rate === v) delete m.rate; else m.rate = v; touchMy(400); render(); }
   else if (act === "agree") { const v = b.dataset.v, m = myVote(id); if (m.agree === v) delete m.agree; else m.agree = v; touchMy(400); render(); }
   else if (act === "approve") {

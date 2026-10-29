@@ -556,7 +556,7 @@
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '3';
+  var HEFT_VER = '4';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -574,9 +574,13 @@
       catch (e) { cls = null; }
       if (!cls) { paint('<div class="main"><div class="card stack"><h2>Hausaufgabenheft nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
       var key = 'hat-' + cid;
+      // wseq zählt Speichervorgänge: Ein Nachladen, das vor dem Speichern begonnen hat, wird verworfen (sonst überschreibt es frische Haken)
+      var wseq = 0, busy = 0;
       var doc = {
         get: async function () { var d = await DB.storeGet(key); return { exists: d != null, data: function () { return d; } }; },
         set: async function (v) {
+          wseq++; busy++;
+          try {
           v = JSON.parse(JSON.stringify(v));
           // Was den Kindern gehört, kommt immer vom Server: ihre Haken («selbst») und ihre eigenen Aufgaben («by»)
           try { var cur = await DB.storeGet(key), sb = {}, own = [];
@@ -586,10 +590,12 @@
             v.entries = v.entries.concat(own);
           } catch (e) {}
           await DB.storeSet(key, v);
+          } finally { busy--; wseq++; }
         },
         onSnapshot: function (cb) {
-          var iv = setInterval(async function () { if (document.hidden || UI.view !== 'heft') return;
-            try { var d = await DB.storeGet(key); if (d) cb({ exists: true, data: function () { return d; } }); } catch (e) {} }, 30000);
+          var iv = setInterval(async function () { if (document.hidden || UI.view !== 'heft' || busy) return;
+            var seq = wseq;
+            try { var d = await DB.storeGet(key); if (d && seq === wseq && !busy) cb({ exists: true, data: function () { return d; } }); } catch (e) {} }, 30000);
           return function () { clearInterval(iv); };
         }
       };
@@ -611,7 +617,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '12';
+  var PIN_VER = '13';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
