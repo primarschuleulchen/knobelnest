@@ -311,6 +311,8 @@
     if (m) return W.start(m[1], !!m[2]);
     var mf = hs.match(/^#\/tagesfolie\/([0-9a-f-]{36})/);
     if (mf) return F.start(mf[1]);
+    var mo = hs.match(/^#\/otterteich\/([0-9a-f-]{36})/);
+    if (mo) return O.start(mo[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
@@ -692,6 +694,27 @@
       paint('<div class="folie"><iframe src="pinnwand.html?v=' + PIN_VER + '" title="Klassen-Pinnwand" allow="fullscreen"></iframe></div>');
     }
   };
+  // ===================================================================
+  // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
+  // ===================================================================
+  var OTTER_VER = '1';
+  var O = {
+    start: async function (cid) {
+      UI.view = 'otter';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      app.innerHTML = '<p class="boot">Otterteich wird geladen …</p>';
+      var cls, kids;
+      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) { cls = null; }
+      if (!cls) { paint('<div class="main"><div class="card stack"><h2>Otterteich nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      window.knOtter = {
+        key: cid,
+        roster: (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }),
+        back: function () { location.hash = '#/'; }
+      };
+      paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen"></iframe></div>');
+    }
+  };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
 
   // ===================================================================
@@ -831,7 +854,7 @@
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
-      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a><a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a><a class="btn" href="#/pinnwand/' + T.cls + '">📌 Pinnwand</a></div></div></section>';
+      '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a><a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a><a class="btn" href="#/pinnwand/' + T.cls + '">📌 Pinnwand</a><a class="btn" href="#/otterteich/' + T.cls + '">🦦 Otterteich</a></div></div></section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
