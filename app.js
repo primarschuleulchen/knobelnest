@@ -697,7 +697,7 @@
   // ===================================================================
   // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
   // ===================================================================
-  var OTTER_VER = '1';
+  var OTTER_VER = '2';
   var O = {
     start: async function (cid) {
       UI.view = 'otter';

@@ -697,7 +697,7 @@ function update(dt){
   if(analyser){
     analyser.getFloatTimeDomainData(buf); let s=0; for(let i=0;i<buf.length;i++)s+=buf[i]*buf[i];
     const db=20*Math.log10(Math.sqrt(s/buf.length)+1e-8);
-    raw=(db+56+S.sens*3.5)*1.6;
+    raw=(db+48.4+S.sens*4)*2.4;
   }else if(sim) raw=+$('simLvl').value*(0.6+S.sens*0.08);
   raw=clamp(raw,0,100);
   level+=(raw-level)*Math.min(1,dt*(raw>level?22:4));
