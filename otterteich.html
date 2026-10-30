@@ -238,8 +238,11 @@ const TAU=Math.PI*2;
 // ================= Einstellungen =================
 const S={sens:5,speedIdx:3,max:25,names:'',showNames:true,pond:''};
 try{Object.assign(S,JSON.parse(localStorage.getItem(LSK)||'{}'))}catch(e){}
-if(KN&&!S.names.trim()&&KN.roster.length) S.names=KN.roster.join(', ');
-function save(){try{localStorage.setItem(LSK,JSON.stringify(S))}catch(e){}}
+
+const SYNC=['names','showNames','pond','speedIdx','max'];
+let syncT=null, synced=false;
+function save(){try{localStorage.setItem(LSK,JSON.stringify(S))}catch(e){}
+  if(KN&&KN.save&&synced){clearTimeout(syncT);syncT=setTimeout(()=>{const o={};SYNC.forEach(k=>o[k]=S[k]);KN.save(o).catch(()=>{})},800)}}
 function fmtSec(s){return s<60? s+' s Ruhe' : (s/60)+' min Ruhe'}
 function syncUI(){
   $('sens').value=S.sens; $('sensOut').textContent=S.sens+' / 10'; $('fsSens').textContent=S.sens+' / 10';
@@ -268,6 +271,15 @@ function renameAll(){const L=new Set(nameList());otters.forEach(o=>{if(o.name&&!
 const N=o=>o.name||'Ein Otter';
 const N2=(a,b)=>a.name&&b.name?a.name+' und '+b.name:'Zwei Otter';
 syncUI(); $('simOut').textContent=$('simLvl').value;
+// Gespeicherten Stand der Klasse holen; ohne gespeicherte Namen die Klassenliste einsetzen
+(async()=>{
+  if(!KN){synced=true;return}
+  let d=null; try{d=KN.load?await KN.load():null}catch(e){}
+  if(d&&typeof d==='object'){SYNC.forEach(k=>{if(d[k]!==undefined)S[k]=d[k]})}
+  if(!String(S.names||'').trim()&&KN.roster.length) S.names=KN.roster.join(', ');
+  $('names').value=S.names; $('showNames').checked=S.showNames; $('pondName').value=S.pond; applyPond(); syncUI(); renameAll();
+  synced=true; if(!d) save();
+})();
 const meter=$('meter'); meter.style.setProperty('--q',QUIET+'%'); meter.style.setProperty('--l',LOUD+'%');
 
 // ================= Mikrofon =================
@@ -1218,7 +1230,7 @@ function hud(){
   if(n>=S.max){$('nextTxt').textContent='Teich ist voll';$('progFill').style.width='100%'}
   else if(!active){$('nextTxt').textContent='wartet';$('progFill').style.width='0'}
   else if(paused){$('nextTxt').textContent='Pause'}
-  else{$('nextTxt').textContent=level>=QUIET&&level<LOUD?'pausiert':'in '+Math.ceil(iv-quietT)+' s';$('progFill').style.width=(quietT/iv*100).toFixed(1)+'%'}
+  else{$('nextTxt').textContent='';$('progFill').style.width=(quietT/iv*100).toFixed(1)+'%'}
   updUnlocks();
 }
 
