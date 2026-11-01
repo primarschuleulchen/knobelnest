@@ -558,13 +558,7 @@
         };
       };
       var otterOk = false; try { otterOk = !!(await toolAccess(me)).otter; } catch (e3) {}
-      if (otterOk) window.knOtter = {
-        key: cid,
-        roster: (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }),
-        back: function () {},
-        load: function () { return DB.storeGet('otter-' + cid); },
-        save: function (v) { return DB.storeSet('otter-' + cid, JSON.parse(JSON.stringify(v))); }
-      };
+      if (otterOk) window.knOtter = otterBridge(cid, (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }), function () {});
       window.knTagesfolie = {
         uid: uid, className: cls ? cls.name : '', isAdmin: !!(me && me.is_admin), template: tpl,
         saveTemplate: function (t) { return DB.sharedSet('tagesfolie-vorlage', JSON.parse(JSON.stringify(t))); },
@@ -763,7 +757,33 @@
       paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '4';
+  var OTTER_VER = '5';
+  // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
+  // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
+  var OTTER_CACHE = {};
+  function otterBridge(cid, roster, back) {
+    var c = OTTER_CACHE[cid] || (OTTER_CACHE[cid] = { doc: null, t: null });
+    function flush() {
+      clearTimeout(c.t); c.t = null;
+      if (!c.doc) return Promise.resolve();
+      return DB.storeSet('otter-' + cid, JSON.parse(JSON.stringify(c.doc))).catch(function () {});
+    }
+    function later(ms) { if (!c.t) c.t = setTimeout(flush, ms); }
+    return {
+      key: cid, roster: roster, back: back, flush: flush,
+      load: async function () {
+        var d = null; try { d = await DB.storeGet('otter-' + cid); } catch (e) { d = null; }
+        d = (d && typeof d === 'object') ? d : {};
+        if (c.doc && c.doc.run && (!d.run || (c.doc.run.at || 0) > (d.run.at || 0))) d.run = c.doc.run;
+        var had = !!Object.keys(d).length;
+        c.doc = d;
+        return had ? JSON.parse(JSON.stringify(d)) : null;
+      },
+      save: function (v) { c.doc = Object.assign(c.doc || {}, v); clearTimeout(c.t); c.t = null; later(1200); return Promise.resolve(); },
+      keepRun: function (r) { c.doc = c.doc || {}; c.doc.run = r; later(15000); }
+    };
+  }
+  window.addEventListener('pagehide', function () { Object.keys(OTTER_CACHE).forEach(function (k) { var c = OTTER_CACHE[k]; if (c.t && c.doc) { clearTimeout(c.t); c.t = null; DB.storeSet('otter-' + k, JSON.parse(JSON.stringify(c.doc))).catch(function () {}); } }); });
   var O = {
     start: async function (cid) {
       UI.view = 'otter';
@@ -774,14 +794,8 @@
       var cls, kids;
       try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) { cls = null; }
       if (!cls) { paint('<div class="main"><div class="card stack"><h2>Otterteich nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
-      window.knOtter = {
-        key: cid,
-        roster: (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }),
-        back: function () { location.hash = '#/'; },
-        load: function () { return DB.storeGet('otter-' + cid); },
-        save: function (v) { return DB.storeSet('otter-' + cid, JSON.parse(JSON.stringify(v))); }
-      };
-      paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen"></iframe></div>');
+      window.knOtter = otterBridge(cid, (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }), function () { location.hash = '#/'; });
+      paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen; autoplay"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
