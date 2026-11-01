@@ -313,6 +313,8 @@
     if (mf) return F.start(mf[1]);
     var mo = hs.match(/^#\/otterteich\/([0-9a-f-]{36})/);
     if (mo) return O.start(mo[1]);
+    var ma = hs.match(/^#\/atelier\/([0-9a-f-]{36})/);
+    if (ma) return AT.start(ma[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
@@ -515,7 +517,7 @@
   // Werkzeuge (Tagesfolie, Hausaufgabenheft, Pinnwand, Otterteich) gibt die Admin-Person pro Lehrperson frei.
   // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { folie: true, heft: true, pin: true, otter: true } }
   // ===================================================================
-  var TOOLS = [['folie', '☀️ Tagesfolie'], ['heft', '📒 Hausaufgabenheft'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Otterteich']];
+  var TOOLS = [['folie', '☀️ Tagesfolie'], ['heft', '📒 Hausaufgabenheft'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Otterteich'], ['atelier', '🚲 Atelier']];
   async function toolAccess(me) {
     var all = {}; TOOLS.forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
@@ -727,6 +729,39 @@
   // ===================================================================
   // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
   // ===================================================================
+  // ===================================================================
+  // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus dem Knobelnest.
+  // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
+  // ===================================================================
+  var ATELIER_VER = '1';
+  var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
+  var AT = {
+    start: async function (cid) {
+      UI.view = 'atelier';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      if (!(await toolGate('atelier', 'Das Atelier'))) return;
+      app.innerHTML = '<p class="boot">Atelier wird geladen …</p>';
+      var cls, kids;
+      try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) { cls = null; }
+      if (!cls) { paint('<div class="main"><div class="card stack"><h2>Atelier nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      var roster = (kids || []).slice().sort(kidSort), made = false;
+      window.knAtelier = {
+        mode: 'teacher', className: cls.name,
+        back: function () { location.hash = '#/'; },
+        load: async function () {
+          var d = await DB.storeGet('atelier-' + cid);
+          if (!d && !made) { made = true; await DB.atelierPut(cid, '_', { open: false }); d = { open: false, kids: {} }; }
+          var m = (d && d.kids) || {};
+          return { open: !!(d && d.open), kids: roster.map(function (k) { var e = m[k.id] || {};
+            return { id: k.id, name: k.name, thema: e.thema || '', umsetzung: e.umsetzung || '', stufe: e.stufe || '', farbe: e.farbe || '', x: e.x == null ? null : e.x, y: e.y == null ? null : e.y }; }) };
+        },
+        put: function (id, patch) { return DB.atelierPut(cid, id, JSON.parse(JSON.stringify(patch))); },
+        setOpen: function (on) { return DB.atelierPut(cid, '_', { open: !!on }); }
+      };
+      paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier"></iframe></div>');
+    }
+  };
   var OTTER_VER = '4';
   var O = {
     start: async function (cid) {
@@ -891,7 +926,8 @@
       (T.tools.folie ? '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a>' : '') +
       (T.tools.heft ? '<a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a>' : '') +
       (T.tools.pin ? '<a class="btn" href="#/pinnwand/' + T.cls + '">📌 Pinnwand</a>' : '') +
-      (T.tools.otter ? '<a class="btn" href="#/otterteich/' + T.cls + '">🦦 Otterteich</a>' : '') + '</div></div></section>';
+      (T.tools.otter ? '<a class="btn" href="#/otterteich/' + T.cls + '">🦦 Otterteich</a>' : '') +
+      (T.tools.atelier ? '<a class="btn" href="#/atelier/' + T.cls + '">🚲 Atelier</a>' : '') + '</div></div></section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -1680,6 +1716,8 @@
   };
   // Gibt es ein Hausaufgabenheft für diese Klasse? Dann erscheint die Agenda-Kachel
   K.checkHeft = async function () {
+    try { var ad = await DB.kidAtelier(K.sess.token); var ha = !!(ad && ad.kids); if (ha !== !!K.atelierOk) { K.atelierOk = ha; if (K.step === 'home') K.render(); } }
+    catch (e) {}
     try { var pd = await DB.kidPin(K.sess.token); var hp = !!(pd && pd.boards && Object.keys(pd.boards).length); if (hp !== !!K.pinOk) { K.pinOk = hp; if (K.step === 'home') K.render(); } }
     catch (e) {}
     try { var d = await DB.kidHeft(K.sess.token); var has = !!(d && d.entries); if (has !== !!K.heftOk) { K.heftOk = has; if (K.step === 'home') K.render(); } }
@@ -1752,7 +1790,9 @@
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
       '<span><b>Unsere Tafel</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>' +
       (K.pinOk ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
-        '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') + '</div>', 'Abmelden');
+        '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
+      (K.atelierOk ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
+        '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', 'Abmelden');
   };
   K.view_thema = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
@@ -1827,6 +1867,19 @@
     return '<div class="folie"><iframe src="pinnwand.html?v=' + PIN_VER + '" title="Pinnwand"></iframe></div>';
   };
   ACT.kPin = function () { K.step = 'pin'; K.render(); };
+  K.view_atelier = function () {
+    var kid = K.home && K.home.kid; if (!kid) { K.step = 'home'; return K.view_home(); }
+    window.knAtelier = {
+      mode: 'kid', me: kid.id, className: '',
+      back: function () { ACT.kBack(); },
+      load: async function () { var d = await DB.kidAtelier(K.sess.token); if (!d) return null;
+        return { open: !!d.open, kids: (d.kids || []).map(function (k) { return { id: k.id, name: k.name, thema: k.thema || '', umsetzung: k.umsetzung || '', farbe: k.farbe || '', x: k.x == null ? null : k.x, y: k.y == null ? null : k.y }; }) }; },
+      put: function (id, patch) { if (id !== kid.id) return Promise.reject(new Error('Nicht erlaubt')); return DB.kidAtelierSet(K.sess.token, JSON.parse(JSON.stringify(patch))); },
+      setOpen: function () { return Promise.reject(new Error('Nicht erlaubt')); }
+    };
+    return '<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier"></iframe></div>';
+  };
+  ACT.kAtelier = function () { K.step = 'atelier'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
@@ -1878,6 +1931,7 @@
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
       case 'heft': K.step = 'home'; K.render(); break;
       case 'pin': K.step = 'home'; K.render(); K.checkHeft(); break;
+      case 'atelier': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }
