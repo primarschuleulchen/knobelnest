@@ -212,7 +212,7 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .t-plan.h .pl-ops{position:absolute;top:2px;right:2px}
 
 /* Material */
-.t-mat{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--fs) * 3.4vh),1fr));gap:clamp(6px,2.5cqw,18px);padding:6px 5cqw 16px}
+.t-mat{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(calc(var(--fs) * 3.4vh),28cqw),1fr));gap:clamp(6px,2.5cqw,18px);padding:6px 5cqw 16px}
 .mat{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--hand);font-size:calc(var(--fs) * .7vh);text-align:center;line-height:1.05}
 .mat svg{width:100%;max-width:120px;aspect-ratio:1;background:#f6f7f2;border-radius:18px}
 .t-mat.icons .mat span{display:none}
@@ -220,6 +220,19 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 /* Bild */
 .w.image .card{background:none;box-shadow:none}
 .t-stand{position:absolute;inset:0}
+.w.otter{pointer-events:none}
+.w.otter .chrome,.w.otter .ohead,.w.otter .rs,.w.otter .rse,.w.otter .rsb{pointer-events:auto}
+.w.otter .card{background:none;box-shadow:none;pointer-events:none}
+.t-otter{position:absolute;inset:0;display:flex;flex-direction:column}
+.t-otter .ohead{flex:none;background:#123222;color:#fff;font:700 15px/1 var(--font, inherit);padding:7px 14px;border-radius:22px 22px 0 0;cursor:grab;user-select:none;box-shadow:0 3px 18px rgba(40,60,45,.12)}
+.t-otter .obody{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;border-radius:0 0 22px 22px;background:rgba(18,50,34,.12);color:#2c4a38;font-size:14px}
+.obody.cov{background:none!important}
+.obody.cov span{display:none}
+.app.idle .t-otter .ohead{opacity:0}
+#otterLayer{position:fixed;left:0;top:0;width:10px;height:10px;visibility:hidden;border-radius:0 0 22px 22px;overflow:hidden;background:#123222;box-shadow:0 6px 18px rgba(40,60,45,.16)}
+#otterLayer.on{visibility:visible}
+#otterLayer iframe{width:100%;height:100%;border:0;display:block}
+.drag-otter #otterLayer iframe{pointer-events:none}
 .t-stand iframe{width:100%;height:100%;border:0;display:block;pointer-events:none}
 .kn-back{font-weight:700}
 .music-chip{position:absolute;left:14px;bottom:96px;z-index:40;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;box-shadow:0 4px 14px rgba(0,0,0,.1);font-size:14px}
@@ -333,6 +346,7 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
     <button class="pill" id="tplBtn" style="display:none">Vorlagen</button>
     <button class="pill" id="fsBtn">⛶ Vollbild</button>
   </div>
+  <div id="otterLayer" aria-label="Otterteich"></div>
   <div class="board" id="board"></div>
   <nav class="dock" id="dock" aria-label="Widget hinzufügen"></nav>
   <div class="toast" id="toast" role="status"></div>
@@ -612,10 +626,11 @@ const TYPES = {
   symbol:  { lab: "Arbeitsform", w: 16, h: 26, d: () => ({ key: "einzel" }), icon: `<circle cx="16" cy="10" r="4.5" fill="currentColor"/><path d="M7 27c0-8 18-8 18 0z" fill="currentColor"/>` },
   traffic: { lab: "Ampel", w: 8, h: 34, d: () => ({ on: "green" }), icon: `<rect x="10" y="3" width="12" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="10" r="2.5" fill="currentColor"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><circle cx="16" cy="22" r="2.5" fill="currentColor"/>` },
   groups:  { lab: "Gruppen", w: 40, h: 30, d: () => ({ heading: "Partner", source: "random", size: 2, groups: [] }), icon: `<circle cx="9" cy="9" r="3.6" fill="currentColor"/><circle cx="23" cy="9" r="3.6" fill="currentColor"/><path d="M3 18c0-4 12-4 12 0zM17 18c0-4 12-4 12 0z" fill="currentColor"/><circle cx="16" cy="22" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 30c0-4 12-4 12 0" fill="none" stroke="currentColor" stroke-width="2"/>` },
+  otter:   { lab: "Otterteich", w: 42, h: 46, d: () => ({}), icon: `<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="11" cy="7.5" r="1.8" fill="currentColor"/><circle cx="21" cy="7.5" r="1.8" fill="currentColor"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/>` },
   stand:   { lab: "Arbeitsstand", w: 50, h: 60, d: () => ({}), icon: `<rect x="4" y="6" width="24" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4 13h24M12 6v20M20 6v20" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="19" r="2" fill="currentColor"/><circle cx="24" cy="22" r="2" fill="currentColor"/>` },
   random:  { lab: "Zufallsname", w: 24, h: 30, d: () => ({ names: "", pick: "", editing: !(KN && KN.roster.length) }), icon: `<rect x="6" y="6" width="20" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="20" cy="20" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/>` }
 };
-const DOCK = ["title","date","clock","timer","|","list","check","plan","material","note","image","|","symbol","traffic","random","groups"].concat(KN ? ["|","stand"] : []);
+const DOCK = ["title","date","clock","timer","|","list","check","plan","material","note","image","|","symbol","traffic","random","groups"].concat(KN ? ["|","stand"].concat(KN.otterUrl ? ["otter"] : []) : []);
 
 // ---------- Startdaten ----------
 const mkItems = a => a.map(t => ({ id: uid(), text: t, done: false }));
@@ -1049,6 +1064,7 @@ function widgetInner(w){
       ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<button class="mat${(d.crossed || []).includes(k) ? " crossed" : ""}" data-mk="${k}" title="${MAT[k][0]} – antippen zum Durchstreichen">${MAT[k][1]}<span>${MAT[k][0]}</span></button>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
       <div class="mnote${d.note ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="note" data-ph="Anmerkung (optional)" style="${d.tc ? `color:${d.tc}` : ""}">${esc(d.note || "")}</div>
       <div class="lfoot"><button class="sbtn rose" data-mat>Material wählen</button><button class="sbtn" data-iconsonly>${d.iconsOnly ? "Mit Text" : "Nur Symbole"}</button></div>`;
+    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur im Knobelnest."}</span></div></div>`;
     case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur im Knobelnest.</div>`;
     case "image": return `<div class="t-img">${d.src ? `<img src="${esc(d.src)}" alt="">` : ""}</div>`;
     case "note": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift (optional)">${esc(d.heading)}</div><div class="t-note" style="${d.tc ? `color:${d.tc}` : ""}" contenteditable="true" spellcheck="false" data-f="body" data-ph="Hier schreiben …">${esc(d.body)}</div>`;
@@ -1088,12 +1104,32 @@ function renderBoard(){
   const sc = screen();
   $("#board").innerHTML = sc.widgets.length ? sc.widgets.map(widgetHTML).join("") : `<div class="board-empty">Unten ein Widget wählen, um diesen Bildschirm zu füllen.</div>`;
 }
+// Otterteich: ein einziges Fenster bleibt bestehen (Mikrofon und Otter laufen weiter) und liegt immer genau über dem Widget
+(() => {
+  const layer = document.getElementById("otterLayer"); let frame = null, last = "";
+  const tick = () => {
+    requestAnimationFrame(tick);
+    const ph = KN && KN.otterUrl ? document.querySelector("#board .obody[data-otter]") : null;
+    if (!ph) { if (last !== "off") { layer.classList.remove("on"); last = "off"; } return; }
+    if (!frame) { frame = document.createElement("iframe"); frame.src = KN.otterUrl; frame.title = "Otterteich"; frame.allow = "microphone; autoplay"; layer.appendChild(frame); }
+    if (!ph.classList.contains("cov")) ph.classList.add("cov");
+    const r = ph.getBoundingClientRect(), wz = ph.closest(".w")?.style.zIndex || "1";
+    const k = [r.left, r.top, r.width, r.height, wz].map(v => typeof v === "number" ? Math.round(v) : v).join(",");
+    if (k === last) return; last = k;
+    Object.assign(layer.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", zIndex: wz });
+    layer.classList.toggle("on", r.width > 20 && r.height > 20);
+  };
+  if (KN && KN.otterUrl) requestAnimationFrame(tick);
+  document.addEventListener("pointerdown", e => { if (e.target.closest?.(".w.otter [data-grip], .w.otter .ohead, .w.otter [data-rs]")) APP_DRAGGING(true); }, true);
+  window.addEventListener("pointerup", () => APP_DRAGGING(false));
+  function APP_DRAGGING(on){ document.body.classList.toggle("drag-otter", on); }
+})();
 function rerender(w){ const el = document.querySelector(`[data-w="${w.id}"]`); if (el) el.outerHTML = widgetHTML(w); }
 const findW = el => { const n = el.closest?.("[data-w]"); return n && screen().widgets.find(w => w.id === n.dataset.w); };
 
 // ---------- Ziehen und Grösse ----------
 let drag = null, justDragged = false;
-const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image", "stand"]);
+const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image", "stand", "otter"]);
 $("#board").addEventListener("pointerdown", e => {
   const w = findW(e.target);
   if (!w) { selId = null; document.querySelectorAll(".w.sel").forEach(n => n.classList.remove("sel")); return; }
@@ -1105,8 +1141,11 @@ $("#board").addEventListener("pointerdown", e => {
   if (!grip && !rs && !onBody) return;
   e.preventDefault();
   const r = $("#board").getBoundingClientRect();
+  // Teile, die nur beim Bearbeiten sichtbar sind (Eingabeleiste, leere Anmerkung), zählen beim Verschieben nicht mit
+  const edPx = [...el.querySelectorAll(".lfoot, .mnote.empty")].reduce((n, x) => n + x.offsetHeight, 0);
   const hh = AUTO.has(w.type) ? el.offsetHeight / r.height * 100 : w.h;
-  drag = { w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, bw: r.width, bh: r.height, moved: false };
+  const vh = AUTO.has(w.type) ? Math.max(4, (el.offsetHeight - edPx) / r.height * 100) : w.h;
+  drag = { w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, vh, bw: r.width, bh: r.height, moved: false };
   el.classList.add("drag");
 });
 window.addEventListener("pointermove", e => {
@@ -1114,7 +1153,7 @@ window.addEventListener("pointermove", e => {
   const dx = (e.clientX - drag.sx) / drag.bw * 100, dy = (e.clientY - drag.sy) / drag.bh * 100, w = drag.w;
   if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 4) drag.moved = true;
   if (!drag.moved) return;
-  if (drag.mode === "mv") { w.x = Math.max(-2, Math.min(102 - w.w, drag.x + dx)); w.y = Math.max(-1, Math.min(101 - Math.min(drag.hh, 30), drag.y + dy)); drag.el.style.left = w.x + "%"; drag.el.style.top = w.y + "%"; }
+  if (drag.mode === "mv") { w.x = Math.max(-2, Math.min(102 - w.w, drag.x + dx)); w.y = Math.max(-1, Math.min(101 - Math.min(drag.vh, 30), drag.y + dy)); drag.el.style.left = w.x + "%"; drag.el.style.top = w.y + "%"; }
   else {
     if (drag.axis.includes("x")) { w.w = Math.max(8, Math.min(100 - w.x, drag.ww + dx)); drag.el.style.width = w.w + "%"; }
     if (drag.axis.includes("y")) {

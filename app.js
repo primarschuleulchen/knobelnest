@@ -555,11 +555,20 @@
           delete: async function () { await DB.storeDel(id); }
         };
       };
+      var otterOk = false; try { otterOk = !!(await toolAccess(me)).otter; } catch (e3) {}
+      if (otterOk) window.knOtter = {
+        key: cid,
+        roster: (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }),
+        back: function () {},
+        load: function () { return DB.storeGet('otter-' + cid); },
+        save: function (v) { return DB.storeSet('otter-' + cid, JSON.parse(JSON.stringify(v))); }
+      };
       window.knTagesfolie = {
         uid: uid, className: cls ? cls.name : '', isAdmin: !!(me && me.is_admin), template: tpl,
         saveTemplate: function (t) { return DB.sharedSet('tagesfolie-vorlage', JSON.parse(JSON.stringify(t))); },
         roster: (kids || []).map(function (k) { return k.name; }),
         boardUrl: base + '#/wandtafel/' + cid + '/embed',
+        otterUrl: otterOk ? 'otterteich.html?embed&v=' + OTTER_VER : '',
         back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: {
           use: async function (name) {
@@ -570,7 +579,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('36') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('37') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
@@ -718,7 +727,7 @@
   // ===================================================================
   // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
   // ===================================================================
-  var OTTER_VER = '3';
+  var OTTER_VER = '4';
   var O = {
     start: async function (cid) {
       UI.view = 'otter';
