@@ -733,7 +733,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus dem Knobelnest.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '1';
+  var ATELIER_VER = '2';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -759,7 +759,7 @@
         put: function (id, patch) { return DB.atelierPut(cid, id, JSON.parse(JSON.stringify(patch))); },
         setOpen: function (on) { return DB.atelierPut(cid, '_', { open: !!on }); }
       };
-      paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier"></iframe></div>');
+      paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
   };
   var OTTER_VER = '4';
@@ -1877,7 +1877,7 @@
       put: function (id, patch) { if (id !== kid.id) return Promise.reject(new Error('Nicht erlaubt')); return DB.kidAtelierSet(K.sess.token, JSON.parse(JSON.stringify(patch))); },
       setOpen: function () { return Promise.reject(new Error('Nicht erlaubt')); }
     };
-    return '<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier"></iframe></div>';
+    return '<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>';
   };
   ACT.kAtelier = function () { K.step = 'atelier'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
