@@ -1401,7 +1401,7 @@
       '<aside class="side"><section class="card stack" style="background:var(--pastel);border-color:#A9C9EC"><h2 style="font-size:22px">Offene Fragen gerade</h2>' + counts +
       '<a class="btn amber" href="#/wandtafel/' + T.cls + '" target="_blank" rel="noopener">' + ic(I.board) + ' An der Wandtafel zeigen</a>' +
       '<button class="btn" data-a="tafelRefresh">' + ic(I.reset) + ' Aktualisieren</button>' +
-      '<p class="muted" style="font-size:14px">Die Kinder öffnen die Tafel nach dem Einloggen über «Unsere Tafel».</p></section></aside></div>';
+      '<p class="muted" style="font-size:14px">Die Kinder öffnen die Tafel nach dem Einloggen über «Arbeitsstand».</p></section></aside></div>';
   };
   function subj(id) { return T.subjects.filter(function (s) { return s.id === id; })[0]; }
   ACT.subjActive = async function (el) { var s = subj(el.dataset.id); s.active = !s.active; T.render(); await DB.updateSubject(s.id, { active: s.active }); T.tafel = null; T.render(); };
@@ -1789,7 +1789,7 @@
       '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
         '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
       '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
-      '<span><b>Unsere Tafel</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>' +
+      '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>' +
       (K.pinOk ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
         '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
       (K.atelierOk ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
