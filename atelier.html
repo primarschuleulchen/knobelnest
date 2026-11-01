@@ -16,7 +16,7 @@
   --hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
   --bubble:"Fredoka","Nunito",system-ui,sans-serif;
   --planW:min(44vw, calc((100dvh - 236px) * .7071 / 1.06));
-  --ptH:clamp(30px,3.4vh,42px); --parkH:clamp(64px,8.5vh,84px);
+  --ptH:clamp(42px,5.2vh,64px); --parkH:clamp(64px,8.5vh,84px);
 }
 html,body{height:100%}
 body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;overflow:hidden}
@@ -52,6 +52,8 @@ button{cursor:pointer}
 .kidmode .kid.other:hover{background:none}
 .dlg input[readonly]{background:#f1f2ee;color:var(--muted)}
 .dlg input:disabled{opacity:.55}
+.dlg select{font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);width:100%}
+.dlg select:disabled{opacity:.55}
 .dlg .lockmsg{font-size:13px;color:var(--muted);margin:-4px 0 0;text-align:center}
 .status{font-size:12px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.7);padding:2px 10px;border-radius:999px}
 .status:empty{display:none}
@@ -82,10 +84,11 @@ button{cursor:pointer}
 .kname{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-family:var(--hand);font-size:clamp(21px,1.75vw,27px);line-height:1;color:var(--ink)}
 .kname .n{overflow-wrap:anywhere;min-width:0}
 .st{font-family:var(--ui);font-size:11px;font-weight:800;letter-spacing:.03em;border-radius:999px;padding:2px 9px 1px;white-space:nowrap;background:#f0f2ee;color:var(--muted)}
-.st.Thema{background:var(--leaf-soft);color:#4f7a3c}
-.st.Recherche{background:var(--sky-soft);color:#456f97}
-.st.Produkt{background:var(--sun-soft);color:#9a6a12}
-.st.Präsentation{background:var(--rose-soft);color:#b5524a}
+.st.Thema{background:#e6e8ea;color:#4f575e}
+.st.Recherche{background:#fbeeb8;color:#7d5f00}
+.st.Produkt{background:#dcefd3;color:#336e24}
+.st.Präsentation{background:#dbe6fb;color:#2a58b0}
+.st:not(.Thema):not(.Recherche):not(.Produkt):not(.Präsentation){background:#fff;color:#8a928c;box-shadow:inset 0 0 0 1px #cfd6cd}
 .facts{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:2px 10px}
 .no-stufe .f-stufe{visibility:hidden}
 .facts div{min-width:0}
@@ -153,13 +156,13 @@ button{cursor:pointer}
   .facts:not([style]){grid-template-columns:minmax(0,1.25fr) minmax(0,1.25fr) minmax(0,.8fr)}
   .facts i{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lhead{font-size:clamp(20px,1.6vw,26px);padding:8px 14px 2px}
-  .lbody{container-type:size;padding:2px 8px 8px;gap:0;overflow:auto}
+  .lbody{container-type:size;padding:8px 8px 8px;gap:0;overflow:auto}
   .kid{--r:max(46px,calc((100cqh - 10px) / 12));flex:none;height:var(--r);grid-template-columns:calc(var(--r) * 1.3) minmax(0,1fr);gap:0 10px;padding:calc(var(--r) * .05) 8px;overflow:hidden}
   .kside{gap:0}
   .kinfo{gap:calc(var(--r) * .04)}
   .kname{font-size:clamp(15px,calc(var(--r) * .36),27px);flex-wrap:nowrap;align-items:center}
   .kname .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .kname .st{flex:none;font-size:clamp(8.5px,calc(var(--r) * .15),11px);padding:1px 7px 0}
+  .kname .st{flex:none;font-size:clamp(9.5px,calc(var(--r) * .17),12.5px);padding:2px 9px 1px}
   .facts i{font-size:clamp(8px,calc(var(--r) * .14),10px);line-height:1.15}
   .facts b{font-size:clamp(10.5px,calc(var(--r) * .21),13.5px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
   .planwrap{container-type:size;height:100%;gap:6px}
@@ -199,12 +202,13 @@ button{cursor:pointer}
     <span class="status" id="status"></span>
     <button class="toggle" id="tgStufe" type="button" role="switch" aria-checked="true">Lernerstufe<span class="track"></span></button>
     <button class="toggle" id="tgOpen" type="button" role="switch" aria-checked="false" hidden title="Wenn offen, können die Kinder Thema und Umsetzungsart selbst ändern">Kinder dürfen Text ändern<span class="track"></span></button>
+    <button class="pill" id="btnArten" type="button" hidden>Umsetzungsarten</button>
     <button class="pill" id="btnPaste" type="button">Liste einfügen</button>
     <button class="pill" id="btnFs" type="button">⛶ Vollbild</button>
     <button class="pill rose" id="btnAdd" type="button">+ Kind</button>
   </div>
   <main class="stage">
-    <section class="list" aria-label="Kinderliste links"><div class="lhead" id="headL">Kinder</div><div class="lbody" id="listL"></div></section>
+    <section class="list" aria-label="Kinderliste links"><div class="lbody" id="listL"></div></section>
     <div class="planwrap">
       <h1 class="ptitle">Atelier</h1>
       <div class="plan" id="plan" aria-label="Atelier-Weg">
@@ -215,7 +219,7 @@ button{cursor:pointer}
       </div>
       <div class="park" id="park"><span class="lbl">Velo-Parkplatz</span></div>
     </div>
-    <section class="list" aria-label="Kinderliste rechts"><div class="lhead" id="headR">Kinder</div><div class="lbody" id="listR"></div></section>
+    <section class="list" aria-label="Kinderliste rechts"><div class="lbody" id="listR"></div></section>
   </main>
 </div>
 
@@ -232,7 +236,7 @@ let store=null;
 // Knobelnest: Kinder der Klasse und Speicher kommen aus dem Portal
 const KN=(()=>{try{return window.parent!==window&&window.parent.knAtelier||null}catch(e){return null}})();
 const KID=!!(KN&&KN.mode==='kid');
-let knOpen=false, dragging=false, lastWrite=0;
+let knOpen=false, dragging=false, lastWrite=0, knArten=[];
 
 /* ---------- Speicher: geteilte Datenbank, sonst Browser ---------- */
 const LS='atelier-kinder-v1';
@@ -272,7 +276,7 @@ function makeKnStore(){
     if(dragging||Date.now()-lastWrite<2500||modal.innerHTML) return;
     try{
       const d=await KN.load(); if(!d) return;
-      knOpen=!!d.open; applyOpen();
+      knOpen=!!d.open; knArten=Array.isArray(d.arten)?d.arten:[]; applyOpen();
       // Startfarbe nach Namen (überall gleich); die Lehrperson speichert sie einmal fest
       const byName=[...(d.kids||[])].map(k=>k.name).sort((x,y)=>String(x).localeCompare(String(y),'de'));
       const list=(d.kids||[]).map((k,i)=>({...k,farbe:k.farbe||PALETTE[byName.indexOf(k.name)%PALETTE.length],order:i}));
@@ -326,10 +330,11 @@ function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt
 function f(v){return v?`<b>${esc(v)}</b>`:'<b class="none">–</b>'}
 function station(k){
   if(k.x==null) return '';
-  // nächstes Schild (Fuss des Pfostens, in % des Plans; Höhe zählt wegen Seitenverhältnis 1.41x)
-  const S=[['Präsentation',13,25],['Produkt',70,44],['Recherche',22,60],['Thema',85,80]];
-  let best=S[0],bd=1e9;S.forEach(s=>{const d=(s[1]-k.x)**2+((s[2]-k.y)*1.41)**2;if(d<bd){bd=d;best=s}});
-  return best[0];
+  // Höhe der Schildmitte in % des Plans: Thema 66.8, Recherche 45.6, Produkt 29.3
+  if(k.y>66.8) return 'Thema';
+  if(k.y>45.6) return 'Recherche';
+  if(k.y>29.3) return 'Produkt';
+  return 'Präsentation';
 }
 function render(){
   const RANK={'Präsentation':0,'Produkt':1,'Recherche':2,'Thema':3};
@@ -462,6 +467,12 @@ function openEdit(k){
   const fields=KID?['name','thema','umsetzung']:['name','thema','umsetzung','stufe'];
   fields.forEach(n=>$('#f-'+n).value=d[n]||'');
   if(KN){$('#f-name').readOnly=true;}
+  if(KN&&knArten.length){ // Auswahl statt Freitext
+    const inp=$('#f-umsetzung'), cur=inp.value, sel=document.createElement('select'); sel.id='f-umsetzung';
+    const opts=[...knArten]; if(cur&&!opts.includes(cur)) opts.push(cur);
+    sel.innerHTML='<option value="">– bitte wählen –</option>'+opts.map(a=>`<option>${esc(a)}</option>`).join('');
+    sel.value=cur; inp.replaceWith(sel);
+  }
   if(KID&&!knOpen){$('#f-thema').disabled=true;$('#f-umsetzung').disabled=true;}
   $('#f-farbe').value=d.farbe;
   const refresh=()=>{
@@ -543,7 +554,7 @@ if(KN){
   $('#btnAdd').hidden=true;
   const kb=$('#knBack');kb.hidden=false;kb.onclick=()=>KN.back();
   if(KID){$('#btnPaste').hidden=true;$('#tgStufe').hidden=true;document.body.classList.add('kidmode')}
-  else{const to=$('#tgOpen');to.hidden=false;to.onclick=async()=>{knOpen=!knOpen;applyOpen();lastWrite=Date.now();
+  else{$('#btnArten').hidden=false;const to=$('#tgOpen');to.hidden=false;to.onclick=async()=>{knOpen=!knOpen;applyOpen();lastWrite=Date.now();
     try{await KN.setOpen(knOpen);setStatus(knOpen?'Die Kinder können jetzt Thema und Umsetzungsart ändern.':'Gesperrt: Die Kinder können nur noch ihr Velo verschieben und die Farbe ändern.');setTimeout(()=>setStatus(''),4000)}
     catch(e){knOpen=!knOpen;applyOpen();setStatus('Speichern hat nicht geklappt.')}}}
   if(KN.className) document.querySelector('.ptitle').textContent='Atelier';
@@ -555,6 +566,24 @@ let stufeOn=true;try{stufeOn=localStorage.getItem('atelier-stufe')!=='0'}catch(e
 setStufe(KID?false:stufeOn);
 tg.onclick=()=>setStufe(tg.getAttribute('aria-checked')!=='true');
 $('#btnPaste').onclick=openPaste;
+function openArten(){
+  modal.innerHTML=`<div class="overlay"><form class="dlg" id="af">
+    <h3>Umsetzungsarten</h3>
+    <p class="hint">Eine Art pro Zeile. Die Kinder wählen ihre Umsetzungsart dann aus dieser Liste (wenn der Riegel «Kinder dürfen Text ändern» offen ist).</p>
+    <textarea id="at" placeholder="Plakat&#10;Modell&#10;Film&#10;Präsentation mit Folien"></textarea>
+    <div class="row"><button type="button" class="pill" id="acancel">Abbrechen</button><button type="submit" class="pill rose">Speichern</button></div>
+  </form></div>`;
+  $('#at').value=knArten.join('\n');
+  $('#acancel').onclick=closeModal;
+  $('#af').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const list=[...new Set($('#at').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))].slice(0,30);
+    closeModal(); knArten=list; lastWrite=Date.now();
+    try{await KN.setArten(list);setStatus('Umsetzungsarten gespeichert.');setTimeout(()=>setStatus(''),3000)}catch(err){setStatus('Speichern hat nicht geklappt.')}
+  });
+  setTimeout(()=>$('#at').focus(),30);
+}
+$('#btnArten').onclick=openArten;
 $('#btnFs').onclick=()=>{try{document.documentElement.requestFullscreen().catch(()=>setStatus('Vollbild geht hier nicht.'))}catch(e){}};
 $('#fsx').onclick=()=>{try{document.exitFullscreen().catch(()=>{})}catch(e){}};
 document.addEventListener('fullscreenchange',()=>setTimeout(fitSigns,60));

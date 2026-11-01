@@ -733,7 +733,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus dem Knobelnest.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '2';
+  var ATELIER_VER = '3';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -753,11 +753,12 @@
           var d = await DB.storeGet('atelier-' + cid);
           if (!d && !made) { made = true; await DB.atelierPut(cid, '_', { open: false }); d = { open: false, kids: {} }; }
           var m = (d && d.kids) || {};
-          return { open: !!(d && d.open), kids: roster.map(function (k) { var e = m[k.id] || {};
+          return { open: !!(d && d.open), arten: (d && d.arten) || [], kids: roster.map(function (k) { var e = m[k.id] || {};
             return { id: k.id, name: k.name, thema: e.thema || '', umsetzung: e.umsetzung || '', stufe: e.stufe || '', farbe: e.farbe || '', x: e.x == null ? null : e.x, y: e.y == null ? null : e.y }; }) };
         },
         put: function (id, patch) { return DB.atelierPut(cid, id, JSON.parse(JSON.stringify(patch))); },
-        setOpen: function (on) { return DB.atelierPut(cid, '_', { open: !!on }); }
+        setOpen: function (on) { return DB.atelierPut(cid, '_', { open: !!on }); },
+        setArten: function (a) { return DB.atelierPut(cid, '_', { arten: a }); }
       };
       paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
@@ -1873,7 +1874,7 @@
       mode: 'kid', me: kid.id, className: '',
       back: function () { ACT.kBack(); },
       load: async function () { var d = await DB.kidAtelier(K.sess.token); if (!d) return null;
-        return { open: !!d.open, kids: (d.kids || []).map(function (k) { return { id: k.id, name: k.name, thema: k.thema || '', umsetzung: k.umsetzung || '', farbe: k.farbe || '', x: k.x == null ? null : k.x, y: k.y == null ? null : k.y }; }) }; },
+        return { open: !!d.open, arten: d.arten || [], kids: (d.kids || []).map(function (k) { return { id: k.id, name: k.name, thema: k.thema || '', umsetzung: k.umsetzung || '', farbe: k.farbe || '', x: k.x == null ? null : k.x, y: k.y == null ? null : k.y }; }) }; },
       put: function (id, patch) { if (id !== kid.id) return Promise.reject(new Error('Nicht erlaubt')); return DB.kidAtelierSet(K.sess.token, JSON.parse(JSON.stringify(patch))); },
       setOpen: function () { return Promise.reject(new Error('Nicht erlaubt')); }
     };
