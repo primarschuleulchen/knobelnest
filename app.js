@@ -102,6 +102,16 @@
     { id: 'frage', label: 'Ich habe eine Frage', ic: '<path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.3-1.5 2.4"/><path d="M12 18h.01"/>' }
   ];
   var COL_LABEL = { helfen: 'Ich kann helfen', klar: 'Ich komme gut klar', frage: 'Ich habe eine Frage' };
+  var COL_DEF = { helfen: 'Ich kann helfen', klar: 'Ich komme gut klar', frage: 'Ich habe eine Frage' };
+  // Eigene Namen der drei Spalten pro Klasse (classes.tafel_cols); leer = Standard. Gespeichert schon «escaped» für das HTML.
+  function setTafelCols(o) {
+    o = o && typeof o === 'object' ? o : {};
+    COLS.forEach(function (c) { var v = String(o[c.id] || '').trim().slice(0, 40); c.label = h(v || COL_DEF[c.id]); COL_LABEL[c.id] = c.label; });
+  }
+  // Klassenbild (Maskottchen): eigenes Bild oder das Standardbild
+  function klassBild(b) { return /^data:image\//.test(b || '') ? b : 'bilder/klassenkiste.webp'; }
+  // Werkzeuge für die Kinder: fehlt ein Eintrag, gilt «freigegeben» (so bleiben bestehende Klassen wie bisher)
+  function toolOn(c, k) { var t = c && c.kid_tools; return !(t && t[k] === false); }
 
   function ic(paths, size, color, sw) {
     return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') +
@@ -510,6 +520,7 @@
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
+      try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); } catch (e) {}
       async function load() {
         try { paint(board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall')); }
         catch (e) { paint('<div class="main"><div class="card stack"><h2>Tafel nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); stopTimers(); }
@@ -836,6 +847,7 @@
     if (!T.cls) { T.rel = new Set(); T.kids = []; T.subjects = []; return; }
     var r = await Promise.all([DB.listReleases(T.cls), DB.listKids(T.cls), DB.listSubjects(T.cls)]);
     T.rel = new Set(r[0]); T.kids = r[1]; T.subjects = r[2];
+    setTafelCols((T.cur() || {}).tafel_cols);
   };
   T.cur = function () { return T.classes.filter(function (c) { return c.id === T.cls; })[0] || null; };
 
@@ -918,6 +930,68 @@
   var CODE_WORDS = ['FUCHS', 'DACHS', 'LUCHS', 'BIBER', 'IGEL', 'ADLER', 'EULE', 'OTTER', 'GEMSE', 'WOLF', 'HASE', 'FALKE', 'KAUZ', 'MARDER', 'SPATZ',
     'PANDA', 'KOALA', 'DELFIN', 'PINGUIN', 'ZEBRA', 'TIGER', 'KATZE', 'MAUS', 'ELCH', 'STORCH', 'RABE', 'SCHWAN', 'LAMA', 'WAL', 'MURMEL'];
   function genCode() { return CODE_WORDS[rnd(CODE_WORDS.length)] + ' ' + (100 + rnd(900)); }
+  // ---------- Klassenbild (Maskottchen): Vorlagen der Admin-Lehrperson (shared_store «klassenbilder») oder eigenes Bild ----------
+  function resizeImg(file, max) {
+    return new Promise(function (res, rej) {
+      if (!file || !/^image\//.test(file.type)) return rej(new Error('Bitte ein Bild wählen (JPG, PNG oder WebP).'));
+      var r = new FileReader();
+      r.onerror = function () { rej(new Error('Das Bild konnte nicht gelesen werden.')); };
+      r.onload = function () {
+        var im = new Image();
+        im.onerror = function () { rej(new Error('Das Bild konnte nicht gelesen werden.')); };
+        im.onload = function () {
+          var k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k));
+          cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+          var d = cv.toDataURL('image/webp', 0.86); if (!/^data:image\/webp/.test(d)) d = cv.toDataURL('image/png');
+          if (d.length > 390000) d = cv.toDataURL('image/jpeg', 0.8);
+          res(d);
+        };
+        im.src = r.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+  var BILDER = null;
+  ACT.bildEdit = async function () {
+    var c = T.cur(); if (!c) return;
+    if (BILDER === null) { try { BILDER = (await DB.sharedGet('klassenbilder')) || []; } catch (e) { BILDER = []; } }
+    var list = (Array.isArray(BILDER) ? BILDER : []).filter(function (b) { return b && /^data:image\//.test(b.src || ''); });
+    overlay('<div class="dialog stack" role="dialog" aria-label="Klassenbild wählen" style="width:min(720px,100%)"><div class="row" style="justify-content:space-between"><h2 style="font-size:30px">Klassenbild wählen</h2><button class="btn sm" data-a="closeOverlay">Schliessen</button></div>' +
+      '<p class="muted">Das Bild erscheint hier und bei den Kindern, wenn sie sich anmelden.</p>' +
+      '<div class="bildwahl"><button class="bildopt' + (!c.bild ? ' on' : '') + '" data-a="bildPick" data-i="-1"><img src="bilder/klassenkiste.webp" alt=""><span>Standard</span></button>' +
+      list.map(function (b, i) { return '<button class="bildopt' + (c.bild === b.src ? ' on' : '') + '" data-a="bildPick" data-i="' + i + '"><img src="' + h(b.src) + '" alt=""><span>' + h(b.name || 'Maskottchen') + '</span></button>'; }).join('') +
+      (c.bild && !list.some(function (b) { return b.src === c.bild; }) ? '<span class="bildopt on"><img src="' + h(c.bild) + '" alt=""><span>Eigenes Bild</span></span>' : '') + '</div>' +
+      '<div class="field"><label for="bildFile">Eigenes Bild hochladen</label><input class="input" id="bildFile" type="file" accept="image/*" data-change="bildFile"><span class="muted small">Am besten quadratisch. Es wird automatisch verkleinert. Keine Fotos von Kindern.</span></div></div>');
+  };
+  async function saveBild(src) {
+    var c = T.cur();
+    try { await DB.updateClass(c.id, { bild: src }); } catch (e) { return toast(sqlHint(e)); }
+    c.bild = src; closeOverlays(); toast('Klassenbild gespeichert.'); T.render();
+  }
+  ACT.bildPick = function (el) { var i = +el.dataset.i; if (i < 0) return saveBild(null); var b = (BILDER || [])[i]; if (b) return saveBild(b.src); };
+  ACT.bildFile = async function (el) { var f = el.files && el.files[0]; if (!f) return; try { var d = await resizeImg(f, 320); await saveBild(d); } catch (e) { toast(e.message); } };
+  // Verwaltung: Vorlagen für Klassenbilder
+  ACT.kbAdd = async function (el) {
+    var A = T.admin, files = Array.prototype.slice.call(el.files || []); if (!files.length) return;
+    var list = (A.kb || []).slice();
+    for (var i = 0; i < files.length; i++) {
+      try { list.push({ id: Math.random().toString(36).slice(2, 10), name: files[i].name.replace(/\.[^.]+$/, '').slice(0, 30), src: await resizeImg(files[i], 320) }); }
+      catch (e) { toast(e.message); }
+    }
+    try { await DB.sharedSet('klassenbilder', list); A.kb = list; BILDER = list; toast('Vorlagen gespeichert.'); } catch (e) { toast(errMsg(e)); }
+    T.render();
+  };
+  ACT.kbDel = async function (el) {
+    var A = T.admin, list = (A.kb || []).filter(function (b) { return b.id !== el.dataset.id; });
+    try { await DB.sharedSet('klassenbilder', list); A.kb = list; BILDER = list; } catch (e) { toast(errMsg(e)); }
+    T.render();
+  };
+  ACT.kbName = async function (el) {
+    var A = T.admin, b = (A.kb || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!b) return;
+    b.name = String(el.value || '').trim().slice(0, 30);
+    try { await DB.sharedSet('klassenbilder', A.kb); BILDER = A.kb; } catch (e) { toast(errMsg(e)); }
+  };
   // Eigener Klassencode, z. B. «Otter 123»: Buchstaben, Zahlen, Leerzeichen; die Kinder müssen Gross/klein und Leerzeichen nicht beachten
   function cleanCode(v) { return String(v || '').replace(/\s+/g, ' ').trim(); }
   function codeProblem(v) {
@@ -964,6 +1038,8 @@
     } else c = await withFreeCode(function (code) { return DB.createClass(name, code); });
     var d = [['Mathematik', '#2F5E9E'], ['Deutsch', '#8A4F7D'], ['Englisch', '#C0473C'], ['NMG', '#2E8B57']];
     for (var i = 0; i < d.length; i++) await DB.addSubject(c.id, { name: d[i][0], color: d[i][1], fav: true, active: true, sort: i });
+    var shut = { heft: false, pin: false, atelier: false, tafel: false };
+    try { await DB.updateClass(c.id, { kid_tools: shut }); c.kid_tools = shut; } catch (e) {}
     T.classes.push(c); T.cls = c.id; LS.set('kn_cls', c.id);
     await T.loadClass(); T.tab = 'kinder'; LS.set('kn_tab', 'kinder');
     closeOverlays(); toast('Klasse ' + name + ' angelegt. Code: ' + c.code); T.render();
@@ -980,19 +1056,23 @@
     var shown = games.filter(function (g) {
       return (T.fach === 'alle' || g.fach === T.fach) && (!q || (g.title + ' ' + g.description + ' ' + g.thema + ' ' + g.fach).toLowerCase().indexOf(q) >= 0);
     });
-    var out = '<section class="banner"><span class="banner-bild" aria-hidden="true"><img src="bilder/klassenkiste.webp" alt="" width="150" height="150"></span><div class="stack banner-text" style="gap:8px;flex:1 1 320px"><span class="klein">Ihre Klasse</span><h2>Klasse ' + h(c.name) + '</h2>' +
+    var out = '<section class="banner"><button class="banner-bild" data-a="bildEdit" title="Klassenbild ändern"><img src="' + h(klassBild(c.bild)) + '" alt="Klassenbild" width="150" height="150"><span class="bild-edit">✎ ändern</span></button><div class="stack banner-text" style="gap:8px;flex:1 1 320px"><span class="klein">Ihre Klasse</span><h2>Klasse ' + h(c.name) + '</h2>' +
       '<p>Die Kinder öffnen <b>' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b><button class="code-edit" data-a="codeEdit">✎ selbst wählen</button></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
       '</div></div>' + (function () {
-        var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel'], ['heft', 'hausaufgaben', '📒', 'Hausaufgaben\u00adheft', 'Aufgaben und Kontrollen'],
-          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern'], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier']]
+        // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
+        var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier']]
           .filter(function (x) { return T.tools[x[0]]; });
-        var vt = vkg ? '<div class="tooltile tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '"><span class="tti" aria-hidden="true">' + VK_SVG + '</span><span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
+        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; var on = toolOn(c, k);
+          return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
+        var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel"><span class="tti" aria-hidden="true">🙋</span><span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
+        var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '"><span class="tti" aria-hidden="true">' + VK_SVG + '</span><span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
-        return t.length || vt ? '<div class="tooltiles">' + t.map(function (x) {
-          return '<a class="tooltile' + (x[0] === 'folie' ? ' tt-main' : '') + '" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>'; }).join('') + vt + '</div>' : '';
+        return '<div class="tooltiles">' + t.map(function (x) {
+          return '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; }).join('') + tafelTile + vt + '</div>';
       })() + '</section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
@@ -1262,6 +1342,12 @@
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
+  ACT.toolRel = async function (el) {
+    var c = T.cur(), k = el.dataset.k, kt = Object.assign({}, c.kid_tools || {}), before = c.kid_tools;
+    kt[k] = !toolOn(c, k); c.kid_tools = kt; T.render();
+    try { await DB.updateClass(c.id, { kid_tools: kt }); toast(kt[k] ? 'Für die Klasse freigegeben.' : 'Für die Klasse gesperrt.'); }
+    catch (e) { c.kid_tools = before; T.render(); toast(sqlHint(e)); }
+  };
   ACT.gRelAll = async function (el) {
     var on = el.dataset.v === '1', k = el.dataset.k;
     var ids = T.games.filter(function (g) { return g.fach + '|' + g.thema === k && T.rel.has(g.id) !== on; }).map(function (g) { return g.id; });
@@ -1548,9 +1634,12 @@
       list + '<form class="stack" data-a="addSubj" style="padding-top:14px;border-top:1.5px solid #E2EBF5"><div class="field"><label for="subjName">Eigenes Fach oder Aufgabe hinzufügen</label>' +
       '<div class="row"><input class="input grow" style="flex:1 1 220px" id="subjName" name="name" maxlength="40" placeholder="z. B. Lesetraining" value="' + h(T.subjDraft || '') + '" data-input="subjDraft" required><button class="btn primary">Hinzufügen</button></div></div>' +
       '<div class="row"><span class="lbl">Farbe:</span>' + swatches(T.newColor, 'newColor') + '</div></form></section>' +
-      '<section class="card stack"><h2>Die drei Spalten</h2><div class="columns">' + COLS.map(function (col) {
-        return '<div class="column c-' + col.id + '" style="min-height:0"><div class="column-h" style="font-size:17px">' + col.label + '</div></div>'; }).join('') +
-      '</div><p class="muted small">Wer «Ich habe eine Frage» wählt, sieht sofort, wer im gleichen Fach helfen kann. Jedes Kind steht nur an einem Ort.</p></section>' +
+      '<section class="card stack"><h2>Die drei Spalten</h2><form class="stack" data-a="colsSave" style="gap:12px"><div class="columns">' + COLS.map(function (col) {
+        var own = String(((c.tafel_cols || {})[col.id]) || '');
+        return '<label class="column c-' + col.id + '" style="min-height:0"><span class="sr">Name der Spalte</span><input class="input col-in" name="' + col.id + '" value="' + h(own) + '" placeholder="' + h(COL_DEF[col.id]) + '" maxlength="40"></label>'; }).join('') +
+      '</div><div class="row"><button class="btn primary sm">Namen speichern</button><button type="button" class="btn sm" data-a="colsReset">Standardnamen</button>' +
+      '<span class="muted small">Leer = Standardname. Die Kinder sehen die neuen Namen beim nächsten Öffnen.</span></div></form>' +
+      '<p class="muted small">Wer «' + COL_LABEL.frage + '» wählt, sieht sofort, wer im gleichen Fach helfen kann. Jedes Kind steht nur an einem Ort.</p></section>' +
       '<section class="card stack"><h2>Neue Woche</h2><button class="switch" role="switch" aria-checked="' + !!c.tafel_auto + '" data-a="tafelAuto"><span>Namen jeden Montag automatisch von der Tafel nehmen</span><span class="track"></span></button>' +
       '<div class="row"><button class="btn danger' + (UI.confirm === clearKey ? ' armed' : '') + '" data-a="tafelClear">' + (UI.confirm === clearKey ? 'Wirklich alle Namen entfernen?' : 'Alle Namen jetzt entfernen') + '</button>' +
       '<span class="muted small">Die Fächer bleiben, nur die Namen gehen weg.</span></div></section></div>' +
@@ -1590,6 +1679,17 @@
     if (!armed('clearTafel')) return T.render();
     await DB.clearTafel(T.cls); T.tafel = null; toast('Alle Namen wurden von der Tafel genommen.'); T.render();
   };
+  function sqlHint(e) { return /bild|kid_tools|tafel_cols|column|schema cache/i.test((e && e.message) || '') ? 'Dafür zuerst das neue SQL (Version 20) in Supabase ausführen.' : errMsg(e); }
+  async function saveTafelCols(o) {
+    var c = T.cur();
+    try { await DB.updateClass(c.id, { tafel_cols: o }); } catch (e) { return toast(sqlHint(e)); }
+    c.tafel_cols = o; setTafelCols(o); toast('Namen der Spalten gespeichert.'); T.tafel = null; T.render();
+  }
+  ACT.colsSave = function (f) {
+    var o = {}; COLS.forEach(function (col) { var v = String(f.elements[col.id].value || '').trim().slice(0, 40); if (v && v !== COL_DEF[col.id]) o[col.id] = v; });
+    return saveTafelCols(o);
+  };
+  ACT.colsReset = function () { return saveTafelCols({}); };
   ACT.tafelRefresh = function () { T.tafel = null; T.render(); };
 
   // ---------- Konto ----------
@@ -1633,12 +1733,21 @@
 
   // ---------- Verwaltung (nur Admin) ----------
   function blankForm() { return { id: null, title: '', description: '', fach: '', thema: '', stufe: '', for_all: false, html: null, filename: '' }; }
+  function kbCard() {
+    var A = T.admin, list = A.kb || [];
+    return '<section class="card stack"><h2>Klassenbilder (Maskottchen)</h2><p class="muted">Diese Bilder können alle Lehrpersonen für ihre Klasse auswählen (Klick auf das Bild neben dem Klassennamen).</p>' +
+      (list.length ? '<div class="bildwahl">' + list.map(function (b) {
+        return '<div class="bildopt"><img src="' + h(b.src) + '" alt=""><input class="input" value="' + h(b.name || '') + '" maxlength="30" aria-label="Name" data-change="kbName" data-id="' + h(b.id) + '"><button class="btn sm danger" data-a="kbDel" data-id="' + h(b.id) + '">Entfernen</button></div>'; }).join('') + '</div>' : '<p class="muted small">Noch keine Vorlagen.</p>') +
+      '<div class="field"><label for="kbFile">Bilder hinzufügen (mehrere möglich)</label><input class="input" id="kbFile" type="file" accept="image/*" multiple data-change="kbAdd"></div></section>';
+  }
   T.tabAdmin = function () {
     var A = T.admin; if (!A.form) A.form = blankForm();
     if (A.teachers === null && !A.busy) {
       A.busy = true;
       Promise.all([DB.listTeachers(), DB.listTeacherGames(), DB.sharedGet('werkzeuge').catch(function () { return null; }),
-        DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; }), DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; })]).then(function (r) {
+        DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; }), DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; }),
+        DB.sharedGet('klassenbilder').catch(function () { return null; })]).then(function (r) {
+        A.kb = Array.isArray(r[5]) ? r[5] : [];
         A.teachers = r[0]; A.tg = r[1]; A.tools = r[2] || {}; A.vtpl = r[3]; A.vz = r[4] && typeof r[4] === 'object' ? r[4] : {}; A.busy = false; if (T.tab === 'verwaltung') T.render(); })
         .catch(function (e) { A.busy = false; toast(errMsg(e)); });
     }
@@ -1721,7 +1830,7 @@
       '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
       (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
-      '<div class="cols2"><div class="wide">' + pack + form + '</div>' +
+      '<div class="cols2"><div class="wide">' + pack + form + kbCard() + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
       '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
       '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
@@ -1907,6 +2016,7 @@
   K.loadHome = async function () {
     try { K.home = await DB.kidHome(K.sess.token); }
     catch (e) { return K.sessionLost(e); }
+    K.kl = await DB.kidKlasse(K.sess.token); setTafelCols(K.kl && K.kl.cols);
     K.render(); K.checkRace(); K.checkHeft();
     if (!K.raceWatch) K.raceWatch = setInterval(function () { if (K.sess && UI.view === 'kid' && K.step === 'home' && !document.hidden) K.checkRace(); }, 4000);
   };
@@ -1965,7 +2075,7 @@
       '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go">Weiter</button></form>');
   };
   K.view_names = function () {
-    return K.shell('<div class="stack" style="gap:6px"><h1>Wer bist du?</h1><p class="lead">Klasse ' + h(K.cls.class_name) + ' · Tippe auf deinen Namen.</p></div>' +
+    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.cls.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Wer bist du?</h1><p class="lead">Klasse ' + h(K.cls.class_name) + ' · Tippe auf deinen Namen.</p></div></div>' +
       (K.cls.kids.length ? '<div class="kid-grid">' + K.cls.kids.map(function (k) {
         return '<button class="kid-name" data-a="kName" data-id="' + k.id + '"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(kidBadge(k)) + '</span><b>' + h(k.name) + '</b></button>';
       }).join('') + '</div>' : '<div class="kid-card"><p class="lead">In dieser Klasse sind noch keine Kinder eingetragen.</p></div>'), 'Anderer Code');
@@ -1991,17 +2101,18 @@
       if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic">' + VK_SVG + '</span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
-    return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
+    var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
+    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div></div>' +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
-      '<div class="tile-pair">' + (K.heftOk ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="9" y="7" width="46" height="52" rx="6" fill="#87ad74"/><rect x="14" y="7" width="41" height="52" rx="4" fill="#6f9a5f"/><rect x="18" y="11" width="33" height="44" rx="3" fill="#fbfaf6"/><path d="M23 21h23M23 28h23M23 35h17M23 42h20" stroke="#c9d3c4" stroke-width="2.4" stroke-linecap="round"/><path d="M23 21h12" stroke="#2f6fd0" stroke-width="2.6" stroke-linecap="round"/><path d="M23 35h9" stroke="#d0493f" stroke-width="2.6" stroke-linecap="round"/><path d="M41 40l3 3 6-7" fill="none" stroke="#3f9a52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="9" y="7" width="46" height="52" rx="6" fill="#87ad74"/><rect x="14" y="7" width="41" height="52" rx="4" fill="#6f9a5f"/><rect x="18" y="11" width="33" height="44" rx="3" fill="#fbfaf6"/><path d="M23 21h23M23 28h23M23 35h17M23 42h20" stroke="#c9d3c4" stroke-width="2.4" stroke-linecap="round"/><path d="M23 21h12" stroke="#2f6fd0" stroke-width="2.6" stroke-linecap="round"/><path d="M23 35h9" stroke="#d0493f" stroke-width="2.6" stroke-linecap="round"/><path d="M41 40l3 3 6-7" fill="none" stroke="#3f9a52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
       '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
         '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
-      '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
-      '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>' +
-      (K.pinOk ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
+      (!toolOn(kt, 'tafel') ? '' : '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
+      '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>') +
+      (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
         '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
-      (K.atelierOk ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
+      (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
         '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', 'Abmelden');
   };
   K.view_thema = function () {

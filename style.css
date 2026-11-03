@@ -630,3 +630,46 @@ body.lp .main section.stack>.row>h2{font-size:36px!important}
 body.lp .main section.stack>.row>h2::after{content:" ✦ ✧ ✦";font-size:13px;letter-spacing:.3em;color:var(--gold);vertical-align:middle}
 body.lp .kidlink{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:16px;box-shadow:var(--schatten);font-weight:400}
 body.lp .kidlink:hover{background:var(--sky-soft);color:var(--ink)}
+
+/* ---- Version 78: breiter, Kopf rechts, Werkzeug-Kacheln mit Freigabe, Klassenbild, roter Knopf ---- */
+body.lp .main,body.lp .top-in,body.lp .tabs{max-width:1440px}
+/* Kopf rechts: Klasse, Name, Abmelden in einer ruhigen Leiste */
+body.lp .top-in>.row{background:#fff;border:1.5px solid #e1edf7;border-radius:999px;padding:5px;gap:4px;box-shadow:var(--schatten);flex-wrap:nowrap}
+body.lp .top-in>.row select.input{min-height:42px!important;border:0;border-radius:999px;background:var(--sky-soft);padding:0 34px 0 16px;font-size:18px;cursor:pointer}
+body.lp .top-in>.row .btn{border:0;box-shadow:none;border-radius:999px;min-height:42px;background:transparent}
+body.lp .top-in>.row .btn:hover{background:var(--sky-soft);transform:none}
+body.lp .top-in>.row .btn[data-a="logout"]{color:var(--soft);font-size:16px}
+body.lp .top-in>.row .avatar{width:32px;height:32px;font-size:14px}
+@media (max-width:640px){body.lp .top-in>.row{flex-wrap:wrap;border-radius:22px}}
+/* Werkzeug-Kacheln: alle mit Fussleiste (Freigabe für die Klasse oder «Nur für Sie») */
+body.lp .tooltiles{grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:14px}
+body.lp .tooltile.tt-card{padding:0;gap:0;justify-content:space-between;overflow:hidden}
+body.lp .tt-card .tt-open{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 10px 12px;width:100%;flex:1;border:0;background:none;color:var(--ink);text-decoration:none;font:inherit;cursor:pointer}
+body.lp .tt-card .tt-open b{white-space:nowrap}
+body.lp .tt-card .tt-rel,body.lp .tt-card .tt-only{display:block;width:100%;border:0;border-top:1.5px dashed var(--gold);padding:8px 8px 9px;font:inherit;font-size:15px;text-align:center;line-height:1.25}
+body.lp .tt-card .tt-rel{background:#fff;color:#9a3b33;cursor:pointer}
+body.lp .tt-card .tt-rel:hover{background:var(--rose-soft)}
+body.lp .tt-card .tt-rel.on{background:var(--leaf-soft);color:#3f6b2e}
+body.lp .tt-card .tt-rel.on:hover{background:#dcead2}
+body.lp .tt-card .tt-only{color:var(--soft);background:#f7fbfe}
+body.lp .tooltile.tt-main .tt-only{background:transparent}
+/* Klassenbild im Banner: anklickbar */
+button.banner-bild{position:relative;cursor:pointer;padding:0;font:inherit}
+button.banner-bild .bild-edit{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:#fff;border:1.5px solid #d6ad45;border-radius:999px;padding:1px 10px;font-size:14px;white-space:nowrap;opacity:0;transition:opacity .2s;color:#2f5f8f}
+button.banner-bild:hover .bild-edit,button.banner-bild:focus-visible .bild-edit{opacity:1}
+.bildwahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px}
+.bildopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border:1.5px solid #e1edf7;border-radius:20px;background:#fff;cursor:pointer;font:inherit;text-align:center}
+.bildopt img{width:96px;height:96px;object-fit:cover;border-radius:50%;border:3px solid #d6ad45;background:#dcf0fd}
+.bildopt.on{border:2px solid #1f2421;box-shadow:0 0 0 3px #fff,0 0 0 5px #d6ad45}
+.bildopt .input{min-height:36px;font-size:15px;padding:4px 8px;text-align:center}
+/* Kinder: Klassenbild neben der Begrüssung */
+.kid-hello{display:flex;align-items:center;gap:18px}
+.kid-bild{flex:none;width:88px;height:88px;border-radius:50%;object-fit:cover;background:#dcf0fd;border:3px solid #d6ad45;box-shadow:inset 0 0 0 4px #fff,0 6px 16px rgba(63,120,168,.18)}
+@media (max-width:520px){.kid-bild{width:64px;height:64px}}
+/* Spaltennamen der Tafel als Eingabefelder */
+body.lp .columns .column{padding:8px}
+body.lp .col-in{background:rgba(255,255,255,.75);font-size:19px}
+/* Roter Knopf: ruhig, beim Bestätigen gut lesbar */
+body.lp .btn.danger{background:#fff;border:2px solid #c9706a;color:#9a3b33;box-shadow:none}
+body.lp .btn.danger:hover{background:#fcefed;border-color:#b5524a}
+body.lp .btn.danger.armed{background:#fcefed;border-color:#b5524a;color:#7d2a24;box-shadow:0 0 0 3px #fff,0 0 0 5px #ec9d95}

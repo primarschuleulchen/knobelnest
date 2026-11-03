@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 19)
+-- Knobelnest – Datenbank-Einrichtung (Version 20)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1007,5 +1007,55 @@ revoke execute on function public.kid_atelier(uuid), public.kid_atelier_set(uuid
 grant execute on function public.kid_atelier(uuid), public.kid_atelier_set(uuid, jsonb) to anon, authenticated;
 revoke execute on function public.atelier_put(uuid, text, jsonb) from anon;
 grant execute on function public.atelier_put(uuid, text, jsonb) to authenticated;
+
+-- =====================================================================
+-- Version 20: Klassenbild (Maskottchen), Werkzeug-Freigaben für die Kinder, eigene Namen der Tafel-Spalten
+--   classes.bild        = Bild der Klasse als kleines data:image (höchstens 400 kB), sonst das Standardbild
+--   classes.kid_tools   = { heft, pin, atelier, tafel: true/false } – fehlt ein Eintrag, gilt «freigegeben»
+--   classes.tafel_cols  = { helfen, klar, frage: "eigener Text" } – leer = Standardtexte
+--   Die Lehrperson ändert alles über ihre eigene Klasse (RLS classes_all). Kinder lesen es nur mit kid_klasse.
+-- =====================================================================
+alter table public.classes add column if not exists bild text;
+alter table public.classes add column if not exists kid_tools jsonb not null default '{}'::jsonb;
+alter table public.classes add column if not exists tafel_cols jsonb not null default '{}'::jsonb;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'classes_bild_size') then
+    alter table public.classes add constraint classes_bild_size check (bild is null or (octet_length(bild) <= 400000 and bild like 'data:image/%'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'classes_tafel_cols_size') then
+    alter table public.classes add constraint classes_tafel_cols_size check (jsonb_typeof(tafel_cols) = 'object' and octet_length(tafel_cols::text) <= 2000);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'classes_kid_tools_size') then
+    alter table public.classes add constraint classes_kid_tools_size check (jsonb_typeof(kid_tools) = 'object' and octet_length(kid_tools::text) <= 2000);
+  end if;
+end $$;
+
+-- Was ein angemeldetes Kind über seine Klasse wissen darf: Bild, freigegebene Werkzeuge, Namen der Tafel-Spalten
+create or replace function public.kid_klasse(p_token uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids; c public.classes;
+begin
+  k := public._kid(p_token);
+  select * into c from public.classes where id = k.class_id;
+  return json_build_object('bild', c.bild, 'tools', coalesce(c.kid_tools, '{}'::jsonb), 'cols', coalesce(c.tafel_cols, '{}'::jsonb));
+end;
+$$;
+
+-- Klassencode eingeben: zusätzlich das Klassenbild (für die Namenswahl)
+create or replace function public.kid_class(p_code text) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare c public.classes;
+begin
+  select * into c from public.classes where public._norm_code(code) = public._norm_code(p_code);
+  if not found then return null; end if;
+  return json_build_object(
+    'class_id', c.id, 'class_name', c.name, 'bild', c.bild,
+    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name, 'nr', k.nr) order by k.nr nulls last, lower(k.name))
+                        from public.kids k where k.class_id = c.id), '[]'::json));
+end;
+$$;
+
+revoke execute on function public.kid_klasse(uuid) from public;
+grant execute on function public.kid_klasse(uuid), public.kid_class(text) to anon, authenticated;
 
 -- Fertig.
