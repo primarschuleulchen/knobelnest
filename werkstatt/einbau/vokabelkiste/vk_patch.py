@@ -296,5 +296,10 @@ rep("<div class=\"hact\">${KN&&isPortion?", "<div class=\"hact\">${KN_ADMIN?(()=
 rep("    $('#relNode').onclick=()=>toggleRelease(id);", "    $('#relNode').onclick=()=>toggleRelease(id);const tpb=$('#tplNode');if(tpb)tpb.onclick=()=>toggleTpl(id);")
 rep("${T&&!op?' · <span class=\"lock\">nicht freigegeben</span>':''}</span>", "${T&&!op?' · <span class=\"lock\">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>")
 
+# 12) Karteikasten: Ein Kärtchen rutscht erst nach 2× «Gewusst» weiter. Damit der Zähler nicht scheinbar bei 0 stehen bleibt,
+#     zeigt er auch die Kärtchen, die schon 1× gewusst wurden, und der Balken wächst schon beim ersten Mal.
+rep("  const next=()=>{setProg(`${doneN} von ${total} fertig · ${up} weiter, ${down} zurück`,doneN/total);",
+    "  const next=()=>{const once=queue.filter(id=>(b.hits[id]||0)===1).length;setProg(`${doneN} von ${total} fertig · ${once} schon 1× gewusst · ${up} weiter, ${down} zurück<br><small>Ein Kärtchen rutscht ins nächste Fach, wenn du es 2× gewusst hast.</small>`,(doneN+once/2)/total);")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
