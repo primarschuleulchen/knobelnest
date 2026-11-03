@@ -745,3 +745,10 @@ body.kidv .kid-input{border:2px solid rgba(31,36,33,.2);border-radius:22px}
 body.lp .tooltile .tti.bild{width:84px;height:84px;padding:0;border:0;background:none;box-shadow:0 6px 14px rgba(63,120,168,.18);border-radius:50%}
 body.lp .tooltile .tti.bild img{width:100%;height:100%;display:block;border-radius:50%}
 body.lp .tooltile .tti:not(.bild){width:84px;height:84px;font-size:40px}
+body.lp a.marke,body.lp a.marke:hover{color:#1f2421}
+/* Kacheln direkt ziehen */
+body.lp .tooltiles [data-tile]{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.lp .tooltiles [data-tile].dragging{position:relative;z-index:20;box-shadow:0 22px 44px rgba(63,120,168,.35);transition:none;cursor:grabbing;outline:2px dashed #d6ad45;outline-offset:3px}
+body.tt-dragging,body.tt-dragging *{cursor:grabbing!important}
+body.tt-dragging .tooltiles [data-tile]:not(.dragging){transition:transform .15s}
+.tt-tipp{margin:10px 0 0;flex:1 1 100%}
