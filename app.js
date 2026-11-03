@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '7'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '8'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();

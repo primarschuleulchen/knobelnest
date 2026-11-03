@@ -1294,7 +1294,7 @@ function practiceBox(kind,f){
   const s=SUB(),b=boxOf(s,kind);const list=shuffle(inFach(b,f)).sort((x,y)=>(b.t[x]||0)-(b.t[y]||0)).slice(0,ROUND),total=list.length;
   SET={key:'box',label:'Karteikasten',words:list.map(WD)};knStart('box','kasten-'+kind);
   const body=shell(`Fach ${f} · ${kind==='karte'?'Kärtchen':'Schreiben'}`);let queue=list.slice(),up=0,down=0,doneN=0;
-  const next=()=>{setProg(`${doneN} von ${total} fertig · ${up} weiter, ${down} zurück`,doneN/total);
+  const next=()=>{const once=queue.filter(id=>(b.hits[id]||0)===1).length;setProg(`${doneN} von ${total} fertig · ${once} schon 1× gewusst · ${up} weiter, ${down} zurück<br><small>Ein Kärtchen rutscht ins nächste Fach, wenn du es 2× gewusst hast.</small>`,(doneN+once/2)/total);
     if(!queue.length){
       /* Das Fach gilt erst als geübt, wenn jedes Kärtchen darin seit dem letzten Mal einmal dran war */
       const rest=inFach(b,f).filter(id=>(b.t[id]||0)<=(b.last[f]||0));if(!rest.length)b.last[f]=Date.now();saveP();
