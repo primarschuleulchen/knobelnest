@@ -51,7 +51,8 @@ body.idle .actions{opacity:0;pointer-events:none}
 .ab.on .led{background:#3fae5c;box-shadow:0 0 0 4px rgba(63,174,92,.2)}
 .ab.sim .led{background:var(--accent)}
 .ab[aria-pressed="true"]{color:#d6453b}
-.meters{width:100%;padding:11px 15px 13px;display:grid;gap:5px}
+.meters{width:100%;padding:9px 14px 11px;display:grid;gap:4px;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@media (max-width:1300px){.meters{width:min(320px,calc(100vw - 28px))}}
 .mlabel{display:flex;justify-content:space-between;gap:10px;font:600 .86rem var(--display);letter-spacing:.02em}
 .mlabel span:last-child{font-variant-numeric:tabular-nums}
 .meter{position:relative;height:16px;border-radius:8px;cursor:ew-resize;touch-action:none;
@@ -294,6 +295,7 @@ kbd{font:700 .8rem var(--body);border:1px solid var(--line);border-bottom-width:
     <button class="linky" id="simBtn2">Ohne Mikrofon testen</button>
     <div class="field" id="simField" hidden><label for="simLvl">Test-Lautstärke <output id="simOut">5</output></label><input type="range" id="simLvl" min="0" max="100" step="1" value="5"><p class="hint">Nach rechts schieben, um «laut» zu spielen.</p></div>
     <div class="field"><label for="lim">Lautstärkegrenze <output data-out="limit"></output></label><input type="range" id="lim" data-key="limit" min="15" max="95" step="1"><p class="hint">Darüber erschrickt ein Otter und rennt davon. Du kannst auch den weissen Strich in der Lautstärke-Anzeige ziehen.</p></div>
+    <div class="field"><label for="tol">Kurze Geräusche verzeihen <output data-out="tol"></output></label><input type="range" id="tol" data-key="tol" min="0" max="20" step="1"><p class="hint">Ein umgefallener Stift oder ein kurzes Husten erschreckt dann keinen Otter. Erst wenn es so lange laut bleibt, rennt einer davon. Der Frosch springt trotzdem sofort ins Wasser – als kleine Warnung.</p></div>
     <div class="field"><label for="sens">Empfindlichkeit <output data-out="sens"></output></label><input type="range" id="sens" data-key="sens" min="0" max="100" step="1"><p class="hint">Höher für leise Räume oder ein weit entferntes Mikrofon.</p></div>
     <button class="btn" id="calBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg><span id="calBtnTxt">Auf diesen Raum einstellen</span></button>
     <p class="hint" style="margin-top:-8px">Alle 4 Sekunden ganz still sein – danach passt die Empfindlichkeit zum Raum.</p>
@@ -310,6 +312,8 @@ kbd{font:700 .8rem var(--body);border:1px solid var(--line);border-bottom-width:
       <label class="tg"><span><b>Anzahl Otter</b><small>Oben links anzeigen</small></span><input type="checkbox" data-key="showCount"></label>
       <label class="tg"><span><b>Holzschild</b><small>Schild mit Namen auf der Wiese</small></span><input type="checkbox" data-key="sign"></label>
       <label class="tg"><span><b>Untertitel</b><small>Kurze Sätze, was die Otter gerade tun</small></span><input type="checkbox" data-key="captions"></label>
+      <label class="tg"><span><b>Bildschirm wach halten</b><small>Solange der Teich läuft, wird der Bildschirm nicht dunkel und der Bildschirmschoner startet nicht</small></span><input type="checkbox" data-key="wake"></label>
+      <label class="tg"><span><b>Sparsam zeichnen</b><small>30 statt bis zu 120 Bilder pro Sekunde. Schont Akku und Lüfter (das Mikrofon hört einen lauten Lüfter mit)</small></span><input type="checkbox" data-key="eco"></label>
     </div>
     <div class="field"><label for="pondName">Name auf dem Holzschild</label><input type="text" id="pondName" maxlength="28" placeholder="Otterteich" autocomplete="off"></div>
     <div class="sec">Datenschutz</div>
@@ -372,7 +376,8 @@ const TAU=Math.PI*2;
 
 // ================= Einstellungen (nur im Arbeitsspeicher, nichts wird gespeichert) =================
 const DEF={autoLight:true,tMorgen:'07:45',tTag:'09:00',tAbend:'14:00',tNacht:'17:00',showNext:true,showBar:true,sens:50,limit:60,speedIdx:10,max:25,names:'',showNames:true,pond:'',season:seasonByDate(),light:'tag',showCount:false,sign:false,
-  clouds:true,insects:true,glints:true,leaves:true,fireflies:true,captions:true,music:'aus',musicVol:35,nature:false,natureVol:40,sfx:true,muted:false,clock:true};
+  clouds:true,insects:true,glints:true,leaves:true,fireflies:true,captions:true,music:'aus',musicVol:35,nature:false,natureVol:40,sfx:true,muted:false,clock:true,
+  tol:5,wake:true,eco:true}; // tol in Zehntelsekunden
 const S=Object.assign({},DEF);
 // Optional: Einstellungen aus einem selbst erstellten Lesezeichen-Link (#e=…). Der Teil nach # geht nie an den Server.
 (function readHash(){
@@ -389,7 +394,7 @@ function settingsLink(){
 }
 const quiet=()=>Math.max(5,Math.round(S.limit*.42));
 function fmtSec(s){return s<60? s+' s Ruhe' : (s/60)+' min Ruhe'}
-const FMT={sens:v=>v+' %',limit:v=>v,speedIdx:v=>fmtSec(SPEEDS[v]),max:v=>v,musicVol:v=>v+' %',natureVol:v=>v+' %'};
+const FMT={tol:v=>v===0?'aus':(v/10).toLocaleString('de-CH')+' s',sens:v=>v+' %',limit:v=>v,speedIdx:v=>fmtSec(SPEEDS[v]),max:v=>v,musicVol:v=>v+' %',natureVol:v=>v+' %'};
 function pondName(){return S.pond.trim()||'Otterteich'}
 
 const ICON={
@@ -410,7 +415,7 @@ function lightByTime(){
 function syncUI(){
   if(S.autoLight) S.light=lightByTime();
   S.sens=clamp(Math.round(S.sens),0,100); S.limit=clamp(Math.round(S.limit),15,95);
-  S.speedIdx=clamp(Math.round(S.speedIdx),0,SPEEDS.length-1); S.max=clamp(Math.round(S.max),3,25); S.musicVol=clamp(Math.round(S.musicVol),0,100);
+  S.speedIdx=clamp(Math.round(S.speedIdx),0,SPEEDS.length-1); S.max=clamp(Math.round(S.max),3,25); S.musicVol=clamp(Math.round(S.musicVol),0,100); S.tol=clamp(Math.round(S.tol),0,20);
   document.querySelectorAll('[data-key]').forEach(el=>{const k=el.dataset.key; if(el.type==='checkbox') el.checked=!!S[k]; else el.value=S[k]});
   document.querySelectorAll('[data-out]').forEach(el=>{const k=el.dataset.out; el.textContent=FMT[k]?FMT[k](S[k]):S[k]});
   document.querySelectorAll('[data-set]').forEach(el=>el.setAttribute('aria-pressed',String(S[el.dataset.set]===el.dataset.val)));
@@ -421,8 +426,22 @@ function syncUI(){
   $('muteAll').innerHTML=(S.muted?ICON.vol+'Ton wieder einschalten':ICON.mute+'Alles stummschalten');
   $('clock').hidden=!S.clock; $('autoTimes').hidden=!S.autoLight; document.querySelectorAll('[data-time]').forEach(el=>{if(document.activeElement!==el)el.value=S[el.dataset.time]}); $('countPill').hidden=!S.showCount; $('nextRow').hidden=!S.showNext&&!S.showBar; $('nextTxt').hidden=!S.showNext; $('progBar').hidden=!S.showBar;
   if(!S.captions) $('caption').classList.remove('show');
-  applyAudio();
+  applyAudio(); applyWake();
 }
+// Bildschirm wach halten (Wake Lock), solange der Teich zuhört und sichtbar ist
+let wakeLock=null, wakeBusy=false, wakeAgain=false;
+async function applyWake(){
+  if(!navigator.wakeLock) return;
+  if(wakeBusy){wakeAgain=true;return}
+  const want=S.wake&&active&&document.visibilityState==='visible';
+  wakeBusy=true;
+  try{
+    if(want&&!wakeLock){const w=await navigator.wakeLock.request('screen');wakeLock=w;w.addEventListener('release',()=>{if(wakeLock===w)wakeLock=null})}
+    else if(!want&&wakeLock){const w=wakeLock;wakeLock=null;await w.release()}
+  }catch(e){wakeLock=null}
+  finally{wakeBusy=false; if(wakeAgain){wakeAgain=false;applyWake()}}
+}
+document.addEventListener('visibilitychange',()=>applyWake());
 document.querySelectorAll('[data-key]').forEach(el=>{
   el.addEventListener(el.type==='checkbox'?'change':'input',()=>{const k=el.dataset.key;S[k]=el.type==='checkbox'?el.checked:+el.value;if(k==='nature'&&S.nature){S.muted=false;ensureOut()}syncUI()});
 });
@@ -673,6 +692,7 @@ function micUI(){
   $('micChipTxt').textContent=on?'Hört zu':sim?'Testmodus':'Mikrofon starten';
   $('micBtn').textContent=on?'Mikrofon stoppen':'Mikrofon starten';
   $('simBtn2').hidden=on||sim;
+  applyWake();
 }
 function rawLevel(){
   if(analyser){
@@ -770,7 +790,7 @@ document.addEventListener('keydown',e=>{
 
 // ================= Zustand =================
 const otters=[], parts=[], dflies=[], flies=[];
-let T=0, level=0, quietT=0, lastScare=-9, fishT=4, bubT=0, reached=0, nextId=1;
+let T=0, level=0, quietT=0, loudT=0, lastScare=-9, fishT=4, bubT=0, reached=0, nextId=1;
 let group=null, lastGroup=-14, ringA=0, stoneBy=null, slideBy=null, frogBy=null;
 const swimmers=()=>otters.filter(o=>o.state==='swim');
 const present=()=>otters.filter(o=>o.state!=='flee'&&o.state!=='leap');
@@ -799,9 +819,11 @@ function spawn(){
   const name=freeName();
   const side=Math.random()<.5?-1:1;
   const y=side<0?rnd(POND.y+18,POND.y+95):rnd(POND.y-50,POND.y+95); // links nicht über den Baumstamm laufen
+  // Kommen mehrere gleichzeitig, laufen sie hintereinander an statt aufeinander
+  const queue=otters.filter(p=>p.state==='walk'&&(p.x<W/2?-1:1)===side).reduce((m,p)=>Math.max(m,side<0?-60-p.x:p.x-W-60),-70);
   const baby=Math.random()<.22, ac=pick(ACOL);
   const o={id:nextId++,name,baby,s:baby?.74:rnd(1.0,1.12),col:pick(COATS),acc:pick(ACCS),accAdj:ac[0],accCol:ac[1],
-    patch:Math.random()<.35,strands:Array.from({length:34},()=>{let u,v;do{u=rnd(-1,1);v=rnd(-1,.35)}while(u*u+v*v>.78);return[u,v,Math.random()<.4]}),fav:pick(FAVS),x:side<0?-60:W+60,y,dir:-side,state:'walk',
+    patch:Math.random()<.35,strands:Array.from({length:34},()=>{let u,v;do{u=rnd(-1,1);v=rnd(-1,.35)}while(u*u+v*v>.78);return[u,v,Math.random()<.4]}),fav:pick(FAVS),x:side<0?-60-(queue+70):W+60+(queue+70),y,dir:-side,state:'walk',
     entryX:edgeX(y,side)+side*14,t:rnd(0,9),act:null,actT:0,k:0,hp:0,partner:null,lead:false,
     expr:'happy',born:T,lift:0,rip:0,pose:'walk'};
   otters.push(o); sfx('plop');
@@ -819,13 +841,13 @@ function release(o){
 function setPair(a,b,act,dur){
   leaveGroup(b);
   a.partner=b;b.partner=a;a.lead=true;b.lead=false;a.act=b.act=act;a.actT=b.actT=dur;
-  a.tx=a.ty=b.tx=b.ty=null;a.role='it';b.role='run';a.k=b.k=0;a.item=b.item=null;a.ball=b.ball=null;
+  a.tx=a.ty=b.tx=b.ty=null;a.at=b.at=false;a.role='it';b.role='run';a.k=b.k=0;a.item=b.item=null;a.ball=b.ball=null;
 }
 function pickActivity(o){
-  o.act=null;o.tx=o.ty=null;o.k=0;o.hp=0;o.item=null;o.shades=false;o.ball=null;o.onLand=false;o.z=0;o.carried=false;
+  o.act=null;o.tx=o.ty=null;o.k=0;o.hp=0;o.item=null;o.at=false;o.shades=false;o.ball=null;o.onLand=false;o.z=0;o.carried=false;
   const n=present().length;
   const free=otters.filter(p=>p!==o&&p.state==='swim'&&!p.partner&&INTERRUPT.has(p.act)&&!(group&&group.members.includes(p)));
-  const ws=[['wander',3],['float',1.6],['dive',1],['snack',1.1],['wash',1],['sleep',1.1],['roll',.4],['lookout',1.2]];
+  const ws=[['wander',3],['float',1],['dive',1.4],['snack',.8],['wash',.7],['sleep',.8],['roll',.7],['lookout',1.4]];
   if(!stoneBy) ws.push(['sun',1]);
   if(!slideBy) ws.push(['slide',1]);
   if(!frogBy&&frog.away<=0) ws.push(['frog',.8]);
@@ -834,8 +856,19 @@ function pickActivity(o){
   const carriers=free.filter(p=>p.baby!==o.baby);
   if(carriers.length) ws.push(['carry',2.2]);
   for(const w of ws) if(w[0]===o.fav) w[1]*=2.5;
+  // Abwechslung: was schon viele andere gerade tun, wird seltener gewählt – ebenso das, was dieser Otter eben getan hat.
+  // Auf dem Rücken liegen (treiben, schlafen, knabbern, putzen, jonglieren) zählt dabei als eine Gruppe.
+  {const BACK=new Set(['float','sleep','snack','wash','juggle']), PAIRS=new Set(['pairswim','hold','groom','boop','ball','chase','splash','carry']);
+    const others=otters.filter(p=>p!==o&&p.state==='swim'), cnt={}; let back=0, pairs=0;
+    for(const p of others){cnt[p.act]=(cnt[p.act]||0)+1;if(BACK.has(p.act))back++;if(PAIRS.has(p.act))pairs++}
+    const share=k=>others.length?k/others.length:0;
+    for(const w of ws){w[1]/=1+1.5*(cnt[w[0]]||0);
+      if(BACK.has(w[0]))w[1]*=Math.max(.15,1-share(back)*1.6);
+      if(PAIRS.has(w[0]))w[1]*=Math.max(.25,1-share(pairs)*1.2);
+      if(w[0]===o.lastAct)w[1]*=.25}}
   let r=Math.random()*ws.reduce((s,w)=>s+w[1],0), act='wander';
   for(const [a,w] of ws){if((r-=w)<=0){act=a;break}}
+  o.lastAct=act;
   if(act==='carry'){
     const p=pick(carriers), mom=o.baby?p:o, kid=o.baby?o:p;
     setPair(mom,kid,'carry',rnd(9,13));
@@ -871,6 +904,7 @@ function pickActivity(o){
 function endActivity(o){freeFlags(o);const p=o.partner;release(o);pickActivity(o);if(p&&p.state==='swim'&&!p.act)pickActivity(p)}
 
 function moveTo(o,tx,ty,sp,dt){
+  o.mv=true;
   const dx=tx-o.x,dy=ty-o.y,d=Math.hypot(dx,dy);
   const want=sp*Math.min(1,d/45), k=Math.min(1,dt*2.2);
   const dvx=d>.3?dx/d*want:0, dvy=d>.3?dy/d*want:0;
@@ -908,7 +942,7 @@ function startGroup(type){
   if(type==='ring') m.sort((a,b)=>Math.atan2(a.y-POND.y,a.x-POND.x)-Math.atan2(b.y-POND.y,b.x-POND.x));
   const c=randInPond(.3);
   group={type,members:m,T:rnd(10,13),cx:c.x,cy:c.y,fx:0};
-  m.forEach(o=>{o.act=type;o.tx=o.ty=null;o.item=null;o.partner=null;o.lead=false;o.ball=null;o.fo=null;o.z=0;o.carried=false});
+  m.forEach(o=>{o.act=type;o.at=false;o.tx=o.ty=null;o.item=null;o.partner=null;o.lead=false;o.ball=null;o.fo=null;o.z=0;o.carried=false});
   lastGroup=T;
   say({school:'Alle Otter schwimmen gemeinsam eine gemütliche Runde.',train:'Otter-Polonaise! Alle schwimmen hintereinander her.',raft:'Otter-Floss! Alle halten sich an den Pfoten fest.',ring:'Otter-Reigen! Alle schwimmen zusammen im Kreis.'}[type],true);
 }
@@ -934,7 +968,14 @@ function fishJump(){
 // ================= Update eines Otters =================
 function updOtter(o,dt){
   o.t+=dt;
-  if(o.face==null)o.face=o.dir; o.face+=(o.dir-o.face)*Math.min(1,dt*4.5);
+  // weiches Umdrehen mit sanftem Anfang und Ende
+  // Kurzes Hin und Her der Richtung wird ignoriert: erst wenn sie eine Weile gleich bleibt, dreht der Otter
+  if(o.face==null){o.face=o.dir;o.fv=0;o.fdir=o.dir;o.fhold=0}
+  if(o.dir!==o.fdir){o.fhold+=dt;if(o.fhold>(o.state==='swim'?.3:0)){o.fdir=o.dir;o.fhold=0}}else o.fhold=0;
+  // Schwimmt er deutlich auf die Kinder zu, dreht er sich nach vorne
+  if(o.state==='swim'&&o.pose==='swim'&&(o.vy||0)>14&&Math.abs(o.vx||0)<o.vy*.7){o.frontT=(o.frontT||0)+dt}else o.frontT=Math.max(0,(o.frontT||0)-dt*2);
+  const ftarget=o.frontT>.35?o.fdir*.15:o.fdir;
+  {const want=(ftarget-o.face)*16-o.fv*8; o.fv+=want*dt; o.face+=o.fv*dt; if(Math.abs(o.face)>=1){o.face=Math.sign(o.face);o.fv=0}}
   if(o.state==='walk'){
     o.pose='walk'; o.expr='happy';
     const dx=o.entryX-o.x, st=58*dt*(o.baby?.85:1);
@@ -956,7 +997,7 @@ function updOtter(o,dt){
   }
   // ---- im Teich ----
   if(!o.act) pickActivity(o);
-  o.pose='swim'; o.expr='normal'; o.lift=0; o.moving=false;
+  o.pose='swim'; o.expr='normal'; o.lift=0; o.moving=false; o.mv=false;
   const p=o.partner;
   switch(o.act){
     case 'wander':{
@@ -972,10 +1013,11 @@ function updOtter(o,dt){
       moveTo(o,o.tx,o.ty,26,dt);o.rip-=dt;if(o.rip<=0){o.rip=.5;addRipple(o.x,o.y,.8)}break}
     case 'dive':{
       o.k+=dt;
-      if(o.k<.55){o.pose='tail'; if(o.k-dt<=0) addRipple(o.x,o.y)}
+      // Abtauchen im Bogen: Kopf voran, der Rücken rollt darüber, zuletzt verschwindet die Schwanzspitze
+      if(o.k<DIVE_T){o.pose='dive'; if(o.k-dt<=0) addRipple(o.x,o.y); if(o.k>=DIVE_T*.35&&o.k-dt<DIVE_T*.35){addRipple(o.x+o.dir*14,o.y,.9);for(let i=0;i<3;i++)drop(o.x+o.dir*16,o.y-2,rnd(-30,30),rnd(-90,-50))}}
       else{o.pose='under';const d=moveTo(o,o.tx,o.ty,75,dt);o.moving=false;
         if(Math.random()<dt*7)bubble(o.x,o.y);
-        if(d<3&&o.k>2){addRipple(o.x,o.y,1.3);splash(o.x,o.y,6);
+        if(d<3&&o.k>2){addRipple(o.x,o.y,1.3);splash(o.x,o.y,4);o.emergeT=T;
           if(Math.random()<.45){pickActivity(o);o.act='snack';o.item='fish';o.actT=6;say(N(o)+' hat einen Fisch gefangen!',true)}
           else pickActivity(o)}}
       break}
@@ -993,15 +1035,22 @@ function updOtter(o,dt){
     case 'slide':{
       const SL=SLIDE;
       if(o.k===0){const d=moveTo(o,SL.inn.x,SL.inn.y,48,dt);if(d<3){o.k=1;o.hp=0;o.sx=o.x;o.sy=o.y;o.dir=-1}}
-      else if(o.k===1){o.hp+=dt/.5;const k=Math.min(1,o.hp);arcTo(o,o.sx,o.sy,SL.bot.x,SL.bot.y,30,k);o.pose='walk';o.onLand=true;o.expr='happy';
+      else if(o.k===1){o.hp+=dt/.8;const k=Math.min(1,o.hp);arcTo(o,o.sx,o.sy,SL.bot.x,SL.bot.y,16,k*k*(3-2*k));o.pose='walk';o.onLand=true;o.expr='happy';
         if(k>=1){o.k=2;o.hp=0;o.lift=0;splash(o.sx,o.sy,5)}}
       else if(o.k===2){o.onLand=true;o.pose='walk';o.expr='happy';const d=moveTo(o,SL.top.x,SL.top.y,36,dt);o.dir=-1;if(d<2){o.k=3;o.hp=0}}
       else if(o.k===3){o.onLand=true;o.pose='walk';o.dir=1;o.expr='happy';o.hp+=dt;
         if(o.hp>.7){o.k=4;o.hp=0;o.sx=o.x;o.sy=o.y;say(N(o)+' rutscht die Matschrutsche runter. Juhuu!')}}
-      else{o.onLand=true;o.pose='belly';o.dir=1;o.expr='happy';o.hp+=dt/1.1;const k=Math.min(1,o.hp*o.hp);
+      else if(o.k===4){o.onLand=true;o.pose='belly';o.dir=1;o.expr='happy';o.hp+=dt/1.1;const k=Math.min(1,o.hp*o.hp);
         o.x=o.sx+(SL.inn.x-o.sx)*k;o.y=o.sy+(SL.inn.y-o.sy)*k;
         if(Math.random()<dt*14)drop(o.x-8,o.y-4,rnd(-50,-10),rnd(-80,-30),'#8b6a45',.5);
-        if(k>=1){splash(o.x,o.y,12);o.onLand=false;
+        if(k>=1){splash(o.x,o.y,12);addRipple(o.x,o.y,1.4);o.onLand=false;o.k=5;o.hp=0;
+          // Schwung mitnehmen: in Rutschrichtung unter Wasser weitergleiten statt zurückzuspringen
+          const dx=SL.inn.x-SL.top.x, dy=SL.inn.y-SL.top.y, l=Math.hypot(dx,dy); o.gx=dx/l*95; o.gy=dy/l*95}}
+      else{ // k===5: unter Wasser ausgleiten, dann sanft auftauchen
+        o.pose='under';o.onLand=false;o.hp+=dt;const slow=Math.max(0,1-o.hp/1.1);
+        o.x+=o.gx*slow*dt;o.y+=o.gy*slow*dt;clampPond(o,.8);o.vx=o.gx*slow;o.vy=o.gy*slow;
+        if(Math.random()<dt*9)bubble(o.x,o.y);
+        if(o.hp>1.1){o.emergeT=T;addRipple(o.x,o.y,1);o.vx=o.vy=0;
           if(!o.again&&Math.random()<.5){o.again=true;o.k=0;say(o.name?o.name+' ruft: Nochmal!':'Nochmal! Der Otter rutscht gleich noch einmal.')}
           else{o.again=false;endActivity(o)}}}
       break}
@@ -1076,13 +1125,13 @@ function updOtter(o,dt){
     case 'pairswim':{
       if(!p){pickActivity(o);break}
       if(o.lead){if(o.tx==null||Math.hypot(o.tx-o.x,o.ty-o.y)<10){const t=randInPond(.65);o.tx=t.x;o.ty=t.y}moveTo(o,o.tx,o.ty,22,dt)}
-      else moveTo(o,p.x-p.dir*6,p.y+20,34,dt);
+      else moveTo(o,p.x-(p.face??p.dir)*16,p.y+30,34,dt);   // schwimmt schräg hinter dem Partner, nicht auf ihm
       if(Math.random()<dt*.25)note(o.x,o.y-30);
       break}
     case 'groom':{
       if(!p){pickActivity(o);break}
       if(o.lead){o.pose='float';o.expr='happy';o.dir=1;o.vx=o.vy=0}
-      else{const d=moveTo(o,p.x+40*p.s,p.y+3,30,dt);if(d<5){o.pose='stand';o.dir=-1;o.expr='happy';if(Math.random()<dt*1.5)spark(p.x+rnd(-15,15),p.y-rnd(10,20),'#ffffff')}}
+      else{const d=moveTo(o,p.x+40*p.s,p.y+3,30,dt);if(d<5)o.at=true;else if(d>14)o.at=false;if(o.at){o.pose='stand';o.dir=-1;o.expr='happy';if(Math.random()<dt*1.5)spark(p.x+rnd(-15,15),p.y-rnd(10,20),'#ffffff')}}
       break}
     case 'carry':{
       if(!p){pickActivity(o);break}
@@ -1090,32 +1139,42 @@ function updOtter(o,dt){
         if(o.tx==null||Math.hypot(o.tx-o.x,o.ty-o.y)<6){const t=randInPond(.55);o.tx=t.x;o.ty=t.y}
         moveTo(o,o.tx,o.ty,9,dt);o.dir=1;o.moving=false;o.k+=dt;if(o.k>1.6){o.k=0;heart(o.x+4,o.y-22)}}
       else{o.pose='float';o.expr=Math.sin(T*.5)>0?'sleep':'happy';o.dir=1;o.carried=true;o.z=40;o.vx=o.vy=0;
-        o.x+=(p.x+1*p.s-o.x)*Math.min(1,dt*6);o.y+=(p.y-9*p.s-o.y)*Math.min(1,dt*6)}
+        o.x+=(p.x-3*p.s-o.x)*Math.min(1,dt*6);o.y+=(p.y-12*p.s-o.y)*Math.min(1,dt*6)}
       break}
     case 'ring':case 'train':case 'raft':case 'school':{
       if(!group||!group.members.includes(o)){pickActivity(o);break}
       const m=group.members, i=m.indexOf(o); o.expr='happy';
       if(o.act==='ring'){const a=ringA+i*TAU/m.length;
-        const rr=m.length>12?.66:.5;moveTo(o,POND.x+Math.cos(a)*POND.rx*rr,POND.y+Math.sin(a)*POND.ry*rr,85,dt)}
+        const rr=clamp(m.length/28,.45,.84);   // Kreis so gross, dass alle nebeneinander Platz haben
+        moveTo(o,POND.x+Math.cos(a)*POND.rx*rr,POND.y+Math.sin(a)*POND.ry*rr,85,dt)}
       else if(o.act==='school'){
         const L=m[0];
         if(i===0){if(o.tx==null||Math.hypot(o.tx-o.x,o.ty-o.y)<12){const t=randInPond(.7);o.tx=t.x;o.ty=t.y}moveTo(o,o.tx,o.ty,24,dt)}
-        else{if(!o.fo)o.fo={x:rnd(20,70),y:rnd(-30,30)};const t={x:L.x-L.dir*o.fo.x,y:L.y+o.fo.y};clampPond(t,.82);moveTo(o,t.x,t.y,32,dt)}
+        else{ // zwei Reihen wie eine Schlange: jeder folgt dem Otter direkt vor ihm in seiner Reihe, so biegt die Gruppe in einer Kurve ab
+          const ah=i<=2?L:m[i-2], vx=ah.vx||0, vy=ah.vy||0, sp=Math.hypot(vx,vy);
+          if(sp>4){o.fdx=vx/sp;o.fdy=vy/sp}else if(o.fdx==null){o.fdx=ah.face??ah.dir;o.fdy=0}
+          const side=i<=2?(i%2?-1:1):0, t={x:ah.x-o.fdx*44+(-o.fdy)*side*22, y:ah.y-o.fdy*44*.45+o.fdx*side*14};
+          clampPond(t,.82);moveTo(o,t.x,t.y,34,dt)}
       }
       else if(o.act==='train'){
         if(i===0){if(o.tx==null||Math.hypot(o.tx-o.x,o.ty-o.y)<10){const t=randInPond(.7);o.tx=t.x;o.ty=t.y}moveTo(o,o.tx,o.ty,48,dt)}
-        else{const pv=m[i-1];moveTo(o,pv.x-pv.dir*38*pv.s,pv.y,80,dt)}
+        else{const pv=m[i-1];moveTo(o,pv.x-(pv.face??pv.dir)*52*pv.s,pv.y,80,dt)}
       }else{
         const cols=Math.min(4,m.length),rows=Math.ceil(m.length/cols),col=i%cols,row=Math.floor(i/cols);
-        const t={x:group.cx+(col-(cols-1)/2)*44+(row%2)*16,y:group.cy+(row-(rows-1)/2)*24};clampPond(t,.8);
+        const t={x:group.cx+(col-(cols-1)/2)*62+(row%2)*22,y:group.cy+(row-(rows-1)/2)*34};clampPond(t,.8);
         const d=moveTo(o,t.x,t.y,55,dt);
-        if(d<4){o.pose='float';o.dir=1;o.expr=(i%3===0)?'sleep':'happy'}
+        if(d<4)o.at=true; else if(d>14)o.at=false;   // angekommen bleibt angekommen (kein Hin und Her)
+        if(o.at){o.pose='float';o.dir=1;o.expr=(i%3===0)?'sleep':'happy'}
       }
       break}
   }
   if(o.act&&o.actT<90&&!['ring','train','raft','school'].includes(o.act)&&(o.lead||!o.partner)){
     o.actT-=dt; if(o.actT<=0) endActivity(o);
   }
+  // Wer anhält (zum Aufrichten, Treiben ...), gleitet mit seinem Schwung sanft aus statt schlagartig stehenzubleiben
+  if(!o.mv&&!o.onLand&&!o.carried&&o.act!=='sun'&&o.act!=='slide'&&(o.vx||o.vy)){const f=Math.exp(-dt*2.2);o.vx*=f;o.vy*=f;
+    if(Math.hypot(o.vx,o.vy)<.5){o.vx=o.vy=0}else{o.x+=o.vx*dt;o.y+=o.vy*dt;clampPond(o,.86)}}
+  o.sph=(o.sph||0)+dt*(4+swimSpeed(o)*7); // Takt der Pfoten läuft gleichmässig weiter, auch wenn sich das Tempo ändert
   if(o.moving&&(o.pose==='swim')){o.rip-=dt;if(o.rip<=0){o.rip=.45;addRipple(o.x-o.dir*12,o.y,.6)}}
 }
 
@@ -1140,8 +1199,9 @@ function update(dt){
   if(listening&&loud&&T>guardT&&frog.away<=0){const p=decor.pads[frog.pad];frog.away=8;splash(p.x,p.y,6)}
   for(const f of shadows){f.x+=f.vx*dt;const q={x:f.x,y:f.y+Math.sin(T*.7+f.ph)*6};const dx=(q.x-POND.x)/(POND.rx*.8),dy=(q.y-POND.y)/(POND.ry*.8);if(dx*dx+dy*dy>1){f.vx*=-1;f.x+=f.vx*dt*2}}
   if(listening){
-    if(loud){ if(T>guardT){quietT=0; if(T-lastScare>1.2&&scareOne()) lastScare=T;} }
-    else if(level<quiet() && present().length<S.max) quietT+=dt;
+    // Erst wenn es länger als die eingestellte Toleranz laut bleibt, erschrickt ein Otter
+    if(loud&&T>guardT){ loudT+=dt; if(loudT>=S.tol/10){quietT=0; if(T-lastScare>1.2&&scareOne()) lastScare=T;} }
+    else{ loudT=Math.max(0,loudT-dt); if(!loud&&level<quiet()&&present().length<S.max) quietT+=dt; }
     if(quietT>=SPEEDS[S.speedIdx]){quietT=0;spawn()}
   }
 
@@ -1150,6 +1210,33 @@ function update(dt){
   for(const o of otters){ if(o.state!=='swim'||o.onLand||o.act==='slide'||o.carried) continue;
     for(const [cx,cy,r] of [[232,372,30],[640,280,30]]){const dx=o.x-cx,dy=o.y-cy,d=Math.hypot(dx,dy);
       if(d<r){const k=d>.01?1/d:0; o.x+=(cx+(k?dx*k:1)*r-o.x)*Math.min(1,dt*4); o.y+=(cy+(k?dy*k:0)*r-o.y)*Math.min(1,dt*4)}}}
+  // Otter halten etwas Abstand zueinander, statt übereinander zu schwimmen (Paare dürfen kuscheln)
+  // Nur freie Otter weichen aus; wer in einer Formation oder zu zweit unterwegs ist, behält seinen Platz
+  // Alle schwimmenden Otter weichen einander aus. Wer frei ist, weicht stark aus; wer einem Partner oder einer
+  // Formation folgt, nur sanft (sonst würde er hin und her gezogen). Wer auf dem Stein, der Rutsche usw. ist, bleibt.
+  {const sw=otters.filter(o=>o.state==='swim'&&!o.onLand&&!o.carried&&o.pose!=='under'), k=Math.min(1,dt*6);
+    const inG=o=>group&&group.members.includes(o);
+    const wt=o=>['sun','slide','frog','dive'].includes(o.act)?0:inG(o)?(group.members[0]===o&&group.type!=='ring'?.8:.35):(o.partner&&!o.lead?.4:1);
+    for(let i=0;i<sw.length;i++)for(let j=i+1;j<sw.length;j++){
+      const a=sw[i],b=sw[j];
+      // Partner dürfen nah zusammen (Händchen halten, Nasenküsschen), aber nicht ineinander; beim Tragen und Fangis gar nicht
+      const pair=a.partner===b; if(pair&&(a.act==='carry'||a.act==='chase')) continue;
+      const same=inG(a)&&inG(b), f=pair?.75:same?.92:1;
+      const wa0=wt(a)||(pair||same?.5:0), wb0=wt(b)||(pair||same?.5:0); if(!wa0&&!wb0) continue;
+      const s=(a.s+b.s)/2, rx=48*s*f, ry=20*s*f, dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx/rx,dy/ry);
+      if(d>=1) continue;
+      let nx=dx/rx, ny=dy/ry; const l=Math.hypot(nx,ny); if(l<.001){nx=a.id<b.id?-1:1;ny=0}else{nx/=l;ny/=l}
+      const e=1-d, sum=wa0+wb0, wa=wa0/sum, wb=wb0/sum, px=nx*e*rx*k, py=ny*e*ry*k;
+      a.x-=px*wa;a.y-=py*wa;b.x+=px*wb;b.y+=py*wb;
+      // Wer aufeinander zuschwimmt, wird gebremst: so schwimmen sie umeinander herum statt hindurch
+      const ux=nx/rx, uy=ny/ry, ul=Math.hypot(ux,uy)||1, mx=ux/ul, my=uy/ul;
+      const vn=((b.vx||0)-(a.vx||0))*mx+((b.vy||0)-(a.vy||0))*my;
+      if(vn<0){const imp=-vn*Math.min(1,e*3);a.vx=(a.vx||0)-mx*imp*wa;a.vy=(a.vy||0)-my*imp*wa;b.vx=(b.vx||0)+mx*imp*wb;b.vy=(b.vy||0)+my*imp*wb}
+      if(a.tx!=null&&wa0===1){a.tx-=px*wa;a.ty-=py*wa} if(b.tx!=null&&wb0===1){b.tx+=px*wb;b.ty+=py*wb}
+      if(wa)clampPond(a,.86); if(wb)clampPond(b,.86)}
+    // Sanfter Zug zurück in den Teich, damit sich niemand am Ufer staut
+    for(const o of sw){if(wt(o)<1)continue;const dx=(o.x-POND.x)/POND.rx,dy=(o.y-POND.y)/POND.ry,r=Math.hypot(dx,dy);
+      if(r>.7){const p=(r-.7)*Math.min(1,dt*2);o.x-=dx/r*POND.rx*p;o.y-=dy/r*POND.ry*p;if(o.drift)o.drift*=-Math.sign(o.drift*dx)||1}}}
   for(let i=otters.length-1;i>=0;i--) if(otters[i].gone){leaveGroup(otters[i]);freeFlags(otters[i]);otters.splice(i,1)}
 
   // Gruppen
@@ -1892,7 +1979,71 @@ function furFill(x,y,rx,ry,c,rot=0){
   const g=ctx.createLinearGradient(0,y-ry,0,y+ry);
   g.addColorStop(0,c.dark);g.addColorStop(.4,c.fur);g.addColorStop(1,c.fur);
   furPath(x,y,rx,ry);ctx.fillStyle=g;ctx.fill();
+  volume(x,y,rx,ry);
   ctx.lineWidth=1.2;ctx.lineJoin='round';ctx.strokeStyle=c.dark;ctx.stroke();
+}
+// Licht von oben links und Schatten am Rand: so wirkt die Form rund statt flach (füllt den aktuellen Pfad)
+function volume(x,y,rx,ry,lx=-.22,ly=-.4,dark=.3){
+  const v=ctx.createRadialGradient(x+rx*lx,y+ry*ly,Math.min(rx,ry)*.15,x,y,Math.max(rx,ry)*1.05);
+  v.addColorStop(0,'rgba(255,248,235,.2)');v.addColorStop(.5,'rgba(255,248,235,0)');v.addColorStop(1,`rgba(25,12,4,${dark})`);
+  ctx.fillStyle=v;ctx.fill();
+}
+// ---------- Otter von vorne (für Drehungen und wenn er auf die Kinder zuschwimmt) ----------
+function headFront(o,x,y,turn){
+  const c=o.col, ex=o.expr, tx=turn*3.2;
+  for(const s of [-1,1]){ES(x+s*9.5-turn*1.5,y-7.5,3.4,3,c.fur,c.dark);C(x+s*9.5-turn*1.5,y-7.3,1.6,'#d99a92')}
+  ctx.beginPath();ctx.ellipse(x,y,12.5,10.5,0,0,TAU);
+  const g=ctx.createLinearGradient(0,y-11,0,y+10);g.addColorStop(0,c.dark);g.addColorStop(.55,c.fur);g.addColorStop(1,c.fur);
+  ctx.fillStyle=g;ctx.fill();volume(x,y,12.5,10.5,-.25,-.45,.32);ctx.strokeStyle=c.dark;ctx.lineWidth=1.25;ctx.stroke();
+  E(x-1,y-7,6.5,1.5,'rgba(255,255,255,.22)',-.06);                      // nasser Glanz
+  E(x+tx,y+4.6,9.5,5.6,c.light);                                          // helle Schnauze und Kinn
+  for(const s of [-1,1])E(x+tx+s*4.3,y+3.6,4.6,3.7,c.light);            // Schnurrhaarpolster
+  E(x+tx,y+1.8,6,1.4,'rgba(255,255,255,.35)');
+  for(const s of [-1,1])[[2.6,3.4],[4.4,4.8],[3.2,5.6],[5.4,3]].forEach(([a,b])=>C(x+tx+s*a,y+b,.5,'rgba(60,40,25,.5)'));
+  const nx=x+tx*1.25, ny=y+1.2;                                           // Nase
+  ctx.beginPath();ctx.moveTo(nx-3.3,ny-1.4);ctx.quadraticCurveTo(nx,ny-2.6,nx+3.3,ny-1.4);ctx.quadraticCurveTo(nx+2.6,ny+1.8,nx,ny+2.3);ctx.quadraticCurveTo(nx-2.6,ny+1.8,nx-3.3,ny-1.4);
+  ctx.fillStyle='#3a2418';ctx.fill();E(nx-.8,ny-1,1.2,.5,'rgba(255,255,255,.75)');
+  ctx.strokeStyle='#3a2418';ctx.lineWidth=.9;ctx.lineCap='round';
+  if(ex==='scared')E(nx,ny+5,1.6,1.9,'#7a2d2d');
+  else{ctx.beginPath();ctx.moveTo(nx,ny+2.3);ctx.lineTo(nx,ny+3.6);ctx.moveTo(nx-2.6,ny+4.4);ctx.quadraticCurveTo(nx-1.2,ny+5.2,nx,ny+3.6);ctx.quadraticCurveTo(nx+1.2,ny+5.2,nx+2.6,ny+4.4);ctx.stroke();
+    if(ex==='happy')E(nx,ny+5.2,1.2,.9,'#e5737c')}
+  ctx.strokeStyle='rgba(95,70,50,.5)';ctx.lineWidth=.55;                  // Schnurrhaare
+  for(const s of [-1,1])for(const dy of [-1.5,.5,2.5]){ctx.beginPath();ctx.moveTo(x+tx+s*6,y+4);ctx.quadraticCurveTo(x+tx+s*11,y+4+dy*.4,x+tx+s*16,y+4+dy);ctx.stroke()}
+  for(const s of [-1,1]){const eX=x+tx+s*5.4, eY=y-2.6;               // Augen
+    if(o.shades){E(eX,eY+.3,3.6,3,'#2b2b3a');E(eX+1,eY-.8,1,.6,'rgba(255,255,255,.6)')}
+    else if(ex==='happy'){ctx.strokeStyle='#22140c';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(eX,eY+1.4,2.3,Math.PI*1.12,Math.PI*1.88);ctx.stroke()}
+    else if(ex==='sleep'){ctx.strokeStyle='#22140c';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(eX,eY-.4,2.3,Math.PI*.15,Math.PI*.85);ctx.stroke()}
+    else if(ex==='scared'){C(eX,eY,3.3,'#ffffff');ctx.strokeStyle='#22140c';ctx.lineWidth=.9;ctx.beginPath();ctx.arc(eX,eY,3.3,0,TAU);ctx.stroke();C(eX+turn,eY,1.3,'#22140c')}
+    else{E(eX,eY,2.4,2.8,'#22140c');E(eX,eY+.8,1.6,1.7,'#4a2c18');C(eX+.8+turn*.4,eY-1.1,1.05,'#ffffff');C(eX-.5,eY+1.2,.5,'#ffffff')}
+    E(x+tx+s*8.6,y+3.6,2.8,1.6,'rgba(255,128,140,.4)')}                   // Bäckchen
+  if(o.shades){ctx.strokeStyle='#2b2b3a';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x+tx-2,y-2.6);ctx.lineTo(x+tx+2,y-2.6);ctx.stroke()}
+  const ac=o.accCol;
+  if(o.acc==='bow'){ctx.save();ctx.translate(x+5,y-9.5);ES(-4.5,0,5,3.3,ac,'rgba(0,0,0,.25)',-.5,.8);ES(4.5,0,5,3.3,ac,'rgba(0,0,0,.25)',.5,.8);C(0,0,2,'#ffffff');ctx.restore()}
+  else if(o.acc==='flower'){[[-8,-7.5],[-3,-10],[3,-10],[8,-7.5]].forEach(([a,b],i)=>flower(x+a,y+b,1.9,i%2?'#ffffff':ac))}
+  else if(o.acc==='leaf'){ctx.save();ctx.translate(x+2,y-9.5);ctx.rotate(-.3);E(0,-6,3.6,7.5,'#5cbf5c');ctx.strokeStyle='#3c8f3c';ctx.lineWidth=.9;ctx.beginPath();ctx.moveTo(0,1);ctx.lineTo(0,-12);ctx.stroke();ctx.restore()}
+  else if(o.acc==='star'){star5(x-7,y-7,4.6,'#ffd23f')}
+}
+function drawSwimFront(o,turn){
+  const c=o.col, hb=Math.sin((o.sph||0)+.9)*.9+Math.sin(o.t*2.2)*.5, k=Math.sin((o.sph||0)*1.5);
+  ctx.save();ctx.globalAlpha=.26;ctx.fillStyle=c.dark;
+  E(-turn*8,9,13,6.5,c.dark);E(-9+k*2.5-turn*6,13,4,2,c.dark);E(9-k*2.5-turn*6,13,4,2,c.dark);ctx.restore();
+  clipWater();
+  ctx.beginPath();ctx.ellipse(-turn*9,4,15.5,8.5,0,0,TAU);ctx.fillStyle=c.fur;ctx.fill();volume(-turn*9,4,15.5,8.5,-.2,-.5,.35);
+  ctx.strokeStyle=c.dark;ctx.lineWidth=1.2;ctx.stroke();
+  if(o.acc==='scarf'){ES(turn*3,-1+hb*.5,10,3.6,o.accCol,'rgba(0,0,0,.2)',0,.8)}
+  headFront(o,turn*3,-10+hb,turn);
+  ctx.restore(); waterline(19);
+}
+function drawStandFront(o,turn){
+  const c=o.col;
+  ctx.save();ctx.globalAlpha=.24;const k=Math.sin(o.t*3);E(0,12,9,11,c.dark);E(-5+k*2,22,4,2,c.dark);E(5-k*2,22,4,2,c.dark);ctx.restore();
+  clipWater(); ctx.rotate(Math.sin(o.t*1.4)*.03);
+  ctx.beginPath();ctx.ellipse(-turn*2,-12,11.5,16,0,0,TAU);ctx.fillStyle=c.fur;ctx.fill();volume(-turn*2,-12,11.5,16,-.25,-.4,.32);ctx.strokeStyle=c.dark;ctx.lineWidth=1.2;ctx.stroke();
+  E(turn*1.5,-11,6.5,11.5,c.light);
+  const pw=o.act==='groom'?Math.sin(o.t*10)*2:0;
+  ES(-4+turn*2,-15+pw,3.2,2.6,c.fur,c.dark,0,1);ES(4+turn*2,-15-pw,3.2,2.6,c.fur,c.dark,0,1);
+  headFront(o,turn*2,-31,turn);
+  ctx.restore(); waterline(14);
 }
 function furPath(x,y,rx,ry){ctx.beginPath();const n=56;
   for(let i=0;i<=n;i++){const a=i/n*TAU,top=Math.sin(a)<.15;const r=top?(i%2?1.035:.995):1;
@@ -1922,7 +2073,8 @@ function head(o,hx,hy){
   ctx.bezierCurveTo(hx+19.6,hy-.6,hx+19,hy+5,hx+14.5,hy+6.4);
   ctx.bezierCurveTo(hx+9,hy+9.4,hx+2,hy+9.8,hx-4,hy+9);
   ctx.bezierCurveTo(hx-8,hy+8.6,hx-11,hy+8,hx-12,hy+6);
-  ctx.closePath();ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=c.dark;ctx.lineWidth=1.25;ctx.stroke();
+  ctx.closePath();ctx.fillStyle=g;ctx.fill();volume(hx+3,hy,17,10.5,-.3,-.45,.28);ctx.strokeStyle=c.dark;ctx.lineWidth=1.25;ctx.stroke();
+  E(hx+1,hy-7.2,7,1.5,'rgba(255,255,255,.2)',-.08);                // nasser Glanz auf dem Kopf
   ctx.lineCap='round';ctx.lineWidth=.8;ctx.strokeStyle='rgba(40,20,8,.3)';
   [[-7,-6.5],[-4,-8.6],[-.8,-9.3],[2.6,-9],[6,-7.8],[9,-6],[-10.5,-1.5],[-10.5,2.5],[-6.5,-2.5],[-3,-5.5],[1,-6.5]].forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(hx+a,hy+b);ctx.lineTo(hx+a-1.5,hy+b+2.7);ctx.stroke()});
   ctx.strokeStyle='rgba(255,238,215,.25)';[[-5.5,-4.5],[-1,-7.5],[-8.5,.5],[3.5,-6.8]].forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(hx+a,hy+b);ctx.lineTo(hx+a-1.4,hy+b+2.5);ctx.stroke()});
@@ -1958,8 +2110,9 @@ function head(o,hx,hy){
 function scarf(o,x,y){ES(x,y,6,9,o.accCol,'rgba(0,0,0,.2)',.35,.8);ctx.fillStyle=o.accCol;ctx.fillRect(x-7,y+3,5,9);
   ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x-3,y-7);ctx.lineTo(x+3,y+7);ctx.stroke()}
 function tail(c,wag){
-  const g=ctx.createLinearGradient(-50,0,-16,0);g.addColorStop(0,c.dark);g.addColorStop(1,c.fur);
-  ctx.beginPath();ctx.moveTo(-18,-20);ctx.quadraticCurveTo(-40,-17,-51,-5+wag);ctx.quadraticCurveTo(-37,-7,-17,-8);ctx.closePath();
+  const g=ctx.createLinearGradient(-56,0,-16,0);g.addColorStop(0,c.dark);g.addColorStop(1,c.fur);
+  // kräftige Schwanzwurzel, die sich zur Spitze hin verjüngt (wie beim echten Otter)
+  ctx.beginPath();ctx.moveTo(-15,-25);ctx.bezierCurveTo(-30,-23,-45,-14+wag*.4,-56,-4+wag);ctx.quadraticCurveTo(-43,-4.5+wag*.5,-16,-6);ctx.closePath();
   ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=c.dark;ctx.lineWidth=1.3;ctx.stroke();
   ctx.strokeStyle='rgba(40,20,8,.25)';ctx.lineWidth=.8;
   for(let i=0;i<4;i++){const x=-22-i*7;ctx.beginPath();ctx.moveTo(x,-17+i*2.4+wag*i*.1);ctx.lineTo(x-2,-13+i*2.2+wag*i*.15);ctx.stroke()}
@@ -1972,20 +2125,22 @@ function foot(x,y,c,front){
 }
 function bodyWalk(o,legs,lying){
   const c=o.col, ph=o.t*(o.state==='flee'?18:11);
-  const sw=legs?Math.sin(ph)*4.5:0, bob=legs?-Math.abs(Math.sin(ph))*2.4:0;
-  ctx.save();ctx.translate(0,bob+(lying?5:0));
-  tail(c,legs?Math.sin(ph)*2:0);
-  if(!lying){foot(-12+sw,-3,c,false);foot(15-sw,-3,c,false)}
-  const ry=lying?11.5:13.5;
-  furFill(0,-15,24,ry,c);
-  furTufts(0,-15,24,ry,9,Math.PI*1.08,Math.PI*1.92);
-  strands(o,0,-15,24,ry);
+  // Otter laufen in Sprüngen: Hinter- und Vorderbeine bewegen sich paarweise, der Rücken wölbt sich dabei
+  const gal=legs?Math.sin(ph):0, up=legs?Math.max(0,Math.cos(ph)):0;
+  const bob=legs?-Math.abs(Math.sin(ph))*2.6:0;
+  ctx.save();ctx.translate(0,bob+(lying?5:0));ctx.rotate(legs?Math.cos(ph)*.035:0);
+  tail(c,legs?Math.cos(ph)*3:0);
+  if(!lying){foot(-12-gal*4.5,-3-up*2,c,false);foot(15+gal*4.5,-3-(1-up)*1.5,c,false)}
+  const ry=(lying?11.5:13.5)*(1-gal*.07), rx=24*(1+gal*.05);
+  furFill(0,-15-gal*.8,rx,ry,c);
+  furTufts(0,-15-gal*.8,rx,ry,9,Math.PI*1.08,Math.PI*1.92);
+  strands(o,0,-15,rx,ry);
   E(5,-8.5,15,5.5,c.light);
   ctx.strokeStyle='rgba(150,110,70,.25)';ctx.lineWidth=.8;
   for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(-6+i*5,-9);ctx.lineTo(-7.5+i*5,-6.5);ctx.stroke()}
   E(16,-13,7,7,c.light);
   E(3,-23,10,2.2,'rgba(255,255,255,.18)',-.05);
-  if(!lying){foot(-6-sw,-2,c,true);foot(19+sw,-2,c,true)}
+  if(!lying){foot(-6-gal*4.5,-2-up*2,c,true);foot(19+gal*4.5,-2-(1-up)*1.5,c,true)}
   else{ES(25,-4,5.5,3.6,c.fur,c.dark);E(27,-3,2.4,1.2,'#f0a8a8')}
   if(o.acc==='scarf')scarf(o,17,-21);
   head(o,25,-27);
@@ -1993,12 +2148,43 @@ function bodyWalk(o,legs,lying){
 }
 function clipWater(){ctx.save();ctx.beginPath();ctx.rect(-90,-110,180,111);ctx.clip()}
 function waterline(w){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(0,1,w,3.6,0,0,TAU);ctx.stroke()}
+function swimSpeed(o){return Math.min(1,Math.hypot(o.vx||0,o.vy||0)/40)}
+// Der Körper unter der Wasseroberfläche schimmert durch: Rumpf, Schwanz und paddelnde Pfoten
+function underBody(o,sp,ph,len=1){
+  const c=o.col, w=Math.sin(ph)*(1.2+sp*2.6);
+  ctx.save();ctx.globalAlpha=.26;ctx.fillStyle=c.dark;ctx.beginPath();
+  ctx.moveTo(16,2);ctx.bezierCurveTo(8,13,-22*len,15,-40*len,9+w*.4);
+  ctx.quadraticCurveTo(-54*len,7+w,-68*len,4+w*1.7);
+  ctx.quadraticCurveTo(-54*len,3.5+w*.8,-40*len,3);ctx.lineTo(16,2);ctx.closePath();ctx.fill();
+  const k=Math.sin(ph*1.5), k2=Math.sin(ph*1.5+Math.PI);
+  E(-31*len+k*4,11.5,5.5,2.2,c.dark,.25+k*.25);E(-24*len+k2*4,12.5,5.5,2.2,c.dark,-.25+k2*.25);
+  E(6+k2*2.5,9.5,3.4,1.8,c.dark);E(11+k*2.5,8.5,3,1.6,c.dark);
+  ctx.restore();
+}
+// Bugwelle: V-förmige Wellen hinter dem Kopf, je schneller desto deutlicher
+function bowWake(sp,t){
+  if(sp<.12) return;
+  // kleine, nach hinten wandernde Wellenbögen, die sich auffächern und verblassen
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#ffffff';ctx.lineWidth=1.1;
+  const step=15, off=(t*26)%step;
+  for(let i=0;i<4;i++){const d=i*step+off, k=d/(step*4), x=20-d, spread=2+d*.22;
+    ctx.globalAlpha=sp*.55*(1-k)*Math.min(1,d/6);
+    for(const s of [-1,1]){const y=1+s*spread*.42;ctx.beginPath();ctx.moveTo(x+3,y-s*.6);ctx.quadraticCurveTo(x-2,y+s*.5,x-8,y+s*1.4);ctx.stroke()}}
+  ctx.restore();
+}
 function drawSwim(o){
-  const c=o.col; clipWater();
-  furFill(-15,3,19,8.5,c); furTufts(-15,3,19,8.5,6,Math.PI*1.1,Math.PI*1.9); strands(o,-15,3,19,8.5); E(-36,3,7,3,c.dark); E(-13,-3.5,8,1.6,'rgba(255,255,255,.28)');
-  if(o.acc==='scarf')scarf(o,1,-2);
-  head(o,7,-10+Math.sin(o.t*3)*.8);
-  ctx.restore(); waterline(28);
+  const raw=swimSpeed(o); o.spS=o.spS==null?raw:o.spS+(raw-o.spS)*.08;          // Tempo geglättet
+  const c=o.col, sp=o.spS, ph=o.sph||0;
+  underBody(o,sp,ph); bowWake(sp,o.t);
+  const bob=Math.sin(ph)*.9*(.35+sp), hb=Math.sin(ph+.9)*1.1*(.3+sp)+Math.sin(o.t*2.2)*.5;
+  clipWater();
+  furFill(-17,3+bob*.6,23,8.5,c); furTufts(-17,3+bob*.6,23,8.5,7,Math.PI*1.1,Math.PI*1.9); strands(o,-17,3+bob*.6,23,8.5);
+  E(-17,-3.8+bob*.6,13,1.5,'rgba(255,255,255,.3)',-.03);            // nasser Glanz auf dem Rücken
+  E(-43,2.6,8,2.6,c.dark,-.05);                                      // Schwanzwurzel an der Oberfläche
+  if(o.acc==='scarf')scarf(o,1,-2+hb*.5);
+  const look=o.expr==='normal'?Math.sin(o.t*.55+o.id*1.7)*.07:0;
+  ctx.save();ctx.translate(8,-10+hb);ctx.rotate(look-sp*.05);head(o,0,0);ctx.restore();
+  ctx.restore(); waterline(30+sp*3);
 }
 function drawItem(it,x,y){
   if(it==='fish'){E(x,y,7.5,3.4,'#f39a4a');ctx.fillStyle='#f39a4a';ctx.beginPath();ctx.moveTo(x-6,y);ctx.lineTo(x-12,y-4);ctx.lineTo(x-12,y+4);ctx.fill();C(x+4,y-1,.9,'#3a2418')}
@@ -2009,7 +2195,10 @@ function drawItem(it,x,y){
 }
 function drawFloat(o){
   const c=o.col, b=Math.sin(o.t*2)*1, act=o.act;
+  if(!o.carried){ctx.save();ctx.globalAlpha=.2;E(-4,6,30,4.5,c.dark);ctx.restore()} // Rücken unter Wasser
   clipWater();
+  ctx.translate(0,1);ctx.rotate(Math.sin(o.t*1.3+o.id)*.035);ctx.translate(0,-1);     // sanftes Schaukeln
+  ctx.fillStyle=c.dark;ctx.beginPath();ctx.moveTo(-21,-3.5+b);ctx.quadraticCurveTo(-34,-3+b*.6,-46,-.2+Math.sin(o.t*1.7)*.8);ctx.quadraticCurveTo(-34,1.5,-21,1.5);ctx.closePath();ctx.fill(); // Schwanz treibt mit, spitz zulaufend
   ES(-26,-9+b,4,6,c.fur,c.dark,-.4);ES(-20,-10+b,4,6,c.fur,c.dark,-.2);
   E(-26.5,-13+b,2.2,1.4,'#f0a8a8',-.4);E(-20.5,-14+b,2.2,1.4,'#f0a8a8',-.2);
   furFill(0,-1+b,25,9,c); E(1,-5+b,19,5,c.light);
@@ -2028,7 +2217,9 @@ function drawFloat(o){
   ctx.restore(); if(!o.carried)waterline(30);
 }
 function drawStand(o){
-  const c=o.col; clipWater();
+  const c=o.col;
+  ctx.save();ctx.globalAlpha=.24;E(-1,12,9,11,c.dark);const k=Math.sin(o.t*3);E(-5+k*2,22,4,2,c.dark);E(4-k*2,22,4,2,c.dark);ctx.restore(); // Wassertreten
+  clipWater();
   ctx.rotate(Math.sin(o.t*1.4)*.04);
   furFill(0,-13,10,17,c); strands(o,0,-13,10,17);
   E(3,-12,5.5,12,c.light);
@@ -2046,24 +2237,363 @@ function drawBall(x,y){
   const r=T*6;[['#ef5a5a',0],['#4c9be8',2.1],['#f4c430',4.2]].forEach(([c,a])=>{ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,7,r+a,r+a+1);ctx.closePath();ctx.fillStyle=c;ctx.fill()});
   C(x-2.5,y-2.5,1.6,'rgba(255,255,255,.8)');
 }
+// ================= Otter als Figur im Raum =================
+// Jeder Körperteil hat eine Lage: u = nach vorne (Blickrichtung), v = zur Seite, h = nach oben.
+// a ist der Drehwinkel: 0 = schaut nach rechts, π/2 = schaut die Kinder an, π = schaut nach links.
+// Daraus wird bei jedem Bild berechnet, wo der Teil auf dem Bildschirm liegt – so dreht sich der Otter fliessend.
+const KZ=.3;
+function rig(a){const ca=Math.cos(a),sa=Math.sin(a);
+  return {ca,sa,P:(u,v,h)=>[u*ca-v*sa,-h+(u*sa+v*ca)*KZ,u*sa+v*ca],
+    w:(L,W)=>Math.sqrt((L*ca)**2+(W*sa)**2), d:(L,W)=>Math.sqrt((L*sa)**2+(W*ca)**2)}}
+function taper(pts,w0,w1,fill){
+  const n=pts.length,L=[],R=[];
+  for(let i=0;i<n;i++){const p=pts[i],q=pts[Math.min(n-1,i+1)],o=pts[Math.max(0,i-1)];let dx=q[0]-o[0],dy=q[1]-o[1];const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+    const w=(w0+(w1-w0)*i/(n-1))/2;L.push([p[0]-dy*w,p[1]+dx*w]);R.push([p[0]+dy*w,p[1]-dx*w])}
+  ctx.beginPath();ctx.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)ctx.lineTo(L[i][0],L[i][1]);
+  ctx.arc(pts[n-1][0],pts[n-1][1],w1/2,0,TAU);for(let i=n-1;i>=0;i--)ctx.lineTo(R[i][0],R[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+}
+function strands3(o,x,y,rx,ry,lean){ctx.lineWidth=.8;ctx.lineCap='round';
+  for(const [u,v,l] of o.strands){const px=x+u*rx,py=y+v*ry;ctx.strokeStyle=l?'rgba(255,238,215,.24)':'rgba(40,20,8,.24)';
+    ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(px-1.2*lean,py+1.2,px-2.2*lean,py+3);ctx.stroke()}}
+function tufts3(x,y,rx,ry,n,lean){ctx.lineCap='round';ctx.lineWidth=.9;
+  for(const [col,k,f] of [['rgba(40,20,8,.3)',.88,.5],['rgba(255,255,255,.17)',.6,.15]]){ctx.strokeStyle=col;
+    for(let i=0;i<n;i++){const a=Math.PI*(1.08+.84*(i+f)/n),px=x+Math.cos(a)*rx*k,py=y+Math.sin(a)*ry*(k-.03);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-2.2*lean,py+3.2);ctx.stroke()}}}
+function eye3(x,y,fx,o){
+  const ex=o.expr; ctx.save();ctx.translate(x,y);ctx.scale(fx,1);
+  if(o.shades){E(0,.3,4,3.2,'#2b2b3a');E(1.2,-.9,1.1,.7,'rgba(255,255,255,.6)')}
+  else if(ex==='happy'){ctx.strokeStyle='#22140c';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,1.4,2.4,Math.PI*1.12,Math.PI*1.88);ctx.stroke()}
+  else if(ex==='sleep'){ctx.strokeStyle='#22140c';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-.4,2.4,Math.PI*.15,Math.PI*.85);ctx.stroke()}
+  else if(ex==='scared'){C(0,0,3.4,'#ffffff');ctx.strokeStyle='#22140c';ctx.lineWidth=.9;ctx.beginPath();ctx.arc(0,0,3.4,0,TAU);ctx.stroke();C(.5,0,1.35,'#22140c')}
+  else{E(0,0,2.5,2.9,'#22140c');E(0,.85,1.7,1.8,'#4a2c18');C(.85,-1.15,1.1,'#ffffff');C(-.55,1.25,.52,'#ffffff')}
+  ctx.restore();
+}
+// Kopf: Schädel und Schnauze sind zwei Formen im Raum; Augen, Ohren, Nase und Schnurrhaare sitzen darauf
+function head3D(o,X,Y,a,pitch=0){
+  const c=o.col, ca=Math.cos(a), sa=Math.sin(a), pc=Math.cos(pitch), ps=Math.sin(pitch), K2=.35;
+  const Q=(u,v,h)=>{const uu=u*pc-h*ps, hh=u*ps+h*pc, z=uu*sa+v*ca; return [X+uu*ca-v*sa, Y-hh+z*K2, z]};
+  const nzOf=(nu,nv)=>nu*pc*sa+nv*ca;                                     // zeigt diese Stelle zu den Kindern?
+  const ear=(s)=>{const [x,y]=Q(-2.5,s*8.6,7.2);ES(x,y,3.4,3,c.fur,c.dark);C(x,y+.2,1.6,'#d99a92')};
+  const ears=[-1,1].map(s=>[s,Q(-2.5,s*8.6,7.2)[2]]).sort((p,q)=>p[1]-q[1]);
+  ear(ears[0][0]);                                                          // hinteres Ohr hinter dem Kopf
+  const [sx,sy]=Q(0,0,0), [nx0,ny0]=Q(8.6,0,-2.6);
+  const srx=Math.sqrt((11.5*ca)**2+(10*sa)**2), sry=9.6;
+  const nrx=Math.sqrt((7.6*ca*pc)**2+(6.3*sa)**2), nry=Math.sqrt(4.7**2+(7.6*ps*.6)**2);
+  const skull=()=>{
+  const path=()=>{ctx.beginPath();ctx.ellipse(sx,sy,srx,sry,0,0,TAU);ctx.moveTo(nx0+nrx,ny0);ctx.ellipse(nx0,ny0,nrx,nry,0,0,TAU)};
+  path();ctx.strokeStyle=c.dark;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();      // nur der äussere Umriss bleibt sichtbar
+  const g=ctx.createLinearGradient(0,sy-sry,0,sy+sry);g.addColorStop(0,c.dark);g.addColorStop(.52,c.fur);g.addColorStop(1,c.fur);
+  ctx.fillStyle=g;ctx.fill();path();volume(sx+ca*2,sy,srx+3,sry,-.25,-.45,.28);
+  ctx.lineCap='round';ctx.lineWidth=.8;ctx.strokeStyle='rgba(40,20,8,.3)';                 // Fell auf dem Kopf
+  for(const [u,v] of [[-6,-5],[-3,-7],[0,-8],[3,-7.5],[-7,0],[-4,-2],[-1,-4],[-5,4],[-2,5],[2,-4],[-7,-8],[1,6]]){const [x,y,z]=Q(u*.9,v*.9,6.5-Math.abs(v)*.25);if(z<-4)continue;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-1.4*ca,y+2.6);ctx.stroke()}
+  E(sx-ca*1.5,sy-7,6.5,1.5,'rgba(255,255,255,.22)',-.06);                                  // nasser Glanz
+  };
+  const feat=()=>{
+  if(o.patch){const [x,y,z]=Q(4,3,1.5);if(z>-2.5)E(x,y,5.6*clamp(.4+.6*nzOf(.3,.95),.4,1),3.8,c.light)}
+  {const [x,y]=Q(6,0,-6.8);E(x,y,Math.sqrt((8*ca)**2+(7*sa)**2),2.9,c.light)}            // helles Kinn
+  {const [x,y]=Q(9.6,0,-4);E(x,y,nrx*.9,nry*.62,c.light)}                                  // helle Schnauze
+  for(const s of [-1,1]){const [x,y,z]=Q(12,s*3.3,-2.6);if(z<-2.2)continue;
+    E(x,y,3.5*(.55+.45*Math.abs(nzOf(.4,s*.9))),3.4,c.light);
+    for(const [du,dv] of [[0,0],[1.3,.8],[-1,1.4],[.8,-1.2]]){const [px,py,pz]=Q(12+du,s*(3.4+dv*.5),-2.6+dv*.6);if(pz>-1.5)C(px,py,.5,'rgba(60,40,25,.5)')}}
+  {const [x,y]=Q(10,0,-.8);E(x,y,nrx*.55,1.2,'rgba(255,255,255,.35)')}
+  // Nase vorne an der Schnauze
+  const [nx,ny]=Q(16,0,-1.4), nw=2.2+1*Math.abs(sa);
+  ctx.beginPath();ctx.moveTo(nx-nw,ny-1);ctx.quadraticCurveTo(nx,ny-2.4,nx+nw,ny-1);ctx.quadraticCurveTo(nx+nw*.8,ny+2,nx,ny+2.4);ctx.quadraticCurveTo(nx-nw*.8,ny+2,nx-nw,ny-1);
+  ctx.fillStyle='#3a2418';ctx.fill();E(nx-.6*ca,ny-.8,1.1,.5,'rgba(255,255,255,.75)');
+  // Mund
+  ctx.strokeStyle='#3a2418';ctx.lineWidth=.9;
+  if(o.expr==='scared'){const [x,y]=Q(14.5,0,-5.4);E(x,y,1.6,1.9,'#7a2d2d')}
+  else{const [m0x,m0y]=Q(15.6,0,-3.6);ctx.beginPath();ctx.moveTo(nx,ny+2.3);ctx.lineTo(m0x,m0y);
+    for(const s of [-1,1]){const [x,y,z]=Q(13,s*2.8,-4.6);if(z<-2)continue;ctx.moveTo(m0x,m0y);ctx.quadraticCurveTo((m0x+x)/2,y+.8,x,y)}ctx.stroke();
+    if(o.expr==='happy'){const [x,y]=Q(14.6,0,-4.9);E(x,y,1.2,.9,'#e5737c')}}
+  // Schnurrhaare
+  ctx.strokeStyle='rgba(95,70,50,.5)';ctx.lineWidth=.55;
+  for(const s of [-1,1]){const [x0,y0,z0]=Q(12,s*4.2,-2.4);if(z0<-3)continue;
+    for(const dh of [1.4,-.2,-1.8]){const [x1,y1]=Q(8,s*14,-2.4+dh*2),[xm,ym]=Q(11,s*9,-2.4+dh*.7);ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo(xm,ym,x1,y1);ctx.stroke()}}
+  // Augen, Brauen, Bäckchen
+  for(const s of [-1,1]){const nz=nzOf(.55,s*.83); if(nz<-.12) continue;
+    const [x,y]=Q(5.4,s*5.3,2.6), fx=clamp(.4+.7*nz,.4,1);
+    eye3(x,y,fx,o);
+    if(!o.shades){ctx.strokeStyle='rgba(40,20,8,.35)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(x-2.5*fx,y-4.4);ctx.quadraticCurveTo(x,y-5.4,x+2.6*fx,y-4.6);ctx.stroke()}
+    const [bx,by]=Q(7,s*6.6,-2.4);if(nzOf(.4,s*.9)>0)E(bx,by,2.8*fx,1.6,'rgba(255,128,140,.4)')}
+  if(o.shades&&Math.abs(sa)>.4){const [x1,y1]=Q(6,-2,2.6),[x2,y2]=Q(6,2,2.6);ctx.strokeStyle='#2b2b3a';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+  };
+  // Schaut der Otter von uns weg, liegt das Gesicht hinter dem Kopf: zuerst Gesicht, dann Hinterkopf darüber
+  if(sa*pc<-.2){feat();skull()}else{skull();feat()}
+  ear(ears[1][0]);                                                          // vorderes Ohr
+  // Schmuck
+  const ac=o.accCol;
+  if(o.acc==='bow'){const [x,y]=Q(-1.5,2.5,9.6);ctx.save();ctx.translate(x,y);ES(-4.5,0,5,3.3,ac,'rgba(0,0,0,.25)',-.5,.8);ES(4.5,0,5,3.3,ac,'rgba(0,0,0,.25)',.5,.8);C(0,0,2,'#ffffff');ctx.restore()}
+  else if(o.acc==='flower'){[[-6,-6],[-2,-3],[1.5,0],[-2,3],[-6,6]].map(([u,v],i)=>[Q(u,v,8.6-Math.abs(v)*.12),i]).sort((p,q)=>p[0][2]-q[0][2]).forEach(([[x,y],i])=>flower(x,y,1.9,i%2?'#ffffff':ac))}
+  else if(o.acc==='leaf'){const [x,y]=Q(-1,0,9.4);ctx.save();ctx.translate(x,y);ctx.rotate(-.5*ca);E(0,-6,3.6,7.5,'#5cbf5c');ctx.strokeStyle='#3c8f3c';ctx.lineWidth=.9;ctx.beginPath();ctx.moveTo(0,1);ctx.lineTo(0,-12);ctx.stroke();ctx.restore()}
+  else if(o.acc==='star'){const [x,y]=Q(-4,5,6.5);star5(x,y,4.6,'#ffd23f')}
+}
+// Oberfläche abschneiden: alles unterhalb der Wasserlinie (an dieser Tiefe) wird ausgeblendet
+function surfClip(z){ctx.save();ctx.beginPath();ctx.rect(-120,-140,240,141+z*KZ);ctx.clip()}
+function tailPts(R,u0,u1,h0,h1,vfn,n=10,curl=0){const pts=[];for(let i=0;i<n;i++){const k=i/(n-1);pts.push(R.P(u0+(u1-u0)*k,vfn(k),h0+(h1-h0)*Math.pow(k,.6)+curl*Math.pow(k,3)))}return pts}
+function tailFill(c,pts){const a=pts[pts.length-1],b=pts[0],g=ctx.createLinearGradient(a[0],a[1],b[0],b[1]);g.addColorStop(0,c.dark);g.addColorStop(1,c.fur);return g}
+function body3(o,R,cx,cy,L,W,H,lean){ // Rumpf als Ellipsoid im Raum
+  const c=o.col, rx=R.w(L,W), ry=Math.sqrt(H*H+(KZ*R.d(L,W))**2);
+  furFill(cx,cy,rx,ry,c); tufts3(cx,cy,rx,ry,Math.round(5+4*Math.abs(R.ca)),lean); strands3(o,cx,cy,rx,ry,lean);
+  return [rx,ry];
+}
+function paw(x,y,c,rx=3.4,ry=3){ES(x,y,rx,ry,c.fur,c.dark,0,1)}
+
+// ---------- Schwimmen ----------
+function drawSwim3(o,a){
+  const c=o.col, R=rig(a), raw=swimSpeed(o); o.spS=o.spS==null?raw:o.spS+(raw-o.spS)*.08;
+  const sp=o.spS, ph=o.sph||0, w=Math.sin(ph)*(1.2+sp*2.6), lean=R.ca;
+  // unter Wasser: Rumpf, Schwanz und paddelnde Pfoten
+  ctx.save();ctx.globalAlpha=.26;
+  {const [x,y]=R.P(-16,0,-6);E(x,y,R.w(27,9),Math.sqrt(25+(KZ*R.d(27,9))**2),c.dark)}
+  taper(tailPts(R,-36,-68,-4,-3,k=>w*k*k*1.6),7,1.5,c.dark);
+  const k1=Math.sin(ph*1.5),k2=Math.sin(ph*1.5+Math.PI);
+  for(const [u,v,k] of [[-30,6,k1],[-30,-6,k2],[7,4,k2],[7,-4,k1]]){const [x,y]=R.P(u+k*(u<0?4:2.5),v,-9);E(x,y,u<0?5.5:3.3,u<0?2.2:1.7,c.dark)}
+  ctx.restore();
+  bowWake3(R,sp,o.t);
+  const bob=Math.sin(ph)*.9*(.35+sp), hb=Math.sin(ph+.9)*1.1*(.3+sp)+Math.sin(o.t*2.2)*.5;
+  // Rücken über dem Wasser
+  {const [x,y,z]=R.P(-16,0,-3+bob*.6);surfClip(z);const [rx,ry]=body3(o,R,x,y,23,10,8.5,lean);E(x-lean*1,y-ry*.45,rx*.55,1.5,'rgba(255,255,255,.3)');ctx.restore()}
+  {const [x,y,z]=R.P(-43,0,-1.5);surfClip(z);E(x,y,R.w(8,3),2.6,c.dark);ctx.restore()}
+  if(o.acc==='scarf'){const [x,y]=R.P(4,0,6+hb*.5);ES(x,y,R.w(5,9),3.6,o.accCol,'rgba(0,0,0,.2)',0,.8)}
+  // Hals und Kopf
+  const look=o.expr==='normal'?Math.sin(o.t*.55+o.id*1.7)*.07:0;
+  {const [x,y,z]=R.P(6,0,4+hb*.5);surfClip(z);E(x,y,R.w(9,8),7,c.fur);ctx.restore()}
+  {const [x,y]=R.P(8,0,10-hb);head3D(o,x,y,a+look,-sp*.06)}
+  {const [x,y]=R.P(-6,0,0);waterline3(x,y+1,R.w(31,12)+sp*3,3.6+KZ*R.d(31,12)*.4)}
+}
+// Wasserlinie: nur der vordere Bogen liegt vor dem Otter. Der hintere wird gemerkt und beim nächsten Bild
+// zuerst gezeichnet, damit der Otter ihn verdeckt.
+let curO=null;
+const WL_FRONT='rgba(255,255,255,.34)', WL_BACK='rgba(255,255,255,.22)';
+function waterline3(x,y,rx,ry){ctx.strokeStyle=WL_FRONT;ctx.lineWidth=1.1;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI);ctx.stroke();
+  if(curO){const m=ctx.getTransform();curO.wlNext=[x,y,rx,ry,m.a,m.b,m.c,m.d,m.e,m.f]}}
+function waterlineBack(o){const w=o.wl;if(!w)return;ctx.save();ctx.setTransform(w[4],w[5],w[6],w[7],w[8],w[9]);
+  ctx.strokeStyle=WL_BACK;ctx.lineWidth=1.1;ctx.beginPath();ctx.ellipse(w[0],w[1],w[2],w[3],0,Math.PI,TAU);ctx.stroke();ctx.restore()}
+function bowWake3(R,sp,t){
+  if(sp<.12) return;
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#ffffff';ctx.lineWidth=1.1;
+  const step=15, off=(t*26)%step;
+  for(let i=0;i<4;i++){const d=i*step+off, k=d/(step*4), u=22-d, spread=3+d*.3;
+    ctx.globalAlpha=sp*.55*(1-k)*Math.min(1,d/6);
+    for(const s of [-1,1]){const [x0,y0]=R.P(u+3,s*spread*.8,0),[x1,y1]=R.P(u-3,s*spread,0),[x2,y2]=R.P(u-8,s*spread*1.2,0);
+      ctx.beginPath();ctx.moveTo(x0,y0+1);ctx.quadraticCurveTo(x1,y1+1,x2,y2+1);ctx.stroke()}}
+  ctx.restore();
+}
+// ---------- Auf dem Rücken treiben ----------
+function drawFloat3(o,a){
+  const c=o.col, R=rig(a), b=Math.sin(o.t*2)*1, act=o.act, lean=R.ca;
+  ctx.save();ctx.rotate(Math.sin(o.t*1.3+o.id)*.035);                     // sanftes Schaukeln
+  if(!o.carried){ctx.save();ctx.globalAlpha=.2;const [x,y]=R.P(-4,0,-6);E(x,y,R.w(30,12),4.5+KZ*R.d(30,12)*.5,c.dark);ctx.restore()}
+  const parts=[];
+  // Schwanz, Hinterpfoten, Rumpf, Bauch, Kopf, Vorderpfoten – nach Tiefe sortiert gezeichnet
+  parts.push([R.P(-30,0,0)[2]-30,()=>{const [,,z]=R.P(-22,0,0);o.carried?ctx.save():surfClip(z+4);taper(tailPts(R,-20,-46,1,.6,k=>Math.sin(o.t*1.7)*k*2),6,1.2,c.dark);ctx.restore()}]);
+  for(const s of [-1,1]){const [x,y,z]=R.P(-24,s*4.8,8.5+b);parts.push([z-20,()=>{ES(x,y,4,6,c.fur,c.dark,-.3*lean);E(x,y-4,2.2,1.4,'#f0a8a8')}])}
+  parts.push([0,()=>{const [x,y,z]=R.P(0,0,1+b);o.carried?ctx.save():surfClip(z+3);   // auf Mamas Bauch liegt das Baby trocken: ganz sichtbar
+    const [rx,ry]=body3(o,R,x,y,25,12,9,lean);
+    const [bx,by]=R.P(1,0,5+b);E(bx,by,R.w(19,8),4.6+KZ*R.d(19,8)*.35,c.light);
+    ctx.strokeStyle='rgba(150,110,70,.28)';ctx.lineWidth=.8;for(let i=0;i<6;i++){const [px,py]=R.P(-12+i*5,0,6+b);ctx.beginPath();ctx.moveTo(px,py-2);ctx.lineTo(px-1.5*lean,py+.5);ctx.stroke()}
+    E(x-lean*2,y-ry*.55,rx*.45,1.5,'rgba(255,255,255,.35)');
+    if(act==='sleep'){ctx.strokeStyle=PALC.fern1;ctx.lineWidth=2.6;ctx.beginPath();for(let i=0;i<=6;i++){const [px,py]=R.P(-26+i*7,0,7+b+(i%2?2:-1));i?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.stroke();
+      for(const [u,r] of [[-6,.6],[10,-.6]]){const [px,py]=R.P(u,0,8+b);E(px,py,4,2,PALC.fern2,r*lean)}}
+    ctx.restore()}]);
+  if(o.acc==='scarf'){const [x,y,z]=R.P(16,0,5+b);parts.push([z+5,()=>ES(x,y,R.w(5,9),3.6,o.accCol,'rgba(0,0,0,.2)',0,.8)])}
+  {const [x,y,z]=R.P(22,0,13.5+b);parts.push([z,()=>head3D(o,x,y,backYaw(a),.4)])}   // Kopf schaut zum Bauch und zu den Pfoten
+  let p1=[6,-3.5,10],p2=[12,3.5,10];
+  if(act==='wash'){const w=Math.sin(o.t*12)*3;p1=[15+w,-3.5,15];p2=[17-w,3.5,13]}
+  if(act==='snack'){p1=[6,-4,11];p2=[13,4,11];const [x,y,z]=R.P(9,0,12.5+b);parts.push([z+1,()=>drawItem(o.item,x,y)])}
+  if(act==='juggle'){const h=Math.abs(Math.sin(o.t*4.2))*28;const [x,y,z]=R.P(10,0,14+h+b);parts.push([z+30,()=>drawItem('pebble',x,y)])}
+  if(!(act==='carry'&&o.lead))for(const p of [p1,p2]){const [x,y,z]=R.P(p[0],p[1],p[2]+b);parts.push([z+2,()=>paw(x,y,c)])}   // beim Tragen halten die Pfoten das Baby
+  parts.sort((p,q)=>p[0]-q[0]).forEach(p=>p[1]());
+  ctx.restore();
+  if(!o.carried){const [x,y]=R.P(0,0,0);waterline3(x,y+1,R.w(31,13),3.6+KZ*R.d(31,13)*.4)}
+}
+// Blickrichtung des Kopfes in Rückenlage: zurück zum eigenen Bauch (auf der Seite, die zu den Kindern zeigt)
+function backYaw(a){return Math.PI-a}
+const lerp=(p,q,k)=>p+(q-p)*k;
+// ---------- Rollen um die Längsachse: rho 0 = Bauch unten (schwimmen), π = Bauch oben (Rückenlage) ----------
+function drawRoll3(o,a,rho){
+  const c=o.col, R=rig(a), f=(1-Math.cos(rho))/2, cr=Math.cos(rho), sr=Math.sin(rho), lean=R.ca;
+  const side=a<=Math.PI/2?1:-1;                       // er rollt zu den Kindern hin, damit man den Bauch sieht
+  const uc=lerp(-16,0,f), hc=lerp(-3,1,f), L=lerp(23,25,f), Wd=lerp(10,12,f), H=lerp(8.5,9,f);
+  const rot=(v,h)=>[v*cr-h*sr*side, v*sr*side+h*cr]; // Drehung um die Längsachse
+  ctx.save();ctx.globalAlpha=.24;{const [x,y]=R.P(lerp(-16,-4,f),0,-6);E(x,y,R.w(lerp(27,30,f),lerp(9,12,f)),5,c.dark)}ctx.restore();
+  const parts=[];
+  // Hinterpfoten drehen sich mit: erst unter Wasser, dann seitlich, dann in die Luft
+  for(const s of [-1,1]){const [v,h]=rot(s*4.8,-8.5), hh=hc+h, [x,y,z]=R.P(lerp(-30,-24,f),v,hh);
+    parts.push([z-20,()=>{if(hh<-1){ctx.save();ctx.globalAlpha=.26;E(x,y,5,2.4,c.dark);ctx.restore()}else{ES(x,y,4,5+f,c.fur,c.dark,-.3*lean);if(f>.6)E(x,y-4,2.2,1.4,'#f0a8a8')}}])}
+  // Schwanz an der Oberfläche
+  parts.push([-40,()=>{const [,,z]=R.P(uc-20,0,0);surfClip(z+3);taper(tailPts(R,uc-20,uc-48,lerp(-1,1,f),.5,k=>Math.sin(o.t*1.7)*k*2),lerp(7,6,f),1.3,c.dark);ctx.restore()}]);
+  // Rumpf mit hellem Bauch, der über die Seite nach oben wandert
+  parts.push([0,()=>{const [x,y,z]=R.P(uc,0,hc);surfClip(z+3);const [rx,ry]=body3(o,R,x,y,L,Wd,H,lean);
+    const [bv,bh]=rot(0,-H*.62), vis=clamp((bh+H*.35)/(H*.97),0,1);
+    if(vis>0){const [bx,by]=R.P(uc+1,bv,hc+bh*.85);E(bx,by,R.w(19,8)*(.45+.55*vis),Math.max(1.2,4.6*vis+Math.abs(sr)*1.2),c.light)}
+    E(x-lean*1.5,y-ry*.5,rx*.5,1.5,`rgba(255,255,255,${(.3*(1-f)+.2).toFixed(2)})`);ctx.restore()}]);
+  // Kopf: wandert nach vorne, dreht sich über die Seite zu den Kindern und schaut am Ende zum Bauch
+  {const [x,y,z]=R.P(lerp(8,22,f),0,lerp(10,13.5,f));const yaw=a+(Math.PI-2*a)*f;parts.push([z+10,()=>head3D(o,x,y,yaw,lerp(0,.4,f))])}
+  parts.sort((p,q)=>p[0]-q[0]).forEach(p=>p[1]());
+  {const [x,y]=R.P(lerp(-6,0,f),0,0);waterline3(x,y+1,R.w(31,13),3.6+KZ*R.d(31,13)*.4)}
+}
+// ---------- Abtauchen im Bogen ----------
+// Jeder Punkt der Wirbelsäule folgt derselben Bahn: an der Oberfläche nach vorne, kurz hoch und dann schräg hinunter.
+// So taucht zuerst der Kopf ein, der Rücken wölbt sich darüber, und zuletzt verschwindet die Schwanzspitze.
+const DIVE_T=.8;
+function ribbon(pts,ws){
+  const n=pts.length,L=[],Rr=[];
+  for(let i=0;i<n;i++){const p=pts[i],q=pts[Math.min(n-1,i+1)],o=pts[Math.max(0,i-1)];let dx=q[0]-o[0],dy=q[1]-o[1];const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+    L.push([p[0]-dy*ws[i]/2,p[1]+dx*ws[i]/2]);Rr.push([p[0]+dy*ws[i]/2,p[1]-dx*ws[i]/2])}
+  ctx.beginPath();ctx.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)ctx.lineTo(L[i][0],L[i][1]);for(let i=n-1;i>=0;i--)ctx.lineTo(Rr[i][0],Rr[i][1]);ctx.closePath();
+}
+function drawDive3(o,a,q){
+  const c=o.col, R=rig(a), BL=78, Lc=30, H0=-3, e=q*q*(3-2*q);
+  const travel=e*(BL+Lc+14);
+  // Bahn: an der Oberfläche (der hintere Körper und der Schwanz liegen tiefer), kurzer Bogen, dann schräg in die Tiefe
+  const path=l=>{if(l<0)return [l,H0-Math.max(0,-l-24)*.3];
+    if(l<Lc){const t=l/Lc;return [l*.8,H0+9*Math.sin(Math.PI*t*.85)-5*t]}
+    const h1=H0+9*Math.sin(Math.PI*.85)-5;return [Lc*.8+(l-Lc)*.55,h1-(l-Lc)*.75]};
+  const N=28, pts=[], ws=[], hs=[];
+  for(let i=0;i<N;i++){const d=i/(N-1)*BL, [u,h]=path(travel-d-6);
+    pts.push(R.P(u+8,0,h));hs.push(h);
+    ws.push(d<12?7+d*.85:d<38?17:Math.max(2.5,17-(d-38)*.4))}
+  // untergetauchter Teil schimmert nur schwach und verblasst in der Tiefe
+  ctx.save();ctx.globalAlpha=.22;ribbon(pts,ws.map((w,i)=>w*.8*clamp((hs[i]+26)/22,0,1)));ctx.fillStyle=c.dark;ctx.fill();ctx.restore();
+  // über Wasser: alles oberhalb der Wasserlinie unter dem Otter (auch schräg von vorne richtig)
+  {const [x1,y1]=R.P(-300,0,0),[x2,y2]=R.P(300,0,0);ctx.save();ctx.beginPath();ctx.moveTo(x1,y1+1);ctx.lineTo(x2,y2+1);ctx.lineTo(x2,y2-300);ctx.lineTo(x1,y1-300);ctx.closePath();ctx.clip()}
+  ribbon(pts,ws);
+  const g=ctx.createLinearGradient(0,-24,0,4);g.addColorStop(0,c.dark);g.addColorStop(.6,c.fur);g.addColorStop(1,c.fur);
+  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=c.dark;ctx.lineWidth=1.2;ctx.lineJoin='round';ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1.4;ctx.lineCap='round';ctx.beginPath();
+  for(let i=4;i<N-6;i++){const p=pts[i],q2=pts[i+1],dx=q2[0]-p[0],dy=q2[1]-p[1],l=Math.hypot(dx,dy)||1,w=ws[i]*.32;const x=p[0]+dy/l*w,y=p[1]-dx/l*w;i===4?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+  {const [u,h]=path(travel-4), [u2,h2]=path(travel-1), k=Math.min(1,q*2.4), lift=13*(1-k);
+    const tang=Math.atan2(h2-h,(u2-u)||.01), [x,y]=R.P(u+8,0,h+lift);
+    if(h+lift>-14)head3D(o,x,y,a,lerp(0,tang,k))}
+  ctx.restore();
+  if(q<.9){const [x,y]=R.P(lerp(-6,20,q),0,0);ctx.save();ctx.globalAlpha=1-q;waterline3(x,y+1,R.w(lerp(31,16,q),12),3.6);ctx.restore()}
+}
+// ---------- Übergang Schwimmen <-> Aufrichten im Wasser ----------
+// lam 0 = waagrecht schwimmen, 1 = aufrecht im Wasser. Der Körper schwenkt um die Wasserlinie nach oben,
+// der Bauch dreht von unten nach vorne, die Vorderpfoten kommen hoch.
+function drawRear3(o,a,lam){
+  const c=o.col, R=rig(a), lean=R.ca, th=lam*Math.PI/2;
+  const e=lam*lam*(3-2*lam);
+  // unter Wasser
+  ctx.save();ctx.globalAlpha=.25;{const [x,y]=R.P(lerp(-16,0,e),0,lerp(-6,-12,e));E(x,y,lerp(R.w(27,9),9,e),lerp(5,11,e),c.dark)}ctx.restore();
+  // Rumpf als gedrehte Form
+  const cu=lerp(-16,0,e), ch=lerp(-3,13,e), Lb=lerp(23,17,e), Wb=lerp(8.5,10.5,e);
+  const [x,y,z]=R.P(cu,0,ch), [ax,ay]=R.P(cu+Math.cos(th),0,ch+Math.sin(th));
+  const vx=ax-x, vy=ay-y, vl=Math.hypot(vx,vy)||1, rot=Math.atan2(vy,vx);
+  const rL=Math.max(Lb*vl,Wb*.9), rW=Math.max(Wb, lerp(R.w(1,10),10.5,e)*(1-e)+Wb*e);
+  surfClip(0);
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  furPath(0,0,rL,rW);
+  const g=ctx.createLinearGradient(0,-rW,0,rW);g.addColorStop(0,c.dark);g.addColorStop(.45,c.fur);g.addColorStop(1,c.fur);
+  ctx.fillStyle=g;ctx.fill();volume(0,0,rL,rW,-.2,-.4,.3);ctx.strokeStyle=c.dark;ctx.lineWidth=1.2;ctx.stroke();
+  strands3(o,0,0,rL,rW,1);
+  // Bauch: liegt beim Schwimmen unten (verdeckt) und zeigt aufgerichtet nach vorne
+  if(e>.15){const side=lean>=0?1:-1, vis=Math.min(1,(e-.15)*1.6), bw=Math.max(2.4,5.8*R.sa+1.6*Math.abs(R.ca));   // genau wie beim Stehen
+    E(-1*vis,side*6*Math.abs(R.ca)*vis,12*vis,bw*vis,c.light)}
+  ctx.restore();
+  ctx.restore();
+  // Hals verbindet Rumpf und Kopf
+  {const [nx,ny,nz]=R.P(lerp(6,1,e),0,lerp(4,26,e));surfClip(nz);E(nx,ny,lerp(R.w(9,8),9.5,e),7,c.fur);ctx.restore()}
+  // Vorderpfoten kommen hoch
+  if(e>.35){const k=(e-.35)/.65;for(const [sv,h] of [[-1,lerp(4,17,k)],[1,lerp(2,12,k)]]){const [px,py]=R.P(lerp(6,9,k),sv*3.6,h);ctx.save();ctx.globalAlpha=Math.min(1,k*2);paw(px,py,c);ctx.restore()}}
+  {const [hx,hy]=R.P(lerp(8,1,e),0,lerp(10,31,e));head3D(o,hx,hy,a)}
+  waterline3(lerp(R.P(-6,0,0)[0],0,e),1+lerp(R.P(-6,0,0)[1],0,e),lerp(R.w(31,12),R.w(14,12),e),lerp(3.6+KZ*R.d(31,12)*.4,3.4,e));
+}
+// ---------- Aufrichten (im Wasser oder an Land) ----------
+function drawStand3(o,a,land){
+  const c=o.col, R=rig(a), lean=R.ca, base=land?17:13;
+  if(!land){ctx.save();ctx.globalAlpha=.24;const k=Math.sin(o.t*3);const [x,y]=R.P(0,0,-12);E(x,y,9,11,c.dark);
+    for(const [s,kk] of [[-1,k],[1,-k]]){const [fx,fy]=R.P(kk*2,s*5,-22);E(fx,fy,4,2,c.dark)}ctx.restore()}
+  else{ // an Land: Schwanz liegt am Boden, Hinterpfoten stehen
+    {const pts=tailPts(R,-5,-40,5,.8,k=>Math.sin(o.t*2)*k*k*4+k*3,10,3);taper(pts,10,2,tailFill(c,pts))}
+    for(const s of [-1,1]){const [x,y]=R.P(3,s*6,1);paw(x,y,c,5,4)}}
+  ctx.save();ctx.rotate(Math.sin(o.t*1.4)*.03);
+  const [x,y,z]=R.P(0,0,base); if(!land)surfClip(0);
+  ctx.beginPath();ctx.ellipse(x,y,R.w(10.5,10),17,0,0,TAU);
+  const g=ctx.createLinearGradient(0,y-17,0,y+17);g.addColorStop(0,c.dark);g.addColorStop(.4,c.fur);g.addColorStop(1,c.fur);
+  ctx.fillStyle=g;ctx.fill();volume(x,y,R.w(10.5,10),17,-.25,-.4,.3);ctx.strokeStyle=c.dark;ctx.lineWidth=1.2;ctx.stroke();
+  strands3(o,x,y,R.w(10,10),17,lean);
+  {const [bx,by]=R.P(6,0,base+1);E(bx,by,Math.max(2.4,5.8*R.sa+1.6*Math.abs(R.ca)),12,c.light)}   // heller Bauch zeigt nach vorne
+  const pw=o.act==='groom'?Math.sin(o.t*10)*2.5:0;
+  for(const [s,h,q] of [[-1,base+4,pw],[1,base-1,-pw]]){const [px,py,pz]=R.P(9+q,s*3.6,h);paw(px,py,c)}
+  if(!land)ctx.restore();
+  {const [hx,hy]=R.P(1,0,base+18);head3D(o,hx,hy,a)}
+  ctx.restore();
+  if(!land)waterline3(0,1,R.w(14,12),3.4);
+}
+// ---------- An Land laufen, liegen, rutschen ----------
+function drawWalk3(o,a,legs,lying){
+  const c=o.col, R=rig(a), ph=o.t*(o.state==='flee'?18:11), lean=R.ca;
+  const gal=legs?Math.sin(ph):0, up=legs?Math.max(0,Math.cos(ph)):0, bob=legs?-Math.abs(Math.sin(ph))*2.6:0;
+  ctx.save();ctx.translate(0,bob+(lying?5:0));
+  const H=lying?2:0, parts=[];
+  const wag=legs?Math.cos(ph)*3:Math.sin(o.t*1.5)*1.5;
+  parts.push([R.P(-30,0,0)[2],()=>{const pts=tailPts(R,-16,-56,11-H,1.5,k=>wag*k*k,10,2.5);taper(pts,15,2.2,tailFill(c,pts))}]);
+  if(!lying){
+    for(const [u,v,lift] of [[-12-gal*4.5,-6.5,up*2],[-12-gal*4.5,6.5,up*2],[16+gal*4.5,-6.5,(1-up)*1.5],[16+gal*4.5,6.5,(1-up)*1.5]]){
+      const [x,y,z]=R.P(u,v,lift+2.5);parts.push([z-.01,()=>{foot3(x,y,c,v>0)}])}}
+  else for(const v of [-4,4]){const [x,y,z]=R.P(25,v,3);parts.push([z+1,()=>{ES(x,y,5.5,3.6,c.fur,c.dark);E(x+R.ca*2,y+1,2.4,1.2,'#f0a8a8')}])}
+  parts.push([0,()=>{
+    const ry=(lying?11.5:13.5)*(1-gal*.07), L=24*(1+gal*.05);
+    const [x,y]=R.P(0,0,(lying?11:15)-gal*.8); const [rx,ryy]=body3(o,R,x,y,L,11,ry,lean);
+    {const [bx,by]=R.P(5,0,lying?5:8.5);E(bx,by,R.w(15,7),5.5,c.light)}
+    {const [bx,by]=R.P(16,0,13);E(bx,by,R.w(7,7),7,c.light)}
+    E(x+lean*3,y-ryy*.6,rx*.45,2.2,'rgba(255,255,255,.18)',-.05*lean)}]);
+  if(o.acc==='scarf'){const [x,y,z]=R.P(17,0,21);parts.push([z+3,()=>ES(x,y,R.w(6,9),4,o.accCol,'rgba(0,0,0,.2)',0,.8)])}
+  {const [x,y,z]=R.P(25,0,27-H*2);parts.push([z+5,()=>head3D(o,x,y,a)])}
+  parts.sort((p,q)=>p[0]-q[0]).forEach(p=>p[1]());
+  ctx.restore();
+}
+function foot3(x,y,c,near){ES(x,y,5,5.5,near?c.fur:c.dark,c.dark);E(x,y+3.2,3,1.3,'#f0a8a8');
+  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=.8;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x-1.6+i*1.6,y+4);ctx.lineTo(x-1.6+i*1.6,y+5.4);ctx.stroke()}}
+const WPOSE=new Set(['swim','float','stand']), POSE_T=.45;
 function onGround(o){return o.state==='walk'||o.state==='flee'||(o.onLand&&o.pose!=='lie')}
+function drawRings(front){
+  ctx.lineWidth=1.1;
+  for(const p of parts){if(p.k!=='ring')continue;const k=1-p.life/p.max;
+    ctx.strokeStyle=`rgba(255,255,255,${(.38*(1-k)*(front?1:.75)).toFixed(3)})`;ctx.beginPath();
+    ctx.ellipse(p.x,p.y,(6+k*30)*p.sz,(2+k*9)*p.sz,0,front?0:Math.PI,front?Math.PI:TAU);ctx.stroke()}
+}
 function drawOtter(o){
   if(o.pose==='under'){ctx.save();ctx.translate(o.x,o.y+6);ctx.scale(o.dir*o.s,o.s);E(0,0,26,7,'rgba(25,60,80,.28)');E(24,-1,9,6,'rgba(25,60,80,.28)');E(-30,1,9,2.5,'rgba(25,60,80,.22)');ctx.restore();return}
+  // Fliessender Wechsel zwischen Schwimmen, Treiben und Aufrichten: kurz eintauchen und umdrehen statt springen
+  if(o.vpose!==o.pose){
+    if(o.vpose&&WPOSE.has(o.vpose)&&WPOSE.has(o.pose)&&!(T-(o.pT0??-9)<(o.pDur||POSE_T))&&!o.carried){
+      o.ppose=o.vpose;o.pT0=T;o.pRoll=(o.vpose==='swim'&&o.pose==='float')||(o.vpose==='float'&&o.pose==='swim');o.pRear=(o.vpose==='swim'&&o.pose==='stand')||(o.vpose==='stand'&&o.pose==='swim');o.pDur=o.pRoll?.85:o.pRear?(o.pose==='stand'?.95:.7):POSE_T;addRipple(o.x,o.y,.7)}
+    o.vpose=o.pose}
+  let pose=o.pose, sy=1, rho=null, lam=null; const pk=(T-(o.pT0??-9))/(o.pDur||POSE_T);
+  if(pk<1&&o.ppose){
+    if(o.pRoll){const e=pk*pk*(3-2*pk); rho=o.pose==='float'?Math.PI*e:Math.PI*(1-e)}   // sanft auf den Rücken rollen
+    else if(o.pRear){lam=o.pose==='stand'?pk:1-pk}                                         // sanft aufrichten oder hinlegen
+    else{const e=pk<.5?pk*2:(pk-.5)*2, ease=e*e*(3-2*e); if(pk<.5){pose=o.ppose;sy=1-ease*.72}else sy=.28+ease*.72}}
   ctx.save();ctx.translate(o.x,o.y-(o.lift||0));
   if(onGround(o)) E(0,o.lift||0,26*o.s,5*o.s,'rgba(40,80,30,.2)');
-  const fc=Math.abs(o.face)<.28?(o.face<0?-.28:.28):o.face;
-  ctx.scale(fc*o.s,o.s);
-  switch(o.pose){
-    case 'walk':bodyWalk(o,true,false);break;
-    case 'lie':bodyWalk(o,false,true);break;
-    case 'belly':ctx.rotate(.45);bodyWalk(o,false,true);break;
-    case 'swim':drawSwim(o);break;
-    case 'float':drawFloat(o);break;
-    case 'roll':drawRoll(o);break;
-    case 'tail':drawTail(o);break;
-    case 'stand':drawStand(o);break;
+  // Kein Spiegeln mehr: aus der Blickrichtung wird ein Drehwinkel, und die Figur wird aus diesem Winkel gezeichnet
+  const a=Math.acos(clamp(o.face,-1,1)), ks=o.carried?.8:1;   // das getragene Baby wirkt klein auf Mamas Bauch
+  ctx.scale(o.s*ks,o.s*sy*ks);
+  if(rho!==null) pose='rolling'; else if(lam!==null) pose='rearing';
+  // Auftauchen: steigt sanft aus dem Wasser hoch statt plötzlich dazustehen
+  const em=o.emergeT!=null?(T-o.emergeT)/.6:9, emerging=em<1&&(pose==='swim'||pose==='float'||pose==='rolling');
+  if(emerging){const e=em*em*(3-2*em);surfClip(0);ctx.translate(0,(1-e)*20)}
+  switch(pose){
+    case 'dive':drawDive3(o,a,clamp(o.k/DIVE_T,0,1));break;
+    case 'rolling':drawRoll3(o,a,rho);break;
+    case 'rearing':drawRear3(o,a,lam);break;
+    case 'walk':drawWalk3(o,a,true,false);break;
+    case 'lie':drawWalk3(o,a,false,true);break;
+    case 'belly':ctx.rotate(.45*Math.cos(a));drawWalk3(o,a,false,true);break;
+    case 'swim':drawSwim3(o,a);break;
+    case 'float':drawFloat3(o,a);break;
+    case 'roll':drawRoll3(o,a,(o.k*4.5)%TAU);break;   // kugeln: dreht sich ganz um die Längsachse
+    case 'tail':ctx.scale(Math.cos(a)<0?-1:1,1);drawTail(o);break;
+    case 'stand':drawStand3(o,a,!!o.onLand);break;
   }
+  if(emerging)ctx.restore();
   ctx.restore();
+  // Mama hält das Baby mit beiden Vorderpfoten fest
+  if(o.carried&&o.partner){const m=o.partner,R=rig(Math.acos(clamp(m.face,-1,1))),b=Math.sin(m.t*2);
+    for(const sv of [-1,1]){const [x,y]=R.P(3,sv*8,12+b);ES(m.x+x*m.s,m.y+y*m.s,3.6*m.s,3.2*m.s,m.col.fur,m.col.dark,0,1)}}
   if(o.ball) drawBall(o.ball.x,o.ball.y);
   if(o.scared&&T-o.scared<2.5){
     const x=o.x+o.dir*20,y=o.y-(o.lift||0)-62*o.s+Math.sin(T*20)*2;
@@ -2078,7 +2608,7 @@ function drawOtter(o){
 }
 function drawParts(){
   for(const p of parts){
-    if(p.k==='ring'){const k=1-p.life/p.max;ctx.strokeStyle=`rgba(255,255,255,${.6*(1-k)})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(p.x,p.y,(6+k*30)*p.sz,(2+k*9)*p.sz,0,0,TAU);ctx.stroke()}
+    if(p.k==='ring'){} // Wellenringe: eigene Funktion, hinterer Bogen hinter, vorderer vor den Ottern
     else if(p.k==='drop'){E(p.x,p.y,1.9,2.3,p.c)}
     else if(p.k==='bub'){ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,TAU);ctx.stroke()}
     else if(p.k==='heart'){ctx.save();ctx.globalAlpha=Math.min(1,p.life/p.max*1.5);heartShape(p.x+Math.sin(T*3+p.ph)*4,p.y,1.3,'#ff7f9f');ctx.restore()}
@@ -2161,7 +2691,13 @@ function draw(){
   drawBg();
   drawReeds(false);
   const sorted=otters.slice().sort((a,b)=>(a.y+(a.z||0))-(b.y+(b.z||0)));
-  for(const o of sorted) drawOtter(o);
+  // Otter bekommen nur eine abgeschwächte Lichtstimmung, damit man sie auch abends und nachts gut sieht
+  const sceneGrade=GRADE;
+  if(L.gr){L.grO=L.grO||{sat:L.gr.sat+(1-L.gr.sat)*.5,m:L.gr.m*.5,sh:L.gr.sh.map(v=>v+(1-v)*.5),hi:L.gr.hi.map(v=>v+(1-v)*.5),exp:L.gr.exp+(1-L.gr.exp)*.55,lift:L.gr.lift};GRADE=makeGrade(S.light+'|otter',L.grO)}
+  drawRings(false);
+  for(const o of sorted){waterlineBack(o);curO=o;o.wlNext=null;drawOtter(o);o.wl=o.wlNext;curO=null}
+  drawRings(true);
+  GRADE=sceneGrade;
   drawReeds(true);
   drawLeaves();
   drawParts();
@@ -2217,10 +2753,11 @@ window.addEventListener('resize',resize); resize();
 syncUI(); micUI(); selectTab('szene');
 let last=performance.now();
 function frame(now){
+  requestAnimationFrame(frame);
+  if(S.eco&&now-last<1000/30-4) return; // Sparsam: höchstens ca. 30 Bilder pro Sekunde
   const dt=Math.min(.05,(now-last)/1000); last=now;
   update(dt); draw();
   hudT-=dt; if(hudT<=0){hudT=.06;hud()}
-  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 })();

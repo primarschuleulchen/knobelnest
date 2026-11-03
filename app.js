@@ -234,11 +234,14 @@
     return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
   // Spiele, die als eigener Ordner auf dem Server liegen (z. B. die Zeitreise): <meta name="knobelnest-url" content="zeitreise/index.html">
+  // Die Vokabelkiste liegt im Ordner vokabelkiste/. Als Spiel-Datei geht auch die Vokabelkiste aus claude.ai (erkannt an «vk-content»).
   function gameUrl(html) {
+    if (/<script[^>]*id=["']vk-content["']/i.test(html || '')) return 'vokabelkiste/index.html';
     var m = /<meta\s+name=["']knobelnest-url["']\s+content=["']([^"']+)["']/i.exec(html || '');
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
+  var VK_VER = '1'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -251,7 +254,7 @@
     f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
     var url = gameUrl(html);
-    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + ZR_VER; else f.srcdoc = prepare(html, seed);
+    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER); else f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
@@ -291,7 +294,7 @@
     var d = e.data; if (!d || typeof d !== 'object') return;
     if (PL.url && d.knobelnest && d.type === 'hello') {
       var sd = PL.seed || {};
-      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: !PL.seed } }, '*'); } catch (x) {}
+      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit } }, '*'); } catch (x) {}
       return;
     }
     if (PL.onMsg) PL.onMsg(d);
@@ -757,7 +760,7 @@
       paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '5';
+  var OTTER_VER = '6';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
@@ -795,7 +798,7 @@
       try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) { cls = null; }
       if (!cls) { paint('<div class="main"><div class="card stack"><h2>Otterteich nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
       window.knOtter = otterBridge(cid, (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }), function () { location.hash = '#/'; });
-      paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen; autoplay"></iframe></div>');
+      paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen; autoplay; screen-wake-lock"></iframe></div>');
     }
   };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
@@ -993,7 +996,8 @@
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
             (isWall(g) ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
             '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') +
-            (isZeit(g) ? '<button class="btn primary" data-a="zrOpen" data-id="' + g.id + '">🔓 Zeiten & Fortschritt</button>' : '') + '</div></div></article>';
+            (isZeit(g) ? '<button class="btn primary" data-a="zrOpen" data-id="' + g.id + '">🔓 Zeiten & Fortschritt</button>' : '') +
+            (isVok(g) ? '<button class="btn primary" data-a="vkOpen" data-id="' + g.id + '">📚 Wörter & Freigaben</button>' : '') + '</div></div></article>';
         }).join('') + '</div>');
     });
     return out + '</section>';
@@ -1069,6 +1073,22 @@
     if (i >= 0) l.splice(i, 1); else l.push(e);
     if (!l.length) delete ZR.cfg.kids[k];
     return zrSave();
+  };
+  // ---------- Vokabelkiste: Wortlisten und Freigaben pro Klasse (game_settings: { content }) ----------
+  function isVok(g) { return /vokabelkiste/i.test(g.title || ''); }
+  ACT.vkOpen = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], cid = T.cls, c = T.cur();
+    if (!g || !c) return toast('Bitte zuerst eine Klasse wählen.');
+    toast('Vokabelkiste wird geladen …');
+    var both = await Promise.all([DB.gameHtml(g.id), DB.gameSettingsGet(cid, g.id)]);
+    var cfg = both[1] && typeof both[1] === 'object' ? both[1] : {};
+    openPlayer(g.title + ' · Klasse ' + c.name, both[0], function (d) {
+      if (!d.knobelnest || d.type !== 'vkContent' || !d.content || !Array.isArray(d.content.subjects)) return;
+      var reply = function (ok, err) { try { if (PL) PL.frame.contentWindow.postMessage({ vkAck: d.id, ok: ok, err: err || '' }, '*'); } catch (x) {} };
+      if (JSON.stringify(d.content).length > 900000) return reply(false, 'zu gross');
+      cfg = Object.assign({}, cfg, { content: d.content });
+      DB.gameSettingsSet(cid, g.id, cfg).then(function () { reply(true); }, function (e) { reply(false, errMsg(e)); toast('Speichern ging nicht: ' + errMsg(e)); });
+    }, null, { settings: cfg, teacher: true, edit: true });
   };
   // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
   // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.

@@ -10,12 +10,13 @@ JOBS = [  # (Einbau-Skript, Original, Ziel im Hauptordner)
     ('einbau/tagesfolie/patch.py',         'originale/tagesfolien.html',       'tagesfolie.html'),
     ('einbau/otterteich/otter2_patch.py',  'originale/otterteich.html',        'otterteich.html'),
     ('einbau/atelier/atelier_patch.py',    'originale/atelier/index.html',     'atelier.html'),
+    ('einbau/vokabelkiste/vk_patch.py',    'originale/vokabelkiste.html',      'vokabelkiste/index.html'),
 ]
 write = '--schreiben' in sys.argv
 ok = True
 with tempfile.TemporaryDirectory() as tmp:
     for script, src, dst in JOBS:
-        out = os.path.join(tmp, dst)
+        out = os.path.join(tmp, dst.replace('/', '_'))
         r = subprocess.run([sys.executable, os.path.join(W, script), os.path.join(W, src), out], capture_output=True, text=True)
         if r.returncode:
             ok = False; print('FEHLER  ', dst, '\n', r.stderr.strip()[-800:]); continue

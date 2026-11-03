@@ -20,8 +20,8 @@ if(EMBED) document.documentElement.classList.add('embed');
 let knSaveSet=()=>{};""")
 
 # 2) Einstellungen speichern, sobald sich etwas ändert
-rep("  if(!S.captions) $('caption').classList.remove('show');\n  applyAudio();\n}",
-    "  if(!S.captions) $('caption').classList.remove('show');\n  applyAudio();\n  knSaveSet();\n}")
+rep("  if(!S.captions) $('caption').classList.remove('show');\n  applyAudio(); applyWake();\n}",
+    "  if(!S.captions) $('caption').classList.remove('show');\n  applyAudio(); applyWake();\n  knSaveSet();\n}")
 rep("$('names').addEventListener('input',e=>{S.names=e.target.value;renameAll()});",
     "$('names').addEventListener('input',e=>{S.names=e.target.value;renameAll();knSaveSet()});")
 
