@@ -397,6 +397,11 @@ textarea.inp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;
 .cpg>b{font-family:var(--hand);font-size:22px;font-weight:400;color:var(--navy)}
 .cpr{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .pill.offp{opacity:.6}
+/* Knobelnest: Kärtchen-Rückseite auf iPad sauber (verdeckte Seite ausblenden) */
+.inner>.face{transform:rotateY(0deg) translateZ(1px);transition:visibility 0s linear .27s}
+.inner>.face.back,.inner>.face.open{transform:rotateY(180deg) translateZ(1px);visibility:hidden}
+.flipped>.inner>.face{visibility:hidden}
+.flipped>.inner>.face.back,.flipped>.inner>.face.open{visibility:visible}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
