@@ -263,5 +263,36 @@ rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Kärtchen-Rück
 rep("  $('#top').innerHTML=`<button class=\"brand\" id=\"brand\"", "  $('#top').innerHTML=`${KN?'<button class=\"pill\" id=\"knBack\">← Knobelnest</button>':''}<button class=\"brand\" id=\"brand\"")
 rep("  $('#brand').onclick=()=>goNode(null);", "  $('#brand').onclick=()=>goNode(null);\n  const kb=$('#knBack');if(kb)kb.onclick=()=>{saveP();knAward();knSend({type:'close'})};")
 
+# 11) Vorlagen: Die Admin-Lehrperson gibt Portionen oder ganze Ordner «als Vorlage» frei (n.tpl; ein Ordner gilt für alles darin).
+#     Das Portal speichert daraus shared_store «vokabelkiste-vorlage». Bei anderen Lehrpersonen werden neue Vorlage-Portionen
+#     beim Öffnen von «Wörter & Freigaben» als Kopie eingefügt (für Kinder gesperrt). C.tplSeen merkt sich, was schon kam,
+#     damit Gelöschtes nicht wiederkommt und Änderungen der Lehrperson bleiben.
+rep("/* ---------- Knobelnest: Was wurde wo geübt (für die Lehrperson) ---------- */", r"""/* ---------- Knobelnest: Vorlagen für andere Lehrpersonen ---------- */
+const KN_ADMIN=KN&&!!KNI.admin,TPL=KN&&KNI.settings&&KNI.settings.tpl&&Array.isArray(KNI.settings.tpl.subjects)?KNI.settings.tpl:null;
+const tplOf=id=>{const i=NODES.get(id);return !i?0:i.node.tpl?1:i.path.some(n=>n.tpl)?2:0};
+function toggleTpl(id){const i=NODES.get(id);if(!i)return;if(i.node.tpl)delete i.node.tpl;else i.node.tpl=true;
+  touch();rerender();toast(i.node.tpl?'Als Vorlage für Lehrpersonen freigegeben. Wird gespeichert …':'Keine Vorlage mehr. Wird gespeichert …');publishContent(null)}
+function findDeep(arr,id){for(const n of arr){if(n.id===id)return n;if(n.kids){const f=findDeep(n.kids,id);if(f)return f}}return null}
+function mergeTpl(){
+  if(!TPL||KN_ADMIN)return [];
+  /* Klasse ohne eigene Listen: nur mit den Vorlagen beginnen (nicht mit den eingebauten Listen) */
+  if(!(KNI.settings&&KNI.settings.content))C.subjects.forEach(x=>{x.tree=[];x.excl=[]});
+  const seen=new Set(C.tplSeen||[]),added=[];
+  TPL.subjects.forEach(ts=>{let sub=C.subjects.find(s=>s.id===ts.id);
+    if(!sub){sub={id:ts.id,name:ts.name,lang:ts.lang,excl:[],tree:[]};C.subjects.push(sub)}
+    const walk=(tarr,getArr)=>(tarr||[]).forEach(tn=>{
+      if(tn.words){if(seen.has(tn.id))return;seen.add(tn.id);if(findDeep(sub.tree,tn.id))return;
+        const cp=JSON.parse(JSON.stringify(tn));delete cp.tpl;cp.open=false;getArr().push(cp);added.push(cp.name);
+        (ts.excl||[]).forEach(x=>{if(cp.words.some(w=>w.id===x)&&!sub.excl.includes(x))sub.excl.push(x)})}
+      else{let f=null;walk(tn.kids,()=>{if(f)return f.kids;f=findDeep(sub.tree,tn.id);if(!f){f={id:tn.id,name:tn.name,kids:[],open:false};getArr().push(f)}f.kids=f.kids||[];return f.kids})}});
+    walk(ts.tree,()=>sub.tree)});
+  C.tplSeen=[...seen];return added;
+}
+/* ---------- Knobelnest: Was wurde wo geübt (für die Lehrperson) ---------- */""")
+rep("CAN_EDIT=true;ART={};T=true;renderTop();", "CAN_EDIT=true;ART={};T=true;{const ad=mergeTpl();if(ad.length){touch();publishContent(null);setTimeout(()=>toast('Neu von '+(TPL.by||'der Admin-Lehrperson')+': '+ad.join(', ')+'. Für die Kinder noch gesperrt.'),900)}}renderTop();")
+rep("<div class=\"hact\">${KN&&isPortion?", "<div class=\"hact\">${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class=\"pill\" style=\"cursor:default\">📤 Vorlage (ganzer Ordner)</span>':`<button class=\"pill ${t?'go':''}\" id=\"tplNode\">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?")
+rep("    $('#relNode').onclick=()=>toggleRelease(id);", "    $('#relNode').onclick=()=>toggleRelease(id);const tpb=$('#tplNode');if(tpb)tpb.onclick=()=>toggleTpl(id);")
+rep("${T&&!op?' · <span class=\"lock\">nicht freigegeben</span>':''}</span>", "${T&&!op?' · <span class=\"lock\">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

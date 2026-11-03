@@ -574,6 +574,27 @@ function knTodayHTML(){
     <div class="kt kt-fire ${st?'on':''}"><b class="ktn">${st}</b><div class="ktx"><span class="ktf">${fl||'Noch keine Flamme'}</span><small>${st===1?'Schultag':'Schultage'} hintereinander mit Tagesstern</small></div></div>
     <div class="kt kt-badges">${bd('🏅','Wochenheld',wk>0,wk?(wk>1?wk+'× geschafft':'geschafft!'):'jeden Schultag einer Woche einen Tagesstern')}
       ${bd('📦','Kistenprofi',f5>=PROFI,f5>=PROFI?'100 Wörter im letzten Fach!':f5+' von '+PROFI+' Wörtern im letzten Fach')}</div></div>`}
+/* ---------- Knobelnest: Vorlagen für andere Lehrpersonen ---------- */
+const KN_ADMIN=KN&&!!KNI.admin,TPL=KN&&KNI.settings&&KNI.settings.tpl&&Array.isArray(KNI.settings.tpl.subjects)?KNI.settings.tpl:null;
+const tplOf=id=>{const i=NODES.get(id);return !i?0:i.node.tpl?1:i.path.some(n=>n.tpl)?2:0};
+function toggleTpl(id){const i=NODES.get(id);if(!i)return;if(i.node.tpl)delete i.node.tpl;else i.node.tpl=true;
+  touch();rerender();toast(i.node.tpl?'Als Vorlage für Lehrpersonen freigegeben. Wird gespeichert …':'Keine Vorlage mehr. Wird gespeichert …');publishContent(null)}
+function findDeep(arr,id){for(const n of arr){if(n.id===id)return n;if(n.kids){const f=findDeep(n.kids,id);if(f)return f}}return null}
+function mergeTpl(){
+  if(!TPL||KN_ADMIN)return [];
+  /* Klasse ohne eigene Listen: nur mit den Vorlagen beginnen (nicht mit den eingebauten Listen) */
+  if(!(KNI.settings&&KNI.settings.content))C.subjects.forEach(x=>{x.tree=[];x.excl=[]});
+  const seen=new Set(C.tplSeen||[]),added=[];
+  TPL.subjects.forEach(ts=>{let sub=C.subjects.find(s=>s.id===ts.id);
+    if(!sub){sub={id:ts.id,name:ts.name,lang:ts.lang,excl:[],tree:[]};C.subjects.push(sub)}
+    const walk=(tarr,getArr)=>(tarr||[]).forEach(tn=>{
+      if(tn.words){if(seen.has(tn.id))return;seen.add(tn.id);if(findDeep(sub.tree,tn.id))return;
+        const cp=JSON.parse(JSON.stringify(tn));delete cp.tpl;cp.open=false;getArr().push(cp);added.push(cp.name);
+        (ts.excl||[]).forEach(x=>{if(cp.words.some(w=>w.id===x)&&!sub.excl.includes(x))sub.excl.push(x)})}
+      else{let f=null;walk(tn.kids,()=>{if(f)return f.kids;f=findDeep(sub.tree,tn.id);if(!f){f={id:tn.id,name:tn.name,kids:[],open:false};getArr().push(f)}f.kids=f.kids||[];return f.kids})}});
+    walk(ts.tree,()=>sub.tree)});
+  C.tplSeen=[...seen];return added;
+}
 /* ---------- Knobelnest: Was wurde wo geübt (für die Lehrperson) ---------- */
 let knMode=null;
 function knLog(){if(!KN||!knMode)return null;P.log=P.log||{};const a=P.log[knMode.key]=P.log[knMode.key]||{};return a[knMode.mode]=a[knMode.mode]||{n:0,a:0,c:0,s:0}}
@@ -815,7 +836,7 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
@@ -830,7 +851,7 @@ function goNode(id){
   if(!node)bindRoot(s);
   bindFolderGrid(id);
   if(T&&node){
-    $('#relNode').onclick=()=>toggleRelease(id);const cpb=$('#cpBtn');if(cpb)cpb.onclick=()=>goClassPortion(id);
+    $('#relNode').onclick=()=>toggleRelease(id);const tpb=$('#tplNode');if(tpb)tpb.onclick=()=>toggleTpl(id);const cpb=$('#cpBtn');if(cpb)cpb.onclick=()=>goClassPortion(id);
     $('#ren').onclick=()=>openDialog({title:isPortion?'Portion umbenennen':'Ordner umbenennen',value:node.name,onOk:v=>{node.name=v;touch();goNode(id)}});
     confirmBtn($('#delNode'),'Wirklich löschen?',()=>{const arr=kidsOf(info.parent?info.parent.id:null);arr.splice(arr.indexOf(node),1);touch();toast('Gelöscht');goNode(info.parent?info.parent.id:null)});
   }
@@ -870,7 +891,7 @@ function folderGrid(kids,pid,depth){
   let h='<div class="fgrid">';
   kids.forEach((n,i)=>{if(!vis(n))return;const isP=!!n.words,ws=wordsOf(n),op=isOpen(n);
     const meta=isP?`${ws.length} ${ws.length===1?'Wort':'Wörter'}`:`${portionsIn(n)} ${portionsIn(n)===1?'Portion':'Portionen'} · ${ws.length} Wörter`;
-    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
+    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
       ${T?`<div class="cact"><button class="ib" data-mv="-1" data-id="${n.id}" ${i?'':'disabled'} aria-label="Nach vorne">‹</button><button class="ib" data-mv="1" data-id="${n.id}" ${i<kids.length-1?'':'disabled'} aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="relb ${op?'on':''}" data-rel="${n.id}">${op?'✓ Freigegeben':'Freigeben'}</button></div>`:''}</div>`});
   const parent=pid?NODES.get(pid).node:null,direct=kids.filter(n=>n.words&&vis(n)&&wordsOf(n).length);
   if(parent&&direct.length){const all=wordsOf(parent);h+=`<div class="portion total"><button class="fmain" data-all="${pid}"><span class="fname">${esc(parent.name)} · Gesamt</span><span class="fmeta">Alle Teile zusammen · ${all.length} Wörter</span><span class="pv">${direct.map(n=>esc(n.name)).join(' + ')}</span></button></div>`}
@@ -1320,7 +1341,7 @@ try{document.documentElement.lang='de'}catch(e){}
 renderTop();renderPub();rerender();
 (async()=>{try{
   if(KN){setInterval(knTick,1000);knAward();}
-  if(KN){if(KNI.teacher&&KNI.edit){CAN_EDIT=true;ART={};T=true;renderTop();renderBanner();renderPub();if(nav.view!=='session')rerender()}return}
+  if(KN){if(KNI.teacher&&KNI.edit){CAN_EDIT=true;ART={};T=true;{const ad=mergeTpl();if(ad.length){touch();publishContent(null);setTimeout(()=>toast('Neu von '+(TPL.by||'der Admin-Lehrperson')+': '+ad.join(', ')+'. Für die Kinder noch gesperrt.'),900)}}renderTop();renderBanner();renderPub();if(nav.view!=='session')rerender()}return}
   if(!window.claude||!window.claude.use)return;
   const u=await window.claude.use('user');CAN_EDIT=!!(u&&await u.canEdit());
   if(!CAN_EDIT)return;
