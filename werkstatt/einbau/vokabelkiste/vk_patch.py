@@ -31,7 +31,7 @@ rep("\n})();\n</script>", r"""
 })();
 </script>""")
 
-# 2) Wortlisten der Klasse aus dem Knobelnest (sonst die eingebauten)
+# 2) Wortlisten der Klasse aus der Klassenkiste (sonst die eingebauten)
 rep("let EMBED=null;try{EMBED=JSON.parse($('#vk-content').textContent)}catch(e){}",
     "let EMBED=null;try{EMBED=JSON.parse($('#vk-content').textContent)}catch(e){}\n"
     "const KN=!!KNI;\n"
@@ -39,7 +39,7 @@ rep("let EMBED=null;try{EMBED=JSON.parse($('#vk-content').textContent)}catch(e){
 rep("const EMBED_JSON=JSON.stringify(EMBED),EMBED_HASH=hashStr(EMBED_JSON);",
     "let EMBED_JSON=JSON.stringify(EMBED),EMBED_HASH=hashStr(EMBED_JSON);")
 
-# 3) Fortschritt des Kindes im Knobelnest speichern (statt nur auf dem Gerät)
+# 3) Fortschritt des Kindes in der Klassenkiste speichern (statt nur auf dem Gerät)
 rep("const P=lsGet(PKEY)||{};", "const P=(KN?(KNI.store&&KNI.store.p):lsGet(PKEY))||{};")
 rep("const saveP=()=>lsSet(PKEY,P);", r"""const knSend=m=>{if(!KN)return;try{m.knobelnest=1;parent.postMessage(m,'*')}catch(e){}};
 const saveP=()=>{if(!KN)return lsSet(PKEY,P);knSend({type:'store',data:{p:P}})};
@@ -67,16 +67,16 @@ rep("  try{await ART.publish(buildHTML(C));", r"""  if(KN){const fin=()=>{if(btn
     return}
   try{await ART.publish(buildHTML(C));""")
 
-# 5) Start: Lehrperson mit Bearbeiten-Recht (aus «Wörter & Freigaben» im Knobelnest)
+# 5) Start: Lehrperson mit Bearbeiten-Recht (aus «Wörter & Freigaben» in der Klassenkiste)
 rep("  if(!window.claude||!window.claude.use)return;",
     "  if(KN){if(KNI.teacher&&KNI.edit){CAN_EDIT=true;ART={};T=true;renderTop();renderBanner();renderPub();if(nav.view!=='session')rerender()}return}\n"
     "  if(!window.claude||!window.claude.use)return;")
 
-# 6) Hinweis für die Kinder: der Fortschritt bleibt im Knobelnest (auf jedem Gerät gleich)
+# 6) Hinweis für die Kinder: der Fortschritt bleibt in der Klassenkiste (auf jedem Gerät gleich)
 rep("wird auf diesem Gerät gespeichert.</p>`;",
-    "wird ${KN?'im Knobelnest gespeichert – auf jedem Gerät gleich':'auf diesem Gerät gespeichert'}.</p>`;")
+    "wird ${KN?'in der Klassenkiste gespeichert – auf jedem Gerät gleich':'auf diesem Gerät gespeichert'}.</p>`;")
 
-# 7) Tagesstern, Serie und Abzeichen (nur im Knobelnest)
+# 7) Tagesstern, Serie und Abzeichen (nur in der Klassenkiste)
 #    Übungszeit zählt nur, solange eine Übung läuft und das Kind in den letzten 30 Sekunden etwas getippt hat.
 #    Tagesstern ab 7 Minuten. Serie = Schultage hintereinander mit Tagesstern; Samstag, Sonntag und Tage mit
 #    «Ferien» oder «schulfrei» im Hausaufgabenheft (settings.frei) zählen nicht und unterbrechen nicht.
@@ -259,8 +259,8 @@ rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Kärtchen-Rück
 @media (prefers-reduced-motion:reduce)""")
 
 # 10) Im Knobelnest gibt es keinen dunklen Balken mehr (wie beim Hausaufgabenheft): Die Vokabelkiste hat
-#     links oben selbst einen Knopf «← Knobelnest», der das Portal bittet, sie zu schliessen.
-rep("  $('#top').innerHTML=`<button class=\"brand\" id=\"brand\"", "  $('#top').innerHTML=`${KN?'<button class=\"pill\" id=\"knBack\">← Knobelnest</button>':''}<button class=\"brand\" id=\"brand\"")
+#     links oben selbst einen Knopf «← Klassenkiste», der das Portal bittet, sie zu schliessen.
+rep("  $('#top').innerHTML=`<button class=\"brand\" id=\"brand\"", "  $('#top').innerHTML=`${KN?'<button class=\"pill\" id=\"knBack\">← Klassenkiste</button>':''}<button class=\"brand\" id=\"brand\"")
 rep("  $('#brand').onclick=()=>goNode(null);", "  $('#brand').onclick=()=>goNode(null);\n  const kb=$('#knBack');if(kb)kb.onclick=()=>{saveP();knAward();knSend({type:'close'})};")
 
 # 11) Vorlagen: Die Admin-Lehrperson gibt Portionen oder ganze Ordner «als Vorlage» frei (n.tpl; ein Ordner gilt für alles darin).

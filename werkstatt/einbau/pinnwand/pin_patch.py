@@ -48,7 +48,7 @@ rep('''  if (act === "role") {''', '''  if (act === "role" && KN && S.peek) setP
   if (act === "role") {''')
 
 # 4) Zurück ins Knobelnest
-rep('''    <h1>Klassen-Pinnwand</h1>''', '''    <button class="btn ghost small" type="button" id="knBack" hidden>← Knobelnest</button>
+rep('''    <h1>Klassen-Pinnwand</h1>''', '''    <button class="btn ghost small" type="button" id="knBack" hidden>← Klassenkiste</button>
     <h1>Klassen-Pinnwand</h1>''')
 rep('/* ---------- Start ---------- */', '''if (KN) { const kb = $("#knBack"); kb.hidden = false; if (KN.mode === "kid") kb.textContent = "← Zurück"; kb.onclick = () => KN.back(); }
 /* ---------- Start ---------- */''')

@@ -2779,14 +2779,14 @@ function knCheckAudio(){
 }
 if(KN){
   const q=x=>document.querySelector(x);
-  // Texte: im Knobelnest werden Namen und Einstellungen pro Klasse gespeichert
-  q('.dhead p').textContent='Wird für diese Klasse im Knobelnest gespeichert';
+  // Texte: in der Klassenkiste werden Namen und Einstellungen pro Klasse gespeichert
+  q('.dhead p').textContent='Wird für diese Klasse in der Klassenkiste gespeichert';
   q('.scard h1').textContent='Otterteich';
-  q('.scard p').textContent='Das Mikrofon misst nur live, wie laut es im Raum ist – es wird nichts aufgenommen. Namen und Einstellungen bleiben für eure Klasse im Knobelnest gespeichert.';
+  q('.scard p').textContent='Das Mikrofon misst nur live, wie laut es im Raum ist – es wird nichts aufgenommen. Namen und Einstellungen bleiben für eure Klasse in der Klassenkiste gespeichert.';
   const fines=[...document.querySelectorAll('.scard .fine')]; if(fines[1]) fines[1].hidden=true;
   const nh=$('names').parentElement.querySelector('.hint');
   if(nh) nh.textContent='Mit Komma oder Zeilenumbruch trennen. Die Namen bleiben für diese Klasse gespeichert, auch auf anderen Geräten.';
-  q('.privacy').innerHTML='<p><b>Gespeichert im Knobelnest.</b> Namen und Einstellungen werden für diese Klasse gespeichert, damit sie überall gleich sind – auch in der Tagesfolie.</p><p>Das Mikrofon misst nur live, wie laut es ist. Es wird nichts aufgenommen.</p>';
+  q('.privacy').innerHTML='<p><b>Gespeichert in der Klassenkiste.</b> Namen und Einstellungen werden für diese Klasse gespeichert, damit sie überall gleich sind – auch in der Tagesfolie.</p><p>Das Mikrofon misst nur live, wie laut es ist. Es wird nichts aufgenommen.</p>';
   const lb=$('linkBtn'), lh=lb.previousElementSibling, ls=lh&&lh.previousElementSibling;
   lb.hidden=true; $('linkOut').hidden=true; if(lh) lh.hidden=true; if(ls&&ls.classList.contains('sec')) ls.hidden=true;
   // Namen der Klasse einsetzen
@@ -2797,7 +2797,7 @@ if(KN){
   }
   // Zurück ins Knobelnest
   if(!EMBED&&KN.back){
-    const b=document.createElement('button'); b.className='ab'; b.id='knBack'; b.type='button'; b.textContent='← Knobelnest'; b.style.padding='0 14px';
+    const b=document.createElement('button'); b.className='ab'; b.id='knBack'; b.type='button'; b.textContent='← Klassenkiste'; b.style.padding='0 14px';
     b.onclick=()=>{try{if(isFs())(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){} knKeep(); KN.back()};
     $('actions').insertBefore(b,$('actions').firstChild);
   }

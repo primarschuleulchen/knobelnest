@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '8'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '9'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -255,7 +255,7 @@
     f.title = title;
     var url = gameUrl(html);
     if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER);
-    if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Knobelnest» statt dunklem Balken else f.srcdoc = prepare(html, seed);
+    if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken else f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
@@ -580,14 +580,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('37') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('38') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
-  // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
+  // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '4';
+  var HEFT_VER = '5';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -649,7 +649,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '13';
+  var PIN_VER = '14';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -726,13 +726,13 @@
     }
   };
   // ===================================================================
-  // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
+  // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus der Klassenkiste
   // ===================================================================
   // ===================================================================
-  // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus dem Knobelnest.
+  // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '4';
+  var ATELIER_VER = '5';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -762,7 +762,7 @@
       paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '6';
+  var OTTER_VER = '7';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
@@ -845,7 +845,7 @@
       '<div class="stack" style="gap:18px"><h1>Ihre Lernspiele an einem Ort.</h1><p>Spiele für die Klasse freigeben, den Fortschritt sehen und die Arbeitsstand-Tafel für den Wochenplan nutzen.</p></div>' +
       '<a class="kidlink" href="#/klasse">' + ic(I.play, 22) + '<span>Für Kinder: Hier geht\'s zum Klassen-Login</span></a></section>' +
       '<section class="login-form"><form data-a="login" class="stack"><div class="stack" style="gap:8px"><h2 style="font-size:34px">Anmelden</h2>' +
-      '<p class="muted">Für Lehrpersonen mit Zugang zu ' + h(C.PORTAL_NAME) + '.</p></div>' +
+      '<p class="muted">Für Lehrpersonen mit Zugang zur ' + h(C.PORTAL_NAME) + '.</p></div>' +
       '<div class="field"><label for="lgMail">E-Mail</label><input class="input" id="lgMail" name="email" type="email" autocomplete="username" value="' + h(T.loginEmail || '') + '" required></div>' +
       '<div class="field"><label for="lgPw">Passwort</label><input class="input" id="lgPw" name="pw" type="password" autocomplete="current-password" required></div>' +
       '<p class="err">' + h(T.loginErr) + '</p>' +
@@ -895,7 +895,7 @@
   ACT.pickClass = async function (el) { T.cls = el.value; LS.set('kn_cls', T.cls); await T.loadClass(); T.render(); };
 
   T.onboardName = function () {
-    return '<main class="main" style="max-width:560px"><form class="card stack" data-a="saveName"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+    return '<main class="main" style="max-width:560px"><form class="card stack" data-a="saveName"><a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span><span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a>' +
       '<h1 class="h1">Willkommen!</h1><p class="muted">Wie sollen Ihre Kinder und Kolleginnen Sie im Portal sehen?</p>' +
       '<div class="field"><label for="obName">Ihr Name</label><input class="input" id="obName" name="name" placeholder="z. B. Frau Meier" required></div>' +
       '<button class="btn primary">Weiter</button></form></main>';
@@ -911,7 +911,7 @@
       '<p class="muted">Jede Klasse bekommt einen eigenen Klassencode. Damit melden sich die Kinder an.</p>' +
       '<div class="field"><label for="cName">Name der Klasse</label><input class="input" id="cName" name="cname" placeholder="z. B. 5a" required maxlength="30"></div>' +
       '<div class="field"><label for="cCode">Klassencode (freiwillig)</label><input class="input" id="cCode" name="ccode" placeholder="z. B. Otter 123" maxlength="24" autocomplete="off">' +
-      '<span class="muted small">Leer lassen, dann wählt das Knobelnest einen Code. Sie können ihn später jederzeit ändern.</span></div>' +
+      '<span class="muted small">Leer lassen, dann wählt die Klassenkiste einen Code. Sie können ihn später jederzeit ändern.</span></div>' +
       '<button class="btn primary">Klasse anlegen</button></form>';
   };
   var CODE_WORDS = ['FUCHS', 'DACHS', 'LUCHS', 'BIBER', 'IGEL', 'ADLER', 'EULE', 'OTTER', 'GEMSE', 'WOLF', 'HASE', 'FALKE', 'KAUZ', 'MARDER', 'SPATZ',
@@ -1745,7 +1745,7 @@
     r.onload = async function () {
       var A = T.admin, data;
       try { data = JSON.parse(String(r.result)); } catch (e) { return toast('Diese Datei ist kein gültiges Spielpaket.'); }
-      if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Knobelnest-Spielpaket.');
+      if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Spielpaket der Klassenkiste.');
       var have = {}; T.games.forEach(function (g) { have[g.title.toLowerCase()] = g; });
       var valid = data.games.filter(function (g) { return g && g.title && g.fach && g.html; });
       var todo = valid.filter(function (g) { return A.packUpd || !have[String(g.title).toLowerCase()]; });
@@ -2472,7 +2472,7 @@
       if (UI.view === 'recovery') return;
       var invite = LINK_INVITE && ev !== 'PASSWORD_RECOVERY'; LINK_INVITE = false; LINK_RECOVERY = false;
       UI.view = 'recovery';
-      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">' + (invite ? 'Willkommen bei ' + h(C.PORTAL_NAME) + '!' : 'Neues Passwort') + '</h1>' +
+      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">' + (invite ? 'Willkommen in der ' + h(C.PORTAL_NAME) + '!' : 'Neues Passwort') + '</h1>' +
         (invite ? '<p class="muted">Legen Sie jetzt Ihr eigenes Passwort fest. Damit melden Sie sich künftig mit Ihrer E-Mail-Adresse an.</p>' : '') +
         '<div class="field"><label for="rcPw">Neues Passwort (mindestens 8 Zeichen)</label><input class="input" id="rcPw" name="pw" type="password" minlength="8" autocomplete="new-password" required></div>' +
         '<button class="btn primary">Speichern</button></form></main>');

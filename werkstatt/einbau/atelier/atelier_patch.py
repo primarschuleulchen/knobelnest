@@ -8,15 +8,15 @@ def rep(a, b, n=1):
     assert c == n, ('Anzahl %d statt %d: ' % (c, n)) + a[:90]
     s = s.replace(a, b)
 
-# 1) Bilder mit eindeutigen Namen (liegen im Knobelnest neben den anderen Dateien)
+# 1) Bilder mit eindeutigen Namen (liegen in der Klassenkiste neben den anderen Dateien)
 rep('url(plan-full.webp)', 'url(atelier-plan.webp)')
 rep('url(bike-halo.png)', 'url(atelier-bike-halo.png)', 2)
 rep('url(bike-lines.png)', 'url(atelier-bike-lines.png)', 2)
 
-# 2) Leiste: Zurück, Riegel für die Kinder, Hinweis; «+ Kind» entfällt (Namen kommen aus dem Knobelnest)
+# 2) Leiste: Zurück, Riegel für die Kinder, Hinweis; «+ Kind» entfällt (Namen kommen aus der Klassenkiste)
 rep('''  <div class="top">
     <div class="sp"></div>''', '''  <div class="top">
-    <button class="pill" id="knBack" type="button" hidden>← Knobelnest</button>
+    <button class="pill" id="knBack" type="button" hidden>← Klassenkiste</button>
     <span class="khint" id="kHint" hidden></span>
     <div class="sp"></div>''')
 rep('''    <button class="pill" id="btnPaste" type="button">Liste einfügen</button>''',
@@ -99,7 +99,7 @@ rep('''      document.removeEventListener('pointermove',move);document.removeEve
 rep('''  el.addEventListener('keydown',e=>{if(e.key==='Enter'){flashCard(k.id);openEdit(k)}});''',
     '''  el.addEventListener('keydown',e=>{if(e.key==='Enter'){flashCard(k.id);if(!KID||k.id===KN.me)openEdit(k)}});''')
 
-# 6) Bearbeiten: Name kommt aus dem Knobelnest; Kinder ohne Lernerstufe, Text nur mit offenem Riegel
+# 6) Bearbeiten: Name kommt aus der Klassenkiste; Kinder ohne Lernerstufe, Text nur mit offenem Riegel
 rep('''    <h3>${isNew?'Neues Kind':'Kind bearbeiten'}</h3>''', '''    <h3>${isNew?'Neues Kind':KID?'Mein Velo':'Kind bearbeiten'}</h3>''')
 rep('''    <div class="grid2"><label>Umsetzungsart<input type="text" id="f-umsetzung" list="dl-ums"></label>
     <label>Lernerstufe<input type="text" id="f-stufe" list="dl-stufe"></label></div>''',
@@ -122,7 +122,7 @@ rep('''  setTimeout(()=>$('#f-name').focus(),30);
 }''', '''  setTimeout(()=>{const n=KN?(KID&&!knOpen?null:$('#f-thema')):$('#f-name');n&&n.focus()},30);
 }''')
 
-# 7) Liste einfügen: im Knobelnest nach Namen zuordnen (nur Thema, Umsetzungsart, Lernerstufe)
+# 7) Liste einfügen: in der Klassenkiste nach Namen zuordnen (nur Thema, Umsetzungsart, Lernerstufe)
 rep('''    e.preventDefault();const rows=parse();if(!rows.length)return;closeModal();
     const base=Date.now();''', r'''    e.preventDefault();const rows=parse();if(!rows.length)return;closeModal();
     if(KN){
@@ -140,7 +140,7 @@ rep('''    e.preventDefault();const rows=parse();if(!rows.length)return;closeMod
 rep('''    <p class="hint">Eine Zeile pro Kind, in dieser Reihenfolge: <b>Name Kind, Thema, Umsetzungsart, Lernerstufe</b>. Du kannst die Spalten direkt aus Excel kopieren oder mit Strichpunkt trennen. Jedes Kind bekommt automatisch eine Velofarbe, die du nachher ändern kannst.</p>''',
     '''    <p class="hint">Eine Zeile pro Kind, in dieser Reihenfolge: <b>Name Kind, Thema, Umsetzungsart, Lernerstufe</b>. Du kannst die Spalten direkt aus Excel kopieren oder mit Strichpunkt trennen. ${KN?'Die Zeilen werden den Kindern der Klasse über den Namen zugeordnet.':'Jedes Kind bekommt automatisch eine Velofarbe, die du nachher ändern kannst.'}</p>''')
 
-# 8) Start: Leiste je nach Rolle, Speicher aus dem Knobelnest
+# 8) Start: Leiste je nach Rolle, Speicher aus der Klassenkiste
 rep('''$('#btnAdd').onclick=()=>openEdit(null);''', r'''$('#btnAdd').onclick=()=>openEdit(null);
 if(KN){
   $('#btnAdd').hidden=true;

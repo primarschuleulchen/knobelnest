@@ -41,7 +41,7 @@ rep('.t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}', '''.t
 .lesgrid span{width:2em;text-align:right;color:var(--muted);font-weight:700}
 .lesgrid input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:7px 8px;font-size:16px;background:var(--paper);font-family:inherit}''')
 
-# 9) Vorlage: Beispiel-Bildschirme für alle Lehrpersonen (aus Knobelnest)
+# 9) Vorlage: Beispiel-Bildschirme für alle Lehrpersonen (aus der Klassenkiste)
 rep('function defaults(){\n  return {', 'function defaults(){\n  if (KN && KN.template && KN.template.screens && KN.template.screens.length) { const t = JSON.parse(JSON.stringify(KN.template)); t.active = t.screens[0].id; t.tplGot = t.screens.map(x => x.id); return t; }\n  return {')
 rep('    <button class="pill" id="libBtn">Meine Bausteine</button>', '''    <button class="pill" id="libBtn">Meine Bausteine</button>
     <button class="pill" id="tplBtn" style="display:none">Vorlagen</button>''')

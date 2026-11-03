@@ -1,7 +1,7 @@
 // Einstellungen für Knobelnest.
 // Name und Untertitel kannst du hier jederzeit ändern.
 window.KN_CONFIG = {
-  PORTAL_NAME: 'Knobelnest',
+  PORTAL_NAME: 'Klassenkiste',
   TAGLINE: 'Lernspiele für die Primarschule',
   CONTACT: 'primarschuleulchen@hotmail.com',
 

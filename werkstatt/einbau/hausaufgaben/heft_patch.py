@@ -20,7 +20,7 @@ if (KN) window.claude = KN.claude;
 const KIDM = !!(KN && KN.mode === "kid");
 if (KIDM) document.documentElement.classList.add("kidmode");''')
 
-# 2) Speicher pro Klasse, Kinder immer aus dem Knobelnest
+# 2) Speicher pro Klasse, Kinder immer aus der Klassenkiste
 rep('const LS = "hausaufgabentafel1";', 'const LS = "hausaufgabentafel1" + (KN ? "-" + KN.key : "");')
 rep('const EMPTY = () => ({ klasse:"Meine Klasse",', 'const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse",')
 rep('let S = EMPTY(), week = monday(new Date()), who = "", beamer = false;',
@@ -42,14 +42,14 @@ rep('function openReport(){', 'function openReport(){\n  if (KIDM) return;')
 # 4) Zurück-Knopf
 rep('''  <div class="top" id="top">
     <button class="pill ic" id="prev"''', '''  <div class="top" id="top">
-    <button class="pill" id="knBack" hidden>← Knobelnest</button>
+    <button class="pill" id="knBack" hidden>← Klassenkiste</button>
     <button class="pill ic" id="prev"''')
 rep('$("#prev").onclick = () =>', '''if (KN) { const b = $("#knBack"); b.hidden = false; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
 $("#prev").onclick = () =>''')
 
-# 5) Klasse und Aussehen: Kinderliste kommt aus dem Knobelnest, dazu Import der alten Hausaufgabentafel
+# 5) Klasse und Aussehen: Kinderliste kommt aus der Klassenkiste, dazu Import der alten Hausaufgabentafel
 rep('''      <div><label class="lbl" for="sIn">Schülerinnen und Schüler · eine Person pro Zeile</label><textarea class="inp" id="sIn" style="min-height:220px;font-family:var(--ui);font-size:15px">${esc(d.list)}</textarea><div class="hint">Die Reihenfolge ergibt die Nummern. Bereits kontrollierte Aufgaben bleiben erhalten, solange der Name gleich bleibt.</div></div>''',
-    '''      ${KN ? `<div><span class="lbl">Schülerinnen und Schüler</span><div class="hint" style="margin-top:0">Die Kinder kommen aus dem Knobelnest (${S.sus.length}). Neue Kinder trägst du dort unter «Kinder» ein.</div></div>
+    '''      ${KN ? `<div><span class="lbl">Schülerinnen und Schüler</span><div class="hint" style="margin-top:0">Die Kinder kommen aus der Klassenkiste (${S.sus.length}). Neue Kinder trägst du dort unter «Kinder» ein.</div></div>
       <div><span class="lbl">Aufgaben übernehmen</span><div class="row"><label class="btn" style="cursor:pointer">Datei importieren …<input type="file" id="impIn" accept=".json,application/json" hidden></label></div><div class="hint" id="impHint">Aufgaben aus der bisherigen Hausaufgabentafel. Kontrollen und Notizen werden über den Vornamen den Kindern zugeordnet.</div></div>` : `<div><label class="lbl" for="sIn">Schülerinnen und Schüler · eine Person pro Zeile</label><textarea class="inp" id="sIn" style="min-height:220px;font-family:var(--ui);font-size:15px">${esc(d.list)}</textarea><div class="hint">Die Reihenfolge ergibt die Nummern. Bereits kontrollierte Aufgaben bleiben erhalten, solange der Name gleich bleibt.</div></div>`}''')
 rep('''    pb.querySelector("#sIn").oninput = ev => d.list = ev.target.value;''',
     '''    const sIn = pb.querySelector("#sIn"); if (sIn) sIn.oninput = ev => d.list = ev.target.value;
@@ -94,7 +94,7 @@ rep('</style>\n\n<div class="app" id="app">', '''/* Knobelnest */
 
 <div class="app" id="app">''')
 
-# 7) Kinder haken selbst ab: im Knobelnest nur in der Ansicht des Kindes, gespeichert wird nur dieser Haken
+# 7) Kinder haken selbst ab: in der Klassenkiste nur in der Ansicht des Kindes, gespeichert wird nur dieser Haken
 rep('  if (en && who) { const e0 = S.entries.find(x => x.id === en.dataset.id); if (e0 && e0.type === "aufgabe") {',
     '  if (en && who && (!KN || KIDM)) { const e0 = S.entries.find(x => x.id === en.dataset.id); if (e0 && e0.type === "aufgabe") {')
 rep('else e0.selbst[who] = true; save(); render(); return; } }',
