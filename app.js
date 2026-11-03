@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '5'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '6'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -295,7 +295,7 @@
     var d = e.data; if (!d || typeof d !== 'object') return;
     if (PL.url && d.knobelnest && d.type === 'hello') {
       var sd = PL.seed || {};
-      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit } }, '*'); } catch (x) {}
+      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit, admin: !!sd.admin } }, '*'); } catch (x) {}
       return;
     }
     if (PL.url && d.knobelnest && d.type === 'close') { closePlayer(); return; }
@@ -1084,6 +1084,24 @@
   };
   // ---------- Vokabelkiste: Wortlisten und Freigaben pro Klasse (game_settings: { content }) ----------
   function isVok(g) { return /vokabelkiste/i.test(g.title || ''); }
+  // Vorlage aus den Wortlisten der Admin-Lehrperson: nur Portionen, die selbst oder über einen Ordner als Vorlage markiert sind
+  function vkTemplate(content, cid) {
+    var subs = [];
+    (content.subjects || []).forEach(function (sb) {
+      var prune = function (arr, inh) {
+        var out = [];
+        (arr || []).forEach(function (n) {
+          var on = inh || !!n.tpl;
+          if (n.words) { if (on) out.push({ id: n.id, name: n.name, words: n.words }); }
+          else { var k = prune(n.kids, on); if (k.length) out.push({ id: n.id, name: n.name, kids: k }); }
+        });
+        return out;
+      };
+      var tr = prune(sb.tree, false);
+      if (tr.length) subs.push({ id: sb.id, name: sb.name, lang: sb.lang, excl: sb.excl || [], tree: tr });
+    });
+    return { subjects: subs, by: (T.me && T.me.name) || '', from: cid, at: Date.now() };
+  }
   // Tage mit «Ferien» oder «schulfrei» im Hausaufgabenheft (für die ganze Klasse)
   function vkFree(heft) {
     return ((heft && heft.entries) || []).filter(function (e) { return e && (e.type === 'ferien' || e.type === 'schulfrei') && (!Array.isArray(e.for) || !e.for.length) && /^\d{4}-\d{2}-\d{2}$/.test(e.date || ''); })
@@ -1117,7 +1135,8 @@
     toast('Vokabelkiste wird geladen …');
     var kids = T.kids.slice().sort(kidSort);
     var both = await Promise.all([DB.gameHtml(g.id), DB.gameSettingsGet(cid, g.id), DB.listProgressSaves(kids.map(function (k) { return k.id; }), g.id).catch(function () { return []; }),
-      DB.storeGet('hat-' + cid).catch(function () { return null; })]);
+      DB.storeGet('hat-' + cid).catch(function () { return null; }), DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; })]);
+    var admin = !!T.me.is_admin, tpl = both[4] && typeof both[4] === 'object' ? both[4] : null;
     var cfg = both[1] && typeof both[1] === 'object' ? both[1] : {}, sv = {};
     (both[2] || []).forEach(function (r) { sv[r.kid_id] = r; });
     var kidData = kids.map(function (k) { var r = sv[k.id] || {}; return { id: k.id, name: k.name, p: (r.save && r.save.p) || {}, last: r.last_played || null }; });
@@ -1126,8 +1145,11 @@
       var reply = function (ok, err) { try { if (PL) PL.frame.contentWindow.postMessage({ vkAck: d.id, ok: ok, err: err || '' }, '*'); } catch (x) {} };
       if (JSON.stringify(d.content).length > 900000) return reply(false, 'zu gross');
       cfg = Object.assign({}, cfg, { content: d.content });
-      DB.gameSettingsSet(cid, g.id, cfg).then(function () { reply(true); }, function (e) { reply(false, errMsg(e)); toast('Speichern ging nicht: ' + errMsg(e)); });
-    }, null, { settings: Object.assign({}, cfg, { frei: vkFree(both[3]), kids: kidData }), teacher: true, edit: true });
+      var jobs = [DB.gameSettingsSet(cid, g.id, cfg)];
+      // Admin: Vorlagen für die anderen Lehrpersonen mitspeichern (nur aus der Klasse, in der sie bearbeitet werden)
+      if (admin) { var nt = vkTemplate(d.content, cid); if (nt.subjects.length || (tpl && tpl.from === cid)) { tpl = nt; jobs.push(DB.sharedSet('vokabelkiste-vorlage', nt)); } }
+      Promise.all(jobs).then(function () { reply(true); }, function (e) { reply(false, errMsg(e)); toast('Speichern ging nicht: ' + errMsg(e)); });
+    }, null, { settings: Object.assign({}, cfg, { frei: vkFree(both[3]), kids: kidData, tpl: admin ? null : tpl }), teacher: true, edit: true, admin: admin });
   };
   // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
   // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.
