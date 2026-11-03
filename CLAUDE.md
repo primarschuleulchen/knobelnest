@@ -88,7 +88,7 @@ So läuft ein Werkzeug im Portal:
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
   - Kinderansicht: Ein Fach, das nur aus der Vokabelkiste besteht, wird eine Kachel mit Kisten-Symbol, die das Spiel direkt öffnet und unter «Mathematik» steht (`vkPlace()`).
   - Lehrperson: Die Vokabelkiste ist im Spiele-Tab eine Kachel bei den Werkzeugen (nicht in der Spieleliste). «Wörter & Freigaben» bekommt `settings.kids` (Stand aller Kinder via `DB.listProgressSaves`) und `settings.frei`. In der Vokabelkiste: «📊 Klasse» (Übersicht pro Kind, pro Portion, pro Kind im Detail). Aufgezeichnet wird in `P.log[Portion][Übung] = {n,a,c,s,t}` und `P.wc[Wort] = [richtig, falsch]`.
-  - Vorlagen: Die Admin-Lehrperson markiert Portionen/Ordner mit «📤 Als Vorlage freigeben» (`n.tpl`). Beim Speichern schreibt das Portal `shared_store` «vokabelkiste-vorlage» (`vkTemplate()`, nur aus der Klasse `from`). Andere Lehrpersonen bekommen neue Vorlage-Portionen beim Öffnen als Kopie (für Kinder gesperrt, `mergeTpl()`, gemerkt in `content.tplSeen`). Klassen ohne eigene Listen starten dann nur mit den Vorlagen.
+  - Vorlagen: Die Admin-Lehrperson markiert Portionen/Ordner mit «📤 Als Vorlage freigeben» (`n.tpl`). Beim Speichern schreibt das Portal `shared_store` «vokabelkiste-vorlage» (`vkTemplate()`, nur aus der Klasse `from`). Die Admin-Lehrperson teilt die Vorlage-Portionen in der Verwaltung einzelnen Lehrpersonen zu (`shared_store` «vokabelkiste-zuweisung» = `{Lehrperson-ID: [Portion-IDs]}`, `vzRow()`, im Portal gefiltert mit `vkOnly()`). Lehrpersonen bekommen neu zugeteilte Portionen beim Öffnen als Kopie (für Kinder gesperrt, `mergeTpl()`, gemerkt in `content.tplSeen`). Sobald es eine Vorlage gibt, starten Klassen anderer Lehrpersonen ohne eigene Listen leer (nur Zugeteiltes, `settings.tplOn`).
   - Sterne: `starCfg()` gibt für die Vokabelkiste `eigene` zurück. Tagesstern = 7 Minuten echte Übungszeit (`P.sec`, zählt nur bei laufender Übung und Eingabe in den letzten 30 s). Serie 🔥 = Schultage hintereinander; Wochenende und Tage mit «Ferien»/«schulfrei» im Hausaufgabenheft (`vkFree()`) zählen nicht. Wochenheld 🏅, Kistenprofi 📦 (100 Wörter im letzten Fach). Die Übersicht zeigt Minuten pro Schultag (`vkHTML()`).
 
 ## Datenbank (Supabase)
@@ -106,7 +106,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=73`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=74`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

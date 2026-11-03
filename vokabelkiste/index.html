@@ -576,14 +576,16 @@ function knTodayHTML(){
       ${bd('📦','Kistenprofi',f5>=PROFI,f5>=PROFI?'100 Wörter im letzten Fach!':f5+' von '+PROFI+' Wörtern im letzten Fach')}</div></div>`}
 /* ---------- Knobelnest: Vorlagen für andere Lehrpersonen ---------- */
 const KN_ADMIN=KN&&!!KNI.admin,TPL=KN&&KNI.settings&&KNI.settings.tpl&&Array.isArray(KNI.settings.tpl.subjects)?KNI.settings.tpl:null;
+let knFresh=false;
 const tplOf=id=>{const i=NODES.get(id);return !i?0:i.node.tpl?1:i.path.some(n=>n.tpl)?2:0};
 function toggleTpl(id){const i=NODES.get(id);if(!i)return;if(i.node.tpl)delete i.node.tpl;else i.node.tpl=true;
   touch();rerender();toast(i.node.tpl?'Als Vorlage für Lehrpersonen freigegeben. Wird gespeichert …':'Keine Vorlage mehr. Wird gespeichert …');publishContent(null)}
 function findDeep(arr,id){for(const n of arr){if(n.id===id)return n;if(n.kids){const f=findDeep(n.kids,id);if(f)return f}}return null}
 function mergeTpl(){
-  if(!TPL||KN_ADMIN)return [];
-  /* Klasse ohne eigene Listen: nur mit den Vorlagen beginnen (nicht mit den eingebauten Listen) */
-  if(!(KNI.settings&&KNI.settings.content))C.subjects.forEach(x=>{x.tree=[];x.excl=[]});
+  if(KN_ADMIN)return [];
+  /* Klasse ohne eigene Listen: nur mit den zugeteilten Vorlagen beginnen (nicht mit den eingebauten Listen) */
+  if(KNI.settings&&KNI.settings.tplOn&&!KNI.settings.content&&!C.tplSeen){C.subjects.forEach(x=>{x.tree=[];x.excl=[]});C.tplSeen=[];knFresh=true}
+  if(!TPL)return [];
   const seen=new Set(C.tplSeen||[]),added=[];
   TPL.subjects.forEach(ts=>{let sub=C.subjects.find(s=>s.id===ts.id);
     if(!sub){sub={id:ts.id,name:ts.name,lang:ts.lang,excl:[],tree:[]};C.subjects.push(sub)}
@@ -1341,7 +1343,7 @@ try{document.documentElement.lang='de'}catch(e){}
 renderTop();renderPub();rerender();
 (async()=>{try{
   if(KN){setInterval(knTick,1000);knAward();}
-  if(KN){if(KNI.teacher&&KNI.edit){CAN_EDIT=true;ART={};T=true;{const ad=mergeTpl();if(ad.length){touch();publishContent(null);setTimeout(()=>toast('Neu von '+(TPL.by||'der Admin-Lehrperson')+': '+ad.join(', ')+'. Für die Kinder noch gesperrt.'),900)}}renderTop();renderBanner();renderPub();if(nav.view!=='session')rerender()}return}
+  if(KN){if(KNI.teacher&&KNI.edit){CAN_EDIT=true;ART={};T=true;{const ad=mergeTpl();if(ad.length||knFresh){touch();publishContent(null);}if(ad.length){setTimeout(()=>toast('Neu von '+(TPL.by||'der Admin-Lehrperson')+': '+ad.join(', ')+'. Für die Kinder noch gesperrt.'),900)}}renderTop();renderBanner();renderPub();if(nav.view!=='session')rerender()}return}
   if(!window.claude||!window.claude.use)return;
   const u=await window.claude.use('user');CAN_EDIT=!!(u&&await u.canEdit());
   if(!CAN_EDIT)return;

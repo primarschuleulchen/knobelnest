@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '6'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '7'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -1084,6 +1084,13 @@
   };
   // ---------- Vokabelkiste: Wortlisten und Freigaben pro Klasse (game_settings: { content }) ----------
   function isVok(g) { return /vokabelkiste/i.test(g.title || ''); }
+  // Nur die Vorlage-Portionen, die dieser Lehrperson zugeteilt sind
+  function vkOnly(tpl, ids) {
+    if (!tpl || !ids.length) return null;
+    var keep = function (arr) { var out = []; (arr || []).forEach(function (n) { if (n.words) { if (ids.indexOf(n.id) >= 0) out.push(n); } else { var k = keep(n.kids); if (k.length) out.push({ id: n.id, name: n.name, kids: k }); } }); return out; };
+    var subs = (tpl.subjects || []).map(function (sb) { return Object.assign({}, sb, { tree: keep(sb.tree) }); }).filter(function (sb) { return sb.tree.length; });
+    return subs.length ? Object.assign({}, tpl, { subjects: subs }) : null;
+  }
   // Vorlage aus den Wortlisten der Admin-Lehrperson: nur Portionen, die selbst oder über einen Ordner als Vorlage markiert sind
   function vkTemplate(content, cid) {
     var subs = [];
@@ -1135,8 +1142,10 @@
     toast('Vokabelkiste wird geladen …');
     var kids = T.kids.slice().sort(kidSort);
     var both = await Promise.all([DB.gameHtml(g.id), DB.gameSettingsGet(cid, g.id), DB.listProgressSaves(kids.map(function (k) { return k.id; }), g.id).catch(function () { return []; }),
-      DB.storeGet('hat-' + cid).catch(function () { return null; }), DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; })]);
+      DB.storeGet('hat-' + cid).catch(function () { return null; }), DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; }),
+      T.me.is_admin ? null : DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; })]);
     var admin = !!T.me.is_admin, tpl = both[4] && typeof both[4] === 'object' ? both[4] : null;
+    var mineTpl = admin ? null : vkOnly(tpl, ((both[5] || {})[T.me.id]) || []);
     var cfg = both[1] && typeof both[1] === 'object' ? both[1] : {}, sv = {};
     (both[2] || []).forEach(function (r) { sv[r.kid_id] = r; });
     var kidData = kids.map(function (k) { var r = sv[k.id] || {}; return { id: k.id, name: k.name, p: (r.save && r.save.p) || {}, last: r.last_played || null }; });
@@ -1149,7 +1158,7 @@
       // Admin: Vorlagen für die anderen Lehrpersonen mitspeichern (nur aus der Klasse, in der sie bearbeitet werden)
       if (admin) { var nt = vkTemplate(d.content, cid); if (nt.subjects.length || (tpl && tpl.from === cid)) { tpl = nt; jobs.push(DB.sharedSet('vokabelkiste-vorlage', nt)); } }
       Promise.all(jobs).then(function () { reply(true); }, function (e) { reply(false, errMsg(e)); toast('Speichern ging nicht: ' + errMsg(e)); });
-    }, null, { settings: Object.assign({}, cfg, { frei: vkFree(both[3]), kids: kidData, tpl: admin ? null : tpl }), teacher: true, edit: true, admin: admin });
+    }, null, { settings: Object.assign({}, cfg, { frei: vkFree(both[3]), kids: kidData, tpl: mineTpl, tplOn: !admin && !!tpl }), teacher: true, edit: true, admin: admin });
   };
   // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
   // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.
@@ -1586,7 +1595,9 @@
     var A = T.admin; if (!A.form) A.form = blankForm();
     if (A.teachers === null && !A.busy) {
       A.busy = true;
-      Promise.all([DB.listTeachers(), DB.listTeacherGames(), DB.sharedGet('werkzeuge').catch(function () { return null; })]).then(function (r) { A.teachers = r[0]; A.tg = r[1]; A.tools = r[2] || {}; A.busy = false; if (T.tab === 'verwaltung') T.render(); })
+      Promise.all([DB.listTeachers(), DB.listTeacherGames(), DB.sharedGet('werkzeuge').catch(function () { return null; }),
+        DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; }), DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; })]).then(function (r) {
+        A.teachers = r[0]; A.tg = r[1]; A.tools = r[2] || {}; A.vtpl = r[3]; A.vz = r[4] && typeof r[4] === 'object' ? r[4] : {}; A.busy = false; if (T.tab === 'verwaltung') T.render(); })
         .catch(function (e) { A.busy = false; toast(errMsg(e)); });
     }
     var F = A.form;
@@ -1642,6 +1653,7 @@
         (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span>' + TOOLS.map(function (x) {
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
+        (t.is_admin ? '' : vzRow(t)) +
         (open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
           var groups = [], by = {};
@@ -1775,6 +1787,42 @@
     try { await DB.sharedSet('werkzeuge', JSON.parse(JSON.stringify(A.tools))); toast((cur[k] ? 'Freigegeben: ' : 'Gesperrt: ') + TOOLS.filter(function (x) { return x[0] === k; })[0][1].replace(/^\S+\s/, '')); }
     catch (e) { toast(errMsg(e)); }
   };
+  // ---------- Vokabelkiste: Vorlagen einzelnen Lehrpersonen zuteilen (shared_store «vokabelkiste-zuweisung» = { Lehrperson-ID: [Portion-IDs] }) ----------
+  function vzItems() {
+    var out = [], tp = T.admin.vtpl;
+    ((tp && tp.subjects) || []).forEach(function (sb) {
+      var walk = function (arr, path) { (arr || []).forEach(function (n) { if (n.words) out.push({ id: n.id, name: n.name, path: path, n: n.words.length }); else walk(n.kids, path.concat(n.name)); }); };
+      walk(sb.tree, [sb.name]);
+    });
+    return out;
+  }
+  function vzRow(t) {
+    var A = T.admin, items = vzItems(); if (!items.length) return '';
+    var mine = (A.vz || {})[t.id] || [], have = items.filter(function (x) { return mine.indexOf(x.id) >= 0; }).length, open = A.vopen === t.id;
+    var html = '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Vokabelkiste-Vorlagen:</span><span class="small">' + have + ' von ' + items.length + ' Portionen</span>' +
+      '<button class="btn sm" data-a="vzOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : '📚 Vorlagen zuteilen') + '</button></div>';
+    if (!open) return html;
+    var groups = [], by = {};
+    items.forEach(function (x) { var k = x.path.join(' › '); if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(x); });
+    var ids = function (l) { return l.map(function (x) { return x.id; }).join(','); };
+    return html + '<div class="stack" style="gap:12px;padding:10px 0 6px 52px"><div class="row"><button class="btn sm" data-a="vzBulk" data-t="' + t.id + '" data-on="1" data-ids="' + ids(items) + '">Alle Vorlagen geben</button>' +
+      '<button class="btn sm" data-a="vzBulk" data-t="' + t.id + '" data-on="0" data-ids="' + ids(items) + '">Alle wegnehmen</button></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">' + groups.map(function (k) {
+        var l = by[k], all = l.every(function (x) { return mine.indexOf(x.id) >= 0; });
+        return '<div class="card stack" style="padding:14px;gap:8px"><div class="row" style="justify-content:space-between"><b>' + h(k) + '</b><button class="btn sm" data-a="vzBulk" data-t="' + t.id + '" data-on="' + (all ? 0 : 1) + '" data-ids="' + ids(l) + '">' + (all ? 'Ordner wegnehmen' : 'Ganzer Ordner') + '</button></div>' +
+          l.map(function (x) { return '<label class="row" style="gap:10px;font-size:16px;flex-wrap:nowrap"><input type="checkbox" style="width:22px;height:22px;flex:none" ' + (mine.indexOf(x.id) >= 0 ? 'checked ' : '') +
+            'data-change="vzSet" data-t="' + t.id + '" data-p="' + h(x.id) + '"><span>' + h(x.name) + ' <span class="muted small">· ' + x.n + ' Wörter</span></span></label>'; }).join('') + '</div>';
+      }).join('') + '</div><p class="muted small" style="margin:0">Die Lehrperson bekommt neu zugeteilte Portionen als Kopie, sobald sie die Vokabelkiste das nächste Mal öffnet. Wegnehmen löscht nichts, was sie schon hat.</p></div>';
+  }
+  async function vzSave(tid, ids, on) {
+    var A = T.admin; A.vz = A.vz || {}; var l = (A.vz[tid] || []).slice();
+    ids.forEach(function (id) { var i = l.indexOf(id); if (on && i < 0) l.push(id); if (!on && i >= 0) l.splice(i, 1); });
+    var before = A.vz[tid]; A.vz[tid] = l; T.render();
+    try { await DB.sharedSet('vokabelkiste-zuweisung', A.vz); } catch (e) { A.vz[tid] = before; T.render(); throw e; }
+  }
+  ACT.vzOpen = function (el) { T.admin.vopen = T.admin.vopen === el.dataset.id ? null : el.dataset.id; T.render(); };
+  ACT.vzSet = function (el) { return vzSave(el.dataset.t, [el.dataset.p], el.checked); };
+  ACT.vzBulk = function (el) { return vzSave(el.dataset.t, el.dataset.ids.split(',').filter(Boolean), el.dataset.on === '1'); };
   ACT.tOpen = function (el) { T.admin.open = T.admin.open === el.dataset.id ? null : el.dataset.id; T.render(); };
   ACT.tgSet = async function (el) {
     var t = el.dataset.t, g = el.dataset.g, on = el.checked;
