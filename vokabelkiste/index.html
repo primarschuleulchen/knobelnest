@@ -738,12 +738,13 @@ const stage=$('#stage');
 
 function renderTop(){
   const s=SUB();
-  $('#top').innerHTML=`<button class="brand" id="brand" aria-label="Zur Übersicht">${BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
+  $('#top').innerHTML=`${KN?'<button class="pill" id="knBack">← Knobelnest</button>':''}<button class="brand" id="brand" aria-label="Zur Übersicht">${BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
     <nav class="subs" aria-label="Sprache">${C.subjects.map(x=>`<button class="pill ${x.id===s.id?'on':''}" data-sub="${x.id}">${esc(x.name)}</button>`).join('')}</nav>
     <span class="sp"></span>
     <div class="seg" role="group" aria-label="Abfragerichtung"><button data-dir="de-f" aria-pressed="${P.dir==='de-f'}">DE → ${CODE(s)}</button><button data-dir="f-de" aria-pressed="${P.dir==='f-de'}">${CODE(s)} → DE</button></div>
     ${CAN_EDIT&&KN?`<button class="pill" id="clsbtn">📊 Klasse</button>`:''}${CAN_EDIT?`<button class="pill ${T?'rose':''}" id="tbtn">${T?'Lehrperson ✓':'Lehrperson'}</button>`:''}`;
   $('#brand').onclick=()=>goNode(null);
+  const kb=$('#knBack');if(kb)kb.onclick=()=>{saveP();knAward();knSend({type:'close'})};
   $$('[data-sub]').forEach(b=>b.onclick=()=>{P.sub=b.dataset.sub;saveP();renderTop();goNode(null)});
   $$('[data-dir]').forEach(b=>b.onclick=()=>{P.dir=b.dataset.dir;saveP();renderTop();if(nav.view!=='session')rerender();else toast('Gilt ab der nächsten Übung')});
   const cb=$('#clsbtn');if(cb)cb.onclick=goClass;

@@ -258,5 +258,10 @@ rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Kärtchen-Rück
 .flipped>.inner>.face.back,.flipped>.inner>.face.open{visibility:visible}
 @media (prefers-reduced-motion:reduce)""")
 
+# 10) Im Knobelnest gibt es keinen dunklen Balken mehr (wie beim Hausaufgabenheft): Die Vokabelkiste hat
+#     links oben selbst einen Knopf «← Knobelnest», der das Portal bittet, sie zu schliessen.
+rep("  $('#top').innerHTML=`<button class=\"brand\" id=\"brand\"", "  $('#top').innerHTML=`${KN?'<button class=\"pill\" id=\"knBack\">← Knobelnest</button>':''}<button class=\"brand\" id=\"brand\"")
+rep("  $('#brand').onclick=()=>goNode(null);", "  $('#brand').onclick=()=>goNode(null);\n  const kb=$('#knBack');if(kb)kb.onclick=()=>{saveP();knAward();knSend({type:'close'})};")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

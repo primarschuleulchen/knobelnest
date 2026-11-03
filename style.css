@@ -492,3 +492,5 @@ button.zr-st{cursor:pointer}
 .tt-vk .tti svg{width:32px;height:28px}
 .tt-vk .tt-rel{border:0;border-top:2px solid var(--ink);background:#fff;padding:7px 10px;font:inherit;font-size:13px;font-weight:700;color:#7A2F28;cursor:pointer}
 .tt-vk .tt-rel.on{background:#CFEFD9;color:#1F6B50}
+/* Vokabelkiste: ohne dunklen Balken, sie hat selbst «← Knobelnest» */
+.player-vk .player-bar{display:none}
