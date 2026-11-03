@@ -1105,14 +1105,8 @@
         tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
         if (vt) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
-        var sorting = !!T.tileSorting;
-        return '<div class="tt-head"><button class="btn sm" data-a="tileSort" aria-pressed="' + sorting + '">' + (sorting ? '✓ Fertig' : '↔ Reihenfolge ändern') + '</button>' +
-          (sorting ? '<span class="muted small">Kacheln ziehen oder mit den Pfeilen verschieben.</span>' : '') + '</div>' +
-          '<div class="tooltiles' + (sorting ? ' sorting' : '') + '">' + keys.map(function (k, i) {
-            var html = tiles[k];
-            if (!sorting) return html;
-            return html.replace('data-tile="' + k + '"', 'data-tile="' + k + '" draggable="true"').replace(/<\/div>$/, '<span class="tt-move"><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="nach vorne">←</button><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="1"' + (i < keys.length - 1 ? '' : ' disabled') + ' aria-label="nach hinten">→</button></span></div>');
-          }).join('') + '</div>';
+        return '<div class="tooltiles">' + keys.map(function (k) { return tiles[k].replace(/<a class="tt-open"/, '<a draggable="false" class="tt-open"').replace(/<img /g, '<img draggable="false" '); }).join('') + '</div>' +
+          '<p class="muted small tt-tipp">Tipp: Kacheln mit der Maus ziehen (am iPad kurz gedrückt halten), um die Reihenfolge zu ändern.</p>';
       })() + '</section>';
     // Reiter «Übersicht» = Klasse und Werkzeuge; Reiter «Spiele» = Fächer und Spiele
     if (T.tab === 'uebersicht') return out;
@@ -1400,21 +1394,44 @@
     return o;
   }
   function saveTileOrder(o) { T.tileOrderList = o; LS.set('kn_kacheln', o); T.render(); DB.storeSet('kacheln', { order: o }).catch(function () {}); }
-  ACT.tileSort = function () { T.tileSorting = !T.tileSorting; T.render(); };
-  ACT.tileMove = function (el) {
-    var o = tileOrder(), shown = Array.prototype.map.call(document.querySelectorAll('.tooltiles [data-tile]'), function (x) { return x.dataset.tile; });
-    var i = shown.indexOf(el.dataset.k), j = i + (+el.dataset.d); if (i < 0 || j < 0 || j >= shown.length) return;
-    var a = o.indexOf(shown[i]), b = o.indexOf(shown[j]); o[a] = shown[j]; o[b] = shown[i]; saveTileOrder(o);
-  };
-  var tileDrag = null;
-  document.addEventListener('dragstart', function (e) { var t = e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]'); if (!t) return; tileDrag = t.dataset.tile; t.classList.add('dragging'); try { e.dataTransfer.setData('text/plain', tileDrag); e.dataTransfer.effectAllowed = 'move'; } catch (x) {} });
-  document.addEventListener('dragover', function (e) { if (tileDrag && e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]')) e.preventDefault(); });
-  document.addEventListener('drop', function (e) {
-    var t = tileDrag && e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]'); if (!t) return; e.preventDefault();
-    var o = tileOrder(), from = o.indexOf(tileDrag), to = o.indexOf(t.dataset.tile); tileDrag = null; if (from < 0 || to < 0 || from === to) return T.render();
-    o.splice(to, 0, o.splice(from, 1)[0]); saveTileOrder(o);
+  // Kacheln direkt ziehen (Maus sofort, Finger nach kurzem Halten). Ein Tippen öffnet weiterhin das Werkzeug.
+  var TD = null;
+  function tdEnd(save) {
+    if (!TD) return; var d = TD; TD = null; clearTimeout(d.hold);
+    document.removeEventListener('pointermove', tdMove, true); document.removeEventListener('pointerup', tdUp, true); document.removeEventListener('pointercancel', tdCancel, true);
+    if (!d.on) return;
+    d.el.classList.remove('dragging'); d.el.style.transform = ''; document.body.classList.remove('tt-dragging');
+    window.__ttNoClick = Date.now();
+    if (save) { var o = tileOrder(), shown = Array.prototype.map.call(document.querySelectorAll('.tooltiles [data-tile]'), function (x) { return x.dataset.tile; });
+      var rest = o.filter(function (k) { return shown.indexOf(k) < 0; }); saveTileOrder(shown.concat(rest)); }
+    else T.render();
+  }
+  function tdStart() { if (!TD) return; TD.on = true; TD.el.classList.add('dragging'); document.body.classList.add('tt-dragging'); }
+  function tdMove(e) {
+    var d = TD; if (!d) return;
+    var dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.on) { if (Math.abs(dx) + Math.abs(dy) > 8) { if (d.touch) return tdEnd(false); tdStart(); } else return; }
+    e.preventDefault();
+    d.el.style.transform = 'translate(' + (e.clientX - d.x) + 'px,' + (e.clientY - d.y) + 'px) scale(1.04)';
+    var over = document.elementsFromPoint(e.clientX, e.clientY).map(function (x) { return x.closest && x.closest('.tooltiles [data-tile]'); }).filter(function (x) { return x && x !== d.el; })[0];
+    var t = over; if (!t) return;
+    var grid = d.el.parentNode, list = Array.prototype.slice.call(grid.children), i = list.indexOf(d.el), j = list.indexOf(t);
+    var r0 = d.el.getBoundingClientRect();
+    grid.insertBefore(d.el, i < j ? t.nextSibling : t);
+    var r1 = d.el.getBoundingClientRect(); d.x += r1.left - r0.left; d.y += r1.top - r0.top;
+    d.el.style.transform = 'translate(' + (e.clientX - d.x) + 'px,' + (e.clientY - d.y) + 'px) scale(1.04)';
+  }
+  function tdUp() { tdEnd(true); }
+  function tdCancel() { tdEnd(false); }
+  document.addEventListener('pointerdown', function (e) {
+    if (e.button || UI.view === 'kid') return;
+    var t = e.target.closest && e.target.closest('.tooltiles [data-tile]'); if (!t || e.target.closest('.tt-rel')) return;
+    TD = { el: t, x: e.clientX, y: e.clientY, on: false, touch: e.pointerType !== 'mouse' };
+    if (TD.touch) TD.hold = setTimeout(tdStart, 380);
+    document.addEventListener('pointermove', tdMove, true); document.addEventListener('pointerup', tdUp, true); document.addEventListener('pointercancel', tdCancel, true);
   });
-  document.addEventListener('dragend', function () { if (tileDrag) { tileDrag = null; T.render(); } });
+  document.addEventListener('click', function (e) { if (window.__ttNoClick && Date.now() - window.__ttNoClick < 400 && e.target.closest && e.target.closest('.tooltiles')) { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('dragstart', function (e) { if (e.target.closest && e.target.closest('.tooltiles')) e.preventDefault(); });
   ACT.toolRel = async function (el) {
     var c = T.cur(), k = el.dataset.k, kt = Object.assign({}, c.kid_tools || {}), before = c.kid_tools;
     kt[k] = !toolOn(c, k); c.kid_tools = kt; T.render();
