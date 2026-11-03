@@ -1097,11 +1097,11 @@
           .filter(function (x) { return T.tools[x[0]]; });
         var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
-        var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel"><span class="tti" aria-hidden="true">🙋</span><span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
-        var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '"><span class="tti" aria-hidden="true">' + VK_SVG + '</span><span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
+        var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel">' + ttIcon('tafel', '🙋') + '<span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
+        var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
         var tiles = {};
-        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
+        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
         tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
         if (vt) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
@@ -1382,6 +1382,9 @@
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
+  // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste' };
+  function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
   var TILE_DEF = ['folie', 'otter', 'heft', 'pin', 'atelier', 'tafel', 'vk'];
   function tileOrder() {
