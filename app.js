@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '8'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '9'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -255,7 +255,7 @@
     f.title = title;
     var url = gameUrl(html);
     if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER);
-    if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Knobelnest» statt dunklem Balken else f.srcdoc = prepare(html, seed);
+    if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken else f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
@@ -307,7 +307,7 @@
   function every(ms, fn) { timers.push(setInterval(fn, ms)); }
   function stopTimers() { timers.forEach(clearInterval); timers = []; }
   function route() {
-    stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null;
+    stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null; document.body.classList.remove('lp');
     var hs = location.hash || '';
     if (/error_description=/.test(hs)) return linkError(hs);
     if (/access_token=|type=recovery/.test(hs)) { setTimeout(function () { if (/access_token=/.test(location.hash) && UI.view !== 'recovery') { location.hash = '#/'; } }, 4000); return; }
@@ -580,14 +580,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('37') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('38') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
-  // Die Kinder kommen aus dem Knobelnest; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
+  // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '4';
+  var HEFT_VER = '5';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -649,7 +649,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '13';
+  var PIN_VER = '14';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -726,13 +726,13 @@
     }
   };
   // ===================================================================
-  // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus dem Knobelnest
+  // Otterteich (Ruhe-Werkzeug für den Beamer): eigene Seite otterteich.html, Namen der Klasse aus der Klassenkiste
   // ===================================================================
   // ===================================================================
-  // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus dem Knobelnest.
+  // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '4';
+  var ATELIER_VER = '5';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -762,7 +762,7 @@
       paint('<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '6';
+  var OTTER_VER = '7';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
@@ -839,12 +839,13 @@
   T.cur = function () { return T.classes.filter(function (c) { return c.id === T.cls; })[0] || null; };
 
   T.renderLogin = function () {
+    document.body.classList.add('lp');
     UI.view = 'login';
-    paint('<div class="login"><section class="login-hero"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+    paint('<div class="login"><section class="login-hero"><a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span><span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a>' +
       '<div class="stack" style="gap:18px"><h1>Ihre Lernspiele an einem Ort.</h1><p>Spiele für die Klasse freigeben, den Fortschritt sehen und die Arbeitsstand-Tafel für den Wochenplan nutzen.</p></div>' +
       '<a class="kidlink" href="#/klasse">' + ic(I.play, 22) + '<span>Für Kinder: Hier geht\'s zum Klassen-Login</span></a></section>' +
       '<section class="login-form"><form data-a="login" class="stack"><div class="stack" style="gap:8px"><h2 style="font-size:34px">Anmelden</h2>' +
-      '<p class="muted">Für Lehrpersonen mit Zugang zu ' + h(C.PORTAL_NAME) + '.</p></div>' +
+      '<p class="muted">Für Lehrpersonen mit Zugang zur ' + h(C.PORTAL_NAME) + '.</p></div>' +
       '<div class="field"><label for="lgMail">E-Mail</label><input class="input" id="lgMail" name="email" type="email" autocomplete="username" value="' + h(T.loginEmail || '') + '" required></div>' +
       '<div class="field"><label for="lgPw">Passwort</label><input class="input" id="lgPw" name="pw" type="password" autocomplete="current-password" required></div>' +
       '<p class="err">' + h(T.loginErr) + '</p>' +
@@ -867,6 +868,7 @@
 
   T.render = function () {
     if (!T.me) return;
+    document.body.classList.add('lp');
     if (!T.me.name) return paint(T.onboardName());
     if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
     var body;
@@ -877,7 +879,8 @@
   T.shell = function (body) {
     var tabs = [['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
     if (T.me.is_admin) tabs.push(['verwaltung', 'Verwaltung']);
-    return '<header class="top"><div class="top-in"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a><div class="row">' +
+    return '<header class="top"><div class="top-in"><a class="marke" href="#/" aria-label="' + h(C.PORTAL_NAME) + ' – Start"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
+      '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a><div class="row">' +
       (T.classes.length ? '<label class="sr" for="clsSel">Klasse wählen</label><select id="clsSel" class="input" style="min-height:44px;width:auto" data-change="pickClass">' +
         T.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === T.cls ? ' selected' : '') + '>Klasse ' + h(c.name) + '</option>'; }).join('') + '</select>' : '') +
       '<button class="btn sm" data-a="account"><span class="avatar">' + h(initials(T.me.name)) + '</span>' + h(T.me.name) + '</button>' +
@@ -886,11 +889,13 @@
         return '<button class="tab" role="tab" aria-selected="' + (T.tab === t[0]) + '" data-a="tab" data-t="' + t[0] + '">' + t[1] + '</button>';
       }).join('') + '</nav></header><main class="main">' + body + '</main>';
   };
+  // Schriftzug wie bei der Eulenkiste: erster Teil dunkel, «nest» gold
+  function markeName() { var n = String(C.PORTAL_NAME || 'Knobelnest'), m = /^(.*?)(nest|kiste)$/i.exec(n); return m ? h(m[1]) + '<em>' + h(m[2]) + '</em>' : h(n); }
   ACT.tab = function (el) { T.tab = el.dataset.t; LS.set('kn_tab', T.tab); UI.confirm = null; T.render(); };
   ACT.pickClass = async function (el) { T.cls = el.value; LS.set('kn_cls', T.cls); await T.loadClass(); T.render(); };
 
   T.onboardName = function () {
-    return '<main class="main" style="max-width:560px"><form class="card stack" data-a="saveName"><a class="logo" href="#/">' + I.logo + h(C.PORTAL_NAME) + '</a>' +
+    return '<main class="main" style="max-width:560px"><form class="card stack" data-a="saveName"><a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span><span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a>' +
       '<h1 class="h1">Willkommen!</h1><p class="muted">Wie sollen Ihre Kinder und Kolleginnen Sie im Portal sehen?</p>' +
       '<div class="field"><label for="obName">Ihr Name</label><input class="input" id="obName" name="name" placeholder="z. B. Frau Meier" required></div>' +
       '<button class="btn primary">Weiter</button></form></main>';
@@ -905,11 +910,42 @@
     return '<form class="card stack" data-a="createClass" style="max-width:620px"><h1 class="h1">Ihre erste Klasse</h1>' +
       '<p class="muted">Jede Klasse bekommt einen eigenen Klassencode. Damit melden sich die Kinder an.</p>' +
       '<div class="field"><label for="cName">Name der Klasse</label><input class="input" id="cName" name="cname" placeholder="z. B. 5a" required maxlength="30"></div>' +
+      '<div class="field"><label for="cCode">Klassencode (freiwillig)</label><input class="input" id="cCode" name="ccode" placeholder="z. B. Otter 123" maxlength="24" autocomplete="off">' +
+      '<span class="muted small">Leer lassen, dann wählt die Klassenkiste einen Code. Sie können ihn später jederzeit ändern.</span></div>' +
       '<button class="btn primary">Klasse anlegen</button></form>';
   };
   var CODE_WORDS = ['FUCHS', 'DACHS', 'LUCHS', 'BIBER', 'IGEL', 'ADLER', 'EULE', 'OTTER', 'GEMSE', 'WOLF', 'HASE', 'FALKE', 'KAUZ', 'MARDER', 'SPATZ',
     'PANDA', 'KOALA', 'DELFIN', 'PINGUIN', 'ZEBRA', 'TIGER', 'KATZE', 'MAUS', 'ELCH', 'STORCH', 'RABE', 'SCHWAN', 'LAMA', 'WAL', 'MURMEL'];
   function genCode() { return CODE_WORDS[rnd(CODE_WORDS.length)] + ' ' + (100 + rnd(900)); }
+  // Eigener Klassencode, z. B. «Otter 123»: Buchstaben, Zahlen, Leerzeichen; die Kinder müssen Gross/klein und Leerzeichen nicht beachten
+  function cleanCode(v) { return String(v || '').replace(/\s+/g, ' ').trim(); }
+  function codeProblem(v) {
+    if (!v) return 'Bitte einen Klassencode eingeben.';
+    if (!/^[A-Za-zÄÖÜäöüÉÈÀéèàÇç0-9 ]+$/.test(v)) return 'Nur Buchstaben, Zahlen und Leerzeichen, z. B. «Otter 123».';
+    if (v.replace(/\s/g, '').length < 4) return 'Der Code braucht mindestens 4 Zeichen.';
+    if (v.length > 24) return 'Der Code darf höchstens 24 Zeichen lang sein.';
+    return '';
+  }
+  function codeTaken(e) { return /classes_code|duplicate/i.test((e && e.message) || ''); }
+  ACT.codeEdit = function () {
+    var c = T.cur(); if (!c) return;
+    overlay('<form class="dialog stack" role="dialog" aria-label="Klassencode wählen" data-a="codeSave"><h2 style="font-size:30px">Klassencode wählen</h2>' +
+      '<p class="muted">Mit diesem Code melden sich die Kinder der Klasse ' + h(c.name) + ' an. Zum Beispiel «Otter 123». Gross- und Kleinschreibung und Leerzeichen müssen die Kinder nicht beachten.</p>' +
+      '<div class="field"><label for="codeIn">Klassencode</label><input class="input codein" id="codeIn" name="code" value="' + h(c.code) + '" maxlength="24" autocomplete="off" required></div>' +
+      '<p class="muted small" style="margin:0">Mit einem neuen Code funktioniert der alte nicht mehr. Angemeldete Kinder bleiben angemeldet.</p>' +
+      '<div class="row" style="justify-content:space-between"><button type="button" class="btn" data-a="codeRandom">🎲 Zufälligen Code vorschlagen</button>' +
+      '<span class="row"><button type="button" class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn primary">Speichern</button></span></div></form>');
+    var i = document.getElementById('codeIn'); if (i) { i.focus(); i.select(); }
+  };
+  ACT.codeRandom = function () { var i = document.getElementById('codeIn'); if (i) { var w = genCode().split(' '); i.value = w[0].charAt(0) + w[0].slice(1).toLowerCase() + ' ' + w[1]; i.focus(); } };
+  ACT.codeSave = async function (f) {
+    var c = T.cur(), v = cleanCode(f.elements.code.value), why = codeProblem(v);
+    if (why) return toast(why);
+    if (v === c.code) return closeOverlays();
+    try { await DB.updateClass(c.id, { code: v }); }
+    catch (e) { if (codeTaken(e)) return toast('Diesen Code hat schon eine andere Klasse. Bitte einen anderen wählen.'); throw e; }
+    c.code = v; closeOverlays(); toast('Neuer Klassencode: ' + v); T.render();
+  };
   async function withFreeCode(fn) {
     for (var i = 0; i < 8; i++) {
       try { return await fn(genCode()); }
@@ -919,7 +955,12 @@
   }
   ACT.createClass = async function (f) {
     var name = f.elements.cname.value.trim(); if (!name) return;
-    var c = await withFreeCode(function (code) { return DB.createClass(name, code); });
+    var own = f.elements.ccode ? cleanCode(f.elements.ccode.value) : '', c;
+    if (own) {
+      var why = codeProblem(own); if (why) return toast(why);
+      try { c = await DB.createClass(name, own); }
+      catch (e) { if (codeTaken(e)) return toast('Diesen Code hat schon eine andere Klasse. Bitte einen anderen wählen.'); throw e; }
+    } else c = await withFreeCode(function (code) { return DB.createClass(name, code); });
     var d = [['Mathematik', '#2F5E9E'], ['Deutsch', '#8A4F7D'], ['Englisch', '#C0473C'], ['NMG', '#2E8B57']];
     for (var i = 0; i < d.length; i++) await DB.addSubject(c.id, { name: d[i][0], color: d[i][1], fav: true, active: true, sort: i });
     T.classes.push(c); T.cls = c.id; LS.set('kn_cls', c.id);
@@ -938,10 +979,10 @@
     var shown = games.filter(function (g) {
       return (T.fach === 'alle' || g.fach === T.fach) && (!q || (g.title + ' ' + g.description + ' ' + g.thema + ' ' + g.fach).toLowerCase().indexOf(q) >= 0);
     });
-    var out = '<section class="banner"><div class="stack" style="gap:8px;flex:1 1 360px"><h2>Klasse ' + h(c.name) + '</h2>' +
+    var out = '<section class="banner"><span class="banner-bild" aria-hidden="true"><img src="bilder/klassenkiste.webp" alt="" width="150" height="150"></span><div class="stack banner-text" style="gap:8px;flex:1 1 320px"><span class="klein">Ihre Klasse</span><h2>Klasse ' + h(c.name) + '</h2>' +
       '<p>Die Kinder öffnen <b>' + h(shortUrl(kidUrl())) + '</b>, geben den Code ein, tippen auf ihren Namen und ihr Bildpasswort. Sie sehen nur die Spiele, die Sie freigeben.</p>' +
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
-      '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
+      '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b><button class="code-edit" data-a="codeEdit">✎ selbst wählen</button></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
       '</div></div>' + (function () {
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel'], ['heft', 'hausaufgaben', '📒', 'Hausaufgaben\u00adheft', 'Aufgaben und Kontrollen'],
@@ -1561,11 +1602,11 @@
       '<button class="btn">Passwort ändern</button></form>' +
       (c ? '<div class="stack" style="padding-top:14px;border-top:1.5px solid var(--line)"><h3 style="font-size:20px">Klasse ' + h(c.name) + ' · Code ' + h(c.code) + '</h3>' +
         '<form class="row" data-a="renameClass"><label class="sr" for="accCls">Neuer Klassenname</label><input class="input grow" style="flex:1 1 180px" id="accCls" name="cname" value="' + h(c.name) + '" required maxlength="30"><button class="btn">Umbenennen</button></form>' +
-        '<div class="row"><button class="btn" data-a="newCode">Neuen Klassencode erstellen</button><button class="btn danger' + (UI.confirm === delKey ? ' armed' : '') + '" data-a="delClass">' +
+        '<div class="row"><button class="btn" data-a="codeEdit">✎ Klassencode selbst wählen</button><button class="btn" data-a="newCode">Zufälliger neuer Code</button><button class="btn danger' + (UI.confirm === delKey ? ' armed' : '') + '" data-a="delClass">' +
         (UI.confirm === delKey ? 'Klasse mit allen Kindern löschen?' : 'Klasse löschen') + '</button></div>' +
         '<p class="muted small">Mit einem neuen Code funktioniert der alte nicht mehr.</p></div>' : '') +
       '<form class="stack" data-a="createClass" style="padding-top:14px;border-top:1.5px solid var(--line)"><div class="field"><label for="accNew">Weitere Klasse anlegen</label>' +
-      '<div class="row"><input class="input grow" style="flex:1 1 180px" id="accNew" name="cname" placeholder="z. B. 6b" required maxlength="30"><button class="btn primary">Anlegen</button></div></div></form></div>');
+      '<div class="row"><input class="input grow" style="flex:1 1 180px" id="accNew" name="cname" placeholder="z. B. 6b" required maxlength="30"><input class="input" style="flex:1 1 160px" name="ccode" placeholder="Code, z. B. Otter 123 (freiwillig)" maxlength="24" autocomplete="off"><button class="btn primary">Anlegen</button></div></div></form></div>');
   };
   ACT.account = function () { T.account(); };
   ACT.savePw = async function (f) {
@@ -1704,7 +1745,7 @@
     r.onload = async function () {
       var A = T.admin, data;
       try { data = JSON.parse(String(r.result)); } catch (e) { return toast('Diese Datei ist kein gültiges Spielpaket.'); }
-      if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Knobelnest-Spielpaket.');
+      if (!data || data.format !== 'knobelnest-spielpaket' || !Array.isArray(data.games)) return toast('Diese Datei ist kein Spielpaket der Klassenkiste.');
       var have = {}; T.games.forEach(function (g) { have[g.title.toLowerCase()] = g; });
       var valid = data.games.filter(function (g) { return g && g.title && g.fach && g.html; });
       var todo = valid.filter(function (g) { return A.packUpd || !have[String(g.title).toLowerCase()]; });
@@ -2431,7 +2472,7 @@
       if (UI.view === 'recovery') return;
       var invite = LINK_INVITE && ev !== 'PASSWORD_RECOVERY'; LINK_INVITE = false; LINK_RECOVERY = false;
       UI.view = 'recovery';
-      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">' + (invite ? 'Willkommen bei ' + h(C.PORTAL_NAME) + '!' : 'Neues Passwort') + '</h1>' +
+      paint('<main class="main" style="max-width:560px"><form class="card stack" data-a="recoverPw"><h1 class="h1">' + (invite ? 'Willkommen in der ' + h(C.PORTAL_NAME) + '!' : 'Neues Passwort') + '</h1>' +
         (invite ? '<p class="muted">Legen Sie jetzt Ihr eigenes Passwort fest. Damit melden Sie sich künftig mit Ihrer E-Mail-Adresse an.</p>' : '') +
         '<div class="field"><label for="rcPw">Neues Passwort (mindestens 8 Zeichen)</label><input class="input" id="rcPw" name="pw" type="password" minlength="8" autocomplete="new-password" required></div>' +
         '<button class="btn primary">Speichern</button></form></main>');

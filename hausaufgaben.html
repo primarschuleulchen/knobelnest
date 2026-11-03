@@ -325,7 +325,7 @@ textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:
 <div class="app" id="app">
   <div class="bg"></div>
   <div class="top" id="top">
-    <button class="pill" id="knBack" hidden>← Knobelnest</button>
+    <button class="pill" id="knBack" hidden>← Klassenkiste</button>
     <button class="pill ic" id="prev" aria-label="Vorherige Woche">‹</button>
     <div class="wk" id="wk"></div>
     <button class="pill ic" id="next" aria-label="Nächste Woche">›</button>
@@ -944,7 +944,7 @@ function openKlasse(){
   openPanel("Klasse und Aussehen", [["k","k"]], "k", (t, pb) => {
     pb.innerHTML = `
       <div><label class="lbl" for="kIn">Name der Klasse</label><input class="inp hand" id="kIn" value="${esc(d.klasse)}"></div>
-      ${KN ? `<div><span class="lbl">Schülerinnen und Schüler</span><div class="hint" style="margin-top:0">Die Kinder kommen aus dem Knobelnest (${S.sus.length}). Neue Kinder trägst du dort unter «Kinder» ein.</div></div>
+      ${KN ? `<div><span class="lbl">Schülerinnen und Schüler</span><div class="hint" style="margin-top:0">Die Kinder kommen aus der Klassenkiste (${S.sus.length}). Neue Kinder trägst du dort unter «Kinder» ein.</div></div>
       <div><span class="lbl">Aufgaben übernehmen</span><div class="row"><label class="btn" style="cursor:pointer">Datei importieren …<input type="file" id="impIn" accept=".json,application/json" hidden></label></div><div class="hint" id="impHint">Aufgaben aus der bisherigen Hausaufgabentafel. Kontrollen und Notizen werden über den Vornamen den Kindern zugeordnet.</div></div>` : `<div><label class="lbl" for="sIn">Schülerinnen und Schüler · eine Person pro Zeile</label><textarea class="inp" id="sIn" style="min-height:220px;font-family:var(--ui);font-size:15px">${esc(d.list)}</textarea><div class="hint">Die Reihenfolge ergibt die Nummern. Bereits kontrollierte Aufgaben bleiben erhalten, solange der Name gleich bleibt.</div></div>`}
       <div><span class="lbl">Zeilen pro Tag</span><div class="row">${[[6,"gross"],[8,"mittel"],[10,"klein"]].map(([n,l]) => `<button class="opt${d.settings.lines === n ? " on" : ""}" data-l="${n}">${l} · ${n}</button>`).join("")}</div></div>
       <div><span class="lbl">Handschrift</span><div class="row">${Object.entries(FONTS).map(([k,v]) => `<button class="opt${d.settings.font === k ? " on" : ""}" data-font="${k}" style="font-family:${esc(v)};font-size:17px">${k}</button>`).join("")}</div></div>

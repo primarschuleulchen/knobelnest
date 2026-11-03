@@ -1,7 +1,8 @@
 # Knobelnest – Arbeitsanleitung für Claude
 
-Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehrpersonen melden sich an, schalten Lernspiele frei und nutzen Klassenwerkzeuge. Kinder melden sich mit Klassencode, Namen und Bildpasswort an.
+Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js`) ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehrpersonen melden sich an, schalten Lernspiele frei und nutzen Klassenwerkzeuge. Kinder melden sich mit Klassencode, Namen und Bildpasswort an.
 
+- Klassencode: Die Lehrperson wählt ihn selbst (z. B. «Otter 123», `ACT.codeEdit`/`codeSave`, beim Anlegen freiwillig). Kinder müssen Gross/klein und Leerzeichen nicht beachten (`_norm_code`).
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -10,6 +11,7 @@ Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehr
 
 - **Wer:** Die Benutzerin ist Lehrerin und Admin des Portals, keine Programmiererin. Sie arbeitet oft am Handy, manchmal am Laptop, und schickt Screenshots.
 - **Antworten:** immer Deutsch in Schweizer Schreibweise («ss» statt «ß», Anführungszeichen «…»). Kurz und ohne Fachjargon. Sag ihr, was sie tun muss, z. B. «in Supabase das SQL ausführen».
+- **Name:** In allen sichtbaren Texten heisst das Portal «Klassenkiste» (z. B. «← Klassenkiste», «in der Klassenkiste gespeichert»). Repository, Adresse und Code-Namen bleiben «knobelnest».
 - **Oberflächentexte:** ebenfalls Deutsch in Schweizer Schreibweise und kindgerecht, wo Kinder sie sehen.
 - **Ablauf:** Mach Änderungen direkt, teste sie und speichere sie mit einem Commit. Frag nur bei echten Unklarheiten.
 - **Grenzen:** Ändere nur das, worum sie bittet. Die eigenständige Klassen-Pinnwand (ausserhalb des Knobelnests) baust du nur auf ausdrücklichen Wunsch (`werkstatt/einbau/pinnwand/standalone.py`).
@@ -28,7 +30,8 @@ Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehr
 | `config.js` | Portalname und Supabase-Adresse mit dem öffentlichen Schlüssel |
 | `db.js` | Alle Aufrufe an Supabase (Tabellen und RPC-Funktionen) als `DB.xyz()` |
 | `app.js` | Die ganze Portal-App (Hash-Routen in `route()`) |
-| `style.css` | Gestaltung des Portals |
+| `style.css` | Gestaltung des Portals. Lehrpersonen-Seiten (`body.lp`, gesetzt in `T.render`/`T.renderLogin`, entfernt in `route()`) im Stil der Eulenkiste (Repo `lernkompass`): Schrift Patrick Hand (`schriften/`), Eulen-Marke (`bilder/eule.webp`), Gold-Akzente, ✦ ✧ ✦. Die Kinderansicht ist noch im alten Stil. |
+| `bilder/`, `schriften/` | Bilder und Schriften aus der Eulenkiste (lokal, nichts von Google) |
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
@@ -106,8 +109,8 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=75`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=77`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 

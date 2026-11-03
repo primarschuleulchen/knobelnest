@@ -494,3 +494,139 @@ button.zr-st{cursor:pointer}
 .tt-vk .tt-rel.on{background:#CFEFD9;color:#1F6B50}
 /* Vokabelkiste: ohne dunklen Balken, sie hat selbst «← Knobelnest» */
 .player-vk .player-bar{display:none}
+
+/* =====================================================================
+   Lehrpersonen-Seite im Stil der Eulenkiste (body.lp)
+   Schrift Patrick Hand (lokal in schriften/), helles Blau, weisse Karten mit weichem blauem Schatten,
+   Gold-Akzente, Sterne ✦ ✧ ✦. Die Kinderansicht bleibt (noch) wie sie ist.
+   ===================================================================== */
+@font-face{font-family:"Patrick Hand";src:url(schriften/patrick-hand.woff2) format("woff2");font-weight:400;font-display:swap}
+body.lp{
+  --bg:#f4f9fd; --ink:#1f2421; --soft:#5f6963; --line:#dbe7f1; --line2:#c5d8e8;
+  --green:#3f78a8; --green-d:#2f5f8f; --btn:#dcf0fd; --btn-d:#c4e4fa; --pastel:#dcf0fd; --green-l:#e9f5fd; --amber:#fbf3dc; --focus:#3f78a8;
+  --gold:#d6ad45; --gold-d:#c4952f; --sky-soft:#dcf0fd; --sky-deep:#3f78a8; --rose-soft:#fcefed; --leaf-soft:#e9f1e3; --sun-soft:#fbf3dc;
+  --h:"Patrick Hand","Segoe Print","Comic Sans MS",cursive; --b:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  --schatten:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);
+  --schatten-hoch:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14);
+  background:var(--bg);font-family:var(--b);font-size:19px;color:var(--ink)}
+body.lp h1,body.lp h2,body.lp h3,body.lp b,body.lp strong,body.lp th,body.lp .btn,body.lp .tab,body.lp .chip,body.lp .switch,body.lp .pill,body.lp .field label,body.lp .lbl{font-weight:400}
+body.lp .small{font-size:16px}
+body.lp .muted{color:var(--soft)}
+
+/* Kopf */
+body.lp .top{background:rgba(244,249,253,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:0;box-shadow:0 1px 0 rgba(214,173,69,.35)}
+body.lp .top-in{min-height:88px;padding:10px 24px}
+.marke{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}
+.marke-bild{flex:none;width:60px;height:60px;border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 2px #d6ad45,0 6px 18px rgba(63,120,168,.25);transform:rotate(-6deg);transition:transform .3s}
+.marke-bild img{width:100%;height:100%;display:block;border-radius:50%}
+.marke:hover .marke-bild{transform:rotate(4deg) scale(1.05)}
+.marke-text b{display:block;font-family:"Patrick Hand",cursive;font-size:36px;line-height:.95;font-weight:400}
+.marke-text em{font-style:normal;color:#c4952f}
+.marke-text i{font-style:normal;color:#d6ad45;font-size:.55em;vertical-align:super;margin-left:2px}
+.marke-text small{display:inline-block;margin-top:2px;font-size:16px;color:#5f6963;border-top:1.5px dashed #d6ad45;padding-top:1px}
+body.lp .tabs{gap:6px;padding:4px 24px 12px}
+body.lp .tab{min-height:42px;padding:0 18px;border:1.5px solid transparent;border-radius:999px;font-size:19px;color:var(--ink)}
+body.lp .tab:hover{background:var(--sky-soft)}
+body.lp .tab[aria-selected="true"]{background:#fff;border-color:var(--ink);box-shadow:var(--schatten)}
+body.lp .avatar{background:var(--sky-soft);color:var(--sky-deep);box-shadow:0 0 0 1.5px var(--gold)}
+
+/* Knöpfe, Felder, Schalter */
+body.lp .btn{border:2px solid var(--ink);border-radius:14px;background:#fff;font-size:18px;box-shadow:var(--schatten);transition:transform .15s,box-shadow .15s}
+body.lp .btn:hover{transform:translateY(-2px);box-shadow:var(--schatten-hoch);border-color:var(--ink)}
+body.lp .btn:active{transform:translateY(1px);box-shadow:var(--schatten)}
+body.lp .btn.primary{background:var(--sky-soft);color:var(--ink);border-color:var(--ink)}
+body.lp .btn.primary:hover{background:#c9e7fb}
+body.lp .btn.amber{background:var(--sun-soft);border-color:var(--ink)}
+body.lp .btn.danger{border-color:#b5524a;color:#9a3b33;box-shadow:none}
+body.lp .btn.sm{min-height:40px;font-size:16px;border-radius:11px;box-shadow:0 4px 12px rgba(63,120,168,.14)}
+body.lp .input,body.lp select.input,body.lp textarea.input{border:1.5px solid var(--line2);border-radius:14px;font-size:19px}
+body.lp .input:focus{outline:3px solid #9fd0f3;border-color:var(--sky-deep)}
+body.lp .switch{border-radius:14px;font-size:17px;background:#f7fbfe}
+body.lp .switch[aria-checked="true"]{background:var(--leaf-soft);border-color:#7ea56a;color:#3f6b2e}
+body.lp [aria-checked="true"] .track{background:#7ea56a}
+body.lp .chip{border:1.5px solid var(--line2);font-size:18px}
+body.lp .chip[aria-pressed="true"]{background:var(--sky-soft);border-color:var(--ink);color:var(--ink)}
+
+/* Karten und Flächen */
+body.lp .card,body.lp .list,body.lp .tablewrap{border:1.5px solid #e1edf7;border-radius:28px;box-shadow:var(--schatten);background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%)}
+body.lp .list{border-radius:22px}
+body.lp .note{background:var(--sun-soft);border:1.5px dashed var(--gold);border-radius:20px;color:#4a3d1a;font-size:17px}
+body.lp .note b{color:#6b5418}
+body.lp .empty{border:2px dashed #b9d6ec;border-radius:28px}
+body.lp .h1{font-size:clamp(36px,5vw,52px)}
+body.lp .main{gap:34px}
+body.lp .main>section>h2,body.lp .main section.stack>h2{font-size:36px!important;display:flex;align-items:center;gap:12px}
+body.lp .main section.stack>h2::after{content:"✦ ✧ ✦";font-size:13px;letter-spacing:.3em;color:var(--gold)}
+body.lp .dialog{border-radius:28px;box-shadow:var(--schatten-hoch)}
+
+/* Klassen-Banner */
+body.lp .banner{background:linear-gradient(180deg,#fff 0%,#f3faff 100%);border:1.5px solid #e1edf7;border-radius:32px;padding:26px 30px;box-shadow:var(--schatten);gap:22px 28px}
+.banner-bild{flex:none;width:132px;height:132px;border-radius:50%;background:var(--sky-soft,#dcf0fd);display:grid;place-items:center;border:3px solid #d6ad45;box-shadow:inset 0 0 0 6px #fff,0 8px 18px rgba(63,120,168,.15);overflow:hidden}
+.banner-bild img{width:100%;height:100%;object-fit:contain;display:block}
+body.lp .banner .klein{font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--sky-deep)}
+body.lp .banner h2{font-size:44px;line-height:1}
+body.lp .banner h2::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+body.lp .banner p{color:var(--soft)}
+body.lp .codebox{background:#fff;border:2px dashed var(--gold);border-radius:22px;padding:10px 24px 8px;box-shadow:var(--schatten)}
+body.lp .codebox small{font-size:14px;letter-spacing:.12em;color:var(--sky-deep)}
+body.lp .codebox b{font-family:var(--h);font-size:40px;letter-spacing:.02em;font-weight:400;line-height:1.1;display:block}
+.code-edit{border:0;background:none;color:#2f5f8f;font:inherit;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:999px}
+.code-edit:hover{background:#dcf0fd}
+.codein{font-size:30px!important;text-align:center;letter-spacing:.03em}
+
+/* Werkzeug-Kacheln wie die Karten der Eulenkiste */
+body.lp .tooltiles{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-top:6px}
+body.lp .tooltile{flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:6px;padding:16px 12px 14px;border:1.5px solid #e1edf7;border-radius:24px;background:#fff;box-shadow:var(--schatten)}
+body.lp .tooltile:hover{transform:translateY(-4px);box-shadow:var(--schatten-hoch)}
+body.lp .tooltile:active{transform:translateY(1px);box-shadow:var(--schatten)}
+body.lp .tooltile .tti{width:70px;height:70px;border-radius:50%;font-size:36px;background:var(--sky-soft);border:3px solid var(--gold);box-shadow:inset 0 0 0 5px #fff,0 6px 14px rgba(63,120,168,.15);transition:transform .35s}
+body.lp .tooltile:hover .tti{transform:rotate(-6deg) scale(1.05)}
+body.lp .tooltile b{font-size:22px}
+body.lp .tooltile b::after{content:"✦ ✧ ✦";display:block;font-size:10px;letter-spacing:.3em;color:var(--gold);margin-top:4px}
+body.lp .tooltile small{font-size:15px;color:var(--soft)}
+body.lp .tooltile.tt-main{background:linear-gradient(180deg,#fff 0%,#fbf3dc 100%)}
+body.lp .tooltile.tt-main .tti{background:var(--sun-soft)}
+body.lp .tooltiles>.tooltile:nth-child(4n+2) .tti{background:var(--leaf-soft)}
+body.lp .tooltiles>.tooltile:nth-child(4n+3) .tti{background:var(--rose-soft)}
+body.lp .tooltile.tt-vk{padding:0;gap:0;background:#fff}
+body.lp .tt-vk .tt-open{flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 12px 10px;width:100%}
+body.lp .tt-vk .tti{background:var(--leaf-soft)}
+body.lp .tt-vk .tt-rel{width:100%;border-top:1.5px dashed var(--gold);font-weight:400;font-size:15px;border-radius:0 0 22px 22px}
+
+/* Fächer und Spiele */
+body.lp .tile{border:1.5px solid #e1edf7;border-radius:22px;box-shadow:var(--schatten);transition:transform .15s,box-shadow .15s}
+body.lp .tile:hover{transform:translateY(-3px);box-shadow:var(--schatten-hoch)}
+body.lp .tile[aria-pressed="true"]{border:2px solid var(--ink);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--gold),var(--schatten)}
+body.lp .tile .sw{border-radius:50%;font-family:var(--h);font-size:24px;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--gold)}
+body.lp .tile b{font-family:var(--h);font-size:22px;font-weight:400}
+body.lp .gtitle{font-size:34px;font-weight:400}
+body.lp .gtitle small{font-family:var(--b);font-size:16px}
+body.lp .gtoggle{border-bottom:1.5px dashed rgba(214,173,69,.6)}
+body.lp .gtoggle .chev{color:var(--gold)}
+body.lp .game{border:1.5px solid #e1edf7;border-radius:26px;box-shadow:var(--schatten);transition:transform .15s,box-shadow .15s}
+body.lp .game:hover{transform:translateY(-3px);box-shadow:var(--schatten-hoch)}
+body.lp .game-top{font-family:var(--h);font-size:24px;font-weight:400;border-bottom:1.5px dashed rgba(214,173,69,.55)}
+body.lp .game-body h3{font-size:26px}
+body.lp .game-body p{font-size:17px}
+
+/* Anmeldeseite */
+body.lp .login-hero{background:linear-gradient(180deg,#dcf0fd 0%,#f4f9fd 100%)}
+
+@media (max-width:640px){
+  body.lp .top-in{min-height:72px;padding:8px 16px}
+  .marke-bild{width:48px;height:48px}
+  .marke-text b{font-size:30px}
+  .marke-text small{display:none}
+  body.lp .banner{padding:20px}
+  .banner-bild{width:96px;height:96px}
+  body.lp .banner h2{font-size:36px}
+  body.lp .tooltiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){body.lp *{transition:none!important}}
+body.lp .tooltiles{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+body.lp .tooltile b{font-size:20px}
+body.lp .tooltile .tti{width:62px;height:62px;font-size:32px}
+body.lp .main section.stack>.row>h2{font-size:36px!important}
+body.lp .main section.stack>.row>h2::after{content:" ✦ ✧ ✦";font-size:13px;letter-spacing:.3em;color:var(--gold);vertical-align:middle}
+body.lp .kidlink{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:16px;box-shadow:var(--schatten);font-weight:400}
+body.lp .kidlink:hover{background:var(--sky-soft);color:var(--ink)}

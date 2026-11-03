@@ -21,7 +21,7 @@ if (KN) window.claude = KN.claude;''')
 # 2) Speicher pro Lehrperson auf diesem Gerät
 rep('const LS = "tagesfolien2";', 'const LS = "tagesfolien2" + (KN ? "-" + KN.uid : "");')
 
-# 3) Klassenliste immer aus Knobelnest
+# 3) Klassenliste immer aus der Klassenkiste
 rep('  s.roster = s.roster || []; s.groupSets', '''  s.roster = KN && KN.roster.length ? KN.roster.slice() : (s.roster || []); s.groupSets''')
 rep('  return s;\n', '''  if (KN && KN.roster.length) s.screens.forEach(sc => sc.widgets.forEach(w => { if (w.type === "random" && !(w.data.names || "").trim()) w.data.editing = false; }));
   return s;
@@ -33,11 +33,11 @@ rep('random:  { lab: "Zufallsname", w: 24, h: 30, d: () => ({ names: "", pick: "
 rep('<textarea id="names-${w.id}" placeholder="Namen eintragen, ein Name pro Zeile" aria-label="Namen">${esc(d.names)}</textarea>',
     '${KN && KN.roster.length && !(d.names || "").trim() ? `<p class="hint" style="margin:0 0 4px">Leer lassen = ganze Klasse ${esc(KN.className)}</p>` : ""}<textarea id="names-${w.id}" placeholder="${KN && KN.roster.length ? "Leer lassen für die ganze Klasse, oder eigene Namen, einer pro Zeile" : "Namen eintragen, ein Name pro Zeile"}" aria-label="Namen">${esc(d.names)}</textarea>')
 
-# 5) Klassenliste-Dialog: Namen kommen aus Knobelnest
+# 5) Klassenliste-Dialog: Namen kommen aus der Klassenkiste
 rep('''    return `<p class="hint">Ein Name pro Zeile. Die Liste gilt für alle Gruppen- und Zufallsname-Widgets.</p>
     <textarea id="rosterTxt" rows="9" aria-label="Klassenliste">${esc(S.roster.join("\\n"))}</textarea>
     <div style="margin-top:8px"><button class="sbtn rose" data-rsave>Klassenliste speichern</button></div>''',
-'''    return (KN ? `<p class="hint">Die Namen kommen aus Knobelnest (Klasse ${esc(KN.className)}). Ändern können Sie sie im Portal unter «Kinder».</p>` : `<p class="hint">Ein Name pro Zeile. Die Liste gilt für alle Gruppen- und Zufallsname-Widgets.</p>
+'''    return (KN ? `<p class="hint">Die Namen kommen aus der Klassenkiste (Klasse ${esc(KN.className)}). Ändern können Sie sie im Portal unter «Kinder».</p>` : `<p class="hint">Ein Name pro Zeile. Die Liste gilt für alle Gruppen- und Zufallsname-Widgets.</p>
     <textarea id="rosterTxt" rows="9" aria-label="Klassenliste">${esc(S.roster.join("\\n"))}</textarea>
     <div style="margin-top:8px"><button class="sbtn rose" data-rsave>Klassenliste speichern</button></div>`) + `''')
 # the original continued with "\n    <h3 ..." inside same template literal; we re-opened a template above
@@ -47,7 +47,7 @@ rep('  random:  { lab: "Zufallsname",', '''  stand:   { lab: "Arbeitsstand", w: 
 rep('const DOCK = ["title","date","clock","timer","|","list","check","plan","material","note","image","|","symbol","traffic","random","groups"];',
     'const DOCK = ["title","date","clock","timer","|","list","check","plan","material","note","image","|","symbol","traffic","random","groups"].concat(KN ? ["|","stand"] : []);')
 rep('    case "image": return `<div class="t-img">',
-    '''    case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur im Knobelnest.</div>`;
+    '''    case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur in der Klassenkiste.</div>`;
     case "image": return `<div class="t-img">''')
 rep('const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image"]);',
     'const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image", "stand"]);')
@@ -57,7 +57,7 @@ rep('.w.image .card{background:none;box-shadow:none}', '''.w.image .card{backgro
 .kn-back{font-weight:700}''')
 
 # 7) Zurück ins Portal
-rep('''    <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>''', '''    <button class="pill kn-back" id="knBack" style="display:none">← Knobelnest</button>
+rep('''    <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>''', '''    <button class="pill kn-back" id="knBack" style="display:none">← Klassenkiste</button>
     <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>''')
 rep('$("#fsBtn").addEventListener("click", async () => {', '''if (KN) { const b = $("#knBack"); b.style.display = ""; b.addEventListener("click", () => KN.back()); }
 $("#fsBtn").addEventListener("click", async () => {''')

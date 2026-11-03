@@ -3,7 +3,7 @@ OTTER_ICON = '<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="curren
 rep('''  stand:   { lab: "Arbeitsstand",''', '''  otter:   { lab: "Otterteich", w: 42, h: 46, d: () => ({}), icon: `''' + OTTER_ICON + '''` },
   stand:   { lab: "Arbeitsstand",''')
 rep('''.concat(KN ? ["|","stand"] : []);''', '''.concat(KN ? ["|","stand"].concat(KN.otterUrl ? ["otter"] : []) : []);''')
-rep('''    case "stand": return KN ?''', '''    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur im Knobelnest."}</span></div></div>`;
+rep('''    case "stand": return KN ?''', '''    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur in der Klassenkiste."}</span></div></div>`;
     case "stand": return KN ?''')
 rep('''const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image", "stand"]);''',
     '''const DRAG_BODY = new Set(["title", "date", "clock", "symbol", "traffic", "image", "stand", "otter"]);''')

@@ -761,7 +761,7 @@ const stage=$('#stage');
 
 function renderTop(){
   const s=SUB();
-  $('#top').innerHTML=`${KN?'<button class="pill" id="knBack">← Knobelnest</button>':''}<button class="brand" id="brand" aria-label="Zur Übersicht">${BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
+  $('#top').innerHTML=`${KN?'<button class="pill" id="knBack">← Klassenkiste</button>':''}<button class="brand" id="brand" aria-label="Zur Übersicht">${BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
     <nav class="subs" aria-label="Sprache">${C.subjects.map(x=>`<button class="pill ${x.id===s.id?'on':''}" data-sub="${x.id}">${esc(x.name)}</button>`).join('')}</nav>
     <span class="sp"></span>
     <div class="seg" role="group" aria-label="Abfragerichtung"><button data-dir="de-f" aria-pressed="${P.dir==='de-f'}">DE → ${CODE(s)}</button><button data-dir="f-de" aria-pressed="${P.dir==='f-de'}">${CODE(s)} → DE</button></div>
@@ -847,7 +847,7 @@ function goNode(id){
   if(node&&!ws.length&&!T)h+=`<div class="empty" style="margin-top:20px"><p class="hand">Hier sind noch keine Wörter eingetragen.</p></div>`;
   if(!node&&canSpeak)h+=`<div class="sh"><h2 class="lbl">Vorlesestimme</h2><p class="hand">Es wird automatisch eine Frauenstimme gewählt.</p></div>
     <div class="voice"><select id="voiceSel" aria-label="Stimme für ${esc(s.name)}">${voiceOptions(s.lang)}</select><button class="pill" id="voiceTest">${SPK} Probehören</button></div>`;
-  if(!node)h+=`<p class="note">Dein Fortschritt (Karteikasten, Knacknüsse, Rekorde) wird ${KN?'im Knobelnest gespeichert – auf jedem Gerät gleich':'auf diesem Gerät gespeichert'}.</p>`;
+  if(!node)h+=`<p class="note">Dein Fortschritt (Karteikasten, Knacknüsse, Rekorde) wird ${KN?'in der Klassenkiste gespeichert – auf jedem Gerät gleich':'auf diesem Gerät gespeichert'}.</p>`;
   stage.innerHTML=h;
   bindNodes(stage);bindSpeak(stage);bindPractice(stage);
   if(!node)bindRoot(s);

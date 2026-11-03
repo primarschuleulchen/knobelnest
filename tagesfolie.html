@@ -334,7 +334,7 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 <div class="app" id="app" lang="de">
   <div class="bg" id="bg"></div>
   <div class="top">
-    <button class="pill kn-back" id="knBack" style="display:none">← Knobelnest</button>
+    <button class="pill kn-back" id="knBack" style="display:none">← Klassenkiste</button>
     <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>
     <div class="spacer"></div>
     <button class="pill undo" id="undoBtn" title="Rückgängig (⌘Z)" aria-label="Rückgängig" disabled>↶ Rückgängig</button>
@@ -1064,8 +1064,8 @@ function widgetInner(w){
       ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<button class="mat${(d.crossed || []).includes(k) ? " crossed" : ""}" data-mk="${k}" title="${MAT[k][0]} – antippen zum Durchstreichen">${MAT[k][1]}<span>${MAT[k][0]}</span></button>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
       <div class="mnote${d.note ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="note" data-ph="Anmerkung (optional)" style="${d.tc ? `color:${d.tc}` : ""}">${esc(d.note || "")}</div>
       <div class="lfoot"><button class="sbtn rose" data-mat>Material wählen</button><button class="sbtn" data-iconsonly>${d.iconsOnly ? "Mit Text" : "Nur Symbole"}</button></div>`;
-    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur im Knobelnest."}</span></div></div>`;
-    case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur im Knobelnest.</div>`;
+    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur in der Klassenkiste."}</span></div></div>`;
+    case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur in der Klassenkiste.</div>`;
     case "image": return `<div class="t-img">${d.src ? `<img src="${esc(d.src)}" alt="">` : ""}</div>`;
     case "note": return `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift (optional)">${esc(d.heading)}</div><div class="t-note" style="${d.tc ? `color:${d.tc}` : ""}" contenteditable="true" spellcheck="false" data-f="body" data-ph="Hier schreiben …">${esc(d.body)}</div>`;
     case "symbol": { const s = SYMS[d.key] || SYMS.einzel; return `<div class="t-sym" title="Antippen zum Wechseln">${s.svg}<div class="lab">${s.lab}</div></div>`; }
@@ -1473,7 +1473,7 @@ function makeGroups(size){
 }
 function openRoster(w){
   const html = () => { const abs = absentToday();
-    return (KN ? `<p class="hint">Die Namen kommen aus Knobelnest (Klasse ${esc(KN.className)}). Ändern können Sie sie im Portal unter «Kinder».</p>` : `<p class="hint">Ein Name pro Zeile. Die Liste gilt für alle Gruppen- und Zufallsname-Widgets.</p>
+    return (KN ? `<p class="hint">Die Namen kommen aus der Klassenkiste (Klasse ${esc(KN.className)}). Ändern können Sie sie im Portal unter «Kinder».</p>` : `<p class="hint">Ein Name pro Zeile. Die Liste gilt für alle Gruppen- und Zufallsname-Widgets.</p>
     <textarea id="rosterTxt" rows="9" aria-label="Klassenliste">${esc(S.roster.join("\n"))}</textarea>
     <div style="margin-top:8px"><button class="sbtn rose" data-rsave>Klassenliste speichern</button></div>`) + `
     <h3 style="margin:18px 0 4px;font-size:15px">Heute abwesend</h3>
