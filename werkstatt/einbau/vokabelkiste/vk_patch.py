@@ -249,5 +249,14 @@ rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Klassen-Übersi
 @media (prefers-reduced-motion:reduce)""")
 
 
+# 9) iPad/Safari: Beim Umdrehen schimmerte die Vorderseite gespiegelt durch die Rückseite.
+#    Darum wird zusätzlich zur 3D-Drehung die verdeckte Seite in der Mitte der Drehung unsichtbar geschaltet.
+rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Kärtchen-Rückseite auf iPad sauber (verdeckte Seite ausblenden) */
+.inner>.face{transform:rotateY(0deg) translateZ(1px);transition:visibility 0s linear .27s}
+.inner>.face.back,.inner>.face.open{transform:rotateY(180deg) translateZ(1px);visibility:hidden}
+.flipped>.inner>.face{visibility:hidden}
+.flipped>.inner>.face.back,.flipped>.inner>.face.open{visibility:visible}
+@media (prefers-reduced-motion:reduce)""")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
