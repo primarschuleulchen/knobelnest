@@ -844,7 +844,7 @@
   var T = {
     me: null, tools: {}, classes: [], cls: null, games: [], rel: new Set(), kids: [], subjects: [],
     progress: null, progressBusy: false, tafel: null, tafelBusy: false,
-    tab: LS.get('kn_tab') || 'spiele', fach: 'alle', closed: LS.get('kn_closed') || {}, q: '', pfilter: 'alle',
+    tab: LS.get('kn_tab') || 'uebersicht', fach: 'alle', closed: LS.get('kn_closed') || {}, q: '', pfilter: 'alle',
     fresh: new Set(), editColor: null, newColor: '#2E7D4F', loginErr: '', loginInfo: '',
     admin: { teachers: null, tg: [], open: null, form: null }
   };
@@ -907,13 +907,13 @@
     if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
     var body;
     if (!T.classes.length && T.tab !== 'verwaltung') body = T.onboardClass();
-    else body = ({ spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
+    else body = ({ uebersicht: T.tabSpiele, spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
     paint(T.shell(body));
   };
   T.shell = function (body) {
-    var tabs = [['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
+    var tabs = [['uebersicht', 'Übersicht'], ['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
     if (T.me.is_admin) tabs.push(['verwaltung', 'Verwaltung']);
-    return '<header class="top"><div class="top-in"><a class="marke" href="#/" aria-label="' + h(C.PORTAL_NAME) + ' – Start"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
+    return '<header class="top"><div class="top-in"><a class="marke" href="#/" data-a="tab" data-t="uebersicht" aria-label="' + h(C.PORTAL_NAME) + ' – Start"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
       '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a><div class="row">' +
       (T.classes.length ? '<label class="sr" for="clsSel">Klasse wählen</label><select id="clsSel" class="input" style="min-height:44px;width:auto" data-change="pickClass">' +
         T.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === T.cls ? ' selected' : '') + '>Klasse ' + h(c.name) + '</option>'; }).join('') + '</select>' : '') +
@@ -974,7 +974,7 @@
     });
   }
   var BILDER = null;
-  var TIERE = [['otter', 'Otter'], ['lama', 'Lamas'], ['igel', 'Igel'], ['giraffe', 'Giraffen'], ['panda', 'Pandas'], ['wal', 'Wale']]; // Bilder in bilder/maskottchen/
+  var TIERE = [['otter', 'Otter'], ['lama', 'Lamas'], ['igel', 'Igel'], ['giraffe', 'Giraffen'], ['panda', 'Pandas'], ['wal', 'Wale'], ['faultier', 'Faultiere']]; // Bilder in bilder/maskottchen/
   ACT.bildTier = async function (el) {
     try { var r = await fetch('bilder/maskottchen/' + el.dataset.f + '.webp'); var d = await resizeImg(await r.blob(), 320); await saveBild(d); }
     catch (e) { toast('Das Bild konnte nicht geladen werden.'); }
@@ -1114,6 +1114,9 @@
             return html.replace('data-tile="' + k + '"', 'data-tile="' + k + '" draggable="true"').replace(/<\/div>$/, '<span class="tt-move"><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="nach vorne">←</button><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="1"' + (i < keys.length - 1 ? '' : ' disabled') + ' aria-label="nach hinten">→</button></span></div>');
           }).join('') + '</div>';
       })() + '</section>';
+    // Reiter «Übersicht» = Klasse und Werkzeuge; Reiter «Spiele» = Fächer und Spiele
+    if (T.tab === 'uebersicht') return out;
+    out = '';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -1383,14 +1386,14 @@
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste' };
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
   var TILE_DEF = ['folie', 'otter', 'heft', 'pin', 'atelier', 'tafel', 'vk'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;
-      DB.storeGet('kacheln').then(function (d) { if (d && Array.isArray(d.order)) { T.tileOrderList = d.order; LS.set('kn_kacheln', d.order); if (T.tab === 'spiele') T.render(); } }).catch(function () {});
+      DB.storeGet('kacheln').then(function (d) { if (d && Array.isArray(d.order)) { T.tileOrderList = d.order; LS.set('kn_kacheln', d.order); if (T.tab === 'uebersicht') T.render(); } }).catch(function () {});
     }
     var o = (T.tileOrderList || []).filter(function (k) { return TILE_DEF.indexOf(k) >= 0; });
     TILE_DEF.forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); });
