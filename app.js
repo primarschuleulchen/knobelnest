@@ -104,10 +104,31 @@
   var COL_LABEL = { helfen: 'Ich kann helfen', klar: 'Ich komme gut klar', frage: 'Ich habe eine Frage' };
   var COL_DEF = { helfen: 'Ich kann helfen', klar: 'Ich komme gut klar', frage: 'Ich habe eine Frage' };
   // Eigene Namen der drei Spalten pro Klasse (classes.tafel_cols); leer = Standard. Gespeichert schon «escaped» für das HTML.
-  function setTafelCols(o) {
+  // Version 21: { list: [ { id, label, color } ] } = eigene Spalten (höchstens 6); sonst die drei Standardspalten
+  var COL_IC = { helfen: COLS[0].ic, klar: COLS[1].ic, frage: COLS[2].ic, stern: '<path d="M12 4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L12 15.8 7.4 18.3l.9-5.2-3.8-3.6 5.2-.7z"/>' };
+  var COL_STDCOL = { helfen: '#2F5E9E', klar: '#2E7D4F', frage: '#E8B710' };
+  function colList(o) {
     o = o && typeof o === 'object' ? o : {};
-    COLS.forEach(function (c) { var v = String(o[c.id] || '').trim().slice(0, 40); c.label = h(v || COL_DEF[c.id]); COL_LABEL[c.id] = c.label; });
+    if (Array.isArray(o.list) && o.list.length) return o.list.slice(0, 6).map(function (x, i) {
+      var id = String((x && x.id) || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || ('s' + i);
+      return { id: id, label: String((x && x.label) || COL_DEF[id] || 'Spalte').trim().slice(0, 40), color: /^#[0-9a-fA-F]{6}$/.test((x && x.color) || '') ? x.color : (COL_STDCOL[id] || PALETTE[i % PALETTE.length][0]) };
+    });
+    return ['helfen', 'klar', 'frage'].map(function (id) { return { id: id, label: String(o[id] || '').trim().slice(0, 40) || COL_DEF[id], color: COL_STDCOL[id] }; });
   }
+  function setTafelCols(o) {
+    var own = o && Array.isArray(o.list) && o.list.length;
+    COLS.length = 0; Object.keys(COL_LABEL).forEach(function (k) { delete COL_LABEL[k]; });
+    colList(o).forEach(function (x) {
+      var std = !own || (COL_STDCOL[x.id] && x.color.toLowerCase() === COL_STDCOL[x.id].toLowerCase());
+      COLS.push({ id: x.id, label: h(x.label), color: std && COL_STDCOL[x.id] ? null : x.color, ic: COL_IC[x.id] || COL_IC.stern });
+      COL_LABEL[x.id] = h(x.label);
+    });
+  }
+  // Farben einer eigenen Spalte: helle Fläche, mittlerer Rand, dunkle Schrift
+  function mixHex(c, w, t) { var n = parseInt(c.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; var f = function (v) { return Math.round(v + (t - v) * w); };
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')'; }
+  function colStyle(c) { return c.color ? ' style="background:' + mixHex(c.color, .84, 255) + ';border-color:' + mixHex(c.color, .45, 255) + ';color:' + mixHex(c.color, .55, 0) + '"' : ''; }
+  function dotStyle(c) { return c.color ? ' style="background:' + c.color + '"' : ''; }
   // Klassenbild (Maskottchen): eigenes Bild oder das Standardbild
   function klassBild(b) { return /^data:image\//.test(b || '') ? b : 'bilder/klassenkiste.webp'; }
   // Werkzeuge für die Kinder: fehlt ein Eintrag, gilt «freigegeben» (so bleiben bestehende Klassen wie bisher)
@@ -318,7 +339,7 @@
   function every(ms, fn) { timers.push(setInterval(fn, ms)); }
   function stopTimers() { timers.forEach(clearInterval); timers = []; }
   function route() {
-    stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null; document.body.classList.remove('lp');
+    stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null; document.body.classList.remove('lp'); document.body.classList.remove('kidv');
     var hs = location.hash || '';
     if (/error_description=/.test(hs)) return linkError(hs);
     if (/access_token=|type=recovery/.test(hs)) { setTimeout(function () { if (/access_token=/.test(location.hash) && UI.view !== 'recovery') { location.hash = '#/'; } }, 4000); return; }
@@ -357,7 +378,7 @@
         '<button class="board-btn" data-a="wallFull">Vollbild</button><a class="board-btn" href="#/">Zum Portal</a>') + '</div></div>';
     if (kid) {
       out += '<div class="mine"><b>Du (' + h(kidName[me] || '') + '):</b><span>' +
-        (mine && subjName[mine.subject_id] ? h(subjName[mine.subject_id]) + ' · ' + COL_LABEL[mine.col] : 'Du stehst noch nicht auf der Tafel. Wähle unten dein Fach und die passende Spalte.') + '</span>' +
+        (mine && subjName[mine.subject_id] ? h(subjName[mine.subject_id]) + ' · ' + (COL_LABEL[mine.col] || '') : 'Du stehst noch nicht auf der Tafel. Wähle unten dein Fach und die passende Spalte.') + '</span>' +
         (mine ? '<button class="board-btn" style="margin-left:auto;min-height:36px" data-a="tOff">Namen wegnehmen</button>' : '') +
         (function () {
           if (!mine || mine.col !== 'frage') return '';
@@ -373,9 +394,9 @@
         var n = s.entries.filter(function (e) { return e.subject_id === sub.id && e.col === c.id; }).length; if (n > maxIn) maxIn = n; }); });
       // Schriftgrösse je nach Anzahl Fächer und Namen pro Feld
       var fs = 'clamp(11px, calc((100dvh - ' + (kid ? 250 : 200) + 'px) / ' + N + ' / ' + (maxIn > 8 ? 4.6 : maxIn > 4 ? 3.4 : 2.4) + '), 22px)';
-      out += '<div class="matrix" style="--rows:' + N + ';--fs-s:clamp(14px, calc((100dvh - 200px) / ' + N + ' / 3), 26px)">' +
+      out += '<div class="matrix" style="--ncol:' + COLS.length + ';--rows:' + N + ';--fs-s:clamp(14px, calc((100dvh - 200px) / ' + N + ' / 3), 26px)">' +
         '<div class="mx-h blank"></div>' + COLS.map(function (c) {
-          return '<div class="mx-h c-' + c.id + '"><span class="dot">' + ic(c.ic, 18, '#fff', 2.4) + '</span><span class="lbl">' + c.label + '</span></div>'; }).join('');
+          return '<div class="mx-h c-' + c.id + '"' + colStyle(c) + '><span class="dot"' + dotStyle(c) + '>' + ic(c.ic, 18, '#fff', 2.4) + '</span><span class="lbl">' + c.label + '</span></div>'; }).join('');
       s.subjects.forEach(function (sub) {
         var inSub = s.entries.filter(function (e) { return e.subject_id === sub.id; });
         out += '<div class="mx-subj"><i style="background:' + h(sub.color) + '"></i><span>' + h(sub.name) + '<small>' + (inSub.length === 1 ? '1 Kind' : inSub.length + ' Kinder') + '</small></span></div>';
@@ -386,9 +407,9 @@
             var n = kidName[e.kid_id] || '';
             return '<span class="tag' + (kid && e.kid_id === me ? ' me' : '') + '"><span class="ini" style="background:' + kidColor(n) + '">' + h(n.charAt(0)) + '</span>' + h(n) + '</span>';
           }).join('');
-          if (kid && !here) out += '<button class="cell c-' + c.id + '" data-a="tSet" data-s="' + sub.id + '" data-c="' + c.id + '" aria-label="' + h(sub.name) + ': ' + c.label + '">' + tags +
+          if (kid && !here) out += '<button class="cell c-' + c.id + '"' + colStyle(c) + ' data-a="tSet" data-s="' + sub.id + '" data-c="' + c.id + '" aria-label="' + h(sub.name) + ': ' + c.label + '">' + tags +
             '<span class="put">' + (mine ? 'hierhin' : 'Hier eintragen') + '</span></button>';
-          else out += '<div class="cell c-' + c.id + (here ? ' here' : '') + '">' + tags + '</div>';
+          else out += '<div class="cell c-' + c.id + (here ? ' here' : '') + '"' + colStyle(c) + '>' + tags + '</div>';
         });
       });
       out += '</div>';
@@ -953,16 +974,24 @@
     });
   }
   var BILDER = null;
+  var TIERE = [['otter', 'Otter'], ['lama', 'Lamas'], ['igel', 'Igel']]; // Bilder in bilder/maskottchen/
+  ACT.bildTier = async function (el) {
+    try { var r = await fetch('bilder/maskottchen/' + el.dataset.f + '.webp'); var d = await resizeImg(await r.blob(), 320); await saveBild(d); }
+    catch (e) { toast('Das Bild konnte nicht geladen werden.'); }
+  };
   ACT.bildEdit = async function () {
     var c = T.cur(); if (!c) return;
     if (BILDER === null) { try { BILDER = (await DB.sharedGet('klassenbilder')) || []; } catch (e) { BILDER = []; } }
     var list = (Array.isArray(BILDER) ? BILDER : []).filter(function (b) { return b && /^data:image\//.test(b.src || ''); });
     overlay('<div class="dialog stack" role="dialog" aria-label="Klassenbild wählen" style="width:min(720px,100%)"><div class="row" style="justify-content:space-between"><h2 style="font-size:30px">Klassenbild wählen</h2><button class="btn sm" data-a="closeOverlay">Schliessen</button></div>' +
       '<p class="muted">Das Bild erscheint hier und bei den Kindern, wenn sie sich anmelden.</p>' +
-      '<div class="bildwahl"><button class="bildopt' + (!c.bild ? ' on' : '') + '" data-a="bildPick" data-i="-1"><img src="bilder/klassenkiste.webp" alt=""><span>Standard</span></button>' +
+      '<div class="bildwahl"><button class="bildopt' + (!c.bild ? ' on' : '') + '" data-a="bildPick" data-i="-1"><img src="bilder/klassenkiste.webp" alt=""><span>Eulen</span></button>' +
+      TIERE.map(function (t) { return '<button class="bildopt" data-a="bildTier" data-f="' + t[0] + '"><img src="bilder/maskottchen/' + t[0] + '.webp" alt=""><span>' + t[1] + '</span></button>'; }).join('') +
       list.map(function (b, i) { return '<button class="bildopt' + (c.bild === b.src ? ' on' : '') + '" data-a="bildPick" data-i="' + i + '"><img src="' + h(b.src) + '" alt=""><span>' + h(b.name || 'Maskottchen') + '</span></button>'; }).join('') +
       (c.bild && !list.some(function (b) { return b.src === c.bild; }) ? '<span class="bildopt on"><img src="' + h(c.bild) + '" alt=""><span>Eigenes Bild</span></span>' : '') + '</div>' +
-      '<div class="field"><label for="bildFile">Eigenes Bild hochladen</label><input class="input" id="bildFile" type="file" accept="image/*" data-change="bildFile"><span class="muted small">Am besten quadratisch. Es wird automatisch verkleinert. Keine Fotos von Kindern.</span></div></div>');
+      '<div class="field"><label for="bildFile">Eigenes Bild hochladen</label><input class="input" id="bildFile" type="file" accept="image/*" data-change="bildFile"><span class="muted small">Am besten quadratisch. Es wird automatisch verkleinert. Keine Fotos von Kindern.</span></div>' +
+      '<a class="insta-wunsch" href="https://www.instagram.com/primarschuleulchen/" target="_blank" rel="noopener noreferrer"><span class="insta-sym" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg></span>' +
+      '<span><b>Dein Tier fehlt?</b><small>Schreib mir auf Instagram, dann füge ich es hinzu → @primarschuleulchen</small></span></a></div>');
   };
   async function saveBild(src) {
     var c = T.cur();
@@ -1071,8 +1100,19 @@
         var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel"><span class="tti" aria-hidden="true">🙋</span><span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '"><span class="tti" aria-hidden="true">' + VK_SVG + '</span><span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
-        return '<div class="tooltiles">' + t.map(function (x) {
-          return '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; }).join('') + tafelTile + vt + '</div>';
+        var tiles = {};
+        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
+        tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
+        if (vt) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
+        var keys = tileOrder().filter(function (k) { return tiles[k]; });
+        var sorting = !!T.tileSorting;
+        return '<div class="tt-head"><button class="btn sm" data-a="tileSort" aria-pressed="' + sorting + '">' + (sorting ? '✓ Fertig' : '↔ Reihenfolge ändern') + '</button>' +
+          (sorting ? '<span class="muted small">Kacheln ziehen oder mit den Pfeilen verschieben.</span>' : '') + '</div>' +
+          '<div class="tooltiles' + (sorting ? ' sorting' : '') + '">' + keys.map(function (k, i) {
+            var html = tiles[k];
+            if (!sorting) return html;
+            return html.replace('data-tile="' + k + '"', 'data-tile="' + k + '" draggable="true"').replace(/<\/div>$/, '<span class="tt-move"><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="nach vorne">←</button><button class="btn sm" data-a="tileMove" data-k="' + k + '" data-d="1"' + (i < keys.length - 1 ? '' : ' disabled') + ' aria-label="nach hinten">→</button></span></div>');
+          }).join('') + '</div>';
       })() + '</section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
@@ -1342,6 +1382,33 @@
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
+  // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
+  var TILE_DEF = ['folie', 'otter', 'heft', 'pin', 'atelier', 'tafel', 'vk'];
+  function tileOrder() {
+    if (!T.tileLoaded) {
+      T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;
+      DB.storeGet('kacheln').then(function (d) { if (d && Array.isArray(d.order)) { T.tileOrderList = d.order; LS.set('kn_kacheln', d.order); if (T.tab === 'spiele') T.render(); } }).catch(function () {});
+    }
+    var o = (T.tileOrderList || []).filter(function (k) { return TILE_DEF.indexOf(k) >= 0; });
+    TILE_DEF.forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); });
+    return o;
+  }
+  function saveTileOrder(o) { T.tileOrderList = o; LS.set('kn_kacheln', o); T.render(); DB.storeSet('kacheln', { order: o }).catch(function () {}); }
+  ACT.tileSort = function () { T.tileSorting = !T.tileSorting; T.render(); };
+  ACT.tileMove = function (el) {
+    var o = tileOrder(), shown = Array.prototype.map.call(document.querySelectorAll('.tooltiles [data-tile]'), function (x) { return x.dataset.tile; });
+    var i = shown.indexOf(el.dataset.k), j = i + (+el.dataset.d); if (i < 0 || j < 0 || j >= shown.length) return;
+    var a = o.indexOf(shown[i]), b = o.indexOf(shown[j]); o[a] = shown[j]; o[b] = shown[i]; saveTileOrder(o);
+  };
+  var tileDrag = null;
+  document.addEventListener('dragstart', function (e) { var t = e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]'); if (!t) return; tileDrag = t.dataset.tile; t.classList.add('dragging'); try { e.dataTransfer.setData('text/plain', tileDrag); e.dataTransfer.effectAllowed = 'move'; } catch (x) {} });
+  document.addEventListener('dragover', function (e) { if (tileDrag && e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]')) e.preventDefault(); });
+  document.addEventListener('drop', function (e) {
+    var t = tileDrag && e.target.closest && e.target.closest('.tooltiles.sorting [data-tile]'); if (!t) return; e.preventDefault();
+    var o = tileOrder(), from = o.indexOf(tileDrag), to = o.indexOf(t.dataset.tile); tileDrag = null; if (from < 0 || to < 0 || from === to) return T.render();
+    o.splice(to, 0, o.splice(from, 1)[0]); saveTileOrder(o);
+  });
+  document.addEventListener('dragend', function () { if (tileDrag) { tileDrag = null; T.render(); } });
   ACT.toolRel = async function (el) {
     var c = T.cur(), k = el.dataset.k, kt = Object.assign({}, c.kid_tools || {}), before = c.kid_tools;
     kt[k] = !toolOn(c, k); c.kid_tools = kt; T.render();
@@ -1634,12 +1701,7 @@
       list + '<form class="stack" data-a="addSubj" style="padding-top:14px;border-top:1.5px solid #E2EBF5"><div class="field"><label for="subjName">Eigenes Fach oder Aufgabe hinzufügen</label>' +
       '<div class="row"><input class="input grow" style="flex:1 1 220px" id="subjName" name="name" maxlength="40" placeholder="z. B. Lesetraining" value="' + h(T.subjDraft || '') + '" data-input="subjDraft" required><button class="btn primary">Hinzufügen</button></div></div>' +
       '<div class="row"><span class="lbl">Farbe:</span>' + swatches(T.newColor, 'newColor') + '</div></form></section>' +
-      '<section class="card stack"><h2>Die drei Spalten</h2><form class="stack" data-a="colsSave" style="gap:12px"><div class="columns">' + COLS.map(function (col) {
-        var own = String(((c.tafel_cols || {})[col.id]) || '');
-        return '<label class="column c-' + col.id + '" style="min-height:0"><span class="sr">Name der Spalte</span><input class="input col-in" name="' + col.id + '" value="' + h(own) + '" placeholder="' + h(COL_DEF[col.id]) + '" maxlength="40"></label>'; }).join('') +
-      '</div><div class="row"><button class="btn primary sm">Namen speichern</button><button type="button" class="btn sm" data-a="colsReset">Standardnamen</button>' +
-      '<span class="muted small">Leer = Standardname. Die Kinder sehen die neuen Namen beim nächsten Öffnen.</span></div></form>' +
-      '<p class="muted small">Wer «' + COL_LABEL.frage + '» wählt, sieht sofort, wer im gleichen Fach helfen kann. Jedes Kind steht nur an einem Ort.</p></section>' +
+      colEditor(c) +
       '<section class="card stack"><h2>Neue Woche</h2><button class="switch" role="switch" aria-checked="' + !!c.tafel_auto + '" data-a="tafelAuto"><span>Namen jeden Montag automatisch von der Tafel nehmen</span><span class="track"></span></button>' +
       '<div class="row"><button class="btn danger' + (UI.confirm === clearKey ? ' armed' : '') + '" data-a="tafelClear">' + (UI.confirm === clearKey ? 'Wirklich alle Namen entfernen?' : 'Alle Namen jetzt entfernen') + '</button>' +
       '<span class="muted small">Die Fächer bleiben, nur die Namen gehen weg.</span></div></section></div>' +
@@ -1685,11 +1747,37 @@
     try { await DB.updateClass(c.id, { tafel_cols: o }); } catch (e) { return toast(sqlHint(e)); }
     c.tafel_cols = o; setTafelCols(o); toast('Namen der Spalten gespeichert.'); T.tafel = null; T.render();
   }
-  ACT.colsSave = function (f) {
-    var o = {}; COLS.forEach(function (col) { var v = String(f.elements[col.id].value || '').trim().slice(0, 40); if (v && v !== COL_DEF[col.id]) o[col.id] = v; });
-    return saveTafelCols(o);
+  // Spalten bearbeiten: Entwurf T.colDraft (Name, Farbe), dann speichern
+  function colEditor(c) {
+    if (!T.colDraft || T.colDraftCls !== c.id) { T.colDraft = colList(c.tafel_cols); T.colDraftCls = c.id; }
+    var d = T.colDraft;
+    return '<section class="card stack"><h2>Die Spalten</h2><p class="muted small" style="margin:0">Namen und Farben anpassen, Spalten hinzufügen oder entfernen (höchstens 6).</p><div class="stack" style="gap:10px">' + d.map(function (x, i) {
+      return '<div class="colrow" style="background:' + mixHex(x.color, .86, 255) + ';border-color:' + mixHex(x.color, .45, 255) + '"><span class="coldot" style="background:' + x.color + '"></span>' +
+        '<input class="input col-in" value="' + h(x.label) + '" maxlength="40" aria-label="Name der Spalte" data-input="colLab" data-i="' + i + '">' +
+        '<div class="colsw" role="group" aria-label="Farbe">' + PALETTE.map(function (p) { return '<button type="button" class="swatch" style="background:' + p[0] + '" aria-label="' + p[1] + '" aria-pressed="' + (p[0].toLowerCase() === x.color.toLowerCase()) + '" data-a="colColor" data-i="' + i + '" data-c="' + p[0] + '"></button>'; }).join('') + '</div>' +
+        '<span class="row" style="gap:4px;flex-wrap:nowrap"><button type="button" class="btn sm" data-a="colMove" data-i="' + i + '" data-d="-1" aria-label="nach links"' + (i ? '' : ' disabled') + '>←</button><button type="button" class="btn sm" data-a="colMove" data-i="' + i + '" data-d="1" aria-label="nach rechts"' + (i < d.length - 1 ? '' : ' disabled') + '>→</button>' +
+        '<button type="button" class="btn sm danger" data-a="colDel" data-i="' + i + '"' + (d.length > 1 ? '' : ' disabled') + '>Entfernen</button></span></div>';
+    }).join('') + '</div><div class="row">' + (d.length < 6 ? '<button type="button" class="btn sm" data-a="colAdd">+ Spalte hinzufügen</button>' : '') +
+      '<button type="button" class="btn primary sm" data-a="colsSave">Spalten speichern</button><button type="button" class="btn sm" data-a="colsReset">Standard</button></div>' +
+      '<p class="muted small" style="margin:0">Die Kinder sehen die Änderungen beim nächsten Öffnen. Kinder in einer entfernten Spalte erscheinen nicht mehr auf der Tafel und tragen sich neu ein. ' +
+      'Bei «Ich habe eine Frage» sehen die Kinder, wer im gleichen Fach unter «Ich kann helfen» steht.</p></section>';
+  }
+  ACT.colLab = function (el) { var x = (T.colDraft || [])[+el.dataset.i]; if (x) x.label = el.value; };
+  ACT.colColor = function (el) { var x = (T.colDraft || [])[+el.dataset.i]; if (x) { x.color = el.dataset.c; T.render(); } };
+  ACT.colDel = function (el) { if (T.colDraft.length > 1) { T.colDraft.splice(+el.dataset.i, 1); T.render(); } };
+  ACT.colMove = function (el) { var d = T.colDraft, i = +el.dataset.i, j = i + (+el.dataset.d); if (j < 0 || j >= d.length) return; d.splice(j, 0, d.splice(i, 1)[0]); T.render(); };
+  ACT.colAdd = function () {
+    var d = T.colDraft, used = d.map(function (x) { return x.color.toLowerCase(); }), col = (PALETTE.filter(function (p) { return used.indexOf(p[0].toLowerCase()) < 0; })[0] || PALETTE[0])[0];
+    d.push({ id: 's' + Math.random().toString(36).slice(2, 8), label: 'Neue Spalte', color: col }); T.render();
   };
-  ACT.colsReset = function () { return saveTafelCols({}); };
+  ACT.colsSave = function () {
+    var d = (T.colDraft || []).map(function (x) { return { id: x.id, label: String(x.label || '').trim().slice(0, 40) || 'Spalte', color: x.color }; });
+    var std = d.length === 3 && ['helfen', 'klar', 'frage'].every(function (id, i) { return d[i].id === id && d[i].color.toLowerCase() === COL_STDCOL[id].toLowerCase(); });
+    var o = {};
+    if (std) d.forEach(function (x) { if (x.label !== COL_DEF[x.id]) o[x.id] = x.label; }); else o = { list: d };
+    T.colDraft = null; return saveTafelCols(o);
+  };
+  ACT.colsReset = function () { T.colDraft = null; return saveTafelCols({}); };
   ACT.tafelRefresh = function () { T.tafel = null; T.render(); };
 
   // ---------- Konto ----------
@@ -2036,11 +2124,13 @@
     toast(errMsg(e));
   };
   K.shell = function (body, back) {
-    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="logo">' + I.logo + h(C.PORTAL_NAME) + '</span>' +
+    if (back === null) return '<div class="kid"><div class="kid-in">' + body + '</div></div>';
+    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="kid-marke"><img src="bilder/eule.webp" alt="" width="52" height="52"><small>' + h(C.PORTAL_NAME) + '</small></span>' +
       (back ? '<button class="kid-btn" data-a="kBack">' + back + '</button>' : '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>') +
       '</div>' + body + '</div></div>';
   };
   K.render = function () {
+    document.body.classList.add('kidv');
     var b = K['view_' + K.step](); if (b == null) return;
     paint(b);
     if (K.step === 'home') vkPlace();
@@ -2102,7 +2192,8 @@
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
-    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div></div>' +
+    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
+      '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
       '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="9" y="7" width="46" height="52" rx="6" fill="#87ad74"/><rect x="14" y="7" width="41" height="52" rx="4" fill="#6f9a5f"/><rect x="18" y="11" width="33" height="44" rx="3" fill="#fbfaf6"/><path d="M23 21h23M23 28h23M23 35h17M23 42h20" stroke="#c9d3c4" stroke-width="2.4" stroke-linecap="round"/><path d="M23 21h12" stroke="#2f6fd0" stroke-width="2.6" stroke-linecap="round"/><path d="M23 35h9" stroke="#d0493f" stroke-width="2.6" stroke-linecap="round"/><path d="M41 40l3 3 6-7" fill="none" stroke="#3f9a52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
@@ -2113,7 +2204,7 @@
       (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
         '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
       (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
-        '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', 'Abmelden');
+        '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
   };
   K.view_thema = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach; });

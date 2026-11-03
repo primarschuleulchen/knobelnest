@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 20)
+-- Knobelnest – Datenbank-Einrichtung (Version 21)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1057,5 +1057,56 @@ $$;
 
 revoke execute on function public.kid_klasse(uuid) from public;
 grant execute on function public.kid_klasse(uuid), public.kid_class(text) to anon, authenticated;
+
+-- =====================================================================
+-- Version 21: Arbeitsstand-Tafel mit eigenen Spalten (hinzufügen, entfernen, Farbe)
+--   classes.tafel_cols = { list: [ { id, label, color } ] } (höchstens 6). Ohne «list» gelten die drei Standardspalten
+--   helfen / klar / frage (mit eigenen Namen wie in Version 20).
+-- =====================================================================
+do $$ declare cn text; begin
+  for cn in select conname from pg_constraint
+             where conrelid = 'public.tafel_entries'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%helfen%' loop
+    execute format('alter table public.tafel_entries drop constraint %I', cn);
+  end loop;
+  if not exists (select 1 from pg_constraint where conname = 'tafel_entries_col_form') then
+    alter table public.tafel_entries add constraint tafel_entries_col_form check (col ~ '^[a-z0-9]{1,12}$');
+  end if;
+end $$;
+
+-- Gibt es diese Spalte in der Klasse?
+create or replace function public._tafel_col_ok(p_class uuid, p_col text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((
+    select case when jsonb_typeof(c.tafel_cols -> 'list') = 'array' and jsonb_array_length(c.tafel_cols -> 'list') > 0
+                then exists (select 1 from jsonb_array_elements(c.tafel_cols -> 'list') x where x ->> 'id' = p_col)
+                else p_col in ('helfen', 'klar', 'frage') end
+      from public.classes c where c.id = p_class), false);
+$$;
+revoke execute on function public._tafel_col_ok(uuid, text) from public, anon, authenticated;
+
+-- Kind trägt sich ein (oder mit p_subject = null wieder aus); erlaubt sind die Spalten der Klasse
+create or replace function public.tafel_set(p_token uuid, p_subject uuid, p_col text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids;
+begin
+  k := public._kid(p_token);
+  perform public._tafel_autoclear(k.class_id);
+  if p_subject is null then
+    delete from public.tafel_entries where kid_id = k.id;
+  else
+    if not exists (select 1 from public.tafel_subjects
+                    where id = p_subject and class_id = k.class_id and active) then
+      raise exception 'Fach nicht gefunden' using errcode = 'P0001';
+    end if;
+    if p_col is null or p_col !~ '^[a-z0-9]{1,12}$' or not public._tafel_col_ok(k.class_id, p_col) then
+      raise exception 'Spalte ungültig' using errcode = 'P0001';
+    end if;
+    insert into public.tafel_entries (kid_id, class_id, subject_id, col, updated_at)
+    values (k.id, k.class_id, p_subject, p_col, now())
+    on conflict (kid_id) do update set subject_id = excluded.subject_id, col = excluded.col, updated_at = now();
+  end if;
+  return json_build_object('me', k.id, 'state', public._tafel_state(k.class_id));
+end;
+$$;
 
 -- Fertig.
