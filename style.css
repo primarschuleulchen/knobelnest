@@ -485,3 +485,10 @@ button.zr-st{cursor:pointer}
 .vkd i.ok{background:#CFEFD9;color:#1F6B50}
 .vkd i.ok small::after{content:" ⭐"}
 .vkd i.fr{background:transparent;color:#A0AAB5}
+/* Vokabelkiste als Kachel bei den Werkzeugen: oben öffnen, unten für die Klasse freigeben */
+.tooltile.tt-vk{flex-direction:column;align-items:stretch;gap:8px;padding:0;overflow:hidden;background:#EAF3E4}
+.tt-vk .tt-open{display:flex;align-items:center;gap:10px;border:0;background:none;padding:12px 12px 0;text-align:left;color:var(--ink);cursor:pointer;font:inherit}
+.tt-vk .tti{background:#fff}
+.tt-vk .tti svg{width:32px;height:28px}
+.tt-vk .tt-rel{border:0;border-top:2px solid var(--ink);background:#fff;padding:7px 10px;font:inherit;font-size:13px;font-weight:700;color:#7A2F28;cursor:pointer}
+.tt-vk .tt-rel.on{background:#CFEFD9;color:#1F6B50}

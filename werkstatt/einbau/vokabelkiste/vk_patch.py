@@ -87,19 +87,19 @@ let knAct=0;['pointerdown','keydown','input'].forEach(t=>addEventListener(t,()=>
 const isoOf=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const noon=d=>{d=new Date(d);d.setHours(12,0,0,0);return d};
 const schoolDay=d=>{const w=d.getDay();return w>0&&w<6&&!FREI.has(isoOf(d))};
-const starOn=k=>((P.sec||{})[k]||0)>=STAR_SEC;
-function knStreak(){let n=0;const d=noon(new Date());
-  for(let i=0;i<500;i++){if(schoolDay(d)){if(starOn(isoOf(d)))n++;else if(i>0)break}d.setDate(d.getDate()-1)}return n}
-function knWeeks(){const ks=Object.keys(P.sec||{}).sort();if(!ks.length)return 0;const d=noon(ks[0]+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));
+const starOf=(p,k)=>(((p&&p.sec)||{})[k]||0)>=STAR_SEC,starOn=k=>starOf(P,k);
+function knStreak(p=P){let n=0;const d=noon(new Date());
+  for(let i=0;i<500;i++){if(schoolDay(d)){if(starOf(p,isoOf(d)))n++;else if(i>0)break}d.setDate(d.getDate()-1)}return n}
+function knWeeks(p=P){const ks=Object.keys((p&&p.sec)||{}).sort();if(!ks.length)return 0;const d=noon(ks[0]+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));
   const end=new Date();let n=0;
-  while(d<=end){let sd=0,ok=true;for(let i=0;i<5;i++){const x=new Date(d);x.setDate(d.getDate()+i);if(schoolDay(x)){sd++;if(!starOn(isoOf(x)))ok=false}}
+  while(d<=end){let sd=0,ok=true;for(let i=0;i<5;i++){const x=new Date(d);x.setDate(d.getDate()+i);if(schoolDay(x)){sd++;if(!starOf(p,isoOf(x)))ok=false}}
     if(sd&&ok)n++;d.setDate(d.getDate()+7)}return n}
-function knFach5(){const ids=new Set();Object.values(P.boxes||{}).forEach(o=>Object.values(o||{}).forEach(b=>Object.entries((b&&b.map)||{}).forEach(([id,f])=>{if(f>=5)ids.add(id)})));return ids.size}
-const knStars=()=>Object.keys(P.sec||{}).filter(starOn).length;
+function knFach5(p=P){const ids=new Set();Object.values((p&&p.boxes)||{}).forEach(o=>Object.values(o||{}).forEach(b=>Object.entries((b&&b.map)||{}).forEach(([id,f])=>{if(f>=5)ids.add(id)})));return ids.size}
+const knStars=(p=P)=>Object.keys((p&&p.sec)||{}).filter(k=>starOf(p,k)).length;
 function knAward(){if(!KN)return;const sec={},d=noon(new Date());for(let i=0;i<35;i++){const k=isoOf(d);if((P.sec||{})[k])sec[k]=P.sec[k];d.setDate(d.getDate()-1)}
   knSend({type:'award',award:{stars:knStars(),vk:{streak:knStreak(),weeks:knWeeks(),fach5:knFach5(),sec}}})}
 function knTick(){if(!KN||!session||document.hidden||Date.now()-knAct>30000)return;
-  P.sec=P.sec||{};const k=dayKey(),b=P.sec[k]||0;P.sec[k]=b+1;
+  P.sec=P.sec||{};const k=dayKey(),b=P.sec[k]||0;P.sec[k]=b+1;const lg=knLog();if(lg)lg.s=(lg.s||0)+1;
   if(b<STAR_SEC&&b+1>=STAR_SEC){toast('⭐ Tagesstern! Du hast heute 7 Minuten geübt.');saveP();knAward()}
   else if((b+1)%20===0){saveP();knAward()}}
 const mmss=x=>Math.floor(x/60)+':'+String(x%60).padStart(2,'0');
@@ -136,6 +136,118 @@ rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Tagesstern, Ser
 .kbi{font-size:26px;filter:grayscale(1)}
 .kb.on .kbi{filter:none}
 @media (prefers-reduced-motion:reduce)""")
+
+# 8) Lehrperson: Klassen-Übersicht und «So wurde geübt» pro Portion
+#    Die Vokabelkiste merkt sich pro Portion und Übung: Anzahl Starts (n), Antworten (a), davon richtig (c), Sekunden (s), zuletzt (t)
+#    in P.log[Portion][Übung] und pro Wort richtig/falsch in P.wc. Das Portal gibt der Lehrperson KNI.kids = [{id,name,p}] mit.
+rep("function rec(id,ok){const w=WD(id);if(!w)return;knRec(ok);", r"""/* ---------- Knobelnest: Was wurde wo geübt (für die Lehrperson) ---------- */
+let knMode=null;
+function knLog(){if(!KN||!knMode)return null;P.log=P.log||{};const a=P.log[knMode.key]=P.log[knMode.key]||{};return a[knMode.mode]=a[knMode.mode]||{n:0,a:0,c:0,s:0}}
+function knStart(key,mode){knMode={key:String(key||'?'),mode};const lg=knLog();if(lg){lg.n++;lg.t=Date.now();saveP()}}
+function knWord(id,ok){if(!KN)return;P.wc=P.wc||{};const x=P.wc[id]=P.wc[id]||[0,0];x[ok?0:1]++;const lg=knLog();if(lg){lg.a++;if(ok)lg.c++;lg.t=Date.now()}}
+const KIDS=KN&&KNI.settings&&Array.isArray(KNI.settings.kids)?KNI.settings.kids:[];
+const MODE_NAMES={karte:'Kärtchen',drei:'3er',merken:'Merken',salat:'Salat',schreiben:'Schreiben',hoeren:'Hören',luecke:'Lücke',pairs:'Paare',regen:'Wortregen'};
+const minTxt=x=>x?(x<60?'<1':Math.round(x/60))+' Min.':'–';
+const pct=v=>v&&v.a?Math.round(v.c/v.a*100)+' %':'';
+const dShort=t=>new Date(t).toLocaleDateString('de-CH',{day:'numeric',month:'numeric'});
+function weekDays(back=0){const d=noon(new Date());d.setDate(d.getDate()-((d.getDay()+6)%7)-7*back);
+  return ['Mo','Di','Mi','Do','Fr'].map((n,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return{n,k:isoOf(x),d:x}})}
+function lastInfo(p){let best=null;Object.entries((p&&p.log)||{}).forEach(([key,m])=>Object.entries(m||{}).forEach(([mode,v])=>{if(v&&v.t&&(!best||v.t>best.t))best={t:v.t,key,mode}}));return best}
+function keyName(key){if(key==='box')return'Karteikasten';if(key==='nuts')return'Knacknüsse';const id=String(key).split(':')[0],i=NODES.get(id);
+  return i?i.node.name+(String(key).endsWith(':all')?' · Gesamt':''):'(gelöscht)'}
+const sicherOf=(p,id)=>{const s=((p&&p.stats)||{})[id];if(s&&s.st>=2)return true;return Object.values((p&&p.boxes)||{}).some(o=>Object.values(o||{}).some(b=>((b&&b.map)||{})[id]>=3))};
+const dayCell=(p,x)=>{const sec=(p&&p.sec)||{};return FREI.has(x.k)?'<td class="fr">frei</td>':`<td class="${starOf(p,x.k)?'ok':sec[x.k]?'part':''}">${sec[x.k]?Math.max(1,Math.round(sec[x.k]/60))+(starOf(p,x.k)?' ⭐':''):'–'}</td>`};
+function goClass(){
+  stopSession();nav={view:'class'};const wd=weekDays(),today=dayKey(),s=SUB();
+  let h=crumbs(null,'Klasse')+`<div class="phead"><h1 class="big">Klasse</h1></div><p class="hand">So üben die Kinder. Tippe auf ein Kind für alle Einzelheiten oder unten auf eine Portion.</p>`;
+  if(!KIDS.length)h+=`<div class="empty">Noch keine Kinder in dieser Klasse.</div>`;
+  else h+=`<div class="ctab"><table><thead><tr><th class="l">Kind</th><th>Heute</th>${wd.map(x=>`<th>${x.n} ${x.d.getDate()}.</th>`).join('')}<th>🔥 Serie</th><th>⭐ Sterne</th><th>🏅 Wochenheld</th><th>📦 Fach 5</th><th>Knacknüsse</th><th class="l">Zuletzt geübt</th></tr></thead><tbody>`+
+    KIDS.map(k=>{const p=k.p||{},sec=p.sec||{},st=knStreak(p),wk=knWeeks(p),f5=knFach5(p),nuts=Object.values(p.stats||{}).filter(x=>(x.w||0)>=NUT_AT).length,li=lastInfo(p);
+      return `<tr><th class="l"><button class="kidb" data-kid="${esc(k.id)}">${esc(k.name)}</button></th><td class="${starOf(p,today)?'ok':sec[today]?'part':''}">${minTxt(sec[today]||0)}</td>${wd.map(x=>dayCell(p,x)).join('')}
+        <td>${st?st+' '+'🔥'.repeat(Math.min(st,5)):'–'}</td><td>${knStars(p)||'–'}</td><td>${wk?(wk>1?wk+'×':'✓'):'–'}</td><td class="${f5>=PROFI?'ok':''}">${f5}/${PROFI}</td><td>${nuts||'–'}</td>
+        <td class="l sm">${li?dShort(li.t)+' · '+esc(keyName(li.key))+' · '+esc(MODE_NAMES[li.mode]||(String(li.mode).startsWith('kasten')?'Karteikasten':li.mode)):'–'}</td></tr>`}).join('')+`</tbody></table></div>
+    <p class="note">Minuten = echte Übungszeit (nur während einer Übung). Grün mit ⭐ = Tagesstern (7 Minuten), gelb = geübt, aber weniger als 7 Minuten. «frei» = Ferien oder schulfrei im Hausaufgabenheft.</p>`;
+  h+=`<div class="sh"><h2 class="lbl">Portion anschauen</h2><p class="hand">${esc(s.name)} · Sprache oben wechseln</p></div>${portionPicker(s)}`;
+  stage.innerHTML=h;bindClass();
+}
+function portionPicker(s){
+  const grp=(n,depth)=>{const ps=(n.kids||[]).filter(x=>x.words),fs=(n.kids||[]).filter(x=>!x.words);
+    return `<div class="cpg" style="margin-left:${depth*16}px"><b>${esc(n.name)}</b>${ps.length?`<div class="cpr">${ps.map(pb).join('')}</div>`:''}${fs.map(f=>grp(f,depth+1)).join('')}</div>`};
+  const pb=n=>`<button class="pill sm ${isOpen(n)?'':'offp'}" data-cp="${n.id}">${esc(n.name)}${isOpen(n)?'':' 🔒'}</button>`;
+  const loose=s.tree.filter(x=>x.words);
+  return `<div class="cpick">${s.tree.filter(x=>!x.words).map(n=>grp(n,0)).join('')}${loose.length?`<div class="cpr">${loose.map(pb).join('')}</div>`:''}</div>`;
+}
+function bindClass(){$$('[data-kid]').forEach(b=>b.onclick=()=>goClassKid(b.dataset.kid));$$('[data-cp]').forEach(b=>b.onclick=()=>goClassPortion(b.dataset.cp));bindNodes(stage);window.scrollTo(0,0)}
+function goClassPortion(id){
+  const info=NODES.get(id);if(!info||!info.node.words)return goClass();
+  if(info.sub!==SUB()){P.sub=info.sub.id;renderTop()}
+  stopSession();nav={view:'classp',node:id};const node=info.node,ws=node.words.filter(valid),modes=Object.keys(MODE_NAMES).filter(m=>!(m==='luecke'&&noSent()));
+  const path=info.path.slice(0,-1).map(n=>n.name).join(' › ');
+  let h=crumbs(null,'Klasse')+`<div class="phead"><h1 class="big">${esc(node.name)}</h1><div class="hact"><button class="pill" id="toClass">← Klasse</button><button class="pill" data-node="${id}">Portion öffnen</button></div></div>
+    <p class="hand">${esc(path)} · ${ws.length} Wörter${isOpen(node)?'':' · nicht freigegeben'}. Pro Übung: wie oft gestartet und wie viele Antworten richtig waren.</p>`;
+  h+=`<div class="ctab"><table><thead><tr><th class="l">Kind</th><th>Zeit</th>${modes.map(m=>`<th>${MODE_NAMES[m]}</th>`).join('')}<th>Kann sicher</th><th class="l">Am meisten falsch</th></tr></thead><tbody>`+
+    KIDS.map(k=>{const p=k.p||{},lg=((p.log||{})[id])||{},wc=p.wc||{};let tot=0;Object.values(lg).forEach(v=>tot+=(v&&v.s)||0);
+      const sich=ws.filter(w=>sicherOf(p,w.id)).length,hard=ws.map(w=>({w,f:(wc[w.id]||[0,0])[1]})).filter(x=>x.f>0).sort((a,b)=>b.f-a.f).slice(0,3);
+      return `<tr><th class="l"><button class="kidb" data-kid="${esc(k.id)}">${esc(k.name)}</button></th><td>${minTxt(tot)}</td>${modes.map(m=>{const v=lg[m];
+        return v&&v.n?`<td class="${v.a&&v.c/v.a>=.8?'ok':'part'}"><b>${v.n}×</b>${v.a?`<small>${pct(v)} richtig</small>`:''}</td>`:'<td class="no">–</td>'}).join('')}
+        <td class="${ws.length&&sich===ws.length?'ok':''}">${sich}/${ws.length}</td><td class="l sm">${hard.map(x=>`${esc(Q(x.w))} <span class="mut">${x.f}×</span>`).join(', ')||'–'}</td></tr>`}).join('')+`</tbody></table></div>`;
+  const rows=ws.map(w=>{let r=0,f=0,k=0;KIDS.forEach(kd=>{const x=((kd.p||{}).wc||{})[w.id];if(x){r+=x[0];f+=x[1]}if(sicherOf(kd.p,w.id))k++});return{w,r,f,k}}).sort((a,b)=>b.f-a.f||a.k-b.k);
+  h+=`<div class="sh"><h2 class="lbl">Wörter</h2><p class="hand">Die schwierigsten zuerst</p></div><div class="ctab"><table><thead><tr><th class="l">Deutsch</th><th class="l">${esc(SUB().name)}</th><th>Richtig</th><th>Falsch</th><th>Kinder, die es sicher können</th></tr></thead><tbody>`+
+    rows.map(x=>`<tr><td class="l">${esc(x.w.de)}</td><td class="l"><b>${esc(x.w.f)}</b></td><td>${x.r||'–'}</td><td class="${x.f?'bad':''}">${x.f||'–'}</td><td>${x.k}/${KIDS.length}</td></tr>`).join('')+`</tbody></table></div>
+    <p class="note">«Kann sicher» = zuletzt mindestens 2× hintereinander richtig oder im Karteikasten ab Fach 3. Gezählt wird ab dem Tag, an dem diese Ansicht eingebaut wurde.</p>`;
+  stage.innerHTML=h;$('#toClass').onclick=goClass;bindClass();
+}
+function goClassKid(kid){
+  const k=KIDS.find(x=>x.id===kid);if(!k)return goClass();
+  stopSession();nav={view:'classk',kid};const p=k.p||{},st=knStreak(p),wk=knWeeks(p),f5=knFach5(p);
+  let h=crumbs(null,'Klasse')+`<div class="phead"><h1 class="big">${esc(k.name)}</h1><div class="hact"><button class="pill" id="toClass">← Klasse</button></div></div>
+    <div class="kntoday"><div class="kt kt-fire ${st?'on':''}"><b class="ktn">${st}</b><div class="ktx"><span class="ktf">${st?'🔥'.repeat(Math.min(st,10)):'Keine Serie'}</span><small>Schultage hintereinander mit Tagesstern</small></div></div>
+      <div class="kt kt-day ${knStars(p)?'on':''}"><span class="kts">⭐</span><div class="ktx"><b>${knStars(p)} Tagessterne</b><small>insgesamt</small></div></div>
+      <div class="kt kt-badges"><div class="kb ${wk?'on':''}"><span class="kbi">🏅</span><span><b>Wochenheld</b><small>${wk?wk+'× geschafft':'noch nicht'}</small></span></div>
+        <div class="kb ${f5>=PROFI?'on':''}"><span class="kbi">📦</span><span><b>Kistenprofi</b><small>${f5} von ${PROFI} Wörtern im letzten Fach</small></span></div></div></div>`;
+  h+=`<div class="sh"><h2 class="lbl">Übungszeit</h2><p class="hand">Minuten pro Schultag, die letzten 4 Wochen</p></div><div class="ctab"><table><thead><tr><th class="l">Woche</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th><th>Total</th></tr></thead><tbody>`+
+    [0,1,2,3].map(b=>{const wd=weekDays(b);let t=0;wd.forEach(x=>t+=((p.sec||{})[x.k]||0));return `<tr><th class="l">${b?dShort(wd[0].d)+' – '+dShort(wd[4].d):'Diese Woche'}</th>${wd.map(x=>dayCell(p,x)).join('')}<td><b>${minTxt(t)}</b></td></tr>`}).join('')+`</tbody></table></div>`;
+  const lg=p.log||{},keys=Object.keys(lg).sort((a,b)=>Math.max(0,...Object.values(lg[b]).map(v=>v.t||0))-Math.max(0,...Object.values(lg[a]).map(v=>v.t||0)));
+  h+=`<div class="sh"><h2 class="lbl">Geübte Portionen</h2><p class="hand">zuletzt geübt zuerst</p></div>`+(keys.length?`<div class="ctab"><table><thead><tr><th class="l">Portion</th><th>Zeit</th><th class="l">Übungen</th><th>Zuletzt</th></tr></thead><tbody>`+
+    keys.map(key=>{const m=lg[key];let t=0,last=0;Object.values(m).forEach(v=>{t+=v.s||0;last=Math.max(last,v.t||0)});const id=String(key).split(':')[0];
+      return `<tr><th class="l">${NODES.has(id)&&NODES.get(id).node.words?`<button class="kidb" data-cp="${id}">${esc(keyName(key))}</button>`:esc(keyName(key))}</th><td>${minTxt(t)}</td>
+        <td class="l sm">${Object.entries(m).map(([mo,v])=>`${esc(MODE_NAMES[mo]||(mo==='kasten-karte'?'Kasten Kärtchen':mo==='kasten-schreiben'?'Kasten Schreiben':mo))} ${v.n}×${v.a?' ('+pct(v)+')':''}`).join(' · ')}</td><td>${last?dShort(last):'–'}</td></tr>`}).join('')+`</tbody></table></div>`
+    :`<div class="empty">Noch keine Übungen aufgezeichnet.</div>`);
+  const nuts=Object.entries(p.stats||{}).filter(([id,x])=>(x.w||0)>=NUT_AT&&WD(id)).map(([id])=>WD(id));
+  const wc=p.wc||{},hard=Object.keys(wc).filter(id=>WD(id)&&wc[id][1]).sort((a,b)=>wc[b][1]-wc[a][1]).slice(0,15);
+  h+=`<div class="sh"><h2 class="lbl">Knifflige Wörter</h2></div><p>${nuts.length?'<b>Knacknüsse:</b> '+nuts.map(w=>`${esc(w.de)} = ${esc(w.f)}`).join(' · '):'Zurzeit keine Knacknüsse.'}</p>`+
+    (hard.length?`<p><b>Am meisten falsch:</b> ${hard.map(id=>`${esc(WD(id).de)} = ${esc(WD(id).f)} <span class="mut">(${wc[id][1]}× falsch, ${wc[id][0]}× richtig)</span>`).join(' · ')}</p>`:'');
+  stage.innerHTML=h;$('#toClass').onclick=goClass;bindClass();
+}
+function rec(id,ok){const w=WD(id);if(!w)return;knRec(ok);knWord(id,ok);""")
+rep("  MODE_FN()[b.dataset.mode]()})}", "  knStart(SET.key,b.dataset.mode);MODE_FN()[b.dataset.mode]()})}")
+rep("  SET={key:'box',label:'Karteikasten',words:list.map(WD)};", "  SET={key:'box',label:'Karteikasten',words:list.map(WD)};knStart('box','kasten-'+kind);")
+rep("function rerender(){if(nav.view==='all')", "function rerender(){if(nav.view==='class')return goClass();if(nav.view==='classp')return goClassPortion(nav.node);if(nav.view==='classk')return goClassKid(nav.kid);if(nav.view==='all')")
+rep("    ${CAN_EDIT?`<button class=\"pill ${T?'rose':''}\" id=\"tbtn\">", "    ${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}${CAN_EDIT?`<button class=\"pill ${T?'rose':''}\" id=\"tbtn\">")
+rep("  const tb=$('#tbtn');if(tb)tb.onclick=", "  const cb=$('#clsbtn');if(cb)cb.onclick=goClass;\n  const tb=$('#tbtn');if(tb)tb.onclick=")
+rep("<div class=\"hact\"><button class=\"pill ${isOpen(node)?'go':'rose'}\" id=\"relNode\">", "<div class=\"hact\">${KN&&isPortion?'<button class=\"pill\" id=\"cpBtn\">📊 So wurde geübt</button>':''}<button class=\"pill ${isOpen(node)?'go':'rose'}\" id=\"relNode\">")
+rep("    $('#relNode').onclick=()=>toggleRelease(id);", "    $('#relNode').onclick=()=>toggleRelease(id);const cpb=$('#cpBtn');if(cpb)cpb.onclick=()=>goClassPortion(id);")
+rep("@media (prefers-reduced-motion:reduce)", r"""/* Knobelnest: Klassen-Übersicht der Lehrperson */
+.ctab{background:#fff;border-radius:18px;box-shadow:var(--shadow);overflow:auto;margin-top:8px}
+.ctab table{border-collapse:collapse;width:100%;font-size:14px}
+.ctab th,.ctab td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;vertical-align:middle}
+.ctab thead th{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:var(--paper);position:sticky;top:0}
+.ctab .l{text-align:left}
+.ctab .sm{font-size:13px;white-space:normal;min-width:180px}
+.ctab td.ok{background:var(--leaf-soft);color:var(--leaf-deep);font-weight:800}
+.ctab td.part{background:#fff6dc}
+.ctab td.fr,.ctab td.no{color:var(--rule)}
+.ctab td.bad{color:var(--rose-ink);font-weight:800}
+.ctab td small{display:block;font-size:11.5px;font-weight:700;color:var(--muted)}
+.ctab .mut{color:var(--muted);font-size:12px}
+.kidb{border:0;background:none;padding:0;font-weight:800;color:var(--navy);text-align:left;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.kidb:hover{color:var(--rose-ink)}
+.cpick{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.cpg>b{font-family:var(--hand);font-size:22px;font-weight:400;color:var(--navy)}
+.cpr{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pill.offp{opacity:.6}
+@media (prefers-reduced-motion:reduce)""")
+
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
