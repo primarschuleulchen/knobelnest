@@ -974,7 +974,7 @@
     });
   }
   var BILDER = null;
-  var TIERE = [['otter', 'Otter'], ['lama', 'Lamas'], ['igel', 'Igel']]; // Bilder in bilder/maskottchen/
+  var TIERE = [['otter', 'Otter'], ['lama', 'Lamas'], ['igel', 'Igel'], ['giraffe', 'Giraffen'], ['panda', 'Pandas'], ['wal', 'Wale']]; // Bilder in bilder/maskottchen/
   ACT.bildTier = async function (el) {
     try { var r = await fetch('bilder/maskottchen/' + el.dataset.f + '.webp'); var d = await resizeImg(await r.blob(), 320); await saveBild(d); }
     catch (e) { toast('Das Bild konnte nicht geladen werden.'); }
