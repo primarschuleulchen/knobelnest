@@ -59,6 +59,7 @@
       if (D.classes.some(function (c) { return norm(c.code) === norm(code); })) return Promise.reject(new Error('duplicate key value violates unique constraint "classes_code_key"'));
       var c = { id: uid(), teacher_id: me().id, name: name, code: code, tafel_auto: true, created_at: now() }; D.classes.push(c); return delay(c);
     },
+    kidKlasse: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0]; return delay({ bild: c.bild || null, tools: c.kid_tools || {}, cols: c.tafel_cols || {} }); },
     updateClass: function (id, p) { Object.assign(D.classes.filter(function (c) { return c.id === id; })[0], p); return delay(); },
     deleteClass: function (id) { D.classes = D.classes.filter(function (c) { return c.id !== id; }); return delay(); },
     listKids: function (cid) { return delay(D.kids.filter(function (k) { return k.class_id === cid; }).sort(function (a, b) { var x = a.nr == null ? 1e9 : a.nr, y = b.nr == null ? 1e9 : b.nr; return x - y || a.name.localeCompare(b.name); })); },
@@ -77,7 +78,7 @@
     tafelTeacher: function (cid) { return delay({ me: null, state: state(cid) }); },
     kidClass: function (code) {
       var c = D.classes.filter(function (x) { return norm(x.code) === norm(code); })[0]; if (!c) return delay(null);
-      return delay({ class_id: c.id, class_name: c.name, kids: D.kids.filter(function (k) { return k.class_id === c.id; }).sort(function (a, b) { var x = a.nr == null ? 1e9 : a.nr, y = b.nr == null ? 1e9 : b.nr; return x - y || a.name.localeCompare(b.name); }).map(function (k) { return { id: k.id, name: k.name, nr: k.nr }; }) });
+      return delay({ class_id: c.id, class_name: c.name, bild: c.bild || null, kids: D.kids.filter(function (k) { return k.class_id === c.id; }).sort(function (a, b) { var x = a.nr == null ? 1e9 : a.nr, y = b.nr == null ? 1e9 : b.nr; return x - y || a.name.localeCompare(b.name); }).map(function (k) { return { id: k.id, name: k.name, nr: k.nr }; }) });
     },
     kidLogin: function (code, kid, pw) {
       var k = D.kids.filter(function (x) { return x.id === kid; })[0];

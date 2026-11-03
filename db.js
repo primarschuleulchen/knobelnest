@@ -67,7 +67,13 @@
     },
 
     // ---------- Klassen ----------
-    listClasses: async function () { return ok(await sb.from('classes').select('id,name,code,tafel_auto,created_at').order('created_at')); },
+    // Version 20: bild, kid_tools, tafel_cols. Solange das SQL noch nicht ausgeführt ist, ohne diese Felder.
+    listClasses: async function () {
+      var r = await sb.from('classes').select('id,name,code,tafel_auto,created_at,bild,kid_tools,tafel_cols').order('created_at');
+      if (r.error && /bild|kid_tools|tafel_cols|column/i.test(r.error.message || '')) r = await sb.from('classes').select('id,name,code,tafel_auto,created_at').order('created_at');
+      return ok(r);
+    },
+    kidKlasse: async function (token) { try { return ok(await sb.rpc('kid_klasse', { p_token: token })); } catch (e) { return null; } },
     createClass: async function (name, code) { return ok(await sb.from('classes').insert({ name: name, code: code }).select('id,name,code,tafel_auto,created_at').single()); },
     updateClass: async function (id, patch) { ok(await sb.from('classes').update(patch).eq('id', id)); },
     deleteClass: async function (id) { ok(await sb.from('classes').delete().eq('id', id)); },
