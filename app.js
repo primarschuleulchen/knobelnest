@@ -1813,7 +1813,19 @@
   K.render = function () {
     var b = K['view_' + K.step](); if (b == null) return;
     paint(b);
+    if (K.step === 'home') vkPlace();
   };
+  // Vokabelkiste-Kachel direkt unter «Mathematik» stellen (gleiche Spalte, nächste Reihe)
+  var VK_SVG = '<svg width="50" height="42" viewBox="0 0 40 34" aria-hidden="true"><rect x="9" y="2" width="22" height="17" rx="2.5" fill="#fff" stroke="#c4c9c2"/><rect x="9" y="6.5" width="22" height="1.7" fill="#ec9d95"/><rect x="2" y="13" width="36" height="19" rx="6" fill="#87ad74"/><rect x="2" y="18" width="36" height="14" rx="6" fill="#6f9a5f"/></svg>';
+  function vkPlace() {
+    var vk = document.querySelector('.big-tiles .vk-tile'); if (!vk) return;
+    var grid = vk.parentNode, list = Array.prototype.filter.call(grid.children, function (x) { return x !== vk; });
+    var m = -1; list.forEach(function (x, i) { if (/^mathematik$/i.test((x.dataset.f || '').trim())) m = i; });
+    grid.appendChild(vk); vk.style.gridColumn = '';
+    var n = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+    if (m >= 0 && n > 1) vk.style.gridColumn = String(m % n + 1);
+  }
+  window.addEventListener('resize', function () { if (UI.view === 'kid' && K.step === 'home') vkPlace(); });
   // Fortschritt eines Spiels: zuletzt gespieltes Level zuerst
   function lvlInfo(p) {
     var lv = (p && p.levels) || {}, keys = Object.keys(lv);
@@ -1854,7 +1866,9 @@
     if (!K.home) return K.shell('<p class="lead">Wird geladen …</p>', 'Abmelden');
     var games = K.home.games, fachs = uniq(games.map(function (g) { return g.fach; }));
     var tiles = fachs.map(function (f) {
-      var n = games.filter(function (g) { return g.fach === f; }).length;
+      var gs = games.filter(function (g) { return g.fach === f; }), n = gs.length;
+      // Ein Fach, das nur aus der Vokabelkiste besteht: Kachel mit dem Kisten-Symbol, öffnet die Vokabelkiste direkt
+      if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic">' + VK_SVG + '</span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     return K.shell('<div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
