@@ -86,6 +86,7 @@ So läuft ein Werkzeug im Portal:
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
+  - Sterne: `starCfg()` gibt für die Vokabelkiste `eigene` zurück. Tagesstern = 7 Minuten echte Übungszeit (`P.sec`, zählt nur bei laufender Übung und Eingabe in den letzten 30 s). Serie 🔥 = Schultage hintereinander; Wochenende und Tage mit «Ferien»/«schulfrei» im Hausaufgabenheft (`vkFree()`) zählen nicht. Wochenheld 🏅, Kistenprofi 📦 (100 Wörter im letzten Fach). Die Übersicht zeigt Minuten pro Schultag (`vkHTML()`).
 
 ## Datenbank (Supabase)
 
@@ -102,7 +103,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=67`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=68`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

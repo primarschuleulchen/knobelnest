@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '1'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '2'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -941,11 +941,13 @@
       '<p style="font-weight:700;color:var(--ink)">' + released + ' von ' + plural(T.games.length, 'Spiel', 'Spielen') + ' für die Klasse freigegeben</p></div>' +
       '<div class="row" style="gap:16px"><div class="codebox"><small>Klassencode</small><b>' + h(c.code) + '</b></div><div class="stack" style="gap:8px">' +
       '<button class="btn amber" data-a="showCode">Code gross zeigen</button><a class="btn" href="#/klasse" target="_blank" rel="noopener">Ansicht der Kinder</a>' +
-      (T.tools.folie ? '<a class="btn primary" href="#/tagesfolie/' + T.cls + '">☀️ Tagesfolie starten</a>' : '') +
-      (T.tools.heft ? '<a class="btn" href="#/hausaufgaben/' + T.cls + '">📒 Hausaufgabenheft</a>' : '') +
-      (T.tools.pin ? '<a class="btn" href="#/pinnwand/' + T.cls + '">📌 Pinnwand</a>' : '') +
-      (T.tools.otter ? '<a class="btn" href="#/otterteich/' + T.cls + '">🦦 Otterteich</a>' : '') +
-      (T.tools.atelier ? '<a class="btn" href="#/atelier/' + T.cls + '">🚲 Atelier</a>' : '') + '</div></div></section>';
+      '</div></div>' + (function () {
+        var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel'], ['heft', 'hausaufgaben', '📒', 'Hausaufgaben\u00adheft', 'Aufgaben und Kontrollen'],
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern'], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier']]
+          .filter(function (x) { return T.tools[x[0]]; });
+        return t.length ? '<div class="tooltiles">' + t.map(function (x) {
+          return '<a class="tooltile' + (x[0] === 'folie' ? ' tt-main' : '') + '" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>'; }).join('') + '</div>' : '';
+      })() + '</section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
         'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
@@ -969,6 +971,8 @@
       out += '<div class="ghead"><h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
         '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
         gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
+        (real.length ? (function () { var all = real.every(function (g) { return T.rel.has(g.id); });
+          return '<button class="btn sm" data-a="gRelAll" data-k="' + h(gk) + '" data-v="' + (all ? 0 : 1) + '">' + (all ? '🔒 Alle sperren' : '✓ Alle freigeben') + '</button>'; })() : '') +
         (T.me.is_admin && !shut && real.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
       if (sorting) {
         out += '<div class="sortbox"><p class="muted">Ziehen Sie ein Spiel am Griff <span aria-hidden="true">⠿</span> an die richtige Stelle oder benutzen Sie die Pfeile. Die Reihenfolge wird sofort gespeichert und gilt für alle Lehrpersonen und Kinder.</p>' +
@@ -1076,6 +1080,33 @@
   };
   // ---------- Vokabelkiste: Wortlisten und Freigaben pro Klasse (game_settings: { content }) ----------
   function isVok(g) { return /vokabelkiste/i.test(g.title || ''); }
+  // Tage mit «Ferien» oder «schulfrei» im Hausaufgabenheft (für die ganze Klasse)
+  function vkFree(heft) {
+    return ((heft && heft.entries) || []).filter(function (e) { return e && (e.type === 'ferien' || e.type === 'schulfrei') && (!Array.isArray(e.for) || !e.for.length) && /^\d{4}-\d{2}-\d{2}$/.test(e.date || ''); })
+      .map(function (e) { return e.date; });
+  }
+  function isoDay(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  // Serie wie in der Vokabelkiste: Schultage hintereinander mit Tagesstern (7 Minuten); Wochenende und Ferien zählen nicht
+  function vkStreak(sec, free) {
+    var d = new Date(); d.setHours(12, 0, 0, 0); var n = 0;
+    for (var i = 0; i < 500; i++) {
+      var w = d.getDay(), k = isoDay(d);
+      if (w > 0 && w < 6 && !free[k]) { if ((sec[k] || 0) >= 420) n++; else if (i > 0) break; }
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+  function vkHTML(a) {
+    if (!a || !a.vk) return '';
+    var sec = a.vk.sec || {}, free = T.vkFree || {}, st = vkStreak(sec, free), d = new Date(); d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    var days = ['Mo', 'Di', 'Mi', 'Do', 'Fr'].map(function (n, i) {
+      var x = new Date(d); x.setDate(d.getDate() + i); var k = isoDay(x), s = sec[k] || 0, m = Math.round(s / 60);
+      return '<i class="' + (free[k] ? 'fr' : s >= 420 ? 'ok' : s ? 'part' : '') + '" title="' + n + ' ' + x.getDate() + '.' + (x.getMonth() + 1) + '.: ' + (free[k] ? 'schulfrei' : m + ' Min. geübt') + '"><small>' + n + '</small>' + (free[k] ? '–' : m) + '</i>';
+    }).join('');
+    return '<span class="vkx"><span class="small" style="font-weight:700">' + (st ? '🔥 ' + st + ' ' : '') + (a.vk.weeks ? '🏅' + (a.vk.weeks > 1 ? '×' + a.vk.weeks : '') + ' ' : '') + (a.vk.fach5 >= 100 ? '📦 ' : '') + '</span>' +
+      '<span class="vkd" title="Minuten geübt in dieser Woche">' + days + '</span></span>';
+  }
   ACT.vkOpen = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], cid = T.cls, c = T.cur();
     if (!g || !c) return toast('Bitte zuerst eine Klasse wählen.');
@@ -1150,6 +1181,14 @@
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
+  ACT.gRelAll = async function (el) {
+    var on = el.dataset.v === '1', k = el.dataset.k;
+    var ids = T.games.filter(function (g) { return g.fach + '|' + g.thema === k && T.rel.has(g.id) !== on; }).map(function (g) { return g.id; });
+    ids.forEach(function (id) { if (on) T.rel.add(id); else T.rel.delete(id); });
+    T.render();
+    try { for (var i = 0; i < ids.length; i++) await DB.setRelease(T.cls, ids[i], on); toast(on ? ids.length + ' Spiele freigegeben' : ids.length + ' Spiele gesperrt'); }
+    catch (e) { T.rel = new Set(await DB.listReleases(T.cls)); T.render(); throw e; }
+  };
   ACT.rel = async function (el) {
     var id = el.dataset.id, on = !T.rel.has(id);
     if (on) T.rel.add(id); else T.rel.delete(id);
@@ -1273,7 +1312,8 @@
     if (T.progress === null) {
       if (!T.progressBusy) {
         T.progressBusy = true;
-        DB.listProgress(T.kids.map(function (k) { return k.id; })).then(function (p) { T.progress = p; T.progressBusy = false; T.render(); })
+        Promise.all([DB.listProgress(T.kids.map(function (k) { return k.id; })), T.games.some(isVok) ? DB.storeGet('hat-' + T.cls).catch(function () { return null; }) : null])
+          .then(function (r) { var p = r[0]; T.vkFree = {}; vkFree(r[1]).forEach(function (k) { T.vkFree[k] = 1; }); T.progress = p; T.progressBusy = false; T.render(); })
           .catch(function (e) { T.progressBusy = false; toast(errMsg(e)); });
       }
       return '<p class="muted">Fortschritt wird geladen …</p>';
@@ -1323,6 +1363,7 @@
       }
       var aw = awardText(p.award);
       var vb = vbHTML(p.award); if (vb) lines.unshift(vb);
+      var vk = vkHTML(p.award); if (vk) lines.unshift(vk);
       if (aw) lines.unshift('<span class="small" style="font-weight:700">' + h(aw) + '</span>');
       return { html: lines.join('') };
     }
@@ -1978,6 +2019,7 @@
   //   <meta name="knobelnest-sterne" content='{"modus":"sammeln","pro":10,"max":5,"proLevel":true}'>  je 10 richtige 1 Stern (1 pro Tag), höchstens 5
   //   <meta name="knobelnest-sterne" content='{"modus":"eigene"}'>                              das Spiel zählt selbst (knobelnest.award)
   function starCfg(html) {
+    if (/<script[^>]*id=["']vk-content["']/i.test(html || '')) return { modus: 'eigene' }; // Vokabelkiste: Tagessterne zählt sie selbst
     var m = /<meta\s+name=["']knobelnest-sterne["']\s+content=(["'])([\s\S]*?)\1/i.exec(html || ''), c = null;
     if (m) try { c = JSON.parse(m[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')); } catch (e) {}
     c = c || { modus: 'runde' };
@@ -2120,6 +2162,11 @@
         Object.keys(x.vb).slice(0, 8).forEach(function (k) { var v = x.vb[k] || {};
           a.vb[String(k).slice(0, 30)] = { name: String(v.name || k).slice(0, 40), c: (Array.isArray(v.c) ? v.c : []).slice(0, 8).map(function (n) { return Math.max(0, Math.round(+n || 0)); }), lock: Math.max(0, Math.round(+v.lock || 0)) }; });
       }
+      if (x.vk && typeof x.vk === 'object') {
+        var sec = {}, xs = x.vk.sec && typeof x.vk.sec === 'object' ? x.vk.sec : {};
+        Object.keys(xs).filter(function (k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); }).sort().slice(-40).forEach(function (k) { sec[k] = Math.max(0, Math.min(86400, Math.round(+xs[k] || 0))); });
+        a.vk = { streak: Math.max(0, Math.round(+x.vk.streak || 0)), weeks: Math.max(0, Math.round(+x.vk.weeks || 0)), fach5: Math.max(0, Math.round(+x.vk.fach5 || 0)), sec: sec };
+      }
       if (x.lv && typeof x.lv === 'object') { a.lv = {}; Object.keys(x.lv).slice(0, 40).forEach(function (k) { if (isFinite(x.lv[k])) a.lv[String(k).slice(0, 40)] = Math.round(x.lv[k]); }); }
       S.dirty = true;
     };
@@ -2135,6 +2182,10 @@
       var both = await Promise.all([DB.kidGame(K.sess.token, g.id), DB.kidState(K.sess.token, g.id).catch(function () { return null; })]);
       html = both[0]; st = both[1] || {};
     } catch (e) { return K.sessionLost(e); }
+    if (gameUrl(html) === 'vokabelkiste/index.html') {
+      var frei = []; try { frei = vkFree((await DB.kidHeft(K.sess.token)) || {}); } catch (e) {}
+      st.settings = Object.assign({}, st.settings || {}, { frei: frei });
+    }
     var pend = { correct: 0, attempts: 0, done: null, total: null, level: null, dirty: false };
     var save = { data: null, dirty: false };
     var S = Stars(starCfg(html), st.award, g.correct || 0);
