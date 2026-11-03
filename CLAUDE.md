@@ -2,6 +2,7 @@
 
 Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehrpersonen melden sich an, schalten Lernspiele frei und nutzen Klassenwerkzeuge. Kinder melden sich mit Klassencode, Namen und Bildpasswort an.
 
+- Klassencode: Die Lehrperson wählt ihn selbst (z. B. «Otter 123», `ACT.codeEdit`/`codeSave`, beim Anlegen freiwillig). Kinder müssen Gross/klein und Leerzeichen nicht beachten (`_norm_code`).
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -28,7 +29,8 @@ Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehr
 | `config.js` | Portalname und Supabase-Adresse mit dem öffentlichen Schlüssel |
 | `db.js` | Alle Aufrufe an Supabase (Tabellen und RPC-Funktionen) als `DB.xyz()` |
 | `app.js` | Die ganze Portal-App (Hash-Routen in `route()`) |
-| `style.css` | Gestaltung des Portals |
+| `style.css` | Gestaltung des Portals. Lehrpersonen-Seiten (`body.lp`, gesetzt in `T.render`/`T.renderLogin`, entfernt in `route()`) im Stil der Eulenkiste (Repo `lernkompass`): Schrift Patrick Hand (`schriften/`), Eulen-Marke (`bilder/eule.webp`), Gold-Akzente, ✦ ✧ ✦. Die Kinderansicht ist noch im alten Stil. |
+| `bilder/`, `schriften/` | Bilder und Schriften aus der Eulenkiste (lokal, nichts von Google) |
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
@@ -106,7 +108,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=75`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=76`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
