@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '4'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '5'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -254,7 +254,8 @@
     f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
     var url = gameUrl(html);
-    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER); else f.srcdoc = prepare(html, seed);
+    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER);
+    if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Knobelnest» statt dunklem Balken else f.srcdoc = prepare(html, seed);
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';
@@ -297,6 +298,7 @@
       try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit } }, '*'); } catch (x) {}
       return;
     }
+    if (PL.url && d.knobelnest && d.type === 'close') { closePlayer(); return; }
     if (PL.onMsg) PL.onMsg(d);
   });
 
