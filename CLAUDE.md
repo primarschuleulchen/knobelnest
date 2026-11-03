@@ -129,5 +129,13 @@ Wenn die Lehrerin Änderungen direkt im Knobelnest will, ändere auch das Einbau
 
 ## Veröffentlichen
 
-- **Commit:** auf `main`, mit einer kurzen deutschen Commit-Nachricht. GitHub Pages ist nach 1–2 Minuten aktuell.
+Claude arbeitet in einer Cloud-Sitzung und darf nicht direkt auf `main` schreiben. Die Seite zeigt aber nur, was auf `main` liegt. Darum:
+
+1. **Commit und Push:** Jede Sitzung hat einen eigenen Arbeitszweig (z. B. `claude/…`, steht in den Sitzungsangaben). Dort committen (kurze deutsche Commit-Nachricht) und pushen. Online ist damit noch nichts.
+2. **Pull Request:** Wenn die Lehrerin sagt «online stellen» (oder Ähnliches), erstellt Claude einen Pull Request vom Arbeitszweig nach `main` und schickt ihr den Link.
+3. **Zusammenführen:** Die Lehrerin öffnet den Link und tippt «Merge pull request» → «Confirm merge». Sagt sie ausdrücklich «führ es gleich zusammen», darf Claude den Pull Request selbst zusammenführen.
+4. **Online:** GitHub Pages ist 1–2 Minuten nach dem Zusammenführen aktuell. Falls ein Gerät noch Altes zeigt: Seite neu laden (Cache-Bremse prüfen).
+
+- **SQL zuerst:** Braucht die Änderung neues SQL, muss die Lehrerin es in Supabase ausführen, bevor sie zusammenführt.
+- **Nach dem Zusammenführen:** Für weitere Änderungen den Arbeitszweig neu auf dem aktuellen `main` aufsetzen und einen neuen Pull Request machen (einen zusammengeführten nie weiterverwenden).
 - **Nachricht an die Lehrerin:** kurz auf Deutsch, was sich geändert hat, ob ein SQL-Schritt nötig ist und worauf sie achten soll. Keine Dateilisten zum Hochladen, das ist ja erledigt.
