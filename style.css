@@ -673,3 +673,47 @@ body.lp .col-in{background:rgba(255,255,255,.75);font-size:19px}
 body.lp .btn.danger{background:#fff;border:2px solid #c9706a;color:#9a3b33;box-shadow:none}
 body.lp .btn.danger:hover{background:#fcefed;border-color:#b5524a}
 body.lp .btn.danger.armed{background:#fcefed;border-color:#b5524a;color:#7d2a24;box-shadow:0 0 0 3px #fff,0 0 0 5px #ec9d95}
+
+/* ---- Version 80: Spalten der Tafel frei, Kacheln sortieren, Kinderansicht im neuen Stil ---- */
+.matrix{grid-template-columns:minmax(120px,.75fr) repeat(var(--ncol,3),minmax(0,1fr))}
+.board.embed .matrix{grid-template-columns:minmax(70px,.6fr) repeat(var(--ncol,3),minmax(0,1fr))}
+@media (max-width:700px){.matrix{grid-template-columns:90px repeat(var(--ncol,3),minmax(0,1fr))}}
+/* Lehrperson: Spalten bearbeiten */
+.colrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border:2px solid;border-radius:18px}
+.colrow .coldot{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 3px #fff}
+.colrow .col-in{flex:1 1 220px;min-height:42px}
+.colsw{display:flex;flex-wrap:wrap;gap:5px}
+.colsw .swatch{width:26px;height:26px}
+/* Lehrperson: Werkzeug-Kacheln sortieren */
+.tt-head{flex:1 1 100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:-6px}
+body.lp .tooltiles.sorting .tooltile{cursor:grab;outline:2px dashed var(--gold);outline-offset:3px}
+body.lp .tooltiles.sorting .tt-open,body.lp .tooltiles.sorting .tt-rel{pointer-events:none}
+body.lp .tooltiles.sorting .tooltile.dragging{opacity:.45}
+.tt-move{display:flex;justify-content:center;gap:6px;padding:8px;border-top:1.5px dashed #d6ad45;background:#fbf3dc}
+/* Kinderansicht: freundlich und hell wie die Lehrpersonen-Seite, Schriften bleiben (gut lesbar) */
+body.kidv{--kid:#f4f9fd;background:#f4f9fd}
+body.kidv .kid{background:radial-gradient(ellipse at 15% 0%,#e3f2fd 0%,transparent 55%),radial-gradient(ellipse at 100% 100%,#fbf3dc 0%,transparent 50%),#f4f9fd}
+body.kidv .kid-marke{display:flex;flex-direction:column;align-items:center;gap:2px}
+body.kidv .kid-marke img{width:52px;height:52px;border-radius:50%;background:#fff;padding:2px;box-shadow:0 0 0 2px #d6ad45,0 4px 12px rgba(63,120,168,.2)}
+body.kidv .kid-marke small{font-family:var(--h);font-size:14px;color:#5f6963}
+body.kidv .kid-hello{flex-wrap:wrap}
+body.kidv .kid-out{margin-left:auto;align-self:center}
+body.kidv .kid-btn{background:#fff;border:2px solid rgba(31,36,33,.18);border-radius:999px;box-shadow:0 6px 16px rgba(63,120,168,.14)}
+body.kidv .kid-btn:hover{background:#dcf0fd}
+body.kidv .big-tile,body.kidv .tafel-tile,body.kidv .sprint-tile{border:2px solid rgba(31,36,33,.1);border-radius:30px;box-shadow:0 12px 28px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.1);transition:transform .15s,box-shadow .15s}
+body.kidv .big-tile:hover,body.kidv .tafel-tile:hover,body.kidv .sprint-tile:hover{transform:translateY(-4px);box-shadow:0 18px 36px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14)}
+body.kidv .big-tile:active,body.kidv .tafel-tile:active{transform:translateY(1px)}
+body.kidv .big-tile .ic,body.kidv .tafel-tile .ic,body.kidv .sprint-tile .ic{border-radius:50%!important;border:3px solid #d6ad45!important;box-shadow:inset 0 0 0 4px #fff,0 6px 14px rgba(63,120,168,.15)}
+body.kidv .big-tile b::after,body.kidv .tafel-tile b::after{content:" ✦";color:#d6ad45;font-size:.45em;vertical-align:super}
+body.kidv .big-tile.extra{border-style:dashed;box-shadow:0 8px 20px rgba(63,120,168,.12)}
+body.kidv .kid-card{border:2px solid rgba(31,36,33,.1);border-radius:32px;box-shadow:0 14px 34px rgba(63,120,168,.2)}
+body.kidv .kid-name{border:2px solid rgba(31,36,33,.12);border-radius:22px;box-shadow:0 8px 20px rgba(63,120,168,.14)}
+body.kidv .kid-name:hover{background:#f3faff}
+body.kidv .kid-go{background:#3f78a8;border-radius:999px;box-shadow:0 8px 20px rgba(63,120,168,.25)}
+body.kidv .kid-go:hover{background:#2f5f8f}
+body.kidv .kid-input{border:2px solid rgba(31,36,33,.2);border-radius:22px}
+.insta-wunsch{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border-radius:999px;background:#fff;text-decoration:none;color:#1f2421;border:1.5px solid #f1e2b8;box-shadow:0 8px 20px rgba(63,120,168,.16);align-self:flex-start;transition:transform .15s}
+.insta-wunsch:hover{transform:translateY(-2px)}
+.insta-wunsch .insta-sym{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#9fd0f3 0%,#5f97c8 55%,#3f78a8 100%);box-shadow:0 0 0 2px #fff,0 0 0 3.5px #d6ad45}
+.insta-wunsch b{display:block;font-size:19px;font-weight:400}
+.insta-wunsch small{display:block;font-size:15px;color:#5f6963}
