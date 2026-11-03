@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 1)
+-- Knobelnest – Datenbank-Einrichtung (Version 19)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -68,6 +68,8 @@ create table if not exists public.kids (
   created_at   timestamptz not null default now()
 );
 create unique index if not exists kids_class_name_key on public.kids (class_id, lower(name));
+-- Version 9: freiwillige Nummer pro Kind (z. B. Klassenlisten-Nummer); sortiert die Listen
+alter table public.kids add column if not exists nr int check (nr between 1 and 999);
 
 -- Welche Spiele eine Klasse sehen darf
 create table if not exists public.class_games (
@@ -300,7 +302,7 @@ begin
   if not found then return null; end if;
   return json_build_object(
     'class_id', c.id, 'class_name', c.name,
-    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name) order by lower(k.name))
+    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name, 'nr', k.nr) order by k.nr nulls last, lower(k.name))
                         from public.kids k where k.class_id = c.id), '[]'::json));
 end;
 $$;
@@ -349,11 +351,12 @@ begin
     'games', coalesce((
       select json_agg(json_build_object(
                'id', g.id, 'title', g.title, 'description', g.description,
-               'fach', g.fach, 'thema', g.thema,
+               'fach', g.fach, 'thema', g.thema, 'stufe', g.stufe,
                'correct', coalesce(p.correct, 0), 'attempts', coalesce(p.attempts, 0),
                'done', p.done, 'total', p.total, 'plays', coalesce(p.plays, 0),
-               'last_played', p.last_played)
-             order by g.fach, g.thema, g.title)
+               'last_played', p.last_played, 'levels', coalesce(p.levels, '{}'::jsonb), 'last_level', p.last_level,
+               'award', coalesce(p.award, '{}'::jsonb))
+             order by g.fach, g.thema, g.sort, g.title)
         from public.class_games cg
         join public.games g on g.id = cg.game_id
         left join public.progress p on p.kid_id = k.id and p.game_id = g.id
@@ -379,12 +382,18 @@ begin
 end;
 $$;
 
--- Fortschritt melden (vom Spiel)
+-- Fortschritt melden (vom Spiel), auf Wunsch pro Level
+alter table public.progress add column if not exists levels jsonb not null default '{}'::jsonb;
+alter table public.progress add column if not exists last_level text;
+alter table public.progress add column if not exists save jsonb;
+alter table public.games add column if not exists sort int not null default 0;
+alter table public.progress add column if not exists award jsonb not null default '{}'::jsonb;
+drop function if exists public.kid_report(uuid, uuid, int, int, int, int);
 create or replace function public.kid_report(p_token uuid, p_game uuid,
-  p_correct int default 0, p_attempts int default 0, p_done int default null, p_total int default null)
+  p_correct int default 0, p_attempts int default 0, p_done int default null, p_total int default null, p_level text default null)
 returns void
 language plpgsql volatile security definer set search_path = public as $$
-declare k public.kids; c int; a int; d int; t int;
+declare k public.kids; c int; a int; d int; t int; lv text; cur jsonb;
 begin
   k := public._kid(p_token);
   if not exists (select 1 from public.class_games where class_id = k.class_id and game_id = p_game) then
@@ -394,6 +403,7 @@ begin
   a := least(greatest(coalesce(p_attempts, 0), 0), 50);
   t := case when p_total is null then null else least(greatest(p_total, 0), 100000) end;
   d := case when p_done is null then null else least(greatest(p_done, 0), coalesce(t, 100000)) end;
+  lv := nullif(left(btrim(coalesce(p_level, '')), 40), '');
   insert into public.progress (kid_id, game_id, correct, attempts, done, total, last_played)
   values (k.id, p_game, c, a, d, t, now())
   on conflict (kid_id, game_id) do update set
@@ -401,6 +411,54 @@ begin
     attempts = public.progress.attempts + excluded.attempts,
     done = coalesce(excluded.done, public.progress.done),
     total = coalesce(excluded.total, public.progress.total),
+    last_played = now();
+  if lv is not null then
+    select coalesce(levels -> lv, '{}'::jsonb) into cur from public.progress where kid_id = k.id and game_id = p_game;
+    update public.progress set last_level = lv,
+      levels = levels || jsonb_build_object(lv, jsonb_build_object(
+        'c', coalesce((cur ->> 'c')::int, 0) + c,
+        'a', coalesce((cur ->> 'a')::int, 0) + a,
+        'd', coalesce(d, (cur ->> 'd')::int),
+        't', coalesce(t, (cur ->> 't')::int)))
+     where kid_id = k.id and game_id = p_game and (jsonb_typeof(levels) = 'object');
+  end if;
+end;
+$$;
+
+-- Spielstand (Sterne, Bestzeiten, Zähler) pro Kind und Spiel
+create or replace function public.kid_state(p_token uuid, p_game uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids; r public.progress; st jsonb;
+begin
+  k := public._kid(p_token);
+  select * into r from public.progress where kid_id = k.id and game_id = p_game;
+  -- Einstellungen der Lehrperson für dieses Spiel (z. B. Zeitreise); von den Einzel-Freischaltungen nur die eigenen
+  select (gs.settings - 'kids') || jsonb_build_object('mine', coalesce(gs.settings -> 'kids' -> (k.id::text), '[]'::jsonb))
+    into st from public.game_settings gs where gs.class_id = k.class_id and gs.game_id = p_game;
+  return json_build_object('save', r.save, 'award', coalesce(r.award, '{}'::jsonb), 'settings', st);
+end;
+$$;
+
+create or replace function public.kid_save(p_token uuid, p_game uuid, p_save jsonb default null, p_award jsonb default null)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids;
+begin
+  k := public._kid(p_token);
+  if not exists (select 1 from public.class_games where class_id = k.class_id and game_id = p_game) then
+    raise exception 'Spiel nicht freigegeben' using errcode = 'P0001';
+  end if;
+  if p_save is not null and (jsonb_typeof(p_save) <> 'object' or octet_length(p_save::text) > 200000) then
+    raise exception 'Spielstand ungültig oder zu gross' using errcode = 'P0001';
+  end if;
+  if p_award is not null and (jsonb_typeof(p_award) <> 'object' or octet_length(p_award::text) > 20000) then
+    raise exception 'Sterne-Daten ungültig oder zu gross' using errcode = 'P0001';
+  end if;
+  insert into public.progress (kid_id, game_id, save, award, last_played)
+  values (k.id, p_game, p_save, coalesce(p_award, '{}'::jsonb), now())
+  on conflict (kid_id, game_id) do update set
+    save = coalesce(excluded.save, public.progress.save),
+    award = case when p_award is null then public.progress.award else excluded.award end,
     last_played = now();
 end;
 $$;
@@ -430,7 +488,7 @@ language sql stable security definer set search_path = public as $$
     'subjects', coalesce((select json_agg(json_build_object('id', s.id, 'name', s.name, 'color', s.color)
                                             order by s.sort, lower(s.name))
                             from public.tafel_subjects s where s.class_id = cid and s.active), '[]'::json),
-    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name) order by lower(k.name))
+    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name, 'nr', k.nr) order by k.nr nulls last, lower(k.name))
                         from public.kids k where k.class_id = cid), '[]'::json),
     'entries', coalesce((select json_agg(json_build_object('kid_id', e.kid_id, 'subject_id', e.subject_id, 'col', e.col))
                            from public.tafel_entries e
@@ -486,14 +544,468 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------
+-- 6. Klassen-Sprint (alle Kinder rechnen gleichzeitig, Lehrperson zeigt das Rennen)
+-- ---------------------------------------------------------------------
+create table if not exists public.races (
+  id uuid primary key default gen_random_uuid(),
+  class_id uuid not null references public.classes(id) on delete cascade,
+  status text not null default 'wait' check (status in ('wait','run','done')),
+  settings jsonb not null default '{}'::jsonb,
+  starts_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists races_class_idx on public.races (class_id, created_at desc);
+create table if not exists public.race_runs (
+  race_id uuid not null references public.races(id) on delete cascade,
+  kid_id uuid not null references public.kids(id) on delete cascade,
+  pos int not null default 0,
+  correct int not null default 0,
+  wrong int not null default 0,
+  finished_at timestamptz,
+  last_at timestamptz not null default now(),
+  primary key (race_id, kid_id)
+);
+alter table public.races enable row level security;
+alter table public.race_runs enable row level security;
+drop policy if exists races_all on public.races;
+create policy races_all on public.races for all to authenticated
+  using (public.owns_class(class_id)) with check (public.owns_class(class_id));
+drop policy if exists race_runs_select on public.race_runs;
+create policy race_runs_select on public.race_runs for select to authenticated
+  using (exists (select 1 from public.races r where r.id = race_id and public.owns_class(r.class_id)));
+drop policy if exists race_runs_delete on public.race_runs;
+create policy race_runs_delete on public.race_runs for delete to authenticated
+  using (exists (select 1 from public.races r where r.id = race_id and public.owns_class(r.class_id)));
+revoke all on public.races, public.race_runs from anon, authenticated;
+grant select, insert, update, delete on public.races to authenticated;
+grant select, delete on public.race_runs to authenticated;
+
+-- Lehrperson: Start in 4 Sekunden (Serverzeit, damit alle Geräte gleich zählen)
+create or replace function public.race_start(p_race uuid) returns json
+language sql volatile security invoker set search_path = public as $$
+  with u as (update public.races set status = 'run', starts_at = now() + interval '4 seconds'
+             where id = p_race returning starts_at)
+  select json_build_object('starts_at', (select starts_at from u), 'now', now());
+$$;
+
+-- Kind: aktueller Sprint der Klasse (falls einer offen ist)
+create or replace function public.kid_race(p_token uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids; r public.races; me public.race_runs; pl int;
+begin
+  k := public._kid(p_token);
+  select * into r from public.races where class_id = k.class_id and created_at > now() - interval '3 hours'
+   order by created_at desc limit 1;
+  if not found then return json_build_object('race', null, 'now', now()); end if;
+  select * into me from public.race_runs where race_id = r.id and kid_id = k.id;
+  if r.status = 'done' and me.kid_id is null then return json_build_object('race', null, 'now', now()); end if;
+  if me.finished_at is not null then
+    select count(*) into pl from public.race_runs where race_id = r.id and finished_at is not null and finished_at <= me.finished_at;
+  end if;
+  return json_build_object('now', now(), 'place', pl,
+    'race', json_build_object('id', r.id, 'status', r.status, 'settings', r.settings, 'starts_at', r.starts_at),
+    'run', case when me.kid_id is null then null else json_build_object('pos', me.pos, 'correct', me.correct, 'wrong', me.wrong, 'finished', me.finished_at is not null) end);
+end;
+$$;
+
+create or replace function public.kid_race_join(p_token uuid, p_race uuid) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids;
+begin
+  k := public._kid(p_token);
+  if not exists (select 1 from public.races where id = p_race and class_id = k.class_id and status in ('wait','run')) then
+    raise exception 'Kein Sprint offen' using errcode = 'P0001';
+  end if;
+  insert into public.race_runs (race_id, kid_id) values (p_race, k.id) on conflict do nothing;
+  return public.kid_race(p_token);
+end;
+$$;
+
+create or replace function public.kid_race_step(p_token uuid, p_race uuid, p_ok boolean) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids; r public.races; g int; me public.race_runs; pl int;
+begin
+  k := public._kid(p_token);
+  select * into r from public.races where id = p_race and class_id = k.class_id;
+  if not found or r.status <> 'run' or r.starts_at is null or now() < r.starts_at - interval '1 second' then
+    return json_build_object('ok', false);
+  end if;
+  g := least(greatest(coalesce((r.settings ->> 'goal')::int, 10), 3), 60);
+  update public.race_runs set
+      pos = least(g, pos + case when p_ok then 1 else 0 end),
+      correct = correct + case when p_ok then 1 else 0 end,
+      wrong = wrong + case when p_ok then 0 else 1 end,
+      finished_at = case when p_ok and pos + 1 >= g then now() else finished_at end,
+      last_at = now()
+   where race_id = p_race and kid_id = k.id and finished_at is null and now() - last_at > interval '300 milliseconds'
+   returning * into me;
+  select * into me from public.race_runs where race_id = p_race and kid_id = k.id;
+  if me.finished_at is not null then
+    select count(*) into pl from public.race_runs where race_id = p_race and finished_at is not null and finished_at <= me.finished_at;
+  end if;
+  return json_build_object('ok', true, 'pos', me.pos, 'goal', g, 'finished', me.finished_at is not null, 'place', pl);
+end;
+$$;
+
+-- =====================================================================
+-- 7) Tagesfolie: gespeicherte Bildschirme pro Lehrperson (Version 6)
+-- =====================================================================
+create table if not exists public.teacher_store (
+  teacher_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  doc        text not null check (length(doc) between 1 and 80),
+  data       jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (teacher_id, doc)
+);
+alter table public.teacher_store enable row level security;
+drop policy if exists teacher_store_own on public.teacher_store;
+create policy teacher_store_own on public.teacher_store for all to authenticated
+  using (teacher_id = auth.uid()) with check (teacher_id = auth.uid());
+revoke all on public.teacher_store from anon;
+grant select, insert, update, delete on public.teacher_store to authenticated;
+
+-- Vorlagen, die alle Lehrpersonen lesen und nur die Admin-Person ändert (z. B. Beispiel-Folien)
+create table if not exists public.shared_store (
+  doc        text primary key check (length(doc) between 1 and 80),
+  data       jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.shared_store enable row level security;
+drop policy if exists shared_store_read on public.shared_store;
+create policy shared_store_read on public.shared_store for select to authenticated using (true);
+drop policy if exists shared_store_admin on public.shared_store;
+create policy shared_store_admin on public.shared_store for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+revoke all on public.shared_store from anon;
+grant select, insert, update, delete on public.shared_store to authenticated;
+
+-- Bilder und Schriften der Tagesfolie (öffentlich lesbar über den Link, nur die Lehrperson selbst darf hochladen)
+insert into storage.buckets (id, name, public) values ('tagesfolien', 'tagesfolien', true)
+  on conflict (id) do nothing;
+drop policy if exists tagesfolien_upload on storage.objects;
+create policy tagesfolien_upload on storage.objects for insert to authenticated
+  with check (bucket_id = 'tagesfolien' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists tagesfolien_delete on storage.objects;
+create policy tagesfolien_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'tagesfolien' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- =====================================================================
+-- 8) Einstellungen pro Klasse und Spiel (Version 8), z. B. welche Zeiten der Zeitreise offen sind
+-- =====================================================================
+create table if not exists public.game_settings (
+  class_id   uuid not null references public.classes(id) on delete cascade,
+  game_id    uuid not null references public.games(id) on delete cascade,
+  settings   jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (class_id, game_id)
+);
+alter table public.game_settings enable row level security;
+drop policy if exists game_settings_own on public.game_settings;
+create policy game_settings_own on public.game_settings for all to authenticated
+  using (public.owns_class(class_id)) with check (public.owns_class(class_id));
+revoke all on public.game_settings from anon;
+grant select, insert, update, delete on public.game_settings to authenticated;
+
+-- =====================================================================
+-- 9) Hausaufgabenheft (Version 10): die Lehrperson speichert es in teacher_store als «hat-<Klasse>».
+--    Ein Kind liest nur sein eigenes Heft: nur Einträge für die ganze Klasse oder für es selbst,
+--    und nur seine eigenen Kontrollen und Notizen.
+-- =====================================================================
+create or replace function public.kid_heft(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  k public.kids; t uuid; d jsonb; sid text; e jsonb; f jsonb; ents jsonb := '[]'::jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'hat-' || k.class_id::text;
+  if d is null or jsonb_typeof(d->'entries') is distinct from 'array' then return null; end if;
+  sid := k.id::text;
+  for e in select x from jsonb_array_elements(d->'entries') as x loop
+    if jsonb_typeof(e) <> 'object' then continue; end if;
+    f := e->'for';
+    if jsonb_typeof(f) = 'array' and jsonb_array_length(f) > 0 and not (f ? sid) then continue; end if;
+    e := e || jsonb_build_object(
+      'for', '[]'::jsonb,
+      'status', case when jsonb_typeof(e->'status') = 'object' and e->'status' ? sid then jsonb_build_object(sid, e->'status'->sid) else '{}'::jsonb end,
+      'notes',  case when jsonb_typeof(e->'notes')  = 'object' and e->'notes'  ? sid then jsonb_build_object(sid, e->'notes'->sid)  else '{}'::jsonb end,
+      'first',  case when jsonb_typeof(e->'first')  = 'object' and e->'first'  ? sid then jsonb_build_object(sid, e->'first'->sid)  else '{}'::jsonb end,
+      'neuAuf', case when jsonb_typeof(e->'neuAuf') = 'object' and e->'neuAuf' ? sid then jsonb_build_object(sid, e->'neuAuf'->sid) else '{}'::jsonb end,
+      'selbst', case when jsonb_typeof(e->'selbst') = 'object' and e->'selbst' ? sid then jsonb_build_object(sid, e->'selbst'->sid) else '{}'::jsonb end);
+    ents := ents || jsonb_build_array(e);
+  end loop;
+  return jsonb_build_object('klasse', d->'klasse', 'settings', d->'settings', 'entries', ents,
+    'sus', jsonb_build_array(jsonb_build_object('id', sid, 'name', k.name)), 'kidNotes', '{}'::jsonb);
+end;
+$$;
+
+-- Ein Kind hakt eine Aufgabe selbst ab (Version 11). Es ändert nur seinen eigenen Haken.
+create or replace function public.kid_heft_tick(p_token uuid, p_entry text, p_on boolean) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare
+  k public.kids; t uuid; d jsonb; i int; e jsonb; sid text; f jsonb; sb jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'hat-' || k.class_id::text for update;
+  if d is null or jsonb_typeof(d->'entries') is distinct from 'array' then return false; end if;
+  sid := k.id::text;
+  select (a.ord - 1)::int, a.x into i, e from jsonb_array_elements(d->'entries') with ordinality as a(x, ord)
+   where a.x->>'id' = p_entry limit 1;
+  if i is null or coalesce(e->>'type', 'aufgabe') <> 'aufgabe' then return false; end if;
+  f := e->'for';
+  if jsonb_typeof(f) = 'array' and jsonb_array_length(f) > 0 and not (f ? sid) then return false; end if;
+  sb := case when jsonb_typeof(e->'selbst') = 'object' then e->'selbst' else '{}'::jsonb end;
+  sb := case when p_on then sb || jsonb_build_object(sid, true) else sb - sid end;
+  d := jsonb_set(d, array['entries', i::text, 'selbst'], sb, true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = 'hat-' || k.class_id::text;
+  return true;
+end;
+$$;
+
+-- Ein Kind trägt eigene Aufgaben ein, ändert oder löscht sie (Version 12).
+-- Nur eigene Einträge («by» = das Kind), nur Text; alles andere setzt der Server selbst.
+create or replace function public.kid_heft_own(p_token uuid, p_entry jsonb, p_delete boolean default false) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare
+  k public.kids; t uuid; d jsonb; sid text; eid text; i int; old jsonb; ne jsonb; n int;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'hat-' || k.class_id::text for update;
+  if d is null or jsonb_typeof(d->'entries') is distinct from 'array' or jsonb_typeof(p_entry) is distinct from 'object' then return false; end if;
+  sid := k.id::text;
+  eid := coalesce(p_entry->>'id', '');
+  if eid !~ '^[A-Za-z0-9_-]{1,40}$' then return false; end if;
+  select (a.ord - 1)::int, a.x into i, old from jsonb_array_elements(d->'entries') with ordinality as a(x, ord)
+   where a.x->>'id' = eid limit 1;
+  if old is not null and old->>'by' is distinct from sid then return false; end if;
+  if p_delete then
+    if i is not null then d := jsonb_set(d, '{entries}', (d->'entries') - i); end if;
+  else
+    if coalesce(p_entry->>'date', '') !~ '^\d{4}-\d{2}-\d{2}$' or length(btrim(coalesce(p_entry->>'title', ''))) = 0 then return false; end if;
+    if i is null then
+      select count(*) into n from jsonb_array_elements(d->'entries') as x where x->>'by' = sid;
+      if n >= 300 then return false; end if;
+    end if;
+    ne := jsonb_build_object('id', eid, 'by', sid, 'for', jsonb_build_array(sid), 'type', 'aufgabe', 'ink', 'schwarz', 'mark', '',
+      'date', p_entry->>'date', 'fach', left(coalesce(p_entry->>'fach', ''), 10), 'title', left(btrim(p_entry->>'title'), 120),
+      'details', left(coalesce(p_entry->>'details', ''), 600),
+      'order', case when jsonb_typeof(p_entry->'order') = 'number' then least(999, greatest(0, (p_entry->>'order')::numeric)) else 0 end,
+      'status', '{}'::jsonb,
+      'selbst', case when jsonb_typeof(old->'selbst') = 'object' then old->'selbst' else '{}'::jsonb end);
+    if i is null then d := jsonb_set(d, '{entries}', (d->'entries') || jsonb_build_array(ne));
+    else d := jsonb_set(d, array['entries', i::text], ne); end if;
+  end if;
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = 'hat-' || k.class_id::text;
+  return true;
+end;
+$$;
+
+-- =====================================================================
+-- 10) Klassen-Pinnwand (Version 13): gespeichert bei der Lehrperson in teacher_store als «pin-<Klasse>»
+--     { boards: {id: …}, ideas: {id: …}, settings: {main: …}, votes: {Kind: …} }.
+--     Die Lehrperson ändert einzelne Einträge (pin_put), die Kinder schicken nur Ideen und ihre eigene Abstimmung.
+--     Kinder bekommen nie Namen: nur offene Pinnwände, freigegebene Zettel ohne «von» und ihre eigenen Ideen.
+-- =====================================================================
+create or replace function public.pin_put(p_class uuid, p_coll text, p_id text, p_obj jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare t uuid; d jsonb; dk text := 'pin-' || p_class::text;
+begin
+  select teacher_id into t from public.classes where id = p_class;
+  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  if p_coll not in ('boards', 'ideas', 'settings') or coalesce(p_id, '') !~ '^[A-Za-z0-9_-]{1,40}$' then raise exception 'Ungültig'; end if;
+  if p_obj is not null and (jsonb_typeof(p_obj) <> 'object' or octet_length(p_obj::text) > 20000) then raise exception 'Ungültig'; end if;
+  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{}'::jsonb) on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if jsonb_typeof(d->p_coll) is distinct from 'object' then d := jsonb_set(d, array[p_coll], '{}'::jsonb, true); end if;
+  if p_obj is null then d := jsonb_set(d, array[p_coll], (d->p_coll) - p_id);
+  else d := jsonb_set(d, array[p_coll, p_id], p_obj, true); end if;
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+end;
+$$;
+
+create or replace function public.kid_pin(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; sid text; b jsonb; i jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'pin-' || k.class_id::text;
+  sid := k.id::text;
+  if d is null then return jsonb_build_object('boards', '{}'::jsonb, 'ideas', '{}'::jsonb, 'labels', '{}'::jsonb, 'my', null, 'me', sid, 'name', k.name); end if;
+  select coalesce(jsonb_object_agg(x.key, jsonb_build_object('title', x.value->'title', 'visible', true, 'at', x.value->'at', 'cats', x.value->'cats')), '{}'::jsonb) into b
+    from jsonb_each(case when jsonb_typeof(d->'boards') = 'object' then d->'boards' else '{}'::jsonb end) as x
+   where jsonb_typeof(x.value) = 'object' and x.value->>'visible' = 'true';
+  select coalesce(jsonb_object_agg(x.key, case when x.value->>'status' = 'ok'
+           then jsonb_build_object('text', x.value->'text', 'boardId', x.value->'boardId', 'status', 'ok', 'tools', x.value->'tools', 'at', x.value->'at', 'okAt', x.value->'okAt', 'order', x.value->'order', 'lp', x.value->'lp', 'cat', x.value->'cat')
+           else jsonb_build_object('text', x.value->'text', 'boardId', x.value->'boardId', 'status', 'pending', 'at', x.value->'at', 'uid', sid) end), '{}'::jsonb) into i
+    from jsonb_each(case when jsonb_typeof(d->'ideas') = 'object' then d->'ideas' else '{}'::jsonb end) as x
+   where jsonb_typeof(x.value) = 'object' and b ? coalesce(x.value->>'boardId', '')
+     and (x.value->>'status' = 'ok' or (x.value->>'status' = 'pending' and x.value->>'uid' = sid));
+  return jsonb_build_object('boards', b, 'ideas', i, 'labels', coalesce(d #> '{settings,main,labels}', '{}'::jsonb),
+    'my', d #> array['votes', sid], 'me', sid, 'name', k.name);
+end;
+$$;
+
+create or replace function public.kid_pin_idea(p_token uuid, p_board text, p_text text) returns text
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; sid text; nid text; n int; dk text;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'pin-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null or d #>> array['boards', coalesce(p_board, ''), 'visible'] is distinct from 'true' then raise exception 'Diese Pinnwand ist im Moment nicht offen.'; end if;
+  if length(btrim(coalesce(p_text, ''))) = 0 then raise exception 'Leer'; end if;
+  sid := k.id::text;
+  select count(*) into n from jsonb_each(case when jsonb_typeof(d->'ideas') = 'object' then d->'ideas' else '{}'::jsonb end) as x
+   where x.value->>'uid' = sid and x.value->>'status' = 'pending';
+  if n >= 30 then raise exception 'Zu viele Ideen warten schon.'; end if;
+  nid := 'k' || substr(md5(random()::text || clock_timestamp()::text), 1, 12);
+  if jsonb_typeof(d->'ideas') is distinct from 'object' then d := jsonb_set(d, '{ideas}', '{}'::jsonb, true); end if;
+  d := jsonb_set(d, array['ideas', nid], jsonb_build_object('text', left(btrim(p_text), 280), 'by', k.name, 'uid', sid, 'boardId', p_board,
+         'status', 'pending', 'at', floor(extract(epoch from now()) * 1000)::bigint), true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return nid;
+end;
+$$;
+
+create or replace function public.kid_pin_vote(p_token uuid, p_body jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; sid text; dk text; x record; o jsonb; r jsonb := '{}'::jsonb; ok jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'pin-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null or jsonb_typeof(p_body) is distinct from 'object' or jsonb_typeof(p_body->'r') is distinct from 'object' then return false; end if;
+  sid := k.id::text;
+  for x in select key, value from jsonb_each(p_body->'r') loop
+    if jsonb_typeof(x.value) <> 'object' or d #>> array['ideas', x.key, 'status'] is distinct from 'ok'
+       or d #>> array['boards', coalesce(d #>> array['ideas', x.key, 'boardId'], ''), 'visible'] is distinct from 'true' then continue; end if;
+    o := '{}'::jsonb;
+    if jsonb_typeof(x.value->'rate') = 'number' and (x.value->>'rate')::numeric between 1 and 10 then o := o || jsonb_build_object('rate', round((x.value->>'rate')::numeric)); end if;
+    if jsonb_typeof(x.value->'rate2') = 'number' and (x.value->>'rate2')::numeric between 1 and 10 then o := o || jsonb_build_object('rate2', round((x.value->>'rate2')::numeric)); end if;
+    if x.value->>'agree' in ('ja', 'teils', 'nein') then o := o || jsonb_build_object('agree', x.value->>'agree'); end if;
+    if jsonb_typeof(x.value->'comment') = 'string' and length(btrim(x.value->>'comment')) > 0 then o := o || jsonb_build_object('comment', left(x.value->>'comment', 400)); end if;
+    if jsonb_typeof(x.value->'baro') = 'number' and (x.value->>'baro')::numeric between 0 and 10 then o := o || jsonb_build_object('baro', (x.value->>'baro')::numeric); end if;
+    if o <> '{}'::jsonb then r := r || jsonb_build_object(x.key, o); end if;
+  end loop;
+  -- Stimmen zu Zetteln, die gerade versteckt sind, bleiben erhalten
+  ok := coalesce(d #> array['votes', sid, 'r'], '{}'::jsonb);
+  select coalesce(jsonb_object_agg(y.key, y.value), '{}'::jsonb) into ok from jsonb_each(case when jsonb_typeof(ok) = 'object' then ok else '{}'::jsonb end) as y
+   where d #>> array['boards', coalesce(d #>> array['ideas', y.key, 'boardId'], ''), 'visible'] is distinct from 'true';
+  if jsonb_typeof(d->'votes') is distinct from 'object' then d := jsonb_set(d, '{votes}', '{}'::jsonb, true); end if;
+  d := jsonb_set(d, array['votes', sid], jsonb_build_object('r', ok || r, 'at', floor(extract(epoch from now()) * 1000)::bigint), true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return true;
+end;
+$$;
+
 -- Wer darf welche Funktion aufrufen
 revoke execute on function public._kid(uuid), public._tafel_autoclear(uuid), public._tafel_state(uuid),
   public.handle_new_user() from public, anon, authenticated;
 grant execute on function public.kid_class(text), public.kid_login(text, uuid, text),
   public.kid_logout(uuid), public.kid_home(uuid), public.kid_game(uuid, uuid),
-  public.kid_report(uuid, uuid, int, int, int, int), public.tafel_get(uuid),
-  public.tafel_set(uuid, uuid, text) to anon, authenticated;
-revoke execute on function public.tafel_teacher(uuid) from public, anon;
-grant execute on function public.tafel_teacher(uuid) to authenticated;
+  public.kid_report(uuid, uuid, int, int, int, int, text), public.kid_state(uuid, uuid),
+  public.kid_save(uuid, uuid, jsonb, jsonb), public.tafel_get(uuid),
+  public.kid_race(uuid), public.kid_race_join(uuid, uuid), public.kid_race_step(uuid, uuid, boolean),
+  public.tafel_set(uuid, uuid, text), public.kid_heft(uuid), public.kid_heft_tick(uuid, text, boolean),
+  public.kid_heft_own(uuid, jsonb, boolean), public.kid_pin(uuid), public.kid_pin_idea(uuid, text, text),
+  public.kid_pin_vote(uuid, jsonb) to anon, authenticated;
+revoke execute on function public.pin_put(uuid, text, text, jsonb) from public, anon;
+grant execute on function public.pin_put(uuid, text, text, jsonb) to authenticated;
+revoke execute on function public.tafel_teacher(uuid), public.race_start(uuid) from public, anon;
+grant execute on function public.tafel_teacher(uuid), public.race_start(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Version 18: Atelier (Velo-Weg). Speicher pro Klasse in teacher_store «atelier-<Klasse>»
+--   = { open: true/false, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
+-- Die Lehrperson ändert einzelne Kinder (atelier_put), die Kinder ihr eigenes Velo (kid_atelier_set).
+-- Kinder sehen die Lernerstufe nie; Thema/Umsetzungsart nur ändern, wenn der Riegel offen ist.
+-- ---------------------------------------------------------------------
+create or replace function public.atelier_put(p_class uuid, p_kid text, p_patch jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare t uuid; d jsonb; dk text := 'atelier-' || p_class::text; e jsonb;
+begin
+  select teacher_id into t from public.classes where id = p_class;
+  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  if coalesce(p_kid, '') !~ '^(_|[0-9a-f-]{36})$' then raise exception 'Ungültig'; end if;
+  if p_patch is not null and (jsonb_typeof(p_patch) <> 'object' or octet_length(p_patch::text) > 4000) then raise exception 'Ungültig'; end if;
+  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{"open":false,"kids":{}}'::jsonb) on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if jsonb_typeof(d->'kids') is distinct from 'object' then d := jsonb_set(d, '{kids}', '{}'::jsonb, true); end if;
+  if p_kid = '_' then
+    if p_patch ? 'open' then d := jsonb_set(d, '{open}', to_jsonb(coalesce((p_patch->>'open')::boolean, false)), true); end if;
+    -- Version 19: Umsetzungsarten zum Auswählen (höchstens 30, je 60 Zeichen)
+    if jsonb_typeof(p_patch->'arten') = 'array' then
+      d := jsonb_set(d, '{arten}', coalesce((select jsonb_agg(left(btrim(a.v), 60) order by a.n)
+             from jsonb_array_elements_text(p_patch->'arten') with ordinality as a(v, n) where btrim(a.v) <> '' and a.n <= 30), '[]'::jsonb), true);
+    end if;
+  elsif p_patch is null then
+    d := jsonb_set(d, '{kids}', (d->'kids') - p_kid);
+  else
+    e := case when jsonb_typeof(d #> array['kids', p_kid]) = 'object' then d #> array['kids', p_kid] else '{}'::jsonb end;
+    d := jsonb_set(d, array['kids', p_kid], e || p_patch, true);
+  end if;
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+end;
+$$;
+
+create or replace function public.kid_atelier(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; l jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'atelier-' || k.class_id::text;
+  if d is null then return null; end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'name', x.name, 'nr', x.nr,
+           'thema', d #> array['kids', x.id::text, 'thema'], 'umsetzung', d #> array['kids', x.id::text, 'umsetzung'],
+           'farbe', d #> array['kids', x.id::text, 'farbe'], 'x', d #> array['kids', x.id::text, 'x'], 'y', d #> array['kids', x.id::text, 'y'])
+         order by x.nr nulls last, lower(x.name)), '[]'::jsonb) into l
+    from public.kids x where x.class_id = k.class_id;
+  return jsonb_build_object('open', coalesce((d->>'open')::boolean, false), 'me', k.id, 'kids', l,
+    'arten', case when jsonb_typeof(d->'arten') = 'array' then d->'arten' else '[]'::jsonb end);
+end;
+$$;
+
+create or replace function public.kid_atelier_set(p_token uuid, p_patch jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; dk text; sid text; e jsonb; xv numeric; yv numeric;
+begin
+  k := public._kid(p_token);
+  if p_patch is null or jsonb_typeof(p_patch) <> 'object' then return false; end if;
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'atelier-' || k.class_id::text; sid := k.id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null then return false; end if;
+  if jsonb_typeof(d->'kids') is distinct from 'object' then d := jsonb_set(d, '{kids}', '{}'::jsonb, true); end if;
+  e := case when jsonb_typeof(d #> array['kids', sid]) = 'object' then d #> array['kids', sid] else '{}'::jsonb end;
+  if p_patch ? 'x' then
+    if jsonb_typeof(p_patch->'x') = 'number' and jsonb_typeof(p_patch->'y') = 'number' then
+      xv := greatest(0, least(100, (p_patch->>'x')::numeric)); yv := greatest(0, least(100, (p_patch->>'y')::numeric));
+      e := e || jsonb_build_object('x', round(xv, 1), 'y', round(yv, 1));
+    else e := e || '{"x":null,"y":null}'::jsonb; end if;
+  end if;
+  if coalesce(p_patch->>'farbe', '') ~ '^#[0-9a-fA-F]{6}$' then e := e || jsonb_build_object('farbe', p_patch->>'farbe'); end if;
+  if coalesce((d->>'open')::boolean, false) then
+    if jsonb_typeof(p_patch->'thema') = 'string' then e := e || jsonb_build_object('thema', left(btrim(p_patch->>'thema'), 80)); end if;
+    if jsonb_typeof(p_patch->'umsetzung') = 'string' and (btrim(p_patch->>'umsetzung') = '' or jsonb_typeof(d->'arten') is distinct from 'array'
+        or jsonb_array_length(d->'arten') = 0 or (d->'arten') ? btrim(p_patch->>'umsetzung')) then
+      e := e || jsonb_build_object('umsetzung', left(btrim(p_patch->>'umsetzung'), 80)); end if;
+  end if;
+  d := jsonb_set(d, array['kids', sid], e, true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return true;
+end;
+$$;
+
+revoke execute on function public.kid_atelier(uuid), public.kid_atelier_set(uuid, jsonb), public.atelier_put(uuid, text, jsonb) from public;
+grant execute on function public.kid_atelier(uuid), public.kid_atelier_set(uuid, jsonb) to anon, authenticated;
+revoke execute on function public.atelier_put(uuid, text, jsonb) from anon;
+grant execute on function public.atelier_put(uuid, text, jsonb) to authenticated;
 
 -- Fertig.
