@@ -465,3 +465,23 @@ button.zr-st{cursor:pointer}
 .pin-tile span span{color:#7A5634}
 .atelier-tile{background:#DCEAF6}
 .atelier-tile span span{color:#35597a}
+/* Werkzeuge als Kacheln im Klassen-Banner */
+.tooltiles{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.tooltile{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--ink);border-radius:16px;padding:12px;color:var(--ink);text-decoration:none;box-shadow:0 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.tooltile:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}
+.tooltile:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.tooltile .tti{flex:none;width:42px;height:42px;border-radius:12px;background:var(--pastel);display:grid;place-items:center;font-size:25px}
+.tooltile>span:last-child{min-width:0}
+.tooltile b{display:block;font-size:16px;line-height:1.2}
+.tooltile small{display:block;color:#3D5A7A;font-size:13px;line-height:1.3;margin-top:2px}
+.tooltile.tt-main{background:#FFF4CF}
+.tooltile.tt-main .tti{background:#fff}
+/* Vokabelkiste in der Fortschritts-Übersicht: Minuten pro Schultag dieser Woche */
+.vkx{display:flex;flex-direction:column;gap:3px}
+.vkd{display:flex;gap:3px}
+.vkd i{font-style:normal;flex:1;min-width:28px;text-align:center;border-radius:6px;background:#EEF1F5;color:#66788D;font-size:12px;font-weight:700;line-height:1.1;padding:2px 0}
+.vkd i small{display:block;font-size:10px;font-weight:600}
+.vkd i.part{background:#FFF1C9;color:#7A5A10}
+.vkd i.ok{background:#CFEFD9;color:#1F6B50}
+.vkd i.ok small::after{content:" ⭐"}
+.vkd i.fr{background:transparent;color:#A0AAB5}

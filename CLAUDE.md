@@ -32,6 +32,7 @@ Knobelnest ist das Schulportal von Frau Kressebuch (Primarschule, Schweiz). Lehr
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
+| `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
 | `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 19) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
@@ -82,6 +83,10 @@ So läuft ein Werkzeug im Portal:
   - Du bearbeitest ihre HTML-Datei.
   - Sie lädt die neue Datei in der Verwaltung wieder hoch: beim Spiel unter «Spiel-Datei» oder als Paket mit «Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen».
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
+- **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
+  - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
+  - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
+  - Sterne: `starCfg()` gibt für die Vokabelkiste `eigene` zurück. Tagesstern = 7 Minuten echte Übungszeit (`P.sec`, zählt nur bei laufender Übung und Eingabe in den letzten 30 s). Serie 🔥 = Schultage hintereinander; Wochenende und Tage mit «Ferien»/«schulfrei» im Hausaufgabenheft (`vkFree()`) zählen nicht. Wochenheld 🏅, Kistenprofi 📦 (100 Wörter im letzten Fach). Die Übersicht zeigt Minuten pro Schultag (`vkHTML()`).
 
 ## Datenbank (Supabase)
 
@@ -98,8 +103,8 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=66`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=68`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('37')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 
@@ -129,5 +134,13 @@ Wenn die Lehrerin Änderungen direkt im Knobelnest will, ändere auch das Einbau
 
 ## Veröffentlichen
 
-- **Commit:** auf `main`, mit einer kurzen deutschen Commit-Nachricht. GitHub Pages ist nach 1–2 Minuten aktuell.
+Claude arbeitet in einer Cloud-Sitzung und darf nicht direkt auf `main` schreiben. Die Seite zeigt aber nur, was auf `main` liegt. Darum:
+
+1. **Commit und Push:** Jede Sitzung hat einen eigenen Arbeitszweig (z. B. `claude/…`, steht in den Sitzungsangaben). Dort committen (kurze deutsche Commit-Nachricht) und pushen. Online ist damit noch nichts.
+2. **Pull Request:** Wenn die Lehrerin sagt «online stellen» (oder Ähnliches), erstellt Claude einen Pull Request vom Arbeitszweig nach `main` und schickt ihr den Link.
+3. **Zusammenführen:** Die Lehrerin öffnet den Link und tippt «Merge pull request» → «Confirm merge». Sagt sie ausdrücklich «führ es gleich zusammen», darf Claude den Pull Request selbst zusammenführen.
+4. **Online:** GitHub Pages ist 1–2 Minuten nach dem Zusammenführen aktuell. Falls ein Gerät noch Altes zeigt: Seite neu laden (Cache-Bremse prüfen).
+
+- **SQL zuerst:** Braucht die Änderung neues SQL, muss die Lehrerin es in Supabase ausführen, bevor sie zusammenführt.
+- **Nach dem Zusammenführen:** Für weitere Änderungen den Arbeitszweig neu auf dem aktuellen `main` aufsetzen und einen neuen Pull Request machen (einen zusammengeführten nie weiterverwenden).
 - **Nachricht an die Lehrerin:** kurz auf Deutsch, was sich geändert hat, ob ein SQL-Schritt nötig ist und worauf sie achten soll. Keine Dateilisten zum Hochladen, das ist ja erledigt.
