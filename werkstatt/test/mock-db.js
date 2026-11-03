@@ -114,6 +114,7 @@
     resetProgress: function (kid, ids) { D.progress = D.progress.filter(function (x) { return !(x.kid_id === kid && (!ids || ids.indexOf(x.game_id) >= 0)); }); return delay(); },
     gameSettingsGet: function (cid, gid) { return delay(((D.gsettings || {})[cid + '|' + gid]) || null); },
     gameSettingsSet: function (cid, gid, v) { D.gsettings = D.gsettings || {}; D.gsettings[cid + '|' + gid] = JSON.parse(JSON.stringify(v)); return delay(); },
+    listProgressSaves: function (ids, gid) { return delay(JSON.parse(JSON.stringify(D.progress.filter(function (x) { return ids.indexOf(x.kid_id) >= 0 && x.game_id === gid; }).map(function (x) { return { kid_id: x.kid_id, save: x.save || null, award: x.award || {}, last_played: x.last_played }; })))); },
     listProgressGame: function (ids, gid) { return delay(D.progress.filter(function (x) { return ids.indexOf(x.kid_id) >= 0 && x.game_id === gid; }).map(function (x) { return { kid_id: x.kid_id, award: x.award || {}, levels: x.levels, last_played: x.last_played }; })); },
     kidSave: function (t, gid, sv, aw) {
       var k = kidOf(t), p = D.progress.filter(function (x) { return x.kid_id === k.id && x.game_id === gid; })[0];

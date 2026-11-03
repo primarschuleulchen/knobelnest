@@ -153,6 +153,11 @@
       if (gameIds && gameIds.length) q = q.in('game_id', gameIds);
       ok(await q);
     },
+    // Vokabelkiste: gespeicherter Stand der Kinder (Übungen, Zeiten, Wörter) für die Klassen-Übersicht der Lehrperson
+    listProgressSaves: async function (kidIds, gid) {
+      if (!kidIds.length) return [];
+      return ok(await sb.from('progress').select('kid_id,save,award,last_played').eq('game_id', gid).in('kid_id', kidIds));
+    },
     listProgressGame: async function (kidIds, gid) {
       if (!kidIds.length) return [];
       return ok(await sb.from('progress').select('kid_id,award,levels,last_played').eq('game_id', gid).in('kid_id', kidIds));

@@ -241,7 +241,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '2'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '3'; // Vokabelkiste (vokabelkiste/index.html)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -928,7 +928,7 @@
   // ---------- Spiele ----------
   function isNew(g) { return Date.now() - new Date(g.created_at).getTime() < 14 * 86400000; }
   T.tabSpiele = function () {
-    var c = T.cur(), games = T.games.concat(liveGames());
+    var c = T.cur(), vkg = T.games.filter(isVok)[0], games = T.games.filter(function (g) { return !isVok(g); }).concat(liveGames());
     var released = T.games.filter(function (g) { return T.rel.has(g.id); }).length;
     var fachs = uniq(games.map(function (g) { return g.fach; }));
     if (T.fach !== 'alle' && fachs.indexOf(T.fach) < 0) T.fach = 'alle';
@@ -945,8 +945,10 @@
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel'], ['heft', 'hausaufgaben', '📒', 'Hausaufgaben\u00adheft', 'Aufgaben und Kontrollen'],
           ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern'], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier']]
           .filter(function (x) { return T.tools[x[0]]; });
-        return t.length ? '<div class="tooltiles">' + t.map(function (x) {
-          return '<a class="tooltile' + (x[0] === 'folie' ? ' tt-main' : '') + '" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>'; }).join('') + '</div>' : '';
+        var vt = vkg ? '<div class="tooltile tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '"><span class="tti" aria-hidden="true">' + VK_SVG + '</span><span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
+          '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
+        return t.length || vt ? '<div class="tooltiles">' + t.map(function (x) {
+          return '<a class="tooltile' + (x[0] === 'folie' ? ' tt-main' : '') + '" href="#/' + x[1] + '/' + T.cls + '"><span class="tti" aria-hidden="true">' + x[2] + '</span><span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>'; }).join('') + vt + '</div>' : '';
       })() + '</section>';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
@@ -1111,15 +1113,19 @@
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], cid = T.cls, c = T.cur();
     if (!g || !c) return toast('Bitte zuerst eine Klasse wählen.');
     toast('Vokabelkiste wird geladen …');
-    var both = await Promise.all([DB.gameHtml(g.id), DB.gameSettingsGet(cid, g.id)]);
-    var cfg = both[1] && typeof both[1] === 'object' ? both[1] : {};
+    var kids = T.kids.slice().sort(kidSort);
+    var both = await Promise.all([DB.gameHtml(g.id), DB.gameSettingsGet(cid, g.id), DB.listProgressSaves(kids.map(function (k) { return k.id; }), g.id).catch(function () { return []; }),
+      DB.storeGet('hat-' + cid).catch(function () { return null; })]);
+    var cfg = both[1] && typeof both[1] === 'object' ? both[1] : {}, sv = {};
+    (both[2] || []).forEach(function (r) { sv[r.kid_id] = r; });
+    var kidData = kids.map(function (k) { var r = sv[k.id] || {}; return { id: k.id, name: k.name, p: (r.save && r.save.p) || {}, last: r.last_played || null }; });
     openPlayer(g.title + ' · Klasse ' + c.name, both[0], function (d) {
       if (!d.knobelnest || d.type !== 'vkContent' || !d.content || !Array.isArray(d.content.subjects)) return;
       var reply = function (ok, err) { try { if (PL) PL.frame.contentWindow.postMessage({ vkAck: d.id, ok: ok, err: err || '' }, '*'); } catch (x) {} };
       if (JSON.stringify(d.content).length > 900000) return reply(false, 'zu gross');
       cfg = Object.assign({}, cfg, { content: d.content });
       DB.gameSettingsSet(cid, g.id, cfg).then(function () { reply(true); }, function (e) { reply(false, errMsg(e)); toast('Speichern ging nicht: ' + errMsg(e)); });
-    }, null, { settings: cfg, teacher: true, edit: true });
+    }, null, { settings: Object.assign({}, cfg, { frei: vkFree(both[3]), kids: kidData }), teacher: true, edit: true });
   };
   // Eingebaute Live-Spiele (Kinder spielen gleichzeitig am iPad, die Wandtafel zeigt alles live).
   // Sie erscheinen im gleichen Fach und Thema wie Ihre anderen Wandtafelspiele.
