@@ -445,6 +445,7 @@
     start: async function (cid) {
       UI.view = 'sprint';
       var sess = await DB.session(); if (!sess) { location.hash = '#/'; return; }
+      if (!(await licGate())) return;
       S.cid = cid; S.race = null; S.runs = []; S.setup = S.setup || LS.get('kn_sprint') || { rows: [2, 3, 4, 5, 6, 7, 8, 9, 10], goal: 10 };
       app.innerHTML = '<p class="boot">Sprint wird geladen …</p>';
       try {
@@ -540,6 +541,7 @@
       UI.view = 'wall';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
+      if (!embed && !(await licGate())) return;
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); W.bild = wc && wc.bild; } catch (e) {}
       async function load() {
@@ -561,8 +563,34 @@
     if (me && me.is_admin) return all;
     try { var d = await DB.sharedGet('werkzeuge'); return (d && me && d[me.id]) || {}; } catch (e) { return {}; }
   }
+  // Lizenz (Version 22): profiles.valid_until = letzter gültiger Tag (leer = unbefristet, Admin immer frei)
+  function licLeft(me) {
+    if (!me || me.is_admin || !me.valid_until) return null;
+    return Math.round((new Date(me.valid_until + 'T12:00:00') - new Date(isoDay(new Date()) + 'T12:00:00')) / 864e5);
+  }
+  function licExpired(me) { var d = licLeft(me); return d !== null && d < 0; }
+  function dateCH(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? (+p[2]) + '.' + (+p[1]) + '.' + p[0] : ''; }
+  function renewBtn(cls) {
+    return C.SHOP_URL ? '<a class="btn ' + (cls || 'primary') + '" href="' + h(C.SHOP_URL) + '" target="_blank" rel="noopener">✦ Jetzt verlängern</a>'
+      : '<a class="btn ' + (cls || 'primary') + '" href="mailto:' + h(C.CONTACT) + '?subject=' + encodeURIComponent(C.PORTAL_NAME + ' verlängern') + '">✦ Jetzt verlängern</a>';
+  }
+  function licPage(me) {
+    document.body.classList.add('lp');
+    paint('<div class="main"><div class="card stack" style="max-width:600px;margin:40px auto;text-align:center;align-items:center;gap:16px">' +
+      '<img src="bilder/eule.webp" alt="" width="96" height="96"><h2>Ihre ' + h(C.PORTAL_NAME) + ' ist abgelaufen</h2>' +
+      '<p>Ihre Lizenz war gültig bis am <b>' + h(dateCH(me.valid_until)) + '</b>. Ihre Klassen und alles, was Sie gespeichert haben, bleiben erhalten. Sobald Sie verlängern, geht es genau dort weiter.</p>' +
+      '<div class="row" style="justify-content:center">' + renewBtn() + '<button class="btn" data-a="logout">Abmelden</button></div>' +
+      '<p class="muted small">Fragen? ' + h(C.CONTACT) + '</p></div></div>');
+  }
+  // Für Werkzeug-Seiten ohne toolGate (Wandtafel, Sprint): false = abgelaufen, Hinweis gezeigt
+  async function licGate() {
+    var me = null; try { me = await DB.me(); } catch (e) {}
+    if (licExpired(me)) { licPage(me); return false; }
+    return true;
+  }
   async function toolGate(key, name) {
     var me = null; try { me = await DB.me(); } catch (e) {}
+    if (licExpired(me)) { licPage(me); return false; }
     var acc = await toolAccess(me);
     if (acc[key]) return true;
     paint('<div class="main"><div class="card stack"><h2>' + h(name) + ' ist noch nicht freigegeben</h2><p>Die Administratorin oder der Administrator kann es Ihnen unter «Verwaltung» freigeben.</p><a class="btn" href="#/">Zum Portal</a></div></div>');
@@ -855,6 +883,7 @@
     if (!s) return T.renderLogin();
     app.innerHTML = '<p class="boot">Wird geladen …</p>';
     T.me = await DB.me();
+    if (licExpired(T.me)) return licPage(T.me);
     T.tools = await toolAccess(T.me);
     T.classes = await DB.listClasses();
     var saved = LS.get('kn_cls');
@@ -914,12 +943,16 @@
 
   T.render = function () {
     if (!T.me) return;
+    if (licExpired(T.me)) return licPage(T.me);
     document.body.classList.add('lp');
     if (!T.me.name) return paint(T.onboardName());
     if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
     var body;
     if (!T.classes.length && T.tab !== 'verwaltung') body = T.onboardClass();
     else body = ({ uebersicht: T.tabSpiele, spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
+    var left = licLeft(T.me);
+    if (left !== null && left <= 30) body = '<div class="note row" style="justify-content:space-between;gap:12px"><span>✦ Ihre ' + h(C.PORTAL_NAME) + ' ist noch ' +
+      (left === 0 ? 'bis heute' : 'bis am <b>' + h(dateCH(T.me.valid_until)) + '</b>') + ' gültig. Verlängern Sie rechtzeitig, damit Sie ohne Unterbruch weiterarbeiten können.</span>' + renewBtn('sm') + '</div>' + body;
     paint(T.shell(body));
   };
   T.shell = function (body) {
@@ -1863,6 +1896,35 @@
         return '<div class="bildopt"><img src="' + h(b.src) + '" alt=""><input class="input" value="' + h(b.name || '') + '" maxlength="30" aria-label="Name" data-change="kbName" data-id="' + h(b.id) + '"><button class="btn sm danger" data-a="kbDel" data-id="' + h(b.id) + '">Entfernen</button></div>'; }).join('') + '</div>' : '<p class="muted small">Noch keine Vorlagen.</p>') +
       '<div class="field"><label for="kbFile">Bilder hinzufügen (mehrere möglich)</label><input class="input" id="kbFile" type="file" accept="image/*" multiple data-change="kbAdd"></div></section>';
   }
+  // Verwaltung: Lizenz «gültig bis» pro Lehrperson (Version 22)
+  function licRow(t) {
+    if (DB.noLicense) return '<div class="row" style="padding:8px 0 2px 52px"><span class="muted small"><b>Gültig bis:</b> Bitte zuerst das SQL (Version 22) in Supabase ausführen.</span></div>';
+    var d = licLeft(t), pill = d === null ? '<span class="pill">unbefristet</span>'
+      : d < 0 ? '<span class="pill" style="background:#F6C9BC;color:#7A2E12">abgelaufen</span>'
+      : d <= 30 ? '<span class="pill" style="background:#FCE8B2">' + (d === 0 ? 'läuft heute ab' : 'noch ' + plural(d, 'Tag', 'Tage')) + '</span>' : '';
+    var mail = d !== null && d <= 30 ? '<a class="btn sm" href="mailto:' + h(t.email) + '?subject=' + encodeURIComponent('Deine ' + C.PORTAL_NAME + ' verlängern') +
+      '&body=' + encodeURIComponent('Hallo' + (t.name ? ' ' + t.name : '') + '\n\nDeine ' + C.PORTAL_NAME + ' ' + (d < 0 ? 'war' : 'ist noch') + ' bis am ' + dateCH(t.valid_until) +
+        ' gültig. Wenn du sie ein weiteres Jahr nutzen möchtest, kannst du sie ' + (C.SHOP_URL ? 'hier verlängern:\n' + C.SHOP_URL : 'bei mir verlängern. Antworte einfach auf diese E-Mail.') +
+        '\n\nDeine Klassen und alles, was du gespeichert hast, bleiben erhalten.\n\nHerzliche Grüsse') + '">✉ Erinnerung schreiben</a>' : '';
+    return '<div class="row" style="gap:8px;padding:8px 0 2px 52px"><label class="muted small" style="font-weight:700" for="lic-' + t.id + '">Gültig bis:</label>' +
+      '<input class="input" style="width:auto;min-height:38px;padding:4px 10px" type="date" id="lic-' + t.id + '" value="' + h(t.valid_until || '') + '" data-change="licSet" data-t="' + t.id + '">' +
+      pill + '<button class="btn sm" data-a="licPlus" data-t="' + t.id + '">+ 1 Jahr</button>' +
+      (t.valid_until ? '<button class="btn sm" data-a="licNone" data-t="' + t.id + '">Unbefristet</button>' : '') + mail + '</div>';
+  }
+  async function licSave(tid, day) {
+    var t = (T.admin.teachers || []).filter(function (x) { return x.id === tid; })[0]; if (!t) return;
+    try { await DB.setValidUntil(tid, day || null); t.valid_until = day || null; toast(day ? 'Gültig bis ' + dateCH(day) + ' gespeichert.' : 'Unbefristet gespeichert.'); }
+    catch (e) { toast(errMsg(e)); }
+    T.render();
+  }
+  ACT.licSet = function (el) { if (!el.value || /^\d{4}-\d{2}-\d{2}$/.test(el.value)) licSave(el.dataset.t, el.value); };
+  ACT.licNone = function (el) { licSave(el.dataset.t, null); };
+  ACT.licPlus = function (el) {
+    var t = (T.admin.teachers || []).filter(function (x) { return x.id === el.dataset.t; })[0]; if (!t) return;
+    var base = t.valid_until && t.valid_until > isoDay(new Date()) ? new Date(t.valid_until + 'T12:00:00') : new Date();
+    base.setFullYear(base.getFullYear() + 1);
+    licSave(t.id, isoDay(base));
+  };
   T.tabAdmin = function () {
     var A = T.admin; if (!A.form) A.form = blankForm();
     if (A.teachers === null && !A.busy) {
@@ -1927,6 +1989,7 @@
         (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span>' + TOOLS.map(function (x) {
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
+        (t.is_admin ? '' : licRow(t)) +
         (t.is_admin ? '' : vzRow(t)) +
         (open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
@@ -1955,7 +2018,7 @@
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
       '<div class="cols2"><div class="wide">' + pack + form + kbCard() + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
-      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
+      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Ihre Lizenz gilt automatisch 1 Jahr ab heute («Gültig bis», mit «+ 1 Jahr» verlängern). Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
       '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
       '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur die hier gewählten Spiele gezeigt:</p>' + fchips : '') + teachers + '</section>';
   };
@@ -2129,7 +2192,7 @@
     LS.del('kn_kid'); K.sess = null;
     var code = LS.get('kn_code');
     if (code) {
-      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names';
+      try { var c = await DB.kidClass(code); if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; c = null; } if (c) { K.code = code; K.cls = c; K.step = 'names';
         var wk = K.wantKid && c.kids.filter(function (k) { return k.id === K.wantKid; })[0];
         if (wk) { K.kid = wk; K.pw = []; K.err = ''; K.step = 'pw'; } K.wantKid = null;
         return K.render(); } } catch (e) {}
@@ -2153,6 +2216,9 @@
     catch (e) {}
   };
   K.sessionLost = function (e) {
+    if (/pausiert/i.test((e && e.message) || '')) {
+      LS.del('kn_kid'); K.sess = null; K.home = null; K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; K.step = 'code'; return K.render();
+    }
     if (/Anmeldung|session/i.test((e && e.message) || '')) {
       LS.del('kn_kid'); K.sess = null; K.home = null; toast('Bitte melde dich nochmals an.'); return K.start();
     }
@@ -2336,6 +2402,7 @@
   ACT.kCode = async function (f) {
     var code = f.elements.code.value.trim(); if (!code) return;
     var c = await DB.kidClass(code);
+    if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; return K.render(); }
     if (!c) { K.err = 'Diesen Code kennen wir nicht. Schau nochmals an der Wandtafel.'; return K.render(); }
     K.err = ''; K.code = code; K.cls = c; LS.set('kn_code', code); K.step = 'names'; K.render();
   };
@@ -2353,8 +2420,9 @@
       if (!r.ok) {
         K.pw = [];
         K.err = r.error === 'gesperrt' ? 'Kurze Pause! Versuch es in ' + Math.max(1, Math.ceil((r.seconds || 60) / 60)) + ' Minuten wieder.' :
-          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
-        if (r.error === 'unbekannt') { LS.del('kn_code'); K.step = 'code'; }
+          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' :
+          r.error === 'pausiert' ? 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
+        if (r.error === 'unbekannt' || r.error === 'pausiert') { if (r.error === 'unbekannt') LS.del('kn_code'); K.step = 'code'; }
         return K.render();
       }
       K.sess = { token: r.token, name: r.name, code: K.code, kid: K.kid && K.kid.id, exp: Date.now() + 11.5 * 3600 * 1000 };

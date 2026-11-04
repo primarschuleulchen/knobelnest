@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 21)
+-- Knobelnest – Datenbank-Einrichtung (Version 22)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1108,5 +1108,106 @@ begin
   return json_build_object('me', k.id, 'state', public._tafel_state(k.class_id));
 end;
 $$;
+
+-- =====================================================================
+-- Version 22: Lizenz «gültig bis» pro Lehrperson
+--   profiles.valid_until = letzter gültiger Tag (leer = unbefristet). Neue Konten bekommen automatisch
+--   heute + 1 Jahr (das allererste Konto = Admin bleibt unbefristet). Ändern darf das nur der Admin
+--   mit admin_set_valid. Nach Ablauf zeigt das Portal der Lehrperson einen Hinweis zum Verlängern,
+--   und die Kinder ihrer Klassen können sich nicht mehr anmelden («pausiert»).
+-- =====================================================================
+alter table public.profiles add column if not exists valid_until date;
+
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare first boolean := not exists (select 1 from public.profiles);
+begin
+  insert into public.profiles (id, email, is_admin, valid_until)
+  values (new.id, new.email, first,
+          case when first then null else ((now() at time zone 'Europe/Zurich')::date + interval '1 year')::date end)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create or replace function public.admin_set_valid(p_teacher uuid, p_until date) returns void
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Nur für den Admin' using errcode = '42501';
+  end if;
+  if p_until is not null and (p_until < date '2020-01-01' or p_until > date '2100-12-31') then
+    raise exception 'Datum ungültig' using errcode = 'P0001';
+  end if;
+  update public.profiles set valid_until = p_until where id = p_teacher;
+end;
+$$;
+revoke execute on function public.admin_set_valid(uuid, date) from public, anon;
+grant execute on function public.admin_set_valid(uuid, date) to authenticated;
+
+-- Kinder: Ist die Lizenz der Lehrperson abgelaufen, ist die Klasse pausiert (keine Anmeldung, keine Daten).
+create or replace function public._lic_ok(p_class uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select p.is_admin or p.valid_until is null or p.valid_until >= (now() at time zone 'Europe/Zurich')::date
+                     from public.classes c join public.profiles p on p.id = c.teacher_id where c.id = p_class), true);
+$$;
+revoke execute on function public._lic_ok(uuid) from public, anon, authenticated;
+
+create or replace function public._kid(p_token uuid) returns public.kids
+language plpgsql stable security definer set search_path = public as $$
+declare r public.kids;
+begin
+  select k.* into r from public.kid_sessions s join public.kids k on k.id = s.kid_id
+   where s.token = p_token and s.expires_at > now();
+  if not found then
+    raise exception 'Anmeldung abgelaufen' using errcode = 'P0001', hint = 'session';
+  end if;
+  if not public._lic_ok(r.class_id) then
+    raise exception 'Eure Klassenkiste ist gerade pausiert. Sag es deiner Lehrperson.' using errcode = 'P0001', hint = 'pausiert';
+  end if;
+  return r;
+end;
+$$;
+
+create or replace function public.kid_class(p_code text) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare c public.classes;
+begin
+  select * into c from public.classes where public._norm_code(code) = public._norm_code(p_code);
+  if not found then return null; end if;
+  if not public._lic_ok(c.id) then return json_build_object('pausiert', true, 'kids', '[]'::json); end if;
+  return json_build_object(
+    'class_id', c.id, 'class_name', c.name, 'bild', c.bild,
+    'kids', coalesce((select json_agg(json_build_object('id', k.id, 'name', k.name, 'nr', k.nr) order by k.nr nulls last, lower(k.name))
+                        from public.kids k where k.class_id = c.id), '[]'::json));
+end;
+$$;
+
+create or replace function public.kid_login(p_code text, p_kid uuid, p_pw text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids; t uuid;
+begin
+  select kk.* into k from public.kids kk join public.classes c on c.id = kk.class_id
+   where kk.id = p_kid and public._norm_code(c.code) = public._norm_code(p_code);
+  if not found then return json_build_object('ok', false, 'error', 'unbekannt'); end if;
+  if not public._lic_ok(k.class_id) then return json_build_object('ok', false, 'error', 'pausiert'); end if;
+  if k.locked_until is not null and k.locked_until > now() then
+    return json_build_object('ok', false, 'error', 'gesperrt',
+      'seconds', ceil(extract(epoch from k.locked_until - now())));
+  end if;
+  if k.pw is distinct from p_pw then
+    update public.kids set
+      failed = case when failed + 1 >= 5 then 0 else failed + 1 end,
+      locked_until = case when failed + 1 >= 5 then now() + interval '2 minutes' else null end
+     where id = k.id;
+    return json_build_object('ok', false, 'error', 'falsch');
+  end if;
+  update public.kids set failed = 0, locked_until = null where id = k.id;
+  delete from public.kid_sessions where expires_at < now();
+  insert into public.kid_sessions (kid_id) values (k.id) returning token into t;
+  return json_build_object('ok', true, 'token', t, 'name', k.name);
+end;
+$$;
+grant execute on function public.kid_class(text), public.kid_login(text, uuid, text) to anon, authenticated;
 
 -- Fertig.
