@@ -24,8 +24,8 @@ from bilder import BILDER
 FRAME = GD.FRAME.replace("data: { gd: s }", "data: { ks: s }").replace("localStorage.setItem('gd', s)", "localStorage.setItem('ks', s)") \
     .replace("x.store && x.store.gd", "x.store && x.store.ks").replace("localStorage.getItem('gd')", "localStorage.getItem('ks')")
 assert FRAME.count("ks") >= 4
-# Eine sechste Stufenfarbe (Kleiderschrank hat 6 Stufen)
-FRAME = FRAME.replace("var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#fdebd8'];")
+# Mehr Stufenfarben (Kleiderschrank hat 8 Stufen)
+FRAME = FRAME.replace("var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#fdebd8', '#e3f1f0', '#f3e9dc'];")
 assert "'#fdebd8'" in FRAME
 
 SPIELE = []

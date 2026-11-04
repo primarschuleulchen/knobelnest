@@ -130,7 +130,14 @@ def eule():
     c = im.crop(im.split()[3].point(lambda a: 255 if a > 20 else 0).getbbox()); c.thumbnail((220, 220), Image.LANCZOS)
     c.save(os.path.join(ORD, 'eule.webp'), quality=84, method=6)
 
+def katze():
+    # Die Katze neben Mia (für «its»), aus katze-original.webp
+    im = Image.open(os.path.join(ORD, 'katze-original.webp')).convert('RGBA')
+    c = im.crop(im.split()[3].point(lambda a: 255 if a > 20 else 0).getbbox()); c.thumbnail((200, 200), Image.LANCZOS)
+    c.save(os.path.join(ORD, 'katze.webp'), quality=84, method=6)
+
 if __name__ == '__main__':
+    katze()
     eule()
     kinder()
     karten()
