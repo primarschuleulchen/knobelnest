@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="knobelnest-sterne" content="{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}">
+<title>Kleiderschrank</title>
+<style>
+@font-face{font-family:"Patrick Hand";src:url(data:font/woff2;base64,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) format("woff2");font-display:swap}
+*{box-sizing:border-box}
+:root{--bg:#f4f9fd;--ink:#1f2421;--soft:#5f6963;--line:#e1edf7;--line2:#c5d8e8;--gold:#d6ad45;--gold-d:#c4952f;
+  --sky:#dcf0fd;--sky-d:#3f78a8;--leaf:#e9f1e3;--rose:#fcefed;--sun:#fbf3dc;--lila:#efe7f7;--ok:#5f9a4a;--no:#c8574e;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);--sch-k:0 4px 12px rgba(63,120,168,.14)}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 600px at 10% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 500px at 110% 110%,#fbf3dc 0%,transparent 60%),var(--bg);
+  color:var(--ink);font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;font-size:21px;line-height:1.3;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+#app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px 16px 28px}
+.top{width:100%;max-width:960px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.top .t{flex:1;text-align:center;font-size:23px}
+.top .t::after{content:" ✦";color:var(--gold);font-size:.6em;vertical-align:super}
+.pill{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:6px 14px;min-height:46px;box-shadow:var(--sch-k);transition:transform .15s}
+.pill:hover{transform:translateY(-2px)}.pill:active{transform:translateY(1px)}
+.kopf{text-align:center;margin:6px 0 4px}
+.ring{width:104px;height:104px;border-radius:50%;display:inline-grid;place-items:center;font-size:54px;background:var(--sun);border:3px solid var(--gold);
+  box-shadow:inset 0 0 0 6px #fff,0 8px 18px rgba(63,120,168,.18)}
+.kopf h1{margin:10px 0 2px;font-size:42px;font-weight:400;line-height:1}
+.kopf h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.kopf p{margin:6px auto 0;max-width:540px;color:var(--soft);font-size:20px}
+.deko{color:var(--gold);letter-spacing:.35em;font-size:13px;margin-top:8px}
+.lvs{width:100%;max-width:600px;display:grid;gap:12px;margin-top:16px}
+.lv{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:24px;
+  padding:12px 18px;text-align:left;min-height:78px;box-shadow:var(--sch);transition:transform .15s,box-shadow .15s}
+.lv:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14)}
+.lv:active{transform:translateY(1px)}
+.lv .n{flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:26px;border:3px solid var(--gold);box-shadow:inset 0 0 0 4px #fff}
+.lv .tx{flex:1}.lv .tx b{display:block;font-weight:400;font-size:25px;line-height:1.1}.lv .tx span{color:var(--soft);font-size:18px}
+.stars{color:var(--gold);font-size:24px;letter-spacing:2px;white-space:nowrap}.stars .off{color:#e6dcc2}
+.msg{min-height:60px;font-size:25px;text-align:center;margin:2px 0 10px;max-width:760px;line-height:1.35}
+.msg .em{font-size:42px;vertical-align:middle;margin:0 4px;line-height:1}
+.msg small{color:var(--soft);font-size:19px}
+.dots{display:flex;gap:6px;justify-content:center;margin:2px 0 4px}
+.dots i{width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid var(--line2);display:block}.dots i.ok{background:var(--ok);border-color:var(--ok)}.dots i.no{background:var(--no);border-color:var(--no)}
+.stage{width:100%;max-width:960px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.bar{width:min(420px,90%);height:14px;border-radius:99px;background:#fff;border:2px solid var(--line2);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#e8c56a,var(--gold));width:100%;transition:width linear}
+.go{background:var(--sky);border:2px solid var(--ink);border-radius:16px;padding:8px 22px;font-size:23px;min-height:54px;box-shadow:var(--sch);transition:transform .15s}
+.go:hover{transform:translateY(-2px)}.go:active{transform:translateY(1px)}
+.go.alt{background:#fff}.go.sun{background:var(--sun)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.card{background:#fff;border:2px solid var(--line);border-radius:18px;display:grid;place-items:center;aspect-ratio:1;font-size:clamp(28px,7vw,54px);line-height:1;
+  box-shadow:var(--sch-k);transition:background .2s,border-color .2s,transform .12s;position:relative}
+button.card:active{transform:scale(.96)}
+.grid{display:grid;gap:clamp(6px,1.6vw,12px);width:100%;margin:0 auto}
+.grid .card{font-size:inherit}
+.card.cover{background:linear-gradient(135deg,#e6f3fd,#c4e2f8);color:var(--gold);border-color:#b9d6ee}
+.card.cover::after{content:"✧";font-size:.45em;opacity:.9}
+.card.ok{border-color:var(--ok);background:#f1f7ec}
+.card.no{border-color:var(--no);background:#fbefed}
+.card.hint{border-color:var(--gold);background:var(--sun)}
+.card.zahl{color:var(--sky-d)}
+.end{background:linear-gradient(180deg,#fff 0%,#fff 70%,#fbf3dc 100%);border:1.5px solid var(--line);border-radius:30px;padding:26px 22px;text-align:center;max-width:480px;width:100%;box-shadow:var(--sch)}
+.end .big{font-size:64px}.end h2{margin:6px 0;font-weight:400;font-size:36px}.end p{color:var(--soft);margin:4px 0 18px;font-size:22px}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pop{animation:pp .3s}@keyframes pp{50%{transform:scale(1.1)}}
+.szene{position:relative;width:min(100%,600px);aspect-ratio:3/2;max-height:52vh;background:#fff;border:2px solid var(--line);border-radius:24px;box-shadow:var(--sch)}
+.szene span{position:absolute;transform:translate(-50%,-50%);font-size:clamp(26px,6vw,46px);line-height:1}
+.szene.zu{background:linear-gradient(135deg,#e6f3fd,#c4e2f8)}
+.nm{position:absolute;left:4px;right:4px;bottom:6%;font-size:clamp(15px,3.2vw,20px);text-align:center;background:var(--sun);border-radius:10px;padding:1px 2px}
+.karte{padding-bottom:22%}
+@media (max-height:640px){.ring{width:80px;height:80px;font-size:40px}.kopf h1{font-size:32px}.msg{min-height:50px;font-size:21px}}
+
+.ks{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.schrank{display:block;width:min(100%,640px,calc((100vh - 250px) * 1.28));height:auto}
+.schrank .hit{fill:transparent}
+.schrank .it{cursor:pointer;transform-box:fill-box;transform-origin:center;transition:transform .15s,filter .15s;outline:none}
+.schrank .it:hover,.schrank .it:focus-visible{transform:scale(1.06)}
+.schrank .it.an{filter:drop-shadow(0 0 10px #f0c24b) drop-shadow(0 0 4px #f0c24b);transform:scale(1.08)}
+.schrank .it.no{animation:wk2 .4s}
+@keyframes wk2{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.schrank .it.seen .hit{fill:rgba(240,194,75,.13)}
+.wortkarte{min-height:64px;display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:6px 18px;box-shadow:var(--sch-k)}
+.wortkarte b{font:700 clamp(26px,6vw,38px) system-ui,-apple-system,sans-serif;color:var(--sky-d)}
+.wortkarte span{color:var(--soft);font-size:20px}
+.laut{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--sky);border:2px solid var(--ink);font-size:24px;box-shadow:var(--sch-k);flex:none}
+.laut:active{transform:scale(.94)}
+.bild{width:min(56vw,230px);aspect-ratio:1;display:grid;place-items:center;background:#fff;border:3px solid var(--gold);border-radius:30px;box-shadow:inset 0 0 0 6px #fff,var(--sch);padding:16px;position:relative}
+.bild svg{width:100%;height:100%;display:block}
+.bild .laut{position:absolute;right:-14px;bottom:-14px}
+.wahl{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,560px)}
+.wahl button{background:#fff;border:2px solid var(--ink);border-radius:20px;box-shadow:var(--sch-k);min-height:70px;padding:8px;font:700 clamp(22px,5vw,30px) system-ui,-apple-system,sans-serif;transition:transform .12s}
+.wahl button:active{transform:scale(.96)}
+.wahl button.ok{background:#e7f3df;border-color:var(--ok)}.wahl button.no{background:#fbe5e2;border-color:var(--no)}.wahl button.hint{background:var(--sun);border-color:var(--gold)}
+.schreib{display:flex;gap:10px;width:min(100%,480px)}
+.schreib input{flex:1;min-width:0;font:700 30px system-ui,-apple-system,sans-serif;padding:8px 16px;border-radius:18px;border:2px solid var(--ink);background:#fff;color:var(--ink);text-align:center;box-shadow:var(--sch-k)}
+.schreib input:focus{outline:3px solid var(--gold);outline-offset:2px}
+.schreib input.ok{background:#e7f3df;border-color:var(--ok)}.schreib input.no{background:#fbe5e2;border-color:var(--no)}
+.luecke{font:700 28px system-ui,-apple-system,sans-serif;letter-spacing:.18em;color:var(--sky-d)}
+.mik{width:118px;height:118px;border-radius:50%;background:var(--rose);border:3px solid var(--ink);font-size:52px;box-shadow:var(--sch);display:grid;place-items:center}
+.mik.hoert{background:#fbe5e2;animation:puls 1s infinite}
+@keyframes puls{50%{box-shadow:0 0 0 14px rgba(200,87,78,.18),var(--sch)}}
+.gehoert{color:var(--soft);font-size:20px;min-height:26px;text-align:center}
+.buehne{width:min(100%,620px);display:grid;grid-template-columns:1fr 1.15fr 1fr;grid-template-rows:auto auto;align-items:end;column-gap:6px;row-gap:6px}
+.buehne .sprech{grid-row:1;min-height:70px;display:flex;align-items:flex-end}
+.blase{position:relative;background:#fff;border:2px solid var(--ink);border-radius:18px;padding:8px 12px;font-size:clamp(19px,4.4vw,24px);box-shadow:var(--sch-k);line-height:1.2}
+.blase::after{content:"";position:absolute;bottom:-11px;left:30px;width:18px;height:18px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.blase.r::after{left:auto;right:30px}
+.erzaehl{grid-column:1/4;display:flex;align-items:center;gap:10px;justify-content:center}
+.erzaehl img{width:54px;height:54px;object-fit:contain}
+.erzaehl .blase::after{display:none}
+.kind{grid-row:2;display:flex;flex-direction:column;align-items:center;position:relative}
+.kind-svg{width:min(100%,120px);height:auto;display:block}
+.kind .nm2{background:var(--sun);border-radius:10px;padding:0 10px;font-size:20px;margin-top:2px}
+.kind.own::before{content:"";position:absolute;left:8%;right:8%;bottom:20px;height:22px;border-radius:50%;background:radial-gradient(#f0c24b 0%,rgba(240,194,75,0) 70%)}
+.ding{grid-row:2;grid-column:2;display:flex;align-items:center;padding-bottom:34px}
+.ding .bild{width:min(30vw,150px);padding:10px;border-width:3px}
+.ding.l{justify-content:flex-start}.ding.r{justify-content:flex-end}.ding.m{justify-content:center}
+.ding.l .bild::before,.ding.r .bild::before{content:"";position:absolute;top:50%;width:16px;height:16px;background:#fff;border:3px solid var(--gold);border-right:0;border-top:0;transform:translateY(-50%) rotate(45deg)}
+.ding.l .bild::before{left:-10px}.ding.r .bild::before{right:-10px;transform:translateY(-50%) rotate(-135deg)}
+.wer{grid-column:1/4;text-align:center;color:var(--soft);font-size:19px;margin-top:-4px}
+.satz{min-height:66px;width:min(100%,600px);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;background:#fff;border:2px dashed var(--line2);border-radius:20px;padding:8px}
+.satz.ok{border:2px solid var(--ok);background:#f1f7ec}.satz.no{border-color:var(--no)}
+.kaertli{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:min(100%,600px)}
+.kaertli button,.satz button{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:6px 14px;min-height:50px;font:700 clamp(20px,4.6vw,26px) system-ui,-apple-system,sans-serif;box-shadow:var(--sch-k)}
+.satz button{background:var(--sky)}
+.kaertli button.weg{visibility:hidden}
+.satz .pkt{font:700 26px system-ui,sans-serif}
+.de{font-size:clamp(22px,5vw,28px);text-align:center}
+@media (max-height:700px){.bild{width:min(44vw,170px)}.mik{width:92px;height:92px;font-size:40px}}
+@media (max-width:520px){.kind-svg{max-width:88px}.ding .bild{width:min(32vw,118px)}.buehne .sprech{min-height:56px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+
+var BILD = {
+  tiere: ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦉','🐢','🐙','🦋','🐝','🐞','🐟','🐘'],
+  essen: ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍒','🥕','🌽','🥦','🍄','🧀','🥨','🍕','🍦','🍪','🥚','🍞'],
+  sachen: ['⚽','🎈','✏️','🔑','🎒','⏰','📚','🧸','🚲','☂️','🎁','🔔','🪁','🎨','✂️','🧦','👓','🎩','🕯️','🧩'],
+  natur: ['🌞','🌙','⭐','☁️','🌈','❄️','🔥','🌵','🌲','🌻','🌷','🍁','🌍','⛄','🌊','🐚']
+};
+var ALLE = [].concat(BILD.tiere, BILD.essen, BILD.sachen, BILD.natur);
+var GESICHTER = ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐵','🐸'];
+
+var D = {"items": [{"id": "jumper", "en": "jumper", "sg": "jumper", "pl": "jumpers", "de": "der Pullover", "dg": "m", "dn": "Pullover", "dpl": "Pullover", "vb": "0 0 100 100"}, {"id": "tshirt", "en": "T-shirt", "sg": "T-shirt", "pl": "T-shirts", "de": "das T-Shirt", "dg": "n", "dn": "T-Shirt", "dpl": "T-Shirts", "vb": "0 0 100 100"}, {"id": "shirt", "en": "shirt", "sg": "shirt", "pl": "shirts", "de": "das Hemd", "dg": "n", "dn": "Hemd", "dpl": "Hemden", "vb": "0 0 100 100"}, {"id": "dress", "en": "dress", "sg": "dress", "pl": "dresses", "de": "das Kleid", "dg": "n", "dn": "Kleid", "dpl": "Kleider", "vb": "0 0 100 150"}, {"id": "skirt", "en": "skirt", "sg": "skirt", "pl": "skirts", "de": "der Rock", "dg": "m", "dn": "Rock", "dpl": "Röcke", "vb": "0 0 100 100"}, {"id": "trousers", "en": "trousers", "sg": null, "pl": "trousers", "de": "die Hose", "dg": "f", "dn": "Hose", "dpl": "Hosen", "vb": "0 0 100 100"}, {"id": "shorts", "en": "shorts", "sg": null, "pl": "shorts", "de": "die kurze Hose", "dg": "f", "dn": "kurze Hose", "dpl": "kurzen Hosen", "vb": "0 0 100 100"}, {"id": "jacket", "en": "jacket", "sg": "jacket", "pl": "jackets", "de": "die Jacke", "dg": "f", "dn": "Jacke", "dpl": "Jacken", "vb": "0 0 100 100"}, {"id": "coat", "en": "coat", "sg": "coat", "pl": "coats", "de": "der Mantel", "dg": "m", "dn": "Mantel", "dpl": "Mäntel", "vb": "0 0 100 150"}, {"id": "scarf", "en": "scarf", "sg": "scarf", "pl": "scarves", "de": "der Schal", "dg": "m", "dn": "Schal", "dpl": "Schals", "vb": "0 0 60 140"}, {"id": "hat", "en": "hat", "sg": "hat", "pl": "hats", "de": "der Hut", "dg": "m", "dn": "Hut", "dpl": "Hüte", "vb": "0 0 100 100"}, {"id": "cap", "en": "cap", "sg": "cap", "pl": "caps", "de": "die Kappe", "dg": "f", "dn": "Kappe", "dpl": "Kappen", "vb": "0 0 100 100"}, {"id": "tie", "en": "tie", "sg": "tie", "pl": "ties", "de": "die Krawatte", "dg": "f", "dn": "Krawatte", "dpl": "Krawatten", "vb": "0 0 50 112"}, {"id": "socks", "en": "socks", "sg": null, "pl": "socks", "de": "die Socken", "dg": "p", "dn": "Socken", "dpl": "Socken", "vb": "0 0 80 86"}, {"id": "shoes", "en": "shoes", "sg": null, "pl": "shoes", "de": "die Schuhe", "dg": "p", "dn": "Schuhe", "dpl": "Schuhe", "vb": "0 0 100 80"}, {"id": "boots", "en": "boots", "sg": null, "pl": "boots", "de": "die Stiefel", "dg": "p", "dn": "Stiefel", "dpl": "Stiefel", "vb": "0 0 100 84"}, {"id": "gloves", "en": "gloves", "sg": null, "pl": "gloves", "de": "die Handschuhe", "dg": "p", "dn": "Handschuhe", "dpl": "Handschuhe", "vb": "0 0 100 80"}], "svg": {"jumper": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e88a80\" d=\"M30 20 Q50 30 70 20 L88 32 L95 70 L82 73 L77 46 L76 88 L24 88 L23 46 L18 73 L5 70 L12 32 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d46f66\" d=\"M24 80 L76 80 L76 88 L24 88 Z M6 63 L19 66 L18 73 L5 70 Z M94 63 L81 66 L82 73 L95 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d46f66\" d=\"M36 21 Q50 33 64 21 Q50 27 36 21 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M30 50 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 M30 62 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6\"/>", "tshirt": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M33 20 Q50 30 67 20 L90 32 L82 48 L72 43 L72 88 L28 88 L28 43 L18 48 L10 32 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M38 22 Q50 32 62 22\"/><path fill=\"#f6d36b\" stroke=\"#c4952f\" stroke-width=\"1.6\" stroke-linejoin=\"round\" d=\"M50 46 L54 55 L64 56 L57 63 L59 73 L50 68 L41 73 L43 63 L36 56 L46 55 Z\"/>", "shirt": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2eef9\" d=\"M32 18 L68 18 L88 30 L93 72 L80 74 L76 46 L76 90 L24 90 L24 46 L20 74 L7 72 L12 30 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#9cc3e3\" d=\"M36 40 L36 90 M64 40 L64 90 M18 40 L16 70 M82 40 L84 70\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 30 L50 90\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M36 16 L50 30 L42 38 L33 22 Z M64 16 L50 30 L58 38 L67 22 Z\"/><g fill=\"#2b2f2c\"><circle cx=\"50\" cy=\"46\" r=\"2\"/><circle cx=\"50\" cy=\"60\" r=\"2\"/><circle cx=\"50\" cy=\"74\" r=\"2\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M56 50 L66 50 L66 60 L56 60 Z\"/>", "dress": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#c4a2e3\" d=\"M36 22 L42 22 Q50 34 58 22 L64 22 L66 58 L90 138 Q50 146 10 138 L34 58 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M38 22 L36 8 M62 22 L64 8\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M33 56 L67 56 L67 64 L33 64 Z\"/><g fill=\"#fff\" opacity=\".8\"><circle cx=\"40\" cy=\"84\" r=\"3\"/><circle cx=\"58\" cy=\"80\" r=\"3\"/><circle cx=\"50\" cy=\"100\" r=\"3\"/><circle cx=\"32\" cy=\"110\" r=\"3\"/><circle cx=\"66\" cy=\"108\" r=\"3\"/><circle cx=\"44\" cy=\"124\" r=\"3\"/><circle cx=\"74\" cy=\"128\" r=\"3\"/><circle cx=\"24\" cy=\"130\" r=\"3\"/><circle cx=\"58\" cy=\"128\" r=\"3\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M10 138 Q50 146 90 138\"/>", "skirt": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#ecc35e\" d=\"M28 20 L72 20 L73 32 L92 82 Q50 90 8 82 L27 32 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d6ad45\" d=\"M28 20 L72 20 L73 32 L27 32 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M40 32 L30 86 M50 32 L50 88 M60 32 L70 86\"/>", "trousers": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#5d8cc0\" d=\"M28 8 L72 8 L77 94 L57 94 L50 38 L43 94 L23 94 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#4a77a8\" d=\"M28 8 L72 8 L72.6 17 L27.4 17 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#cfe2f3\" d=\"M50 17 L50 32 M30 22 Q38 26 40 18 M70 22 Q62 26 60 18\"/>", "shorts": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#9ccb87\" d=\"M22 24 L78 24 L86 70 L58 74 L50 46 L42 74 L14 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#7fb069\" d=\"M22 24 L78 24 L79.6 34 L20.4 34 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M50 34 L50 44 M17 62 L42 66 M83 62 L58 66\"/>", "jacket": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f2a65a\" d=\"M34 14 L66 14 L86 28 L93 74 L80 76 L77 46 L76 90 L24 90 L23 46 L20 76 L7 74 L14 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e08d3c\" d=\"M34 14 L50 28 L66 14 L60 10 L40 10 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 28 L50 90\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"1 4\" d=\"M53 30 L53 88\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M28 66 L40 60 M72 66 L60 60\"/><circle cx=\"50\" cy=\"34\" r=\"2.4\" fill=\"#d6ad45\" stroke=\"#2b2f2c\" stroke-width=\"1.5\"/>", "coat": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b98c62\" d=\"M34 10 L66 10 L86 26 L92 92 L79 94 L76 50 L82 142 L18 142 L24 50 L21 94 L8 92 L14 26 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#a2764d\" d=\"M40 10 L50 40 L60 10 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8a6440\" d=\"M23 68 L77 68 L77.6 76 L22.4 76 Z\"/><g fill=\"#f0c24b\" stroke=\"#2b2f2c\" stroke-width=\"1.5\"><circle cx=\"43\" cy=\"52\" r=\"3\"/><circle cx=\"57\" cy=\"52\" r=\"3\"/><circle cx=\"43\" cy=\"92\" r=\"3\"/><circle cx=\"57\" cy=\"92\" r=\"3\"/><circle cx=\"43\" cy=\"112\" r=\"3\"/><circle cx=\"57\" cy=\"112\" r=\"3\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 40 L50 142\"/>", "scarf": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M12 18 Q30 -4 48 18 L48 30 Q30 14 12 30 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M12 22 L28 22 L28 120 L12 120 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M32 22 L48 22 L50 104 L34 104 Z\"/><g fill=\"#fff\"><rect x=\"13.3\" y=\"44\" width=\"13.4\" height=\"8\"/><rect x=\"13.3\" y=\"66\" width=\"13.4\" height=\"8\"/><rect x=\"13.3\" y=\"88\" width=\"13.4\" height=\"8\"/><rect x=\"33.3\" y=\"40\" width=\"15\" height=\"8\"/><rect x=\"33.6\" y=\"62\" width=\"15.2\" height=\"8\"/><rect x=\"34\" y=\"84\" width=\"15.4\" height=\"8\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14 120 L14 130 M18 120 L18 130 M22 120 L22 130 M26 120 L26 130 M36 104 L36 114 M40 104 L40 114 M44 104 L44 114 M48 104 L48 114\"/>", "hat": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" d=\"M28 64 Q28 26 50 26 Q72 26 72 64 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#c8574e\" d=\"M28.6 52 Q50 58 71.4 52 L71.8 62 Q50 68 28.2 62 Z\"/><ellipse stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" cx=\"50\" cy=\"66\" rx=\"46\" ry=\"12\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" d=\"M28 64 Q50 70 72 64 L72 60 Q50 66 28 60 Z\" stroke=\"none\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M28 63 Q50 70 72 63\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#c4952f\" d=\"M38 40 Q50 34 62 40\"/>", "cap": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3d6797\" d=\"M50 58 L96 62 Q98 72 88 74 L50 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#4f7fb5\" d=\"M14 66 Q12 28 50 26 Q80 26 84 62 Q50 56 14 66 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#cfe2f3\" d=\"M50 28 Q42 44 44 60 M50 28 Q64 42 66 58\"/><circle cx=\"50\" cy=\"26\" r=\"3.4\" fill=\"#3d6797\" stroke=\"#2b2f2c\" stroke-width=\"2\"/><path fill=\"#f6d36b\" stroke=\"#c4952f\" stroke-width=\"1.4\" d=\"M28 46 L31 51 L37 52 L33 56 L34 62 L28 59 L22 62 L23 56 L19 52 L25 51 Z\"/>", "tie": "<path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d4574e\" d=\"M17 6 L33 6 L30 18 L20 18 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d4574e\" d=\"M20 18 L30 18 L38 92 L25 108 L12 92 Z\"/><g fill=\"#f6d5cf\"><circle cx=\"25\" cy=\"34\" r=\"2.6\"/><circle cx=\"21\" cy=\"52\" r=\"2.6\"/><circle cx=\"29\" cy=\"58\" r=\"2.6\"/><circle cx=\"24\" cy=\"74\" r=\"2.6\"/><circle cx=\"31\" cy=\"84\" r=\"2.6\"/><circle cx=\"18\" cy=\"88\" r=\"2.6\"/></g>", "socks": "<g transform=\"translate(2,4)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M14 6 L34 6 L34 52 Q34 68 22 74 L10 76 Q0 76 2 66 Q4 60 12 58 L14 54 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M14 6 L34 6 L34 18 L14 18 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" stroke=\"#e8c56a\" opacity=\"1\" d=\"M15 30 L33 30 M15 40 L33 40\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M4 64 Q10 62 12 70\"/></g><g transform=\"translate(38,0)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M14 6 L34 6 L34 52 Q34 68 22 74 L10 76 Q0 76 2 66 Q4 60 12 58 L14 54 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M14 6 L34 6 L34 18 L14 18 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" stroke=\"#e8c56a\" opacity=\"1\" d=\"M15 30 L33 30 M15 40 L33 40\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M4 64 Q10 62 12 70\"/></g>", "shoes": "<g transform=\"translate(28,6) scale(0.95)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e46a5e\" d=\"M2 40 L2 18 Q2 10 12 10 L22 10 Q30 20 44 22 Q58 24 60 34 L60 40 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M2 40 L60 40 L60 46 Q60 48 58 48 L4 48 Q2 48 2 46 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M20 14 L28 22 M16 18 L26 26 M12 22 L22 30\"/><circle cx=\"10\" cy=\"26\" r=\"2.4\" fill=\"#fff\"/></g><g transform=\"translate(4,28) scale(1)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e46a5e\" d=\"M2 40 L2 18 Q2 10 12 10 L22 10 Q30 20 44 22 Q58 24 60 34 L60 40 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M2 40 L60 40 L60 46 Q60 48 58 48 L4 48 Q2 48 2 46 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M20 14 L28 22 M16 18 L26 26 M12 22 L22 30\"/><circle cx=\"10\" cy=\"26\" r=\"2.4\" fill=\"#fff\"/></g>", "boots": "<g transform=\"translate(2,4)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M6 4 L30 4 L30 50 Q50 52 56 64 L56 74 L6 74 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3f78a8\" d=\"M6 68 L56 68 L56 76 Q56 78 54 78 L8 78 Q6 78 6 76 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2ad2f\" d=\"M4 2 L32 2 L32 12 L4 12 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M12 22 L12 52\"/></g><g transform=\"translate(40,0)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M6 4 L30 4 L30 50 Q50 52 56 64 L56 74 L6 74 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3f78a8\" d=\"M6 68 L56 68 L56 76 Q56 78 54 78 L8 78 Q6 78 6 76 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2ad2f\" d=\"M4 2 L32 2 L32 12 L4 12 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M12 22 L12 52\"/></g>", "gloves": "<g transform=\"translate(8,6)\"><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"6\" y=\"12\" width=\"9\" height=\"30\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"15\" y=\"4\" width=\"9\" height=\"36\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"24\" y=\"6\" width=\"9\" height=\"34\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"33\" y=\"14\" width=\"8.5\" height=\"28\" rx=\"4.25\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 36 Q-6 30 -4 24 Q0 20 6 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 30 L42 30 L42 52 Q42 62 30 62 L16 62 Q4 62 4 50 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8f68b8\" d=\"M8 60 L38 60 L38 72 L8 72 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" opacity=\".6\" d=\"M13 64 L13 70 M19 64 L19 70 M25 64 L25 70 M31 64 L31 70\"/></g><g transform=\"translate(50,2) translate(46,0) scale(-1,1)\"><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"6\" y=\"12\" width=\"9\" height=\"30\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"15\" y=\"4\" width=\"9\" height=\"36\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"24\" y=\"6\" width=\"9\" height=\"34\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"33\" y=\"14\" width=\"8.5\" height=\"28\" rx=\"4.25\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 36 Q-6 30 -4 24 Q0 20 6 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 30 L42 30 L42 52 Q42 62 30 62 L16 62 Q4 62 4 50 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8f68b8\" d=\"M8 60 L38 60 L38 72 L8 72 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" opacity=\".6\" d=\"M13 64 L13 70 M19 64 L19 70 M25 64 L25 70 M31 64 L31 70\"/></g>"}, "schrank": "<svg class=\"schrank\" viewBox=\"0 0 1000 780\" role=\"group\" aria-label=\"Kleiderschrank\"><ellipse cx=\"500\" cy=\"764\" rx=\"470\" ry=\"14\" fill=\"#c5d8e8\" opacity=\".55\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" d=\"M30 40 L142 18 L142 752 L30 728 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#b07c45\" d=\"M48 70 L124 54 L124 716 L48 700 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" d=\"M858 18 L970 40 L970 728 L858 752 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#b07c45\" d=\"M876 54 L952 70 L952 700 L876 716 Z\"/><circle cx=\"128\" cy=\"400\" r=\"7\" fill=\"#f0c24b\" stroke=\"#2b2f2c\" stroke-width=\"2\"/><circle cx=\"872\" cy=\"400\" r=\"7\" fill=\"#f0c24b\" stroke=\"#2b2f2c\" stroke-width=\"2\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"4\" d=\"M88 136 L88 150 Q88 158 96 156 M910 136 L910 150 Q910 158 902 156\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" x=\"142\" y=\"18\" width=\"716\" height=\"734\" rx=\"14\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f8ecd8\" x=\"160\" y=\"36\" width=\"680\" height=\"682\" rx=\"6\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" x=\"126\" y=\"4\" width=\"748\" height=\"26\" rx=\"9\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" x=\"160\" y=\"186\" width=\"680\" height=\"14\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" x=\"160\" y=\"570\" width=\"680\" height=\"14\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#dcaa70\" x=\"600\" y=\"200\" width=\"12\" height=\"370\"/><path d=\"M168 232 L594 232 M168 418 L594 418 M618 226 L834 226\" stroke=\"#8a97a3\" stroke-width=\"7\" stroke-linecap=\"round\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b07c45\" d=\"M170 752 L200 752 L196 770 L174 770 Z M800 752 L830 752 L826 770 L804 770 Z\"/><text x=\"786\" y=\"114\" font-size=\"30\" fill=\"#d6ad45\" text-anchor=\"middle\">✦ ✧ ✦</text><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M224.0 246 L224.0 230 Q224.0 220 232.0 224 M184.0 262 L224.0 246 L264.0 262\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M330.0 246 L330.0 230 Q330.0 220 338.0 224 M290.0 262 L330.0 246 L370.0 262\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M436.0 246 L436.0 230 Q436.0 220 444.0 224 M396.0 262 L436.0 246 L476.0 262\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M542.0 246 L542.0 230 Q542.0 220 550.0 224 M502.0 262 L542.0 246 L582.0 262\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M672.0 240 L672.0 224 Q672.0 214 680.0 218 M632.0 256 L672.0 240 L712.0 256\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M780.0 240 L780.0 224 Q780.0 214 788.0 218 M740.0 256 L780.0 240 L820.0 256\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M246.0 430 L246.0 416 Q246.0 406 254.0 410 M212.0 430 L280.0 430\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M388.0 430 L388.0 416 Q388.0 406 396.0 410 M354.0 430 L422.0 430\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"3\" d=\"M528.0 430 L528.0 416 Q528.0 406 536.0 410 M494.0 430 L562.0 430\"/><g class=\"it\" data-id=\"hat\" tabindex=\"0\" role=\"button\" aria-label=\"hat\"><rect class=\"hit\" x=\"200\" y=\"48\" width=\"160\" height=\"128\" rx=\"16\"/><svg x=\"200\" y=\"48\" width=\"160\" height=\"128\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" d=\"M28 64 Q28 26 50 26 Q72 26 72 64 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#c8574e\" d=\"M28.6 52 Q50 58 71.4 52 L71.8 62 Q50 68 28.2 62 Z\"/><ellipse stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" cx=\"50\" cy=\"66\" rx=\"46\" ry=\"12\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e7c873\" d=\"M28 64 Q50 70 72 64 L72 60 Q50 66 28 60 Z\" stroke=\"none\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M28 63 Q50 70 72 63\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#c4952f\" d=\"M38 40 Q50 34 62 40\"/></svg></g><g class=\"it\" data-id=\"cap\" tabindex=\"0\" role=\"button\" aria-label=\"cap\"><rect class=\"hit\" x=\"410\" y=\"50\" width=\"150\" height=\"124\" rx=\"16\"/><svg x=\"410\" y=\"50\" width=\"150\" height=\"124\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3d6797\" d=\"M50 58 L96 62 Q98 72 88 74 L50 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#4f7fb5\" d=\"M14 66 Q12 28 50 26 Q80 26 84 62 Q50 56 14 66 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#cfe2f3\" d=\"M50 28 Q42 44 44 60 M50 28 Q64 42 66 58\"/><circle cx=\"50\" cy=\"26\" r=\"3.4\" fill=\"#3d6797\" stroke=\"#2b2f2c\" stroke-width=\"2\"/><path fill=\"#f6d36b\" stroke=\"#c4952f\" stroke-width=\"1.4\" d=\"M28 46 L31 51 L37 52 L33 56 L34 62 L28 59 L22 62 L23 56 L19 52 L25 51 Z\"/></svg></g><g class=\"it\" data-id=\"jumper\" tabindex=\"0\" role=\"button\" aria-label=\"jumper\"><rect class=\"hit\" x=\"166\" y=\"236\" width=\"116\" height=\"150\" rx=\"16\"/><svg x=\"166\" y=\"236\" width=\"116\" height=\"150\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e88a80\" d=\"M30 20 Q50 30 70 20 L88 32 L95 70 L82 73 L77 46 L76 88 L24 88 L23 46 L18 73 L5 70 L12 32 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d46f66\" d=\"M24 80 L76 80 L76 88 L24 88 Z M6 63 L19 66 L18 73 L5 70 Z M94 63 L81 66 L82 73 L95 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d46f66\" d=\"M36 21 Q50 33 64 21 Q50 27 36 21 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M30 50 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 M30 62 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6 l5 6 l5 -6\"/></svg></g><g class=\"it\" data-id=\"tshirt\" tabindex=\"0\" role=\"button\" aria-label=\"tshirt\"><rect class=\"hit\" x=\"272\" y=\"236\" width=\"116\" height=\"150\" rx=\"16\"/><svg x=\"272\" y=\"236\" width=\"116\" height=\"150\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M33 20 Q50 30 67 20 L90 32 L82 48 L72 43 L72 88 L28 88 L28 43 L18 48 L10 32 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M38 22 Q50 32 62 22\"/><path fill=\"#f6d36b\" stroke=\"#c4952f\" stroke-width=\"1.6\" stroke-linejoin=\"round\" d=\"M50 46 L54 55 L64 56 L57 63 L59 73 L50 68 L41 73 L43 63 L36 56 L46 55 Z\"/></svg></g><g class=\"it\" data-id=\"shirt\" tabindex=\"0\" role=\"button\" aria-label=\"shirt\"><rect class=\"hit\" x=\"378\" y=\"236\" width=\"116\" height=\"150\" rx=\"16\"/><svg x=\"378\" y=\"236\" width=\"116\" height=\"150\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2eef9\" d=\"M32 18 L68 18 L88 30 L93 72 L80 74 L76 46 L76 90 L24 90 L24 46 L20 74 L7 72 L12 30 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#9cc3e3\" d=\"M36 40 L36 90 M64 40 L64 90 M18 40 L16 70 M82 40 L84 70\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 30 L50 90\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M36 16 L50 30 L42 38 L33 22 Z M64 16 L50 30 L58 38 L67 22 Z\"/><g fill=\"#2b2f2c\"><circle cx=\"50\" cy=\"46\" r=\"2\"/><circle cx=\"50\" cy=\"60\" r=\"2\"/><circle cx=\"50\" cy=\"74\" r=\"2\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M56 50 L66 50 L66 60 L56 60 Z\"/></svg></g><g class=\"it\" data-id=\"jacket\" tabindex=\"0\" role=\"button\" aria-label=\"jacket\"><rect class=\"hit\" x=\"484\" y=\"236\" width=\"116\" height=\"150\" rx=\"16\"/><svg x=\"484\" y=\"236\" width=\"116\" height=\"150\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f2a65a\" d=\"M34 14 L66 14 L86 28 L93 74 L80 76 L77 46 L76 90 L24 90 L23 46 L20 76 L7 74 L14 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e08d3c\" d=\"M34 14 L50 28 L66 14 L60 10 L40 10 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 28 L50 90\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-dasharray=\"1 4\" d=\"M53 30 L53 88\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M28 66 L40 60 M72 66 L60 60\"/><circle cx=\"50\" cy=\"34\" r=\"2.4\" fill=\"#d6ad45\" stroke=\"#2b2f2c\" stroke-width=\"1.5\"/></svg></g><g class=\"it\" data-id=\"skirt\" tabindex=\"0\" role=\"button\" aria-label=\"skirt\"><rect class=\"hit\" x=\"184\" y=\"420\" width=\"124\" height=\"136\" rx=\"16\"/><svg x=\"184\" y=\"420\" width=\"124\" height=\"136\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#ecc35e\" d=\"M28 20 L72 20 L73 32 L92 82 Q50 90 8 82 L27 32 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d6ad45\" d=\"M28 20 L72 20 L73 32 L27 32 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M40 32 L30 86 M50 32 L50 88 M60 32 L70 86\"/></svg></g><g class=\"it\" data-id=\"trousers\" tabindex=\"0\" role=\"button\" aria-label=\"trousers\"><rect class=\"hit\" x=\"322\" y=\"414\" width=\"132\" height=\"152\" rx=\"16\"/><svg x=\"322\" y=\"414\" width=\"132\" height=\"152\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#5d8cc0\" d=\"M28 8 L72 8 L77 94 L57 94 L50 38 L43 94 L23 94 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#4a77a8\" d=\"M28 8 L72 8 L72.6 17 L27.4 17 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#cfe2f3\" d=\"M50 17 L50 32 M30 22 Q38 26 40 18 M70 22 Q62 26 60 18\"/></svg></g><g class=\"it\" data-id=\"shorts\" tabindex=\"0\" role=\"button\" aria-label=\"shorts\"><rect class=\"hit\" x=\"466\" y=\"420\" width=\"124\" height=\"124\" rx=\"16\"/><svg x=\"466\" y=\"420\" width=\"124\" height=\"124\" viewBox=\"0 0 100 100\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#9ccb87\" d=\"M22 24 L78 24 L86 70 L58 74 L50 46 L42 74 L14 70 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#7fb069\" d=\"M22 24 L78 24 L79.6 34 L20.4 34 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M50 34 L50 44 M17 62 L42 66 M83 62 L58 66\"/></svg></g><g class=\"it\" data-id=\"dress\" tabindex=\"0\" role=\"button\" aria-label=\"dress\"><rect class=\"hit\" x=\"612\" y=\"228\" width=\"120\" height=\"186\" rx=\"16\"/><svg x=\"612\" y=\"228\" width=\"120\" height=\"186\" viewBox=\"0 0 100 150\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#c4a2e3\" d=\"M36 22 L42 22 Q50 34 58 22 L64 22 L66 58 L90 138 Q50 146 10 138 L34 58 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M38 22 L36 8 M62 22 L64 8\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M33 56 L67 56 L67 64 L33 64 Z\"/><g fill=\"#fff\" opacity=\".8\"><circle cx=\"40\" cy=\"84\" r=\"3\"/><circle cx=\"58\" cy=\"80\" r=\"3\"/><circle cx=\"50\" cy=\"100\" r=\"3\"/><circle cx=\"32\" cy=\"110\" r=\"3\"/><circle cx=\"66\" cy=\"108\" r=\"3\"/><circle cx=\"44\" cy=\"124\" r=\"3\"/><circle cx=\"74\" cy=\"128\" r=\"3\"/><circle cx=\"24\" cy=\"130\" r=\"3\"/><circle cx=\"58\" cy=\"128\" r=\"3\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M10 138 Q50 146 90 138\"/></svg></g><g class=\"it\" data-id=\"coat\" tabindex=\"0\" role=\"button\" aria-label=\"coat\"><rect class=\"hit\" x=\"720\" y=\"228\" width=\"120\" height=\"186\" rx=\"16\"/><svg x=\"720\" y=\"228\" width=\"120\" height=\"186\" viewBox=\"0 0 100 150\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b98c62\" d=\"M34 10 L66 10 L86 26 L92 92 L79 94 L76 50 L82 142 L18 142 L24 50 L21 94 L8 92 L14 26 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#a2764d\" d=\"M40 10 L50 40 L60 10 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8a6440\" d=\"M23 68 L77 68 L77.6 76 L22.4 76 Z\"/><g fill=\"#f0c24b\" stroke=\"#2b2f2c\" stroke-width=\"1.5\"><circle cx=\"43\" cy=\"52\" r=\"3\"/><circle cx=\"57\" cy=\"52\" r=\"3\"/><circle cx=\"43\" cy=\"92\" r=\"3\"/><circle cx=\"57\" cy=\"92\" r=\"3\"/><circle cx=\"43\" cy=\"112\" r=\"3\"/><circle cx=\"57\" cy=\"112\" r=\"3\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M50 40 L50 142\"/></svg></g><g class=\"it\" data-id=\"boots\" tabindex=\"0\" role=\"button\" aria-label=\"boots\"><rect class=\"hit\" x=\"642\" y=\"446\" width=\"168\" height=\"116\" rx=\"16\"/><svg x=\"642\" y=\"446\" width=\"168\" height=\"116\" viewBox=\"0 0 100 84\" overflow=\"visible\"><g transform=\"translate(2,4)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M6 4 L30 4 L30 50 Q50 52 56 64 L56 74 L6 74 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3f78a8\" d=\"M6 68 L56 68 L56 76 Q56 78 54 78 L8 78 Q6 78 6 76 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2ad2f\" d=\"M4 2 L32 2 L32 12 L4 12 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M12 22 L12 52\"/></g><g transform=\"translate(40,0)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f0c24b\" d=\"M6 4 L30 4 L30 50 Q50 52 56 64 L56 74 L6 74 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3f78a8\" d=\"M6 68 L56 68 L56 76 Q56 78 54 78 L8 78 Q6 78 6 76 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e2ad2f\" d=\"M4 2 L32 2 L32 12 L4 12 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" d=\"M12 22 L12 52\"/></g></svg></g><g class=\"it\" data-id=\"shoes\" tabindex=\"0\" role=\"button\" aria-label=\"shoes\"><rect class=\"hit\" x=\"180\" y=\"600\" width=\"180\" height=\"112\" rx=\"16\"/><svg x=\"180\" y=\"600\" width=\"180\" height=\"112\" viewBox=\"0 0 100 80\" overflow=\"visible\"><g transform=\"translate(28,6) scale(0.95)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e46a5e\" d=\"M2 40 L2 18 Q2 10 12 10 L22 10 Q30 20 44 22 Q58 24 60 34 L60 40 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M2 40 L60 40 L60 46 Q60 48 58 48 L4 48 Q2 48 2 46 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M20 14 L28 22 M16 18 L26 26 M12 22 L22 30\"/><circle cx=\"10\" cy=\"26\" r=\"2.4\" fill=\"#fff\"/></g><g transform=\"translate(4,28) scale(1)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#e46a5e\" d=\"M2 40 L2 18 Q2 10 12 10 L22 10 Q30 20 44 22 Q58 24 60 34 L60 40 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M2 40 L60 40 L60 46 Q60 48 58 48 L4 48 Q2 48 2 46 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" d=\"M20 14 L28 22 M16 18 L26 26 M12 22 L22 30\"/><circle cx=\"10\" cy=\"26\" r=\"2.4\" fill=\"#fff\"/></g></svg></g><g class=\"it\" data-id=\"socks\" tabindex=\"0\" role=\"button\" aria-label=\"socks\"><rect class=\"hit\" x=\"420\" y=\"588\" width=\"120\" height=\"126\" rx=\"16\"/><svg x=\"420\" y=\"588\" width=\"120\" height=\"126\" viewBox=\"0 0 80 86\" overflow=\"visible\"><g transform=\"translate(2,4)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M14 6 L34 6 L34 52 Q34 68 22 74 L10 76 Q0 76 2 66 Q4 60 12 58 L14 54 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M14 6 L34 6 L34 18 L14 18 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" stroke=\"#e8c56a\" opacity=\"1\" d=\"M15 30 L33 30 M15 40 L33 40\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M4 64 Q10 62 12 70\"/></g><g transform=\"translate(38,0)\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8fc3ea\" d=\"M14 6 L34 6 L34 52 Q34 68 22 74 L10 76 Q0 76 2 66 Q4 60 12 58 L14 54 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#fff\" d=\"M14 6 L34 6 L34 18 L14 18 Z\"/><path fill=\"none\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".75\" stroke=\"#e8c56a\" opacity=\"1\" d=\"M15 30 L33 30 M15 40 L33 40\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M4 64 Q10 62 12 70\"/></g></svg></g><g class=\"it\" data-id=\"gloves\" tabindex=\"0\" role=\"button\" aria-label=\"gloves\"><rect class=\"hit\" x=\"598\" y=\"596\" width=\"210\" height=\"112\" rx=\"16\"/><svg x=\"598\" y=\"596\" width=\"210\" height=\"112\" viewBox=\"0 0 100 80\" overflow=\"visible\"><g transform=\"translate(8,6)\"><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"6\" y=\"12\" width=\"9\" height=\"30\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"15\" y=\"4\" width=\"9\" height=\"36\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"24\" y=\"6\" width=\"9\" height=\"34\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"33\" y=\"14\" width=\"8.5\" height=\"28\" rx=\"4.25\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 36 Q-6 30 -4 24 Q0 20 6 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 30 L42 30 L42 52 Q42 62 30 62 L16 62 Q4 62 4 50 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8f68b8\" d=\"M8 60 L38 60 L38 72 L8 72 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" opacity=\".6\" d=\"M13 64 L13 70 M19 64 L19 70 M25 64 L25 70 M31 64 L31 70\"/></g><g transform=\"translate(50,2) translate(46,0) scale(-1,1)\"><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"6\" y=\"12\" width=\"9\" height=\"30\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"15\" y=\"4\" width=\"9\" height=\"36\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"24\" y=\"6\" width=\"9\" height=\"34\" rx=\"4.5\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" x=\"33\" y=\"14\" width=\"8.5\" height=\"28\" rx=\"4.25\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 36 Q-6 30 -4 24 Q0 20 6 28 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#b893dd\" d=\"M4 30 L42 30 L42 52 Q42 62 30 62 L16 62 Q4 62 4 50 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8f68b8\" d=\"M8 60 L38 60 L38 72 L8 72 Z\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke=\"#fff\" opacity=\".6\" d=\"M13 64 L13 70 M19 64 L19 70 M25 64 L25 70 M31 64 L31 70\"/></g></svg></g><g class=\"it\" data-id=\"scarf\" tabindex=\"0\" role=\"button\" aria-label=\"scarf\"><rect class=\"hit\" x=\"48\" y=\"140\" width=\"86\" height=\"230\" rx=\"16\"/><svg x=\"48\" y=\"140\" width=\"86\" height=\"230\" viewBox=\"0 0 60 140\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M12 18 Q30 -4 48 18 L48 30 Q30 14 12 30 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M12 22 L28 22 L28 120 L12 120 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d9645a\" d=\"M32 22 L48 22 L50 104 L34 104 Z\"/><g fill=\"#fff\"><rect x=\"13.3\" y=\"44\" width=\"13.4\" height=\"8\"/><rect x=\"13.3\" y=\"66\" width=\"13.4\" height=\"8\"/><rect x=\"13.3\" y=\"88\" width=\"13.4\" height=\"8\"/><rect x=\"33.3\" y=\"40\" width=\"15\" height=\"8\"/><rect x=\"33.6\" y=\"62\" width=\"15.2\" height=\"8\"/><rect x=\"34\" y=\"84\" width=\"15.4\" height=\"8\"/></g><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14 120 L14 130 M18 120 L18 130 M22 120 L22 130 M26 120 L26 130 M36 104 L36 114 M40 104 L40 114 M44 104 L44 114 M48 104 L48 114\"/></svg></g><g class=\"it\" data-id=\"tie\" tabindex=\"0\" role=\"button\" aria-label=\"tie\"><rect class=\"hit\" x=\"870\" y=\"140\" width=\"80\" height=\"210\" rx=\"16\"/><svg x=\"870\" y=\"140\" width=\"80\" height=\"210\" viewBox=\"0 0 50 112\" overflow=\"visible\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d4574e\" d=\"M17 6 L33 6 L30 18 L20 18 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#d4574e\" d=\"M20 18 L30 18 L38 92 L25 108 L12 92 Z\"/><g fill=\"#f6d5cf\"><circle cx=\"25\" cy=\"34\" r=\"2.6\"/><circle cx=\"21\" cy=\"52\" r=\"2.6\"/><circle cx=\"29\" cy=\"58\" r=\"2.6\"/><circle cx=\"24\" cy=\"74\" r=\"2.6\"/><circle cx=\"31\" cy=\"84\" r=\"2.6\"/><circle cx=\"18\" cy=\"88\" r=\"2.6\"/></g></svg></g></svg>", "mia": "<svg viewBox=\"0 0 100 180\" class=\"kind-svg\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#5d6f8a\" d=\"M36 126 L48 126 L48 164 L36 164 Z M52 126 L64 126 L64 164 L52 164 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#5f6963\" d=\"M32 164 L49 164 L49 172 L30 172 Q30 166 32 164 Z M51 164 L68 164 Q70 166 70 172 L51 172 Z\"/><path d=\"M30 86 Q16 106 22 126 M70 86 Q84 106 78 126\" fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"12\" stroke-linecap=\"round\"/><path d=\"M30 86 Q16 106 22 126 M70 86 Q84 106 78 126\" fill=\"none\" stroke=\"#f7d5b8\" stroke-width=\"7\" stroke-linecap=\"round\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f2a0a8\" d=\"M30 82 Q50 72 70 82 L74 134 L26 134 Z\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f7d5b8\" x=\"44\" y=\"68\" width=\"12\" height=\"10\"/><circle stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8a5a33\" cx=\"22\" cy=\"54\" r=\"9\"/><circle stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8a5a33\" cx=\"78\" cy=\"54\" r=\"9\"/><circle stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f7d5b8\" cx=\"50\" cy=\"48\" r=\"24\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#8a5a33\" d=\"M26 50 Q22 20 50 20 Q78 20 74 50 Q70 34 56 34 Q52 40 44 34 Q30 34 26 50 Z\"/><circle cx=\"41\" cy=\"50\" r=\"2.8\" fill=\"#2b2f2c\"/><circle cx=\"59\" cy=\"50\" r=\"2.8\" fill=\"#2b2f2c\"/><circle cx=\"36\" cy=\"58\" r=\"4\" fill=\"#f3a6a0\" opacity=\".6\"/><circle cx=\"64\" cy=\"58\" r=\"4\" fill=\"#f3a6a0\" opacity=\".6\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M43 60 Q50 66 57 60\"/></svg>", "noah": "<svg viewBox=\"0 0 100 180\" class=\"kind-svg\"><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#4a77a8\" d=\"M36 126 L48 126 L48 164 L36 164 Z M52 126 L64 126 L64 164 L52 164 Z\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#5f6963\" d=\"M32 164 L49 164 L49 172 L30 172 Q30 166 32 164 Z M51 164 L68 164 Q70 166 70 172 L51 172 Z\"/><path d=\"M30 86 Q16 106 22 126 M70 86 Q84 106 78 126\" fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"12\" stroke-linecap=\"round\"/><path d=\"M30 86 Q16 106 22 126 M70 86 Q84 106 78 126\" fill=\"none\" stroke=\"#f7d5b8\" stroke-width=\"7\" stroke-linecap=\"round\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#7fb069\" d=\"M30 82 Q50 72 70 82 L74 134 L26 134 Z\"/><rect stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f7d5b8\" x=\"44\" y=\"68\" width=\"12\" height=\"10\"/><circle stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#f7d5b8\" cx=\"50\" cy=\"48\" r=\"24\"/><path stroke=\"#2b2f2c\" stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\" fill=\"#3b2b22\" d=\"M26 46 Q24 20 50 20 Q76 20 74 46 Q70 36 62 36 L60 30 L54 36 L48 29 L42 36 L36 31 Q30 36 26 46 Z\"/><circle cx=\"41\" cy=\"50\" r=\"2.8\" fill=\"#2b2f2c\"/><circle cx=\"59\" cy=\"50\" r=\"2.8\" fill=\"#2b2f2c\"/><circle cx=\"36\" cy=\"58\" r=\"4\" fill=\"#f3a6a0\" opacity=\".6\"/><circle cx=\"64\" cy=\"58\" r=\"4\" fill=\"#f3a6a0\" opacity=\".6\"/><path fill=\"none\" stroke=\"#2b2f2c\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M43 60 Q50 66 57 60\"/></svg>", "aehnlich": {"tie": ["thai", "tai", "tye", "ty", "tied", "tight"], "tshirt": ["tshirt", "t shirt", "tee shirt", "teeshirt", "t-shirts", "tshirts"], "socks": ["sox", "sock"], "hat": ["hats"], "cap": ["caps", "cup"], "coat": ["coats", "code"], "scarf": ["scarves"], "shoes": ["shoe", "shoos"], "boots": ["boot"], "gloves": ["glove"], "jumper": ["jumpers", "jump her"], "shirt": ["shirts"], "dress": ["dresses"], "skirt": ["skirts"], "jacket": ["jackets"], "trousers": ["trouser"], "shorts": ["short"]}};
+var G = {"title": "Kleiderschrank", "icon": "👚", "intro": "Im Schrank hängen viele Kleider. Wie heissen sie auf Englisch? Hör gut zu und sprich nach!", "n": 10, "levels": [{"name": "Entdecken", "info": "Antippen, hören und finden", "t": 0}, {"name": "Auswählen", "info": "Wie heisst es auf Englisch?", "t": 1}, {"name": "Schreiben", "info": "Das englische Wort schreiben", "t": 2}, {"name": "Sprechen", "info": "Das Wort laut sagen 🎤", "t": 3}, {"name": "my, your, his, her", "info": "Wem gehört es?", "t": 4}, {"name": "Sätze", "info": "This is my … / These are my …", "t": 5}]};
+
+var IT = D.items, ITM = {}; IT.forEach(function (x) { ITM[x.id] = x; });
+var BOTH = 'Mia und Noah';
+// ---------- Bilder
+function art(id, zwei) {
+  var x = ITM[id], s = D.svg[id];
+  if (!zwei) return '<svg viewBox="' + x.vb + '" aria-hidden="true" data-k="' + id + '">' + s + '</svg>';
+  var v = x.vb.split(' ').map(Number), w = v[2], hh = v[3];
+  return '<svg viewBox="0 0 ' + (w * 1.6) + ' ' + (hh * 1.12) + '" aria-hidden="true" data-k="' + id + '"><g transform="translate(0,' + (hh * .12) + ') scale(.95)">' + s + '</g><g transform="translate(' + (w * .62) + ',0) scale(.95)">' + s + '</g></svg>';
+}
+// ---------- Sprechen (Vorlesen auf Englisch)
+var VOICE = null;
+function voices() {
+  try {
+    var v = speechSynthesis.getVoices(), gb = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); });
+    var pref = gb.filter(function (x) { return /female|kate|serena|libby|sonia|martha|google uk english female/i.test(x.name); });
+    VOICE = pref[0] || gb[0] || v.filter(function (x) { return /^en[-_]/i.test(x.lang); })[0] || null;
+  } catch (e) {}
+}
+try { voices(); speechSynthesis.onvoiceschanged = voices; } catch (e) {}
+function say(t, rate) {
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; if (VOICE) u.voice = VOICE; u.rate = rate || 0.82; u.pitch = 1.05;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function lautBtn(t) { var b = document.createElement('button'); b.className = 'laut'; b.setAttribute('aria-label', 'Anhören'); b.textContent = '🔊'; b.onclick = function (e) { e.stopPropagation(); say(t); }; return b; }
+function norm(s) { return String(s || '').toLowerCase().replace(/[’']/g, '').replace(/[^a-z\- ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function klein(s) { return norm(s).replace(/-/g, '').replace(/ /g, ''); }
+function abstand(a, b) {
+  var d = [], i, j; for (i = 0; i <= a.length; i++) { d[i] = [i]; } for (j = 0; j <= b.length; j++) d[0][j] = j;
+  for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+// Abwechslung: jedes Stück kommt, bevor eines doppelt kommt
+function reihe(n, filt) { var a = [], src = IT.filter(filt || function () { return true; }); while (a.length < n) a = a.concat(shuffle(src)); return a.slice(0, n); }
+function neu(c, html) { var e = document.createElement('div'); if (c) e.className = c; if (html != null) e.innerHTML = html; return e; }
+
+// ---------- Stufe 1: Schrank entdecken, dann finden
+function stufeSchrank(api) {
+  var w = neu('ks'); api.stage.appendChild(w);
+  var karte = neu('wortkarte', '<span>Tippe auf ein Kleidungsstück im Schrank.</span>');
+  var holder = neu('', D.schrank); var sv = holder.firstChild;
+  var los = document.createElement('button'); los.className = 'go sun'; los.textContent = 'Finde die Kleider! →';
+  w.appendChild(karte); w.appendChild(sv); w.appendChild(los);
+  var seen = {}, phase = 'schau', liste = reihe(G.n), k = 0, ziel = null, lock = false;
+  api.msg('<span class="em">👀</span> Schau in den Schrank! Tippe auf die Kleider und hör gut zu.');
+  function itEl(id) { return sv.querySelector('[data-id="' + id + '"]'); }
+  function zeig(id) {
+    var x = ITM[id]; karte.innerHTML = ''; karte.appendChild(lautBtn(x.en));
+    karte.appendChild(neu('', '<b>' + h(x.en) + '</b> <span>' + h(x.de) + '</span>'));
+  }
+  function frage() {
+    ziel = liste[k]; lock = false;
+    var t = 'Find the ' + ziel.en + '!';
+    karte.innerHTML = ''; karte.appendChild(lautBtn(t)); karte.appendChild(neu('', '<b>Find the ' + h(ziel.en) + '!</b>'));
+    api.msg('<span class="em">🔎</span> Hör zu und tippe auf das richtige Kleidungsstück.');
+    say(t);
+  }
+  Array.prototype.forEach.call(sv.querySelectorAll('.it'), function (g) {
+    function tap() {
+      var id = g.getAttribute('data-id');
+      if (phase === 'schau') {
+        Array.prototype.forEach.call(sv.querySelectorAll('.it.an'), function (e) { e.classList.remove('an'); });
+        g.classList.add('an', 'seen'); seen[id] = 1; zeig(id); say(ITM[id].en);
+        var n = Object.keys(seen).length;
+        if (n >= 6) los.classList.add('pop');
+        api.msg('<span class="em">' + (n >= IT.length ? '🌟' : '👆') + '</span> ' + (n >= IT.length ? 'Du hast alles angeschaut! Jetzt «Finde die Kleider!»' : n + ' von ' + IT.length + ' angeschaut.'));
+        return;
+      }
+      if (lock || !ziel) return; lock = true;
+      var ok = id === ziel.id, rich = itEl(ziel.id);
+      Array.prototype.forEach.call(sv.querySelectorAll('.it.an'), function (e) { e.classList.remove('an'); });
+      rich.classList.add('an');
+      if (!ok) { g.classList.remove('no'); void g.getBBox(); g.classList.add('no'); }
+      say(ok ? ziel.en : 'This is the ' + ziel.en + '.');
+      api.msg(ok ? '<span class="em">✨</span> Yes! <b>' + h(ziel.en) + '</b> = ' + h(ziel.de) : '<span class="em">💡</span> Das ist <b>' + h(ITM[id].en) + '</b>. Gesucht war <b>' + h(ziel.en) + '</b> (leuchtet).');
+      k++;
+      if (!api.answer(ok)) return;
+      api.later(function () { rich.classList.remove('an'); g.classList.remove('no'); frage(); }, ok ? 1300 : 2400);
+    }
+    g.addEventListener('click', tap);
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(); } });
+  });
+  los.onclick = function () {
+    phase = 'finden'; los.remove();
+    Array.prototype.forEach.call(sv.querySelectorAll('.it'), function (e) { e.classList.remove('an', 'seen'); });
+    frage();
+  };
+}
+
+// ---------- Stufe 2: Auswählen
+function stufeWahl(api) {
+  var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
+  function frage() {
+    var x = liste[k], lock = false; w.innerHTML = '';
+    var b = neu('bild', art(x.id)); w.appendChild(b);
+    var opts = [x].concat(pick(IT.filter(function (y) { return y.id !== x.id; }), 3));
+    var wahl = neu('wahl'); w.appendChild(wahl);
+    api.msg('<span class="em">🤔</span> Wie heisst das auf Englisch?');
+    shuffle(opts).forEach(function (o) {
+      var bt = document.createElement('button'); bt.textContent = o.en;
+      bt.onclick = function () {
+        if (lock) return; lock = true; var ok = o.id === x.id;
+        bt.classList.add(ok ? 'ok' : 'no');
+        if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === x.en) c.classList.add('hint'); });
+        say(x.en); b.appendChild(lautBtn(x.en));
+        api.msg(ok ? '<span class="em">' + pick(['✨', '🌟', '👏'], 1)[0] + '</span> Richtig! <b>' + h(x.en) + '</b> = ' + h(x.de) : '<span class="em">💡</span> Das ist <b>' + h(x.en) + '</b> (' + h(x.de) + ').');
+        k++; if (!api.answer(ok)) return;
+        api.later(frage, ok ? 1300 : 2300);
+      };
+      wahl.appendChild(bt);
+    });
+  }
+  frage();
+}
+
+// ---------- Stufe 3: Schreiben
+function stimmt(x, s) {
+  var a = klein(s).replace(/^(a|an|the)(?=[a-z])/, ''); if (/^(a|an|the) /.test(norm(s))) a = klein(norm(s).replace(/^(a|an|the) /, ''));
+  var gut = [x.en, x.pl, x.sg].filter(Boolean).map(klein);
+  return gut.indexOf(a) >= 0;
+}
+function stufeSchreiben(api) {
+  var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
+  function frage() {
+    var x = liste[k], vers = 0, lock = false; w.innerHTML = '';
+    var b = neu('bild', art(x.id)); w.appendChild(b);
+    var lu = neu('luecke', ''); w.appendChild(lu);
+    var f = neu('schreib', '<input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Englisches Wort"><button class="go">Prüfen</button>');
+    w.appendChild(f);
+    var inp = f.querySelector('input'), btn = f.querySelector('button');
+    api.msg('<span class="em">✏️</span> Schreib das englische Wort. <small>(' + h(x.de) + ')</small>');
+    setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+    function pruef() {
+      if (lock) return; if (!inp.value.trim()) { inp.focus(); return; }
+      var ok = stimmt(x, inp.value);
+      if (!ok && vers === 0) {
+        vers = 1; inp.classList.add('no'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); bad();
+        lu.textContent = x.en.split('').map(function (c, i) { return i === 0 || c === '-' ? c : '_'; }).join(' ');
+        b.appendChild(lautBtn(x.en)); say(x.en);
+        api.msg('<span class="em">💡</span> Noch nicht. Tipp: So viele Buchstaben hat das Wort. Hör nochmal zu!');
+        api.later(function () { inp.classList.remove('no'); inp.select(); }, 600);
+        return;
+      }
+      lock = true; inp.classList.add(ok ? 'ok' : 'no'); inp.disabled = true;
+      if (!ok) { lu.textContent = x.en; }
+      if (vers === 0 || !ok) b.appendChild(lautBtn(x.en));
+      say(x.en);
+      api.msg(ok ? '<span class="em">🌟</span> Richtig geschrieben: <b>' + h(x.en) + '</b>!' : '<span class="em">📝</span> So schreibt man es: <b>' + h(x.en) + '</b>');
+      k++; if (!api.answer(ok)) return;
+      api.later(frage, ok ? 1400 : 2800);
+    }
+    btn.onclick = pruef;
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pruef(); } });
+  }
+  frage();
+}
+
+// ---------- Stufe 4: Sprechen (Spracherkennung des Geräts; sonst aufnehmen und selber vergleichen)
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition, SR_AUS = false;
+function gehoertOk(x, alts) {
+  var ziele = [x.en, x.pl, x.sg].filter(Boolean).map(klein).concat((D.aehnlich[x.id] || []).map(klein));
+  for (var i = 0; i < alts.length; i++) {
+    var t = norm(alts[i]), ganz = klein(t), woerter = t.split(' ');
+    for (var j = 0; j < ziele.length; j++) {
+      var z = ziele[j];
+      if (ganz === z || ganz.indexOf(z) >= 0 && z.length >= 4) return true;
+      for (var m = 0; m < woerter.length; m++) {
+        var wd = klein(woerter[m]), wd2 = m + 1 < woerter.length ? wd + klein(woerter[m + 1]) : '';
+        if (wd === z || wd2 === z || (z.length >= 5 && abstand(wd, z) <= 1)) return true;
+      }
+    }
+  }
+  return false;
+}
+function stufeSprechen(api) {
+  var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0, rec = null;
+  function frage() {
+    var x = liste[k], vers = 0, lock = false; w.innerHTML = '';
+    var b = neu('bild', art(x.id)); b.appendChild(lautBtn(x.en)); w.appendChild(b);
+    var mik = document.createElement('button'); mik.className = 'mik'; mik.setAttribute('aria-label', 'Sprechen'); mik.textContent = '🎤';
+    var info = neu('gehoert', ''); w.appendChild(mik); w.appendChild(info);
+    var selbst = !SR || SR_AUS;
+    api.msg(selbst ? '<span class="em">🗣️</span> Sag das Wort laut auf Englisch! <small>Tippe auf 🔊 zum Vorhören, dann auf 🎤.</small>'
+                   : '<span class="em">🗣️</span> Tippe auf 🎤 und sag das Wort auf Englisch! <small>(🔊 = vorhören)</small>');
+    function fertig(ok) {
+      if (lock) return; lock = true; mik.disabled = true; mik.classList.remove('hoert');
+      say(x.en);
+      api.msg(ok ? '<span class="em">🌟</span> Super ausgesprochen: <b>' + h(x.en) + '</b>!' : '<span class="em">👂</span> Hör nochmal gut zu: <b>' + h(x.en) + '</b>');
+      k++; if (!api.answer(ok)) return;
+      api.later(frage, ok ? 1500 : 2600);
+    }
+    function selbstPruefen() {
+      // Ohne Spracherkennung: aufnehmen, anhören und selber vergleichen
+      info.innerHTML = '';
+      var r = neu('row', '<button class="go alt" data-x="ja">👍 Klang gleich</button><button class="go alt" data-x="nochmal">🔁 Nochmal</button>');
+      function wahl() { w.appendChild(r); r.querySelector('[data-x="ja"]').onclick = function () { r.remove(); fertig(true); }; r.querySelector('[data-x="nochmal"]').onclick = function () { r.remove(); info.textContent = ''; }; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { info.textContent = 'Sag das Wort laut. Klang es wie bei 🔊?'; wahl(); return; }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
+        var mr = new MediaRecorder(st), teile = [];
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) teile.push(e.data); };
+        mr.onstop = function () {
+          st.getTracks().forEach(function (t) { t.stop(); }); mik.classList.remove('hoert');
+          var url = URL.createObjectURL(new Blob(teile, { type: mr.mimeType || 'audio/webm' })), a = new Audio(url);
+          info.innerHTML = 'So klingst du: '; var p = document.createElement('button'); p.className = 'laut'; p.textContent = '▶️'; p.onclick = function () { a.play(); }; info.appendChild(p);
+          a.play().catch(function () {}); wahl();
+        };
+        mik.classList.add('hoert'); info.textContent = 'Ich nehme auf … sprich jetzt!'; mr.start();
+        api.later(function () { if (mr.state !== 'inactive') mr.stop(); }, 2600);
+      }).catch(function () { info.textContent = 'Sag das Wort laut. Klang es wie bei 🔊?'; wahl(); });
+    }
+    mik.onclick = function () {
+      if (lock || mik.classList.contains('hoert')) return;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      if (!SR || SR_AUS) { selbstPruefen(); return; }
+      var r; try { r = new SR(); } catch (e) { SR_AUS = true; selbstPruefen(); return; }
+      rec = r; r.lang = 'en-GB'; r.interimResults = false; r.maxAlternatives = 6; r.continuous = false;
+      var bekommen = false, stopp = setTimeout(function () { try { r.stop(); } catch (e) {} }, 6000);
+      r.onresult = function (e) {
+        bekommen = true; var alts = [];
+        for (var i = 0; i < e.results.length; i++) for (var j = 0; j < e.results[i].length; j++) alts.push(e.results[i][j].transcript);
+        if (gehoertOk(x, alts)) { info.textContent = 'Ich habe gehört: «' + alts[0] + '» ✓'; fertig(true); return; }
+        vers++; info.textContent = 'Ich habe gehört: «' + (alts[0] || '…') + '»';
+        if (vers >= 3) { fertig(false); return; }
+        bad(); api.msg('<span class="em">🔁</span> Fast! Hör mit 🔊 zu und versuch es nochmal.');
+      };
+      r.onerror = function (e) {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+          SR_AUS = true; info.textContent = 'Das Mikrofon ist hier gesperrt. Du kannst trotzdem üben:'; mik.classList.remove('hoert'); api.later(selbstPruefen, 900); return;
+        }
+        if (e.error === 'no-speech') { info.textContent = 'Ich habe nichts gehört. Tippe auf 🎤 und sprich etwas lauter.'; return; }
+        if (e.error === 'aborted') return;
+        // z. B. «network»: Die Spracherkennung geht hier nicht, also selber vergleichen
+        SR_AUS = true; mik.classList.remove('hoert'); info.textContent = 'Zuhören geht gerade nicht. Du kannst trotzdem üben:'; api.later(selbstPruefen, 900);
+      };
+      r.onend = function () { clearTimeout(stopp); mik.classList.remove('hoert'); if (!bekommen && info.textContent === 'Ich höre zu …') info.textContent = 'Ich habe nichts gehört. Nochmal!'; };
+      try { r.start(); mik.classList.add('hoert'); info.textContent = 'Ich höre zu …'; } catch (e) { SR_AUS = true; selbstPruefen(); }
+    };
+  }
+  frage();
+}
+
+// ---------- Stufe 5 und 6: Mia und Noah
+var PR = {
+  my: { de: 'mein', wer: 'self' }, your: { de: 'dein', wer: 'other' }, his: { de: 'sein', wer: 'noah' },
+  her: { de: 'ihr', wer: 'mia' }, our: { de: 'unser', wer: 'beide-self' }, their: { de: 'ihr', wer: 'beide' }
+};
+var PAAR = { my: 'your', your: 'my', his: 'her', her: 'his', our: 'their', their: 'our' };
+function aufgabe(x, mehrErlaubt) {
+  var p = pick(['my', 'your', 'his', 'her', 'my', 'your', 'his', 'her', 'our', 'their'], 1)[0], spr = null, own;
+  var c = PR[p].wer;
+  if (c === 'self') { own = pick(['mia', 'noah'], 1)[0]; spr = own; }
+  else if (c === 'other') { own = pick(['mia', 'noah'], 1)[0]; spr = own === 'mia' ? 'noah' : 'mia'; }
+  else if (c === 'beide-self') { own = 'beide'; spr = pick(['mia', 'noah'], 1)[0]; }
+  else own = c;
+  var enPl = !x.sg || (mehrErlaubt && Math.random() < 0.45);
+  var dePl = x.dg === 'p' || (x.sg && enPl);
+  var g = dePl ? 'p' : x.dg, noun = dePl && x.sg ? x.dpl : x.dn;
+  var poss = PR[p].de + (g === 'f' || g === 'p' ? 'e' : '');
+  return { x: x, p: p, own: own, spr: spr, enPl: enPl, zwei: !!(x.sg && enPl),
+    deP: poss + ' ' + noun, deS: (dePl ? 'Das sind ' : 'Das ist ') + poss + ' ' + noun + '.',
+    word: enPl ? x.pl : x.sg, enP: p + ' ' + (enPl ? x.pl : x.sg),
+    enS: (enPl ? 'These are ' : 'This is ') + p + ' ' + (enPl ? x.pl : x.sg) };
+}
+function buehne(a, text) {
+  var b = neu('buehne');
+  if (a.spr) {
+    var bl = neu('sprech', '<div class="blase' + (a.spr === 'noah' ? ' r' : '') + '">' + text + '</div>');
+    bl.style.gridColumn = a.spr === 'mia' ? '1/3' : '2/4'; if (a.spr === 'noah') bl.style.justifyContent = 'flex-end';
+    b.appendChild(bl);
+  } else b.appendChild(neu('erzaehl', '<img src="../bilder/eule.webp" alt="" onerror="this.replaceWith(\'🦉\')"><div class="blase">' + text + '</div>'));
+  var m = neu('kind' + (a.own === 'mia' || a.own === 'beide' ? ' own' : ''), D.mia + '<span class="nm2">Mia</span>'); m.style.gridColumn = '1';
+  var n = neu('kind' + (a.own === 'noah' || a.own === 'beide' ? ' own' : ''), D.noah + '<span class="nm2">Noah</span>'); n.style.gridColumn = '3';
+  var d = neu('ding ' + (a.own === 'mia' ? 'l' : a.own === 'noah' ? 'r' : 'm'), '<div class="bild">' + art(a.x.id, a.zwei) + '</div>');
+  b.appendChild(m); b.appendChild(d); b.appendChild(n);
+  b.appendChild(neu('wer', a.spr ? (a.spr === 'mia' ? 'Mia' : 'Noah') + ' sagt:' : ''));
+  if (!a.spr) b.lastChild.textContent = '🦉 erzählt über ' + (a.own === 'beide' ? 'Mia und Noah' : a.own === 'mia' ? 'Mia' : 'Noah') + '.';
+  else if (a.spr) b.lastChild.textContent = (a.spr === 'mia' ? 'Mia' : 'Noah') + ' spricht' + (a.p === 'your' ? ' mit ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : a.p === 'our' ? ' über sich und ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : ' über sich') + '.';
+  return b;
+}
+function tippPr(a) {
+  return { my: '«mein» = my', your: '«dein» = your', his: 'Es gehört Noah (einem Jungen) → his', her: 'Es gehört Mia (einem Mädchen) → her',
+    our: '«unser» = our', their: 'Es gehört Mia und Noah → their' }[a.p];
+}
+function stufeBegleiter(api) {
+  var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
+  function frage() {
+    var a = aufgabe(liste[k], false), lock = false; w.innerHTML = '';
+    w.appendChild(buehne(a, '<b>' + h(a.deP) + '</b>'));
+    api.msg('<span class="em">🧺</span> Wem gehört es? Wie sagt man das auf Englisch?');
+    var opts = [a.p, PAAR[a.p]], rest = shuffle(['my', 'your', 'his', 'her', 'our', 'their'].filter(function (q) { return opts.indexOf(q) < 0; }));
+    opts = shuffle(opts.concat(rest.slice(0, 2)));
+    var wahl = neu('wahl'); w.appendChild(wahl);
+    opts.forEach(function (q) {
+      var bt = document.createElement('button'), t = q + ' ' + a.word; bt.textContent = t;
+      bt.onclick = function () {
+        if (lock) return; lock = true; var ok = q === a.p;
+        bt.classList.add(ok ? 'ok' : 'no');
+        if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === a.enP) c.classList.add('hint'); });
+        say(a.enP);
+        api.msg(ok ? '<span class="em">✨</span> Richtig: <b>' + h(a.enP) + '</b>' : '<span class="em">💡</span> ' + h(tippPr(a)) + ': <b>' + h(a.enP) + '</b>');
+        k++; if (!api.answer(ok)) return;
+        api.later(frage, ok ? 1500 : 3000);
+      };
+      wahl.appendChild(bt);
+    });
+  }
+  frage();
+}
+function stufeSaetze(api) {
+  var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
+  function frage() {
+    var a = aufgabe(liste[k], true), vers = 0, lock = false; w.innerHTML = '';
+    w.appendChild(buehne(a, '<b>' + h(a.deS) + '</b>'));
+    var ziel = a.enS.split(' ');
+    var dazu = [a.enPl ? 'This' : 'These', a.enPl ? 'is' : 'are', PAAR[a.p]];
+    if (a.x.sg) dazu.push(a.enPl ? a.x.sg : a.x.pl);
+    var satz = neu('satz'), kae = neu('kaertli'); w.appendChild(satz); w.appendChild(kae);
+    var go = document.createElement('button'); go.className = 'go'; go.textContent = 'Prüfen'; w.appendChild(go);
+    api.msg('<span class="em">🧩</span> Bau den Satz auf Englisch! Tippe die Wörter der Reihe nach an.');
+    var gewaehlt = [];
+    function zeichnen() {
+      satz.innerHTML = '';
+      gewaehlt.forEach(function (btn, i) {
+        var s = document.createElement('button'); s.textContent = btn.textContent;
+        s.onclick = function () { if (lock) return; gewaehlt.splice(i, 1); btn.classList.remove('weg'); zeichnen(); };
+        satz.appendChild(s);
+      });
+      if (gewaehlt.length) satz.appendChild(neu('pkt', '.'));
+      go.disabled = gewaehlt.length < ziel.length; go.style.opacity = go.disabled ? .5 : 1;
+    }
+    shuffle(ziel.concat(dazu)).forEach(function (t) {
+      var b = document.createElement('button'); b.textContent = t;
+      b.onclick = function () { if (lock || b.classList.contains('weg')) return; b.classList.add('weg'); gewaehlt.push(b); zeichnen(); };
+      kae.appendChild(b);
+    });
+    zeichnen();
+    go.onclick = function () {
+      if (lock || go.disabled) return;
+      var s = gewaehlt.map(function (b) { return b.textContent; }).join(' '), ok = s === a.enS;
+      if (!ok && vers === 0) {
+        vers = 1; satz.classList.add('no', 'shake'); bad();
+        var g = s.split(' '), tipp = g[0] !== ziel[0] || g[1] !== ziel[1] ? (a.enPl ? 'Mehrere Dinge (oder trousers, socks …) → These are' : 'Ein Ding → This is') : g[2] !== ziel[2] ? tippPr(a) : 'Schau das Bild genau an: eins oder zwei?';
+        if (!a.x.sg && (g[0] !== ziel[0] || g[1] !== ziel[1])) tipp = '«' + a.x.pl + '» ist auf Englisch immer Mehrzahl → These are';
+        api.msg('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
+        api.later(function () { satz.classList.remove('no', 'shake'); gewaehlt.forEach(function (b) { b.classList.remove('weg'); }); gewaehlt = []; zeichnen(); }, 1500);
+        return;
+      }
+      lock = true; go.remove();
+      if (!ok) { satz.innerHTML = ''; ziel.forEach(function (t) { var e = document.createElement('button'); e.textContent = t; satz.appendChild(e); }); satz.appendChild(neu('pkt', '.')); }
+      satz.classList.add(ok ? 'ok' : 'no'); satz.appendChild(lautBtn(a.enS + '.'));
+      say(a.enS + '.');
+      api.msg(ok ? '<span class="em">🌟</span> Super! <b>' + h(a.enS) + '.</b>' : '<span class="em">📝</span> So heisst der Satz: <b>' + h(a.enS) + '.</b>');
+      k++; if (!api.answer(ok)) return;
+      api.later(frage, ok ? 2000 : 3400);
+    };
+  }
+  frage();
+}
+
+G.play = function (lv, api) {
+  try { speechSynthesis.cancel(); } catch (e) {}
+  [stufeSchrank, stufeWahl, stufeSchreiben, stufeSprechen, stufeBegleiter, stufeSaetze][lv.t](api);
+};
+
+
+var MODE = window.knobelnest ? 'srcdoc' : window.parent !== window ? (/[?&]vorschau/.test(location.search) ? 'vorschau' : 'url') : 'solo';
+var ST = {}, AW = { lv: {}, max: 0 }, booted = false;
+function loadST(s) { try { ST = JSON.parse(s || '{}') || {}; } catch (e) { ST = {}; } }
+function send(m) { if (MODE !== 'url') return; m.knobelnest = 1; try { parent.postMessage(m, '*'); } catch (e) {} }
+var KN = MODE === 'srcdoc' ? window.knobelnest : {
+  answer: function (ok) { send({ type: 'answer', ok: !!ok }); },
+  level: function (n) { send({ type: 'level', level: n == null ? null : String(n) }); },
+  round: function () { send({ type: 'round' }); },
+  sterne: function (k) { return { have: +((AW.lv || {})[k]) || 0, max: +AW.max || 3 }; }
+};
+function save() {
+  var s = JSON.stringify(ST);
+  if (MODE === 'url') send({ type: 'store', data: { ks: s } }); else try { localStorage.setItem('ks', s); } catch (e) {}
+}
+var app = document.getElementById('app'), TM = [], RUN = 0, AC = null, CUR = -1;
+var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#fdebd8'];
+function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pick(a, n) { return shuffle(a).slice(0, n); }
+function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+function anyCat() { var k = Object.keys(BILD); return BILD[k[rnd(0, k.length - 1)]]; }
+function stopAll() { TM.forEach(clearTimeout); TM = []; }
+function pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+// Raster, das auf den Bildschirm passt (reserve = Platz für Kopf und Text)
+function grid(cols, rows, maxPx, reserve) {
+  var g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
+  var w = Math.min(window.innerWidth - 32, (window.innerHeight - (reserve || 210)) * cols / rows, cols * (maxPx || 130));
+  g.style.maxWidth = Math.max(160, w) + 'px'; g.style.fontSize = Math.max(22, Math.min(64, w / cols * 0.5)) + 'px';
+  return g;
+}
+function bigBox() { var b = document.createElement('div'); b.className = 'card'; b.style.cssText = 'width:min(46vw,200px);font-size:min(24vw,112px)'; return b; }
+function optBtn(t, wide) { var b = document.createElement('button'); b.className = 'card'; b.style.cssText = wide ? 'aspect-ratio:auto;padding:10px 18px;font-size:26px;min-height:58px' : 'width:clamp(60px,15vw,92px);font-size:clamp(32px,7.5vw,52px)'; b.innerHTML = t; return b; }
+function tone(f, d, type, vol) {
+  if (ST.mute) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + 0.05);
+  } catch (e) {}
+}
+function good() { tone(660, 0.12); setTimeout(function () { tone(990, 0.2); }, 110); }
+function bad() { tone(200, 0.3, 'triangle', 0.16); }
+function stars(have, max) { var o = ''; for (var i = 0; i < max; i++) o += i < have ? '★' : '<span class="off">★</span>'; return '<span class="stars">' + o + '</span>'; }
+function sndBtn() { return '<button class="pill" data-snd aria-label="Ton ein oder aus">' + (ST.mute ? '🔇' : '🔊') + '</button>'; }
+app.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-snd]'); if (!b) return;
+  ST.mute = !ST.mute; save(); b.textContent = ST.mute ? '🔇' : '🔊';
+});
+var showStars = MODE === 'url' || MODE === 'srcdoc';
+
+function menu() {
+  stopAll(); RUN++; CUR = -1; KN.level(null);
+  var o = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="kopf"><span class="ring">' + G.icon + '</span><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p><div class="deko">✦ ✧ ✦</div></div><div class="lvs">';
+  G.levels.forEach(function (lv, i) {
+    var s = KN.sterne('Stufe ' + (i + 1)), mx = s.max || 3;
+    o += '<button class="lv" data-lv="' + i + '"><span class="n" style="background:' + LV_COL[i] + '">' + (i + 1) + '</span><span class="tx"><b>' + h(lv.name) + '</b><span>' + h(lv.info) + '</span></span>' +
+      (showStars ? stars(Math.min(s.have, mx), mx) : '') + '</button>';
+  });
+  app.innerHTML = o + '</div>';
+  Array.prototype.forEach.call(app.querySelectorAll('[data-lv]'), function (b) { b.onclick = function () { tone(520, 0.08); start(+b.dataset.lv); }; });
+}
+
+function start(i) {
+  stopAll(); var run = ++RUN, lv = G.levels[i], res = [], N = G.n || 0; CUR = i;
+  KN.level('Stufe ' + (i + 1));
+  app.innerHTML = '<div class="top"><button class="pill" data-back>← Stufen</button><span class="t">Stufe ' + (i + 1) + ' · ' + h(lv.name) + '</span>' + sndBtn() + '</div>' +
+    (N && MODE !== 'url' && MODE !== 'srcdoc' ? '<div class="dots" id="dots"></div>' : '') + '<div class="msg" id="msg"></div><div class="stage" id="stage"></div>';
+  app.querySelector('[data-back]').onclick = menu;
+  var stage = document.getElementById('stage'), msgEl = document.getElementById('msg');
+  function dots() { var d = document.getElementById('dots'); if (!N || !d) return; var o = ''; for (var k = 0; k < N; k++) o += '<i class="' + (k < res.length ? (res[k] ? 'ok' : 'no') : '') + '"></i>'; d.innerHTML = o; }
+  dots();
+  var api = {
+    stage: stage,
+    msg: function (t) { msgEl.innerHTML = t; },
+    later: function (fn, ms) { TM.push(setTimeout(function () { if (run === RUN) fn(); }, ms)); },
+    // Antwort melden. Gibt false zurück, wenn die Runde fertig ist.
+    answer: function (ok, quiet) {
+      KN.answer(!!ok);
+      if (!quiet) { if (ok) good(); else bad(); }
+      if (!N) return true;
+      res.push(!!ok); dots();
+      if (res.length >= N) { var c = res.filter(Boolean).length; api.later(function () { end(i, c + ' von ' + N + ' richtig', c / N); }, 1600); return false; }
+      return true;
+    },
+    // Für Spiele ohne feste Anzahl Aufgaben (Paare finden)
+    done: function (line, q) { KN.round(); end(i, line, q); },
+    best: function (key, v, lower) {
+      ST.best = ST.best || {}; var old = ST.best[key], rec = old == null || (lower ? v < old : v > old);
+      if (rec) { ST.best[key] = v; save(); } return { old: old, rec: rec };
+    },
+    // Merkzeit mit Balken und Knopf «Ich bin bereit»
+    watch: function (ms, after) {
+      var w = document.createElement('div'); w.className = 'stage'; w.style.gap = '10px';
+      w.innerHTML = '<div class="bar"><i></i></div><button class="go alt">Ich bin bereit ✓</button>';
+      stage.appendChild(w);
+      var bar = w.querySelector('i'), fired = false;
+      function fire() { if (fired || run !== RUN) return; fired = true; w.remove(); after(); }
+      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.transitionDuration = ms + 'ms'; bar.style.width = '0%'; }); });
+      w.querySelector('button').onclick = fire;
+      api.later(fire, ms);
+    }
+  };
+  G.play(lv, api, i);
+}
+
+function end(i, line, q) {
+  stopAll(); RUN++;
+  var em = q >= 0.9 ? '🏆' : q >= 0.7 ? '🌟' : q >= 0.5 ? '👍' : '💪', t = q >= 0.9 ? 'Super gemacht!' : q >= 0.7 ? 'Gut gemacht!' : q >= 0.5 ? 'Geschafft!' : 'Weiter üben!';
+  var next = i + 1 < G.levels.length;
+  app.innerHTML = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="stage" style="margin-top:30px"><div class="end"><div class="big">' + em + '</div><h2>' + t + '</h2><p>' + line + '</p><div class="row">' +
+    '<button class="go" data-again>Nochmal</button>' + (next && q >= 0.7 ? '<button class="go sun" data-next>Nächste Stufe →</button>' : '') + '<button class="go alt" data-menu>Stufen</button></div><div class="deko" style="margin-top:16px">✦ ✧ ✦</div></div></div>';
+  app.querySelector('[data-again]').onclick = function () { start(i); };
+  if (app.querySelector('[data-next]')) app.querySelector('[data-next]').onclick = function () { start(i + 1); };
+  app.querySelector('[data-menu]').onclick = menu;
+  if (q >= 0.7) { good(); setTimeout(function () { tone(1320, 0.25); }, 260); }
+}
+
+function boot() {
+  if (booted) return; booted = true;
+  var m = /[?&]stufe=(\d)/.exec(location.search), s = m ? +m[1] - 1 : -1;
+  if (s >= 0 && s < G.levels.length) start(s); else menu();
+}
+if (MODE === 'url') {
+  window.addEventListener('message', function (e) {
+    var d = e.data; if (e.source !== parent || !d) return;
+    if (d.knobelnestInit && !booted) { var x = d.knobelnestInit; loadST(x.store && x.store.ks); if (x.award && typeof x.award === 'object') AW = x.award; boot(); }
+    if (d.knobelnestAward) { AW = d.knobelnestAward; if (booted && CUR < 0) menu(); }
+  });
+  send({ type: 'hello' });
+  setTimeout(boot, 2500);
+} else {
+  try { loadST(localStorage.getItem('ks')); } catch (e) {}
+  if (MODE === 'srcdoc') window.addEventListener('knobelnest-sterne', function () { if (CUR < 0) menu(); });
+  boot();
+}
+
+</script>
+</body>
+</html>
