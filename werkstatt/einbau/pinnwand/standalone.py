@@ -62,5 +62,6 @@ rep('S.ideas = new Map(snap.docs.map(d => [d.id, d.data()]));', 'S.ideas = new M
 rep('    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} };', '    if (data && S.peek) { ownMy = { name: data.name || (ownMy && ownMy.name) || "", r: data.r || {} }; render(); return; }\n    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} };')
 # Vorlagen und Darstellungen
 exec(open(os.path.join(here, 'vorlagen.py'), encoding='utf-8').read())
+exec(open(os.path.join(here, 'vorlagen2.py'), encoding='utf-8').read())
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
