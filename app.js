@@ -2141,7 +2141,7 @@
   // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
   // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
   // ===================================================================
-  var QUIZ_VER = '5';
+  var QUIZ_VER = '6';
   function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
   var QZ = {
     start: async function () {
