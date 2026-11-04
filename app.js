@@ -134,6 +134,13 @@
   // Werkzeuge für die Kinder: fehlt ein Eintrag, gilt «freigegeben» (so bleiben bestehende Klassen wie bisher)
   function toolOn(c, k) { var t = c && c.kid_tools; return !(t && t[k] === false); }
 
+  // Einheitlicher Zurück-Knopf wie in der Eulenkiste: weisse Pille mit Pfeil und Eule (oben links)
+  function backBtn(attr, label) {
+    label = label || 'Zurück zur Klassenkiste';
+    var inner = '<span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34" draggable="false">';
+    return /href=/.test(attr) ? '<a class="kn-back" ' + attr + ' aria-label="' + h(label) + '" title="' + h(label) + '">' + inner + '</a>'
+      : '<button class="kn-back" ' + attr + ' aria-label="' + h(label) + '" title="' + h(label) + '">' + inner + '</button>';
+  }
   function ic(paths, size, color, sw) {
     return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') +
       '" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
@@ -272,14 +279,14 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '9'; // Vokabelkiste (vokabelkiste/index.html)
-  var GD_VER = '1'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
+  var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
+  var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
     var p = document.createElement('div');
     p.className = 'player'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', title);
-    p.innerHTML = '<div class="player-bar"><button class="btn sm" data-a="closePlayer">' + ic(I.back) + ' Zurück</button><b>' + h(title) +
+    p.innerHTML = '<div class="player-bar">' + backBtn('data-a="closePlayer"', 'Zurück') + '<b>' + h(title) +
       '</b><button class="btn sm" data-a="playerFull">Vollbild</button></div>';
     var f = document.createElement('iframe');
     f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
@@ -381,11 +388,10 @@
     var mine = me ? entry[me] : null;
     var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
     var kid = mode === 'kid', emb = mode === 'embed';
-    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head"><img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
+    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
       '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
       '<p>' + (kid ? 'Tippe beim Fach auf das Feld, das zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
-      '<div class="row">' + (kid ? '<button class="board-btn" data-a="kBack">' + ic(I.back) + ' Zurück</button>' :
-        '<button class="board-btn" data-a="wallFull">Vollbild</button><a class="board-btn" href="#/">Zum Portal</a>') + '</div></div>';
+      (kid ? '' : '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button></div>') + '</div>';
     if (kid) {
       out += '<div class="mine"><b>Du (' + h(kidName[me] || '') + '):</b><span>' +
         (mine && subjName[mine.subject_id] ? h(subjName[mine.subject_id]) + ' · ' + (COL_LABEL[mine.col] || '') : 'Du stehst noch nicht auf der Tafel. Wähle unten dein Fach und die passende Spalte.') + '</span>' +
@@ -480,12 +486,12 @@
     countLeft: function () { if (!S.race || !S.race.starts_at) return -1; return Math.ceil((Date.parse(S.race.starts_at) - S.offset - Date.now()) / 1000); },
     render: function () {
       var cls = S.cls || { name: '' }, r = S.race, kidName = {}; (S.kids || []).forEach(function (k) { kidName[k.id] = k.name; });
-      var head = '<div class="spr-head"><div><span class="kick">Klassen-Sprint · Klasse ' + h(cls.name) + '</span><h1>' +
+      var head = '<div class="spr-head">' + backBtn('href="#/"') + '<div style="flex:1 1 auto"><span class="kick">Klassen-Sprint · Klasse ' + h(cls.name) + '</span><h1>' +
         (!r ? 'Neuer Sprint' : r.status === 'wait' ? 'Auf die Plätze …' : r.status === 'run' ? 'Los geht\'s!' : 'Zieleinlauf') + '</h1></div><div class="row">' +
         (r && r.status === 'wait' ? '<button class="btn primary big" data-a="sGo"' + (S.runs.length ? '' : ' disabled') + '>▶ Start</button><button class="btn" data-a="sCancel">Abbrechen</button>' : '') +
         (r && r.status === 'run' ? '<button class="btn" data-a="sEnd">Beenden</button>' : '') +
         (r && r.status === 'done' ? '<button class="btn primary" data-a="sNew">Neuer Sprint</button>' : '') +
-        '<button class="btn" data-a="wallFull">Vollbild</button><a class="btn" href="#/">Zum Portal</a></div></div>';
+        '<button class="btn" data-a="wallFull">Vollbild</button></div></div>';
       var body = '';
       if (!r) {
         body = '<div class="spr-setup card stack"><p class="lead">Alle Kinder rechnen gleichzeitig an ihrem iPad. Jede richtige Antwort bringt ihren Läufer einen Schritt weiter. Hier vorne sieht die ganze Klasse das Rennen.</p>' +
@@ -655,14 +661,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('38') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('39') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '5';
+  var HEFT_VER = '6';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -724,7 +730,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '15';
+  var PIN_VER = '16';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -807,7 +813,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '5';
+  var ATELIER_VER = '6';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -1167,7 +1173,7 @@
 
   // ---------- Liste der Umfragen ----------
   U.viewList = function () {
-    var out = '<div class="umf-page">' + U.top('<a class="btn sm" href="#/">← ' + h(C.PORTAL_NAME) + '</a>') +
+    var out = '<div class="umf-page">' + U.top(backBtn('href="#/"')) +
       '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
       '<p>Stellen Sie der Klasse Fragen: Abstimmungen, Wortwolken, Quiz, Schätzfragen und mehr. Die Kinder antworten am iPad, die Ergebnisse erscheinen live an der Wandtafel.</p>' +
       '<p class="muted small">Ihre Umfragen gelten für alle Ihre Klassen. Die Antworten werden pro Klasse gespeichert.</p></div>' +
@@ -1513,7 +1519,7 @@
       paint('<div class="folie"><iframe src="gedaechtnis/index.html?v=' + GD_VER + '" title="Gedächtniskiste" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '7';
+  var OTTER_VER = '8';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
@@ -1558,7 +1564,7 @@
   // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
   // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
   // ===================================================================
-  var QUIZ_VER = '2';
+  var QUIZ_VER = '3';
   function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
   var QZ = {
     start: async function () {
@@ -1918,8 +1924,8 @@
       [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3ECF5' }].concat(fachs.map(function (f) {
         return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
       })).map(function (t) {
-        return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
-          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
+        return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw' + (t.id !== 'alle' && fachBild(t.id) ? ' sw-bild' : '') + '" style="background:' + t.col + '">' +
+          (t.id === 'alle' ? '★' : fachBild(t.id) || h(t.label.charAt(0))) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
       (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
@@ -2179,6 +2185,12 @@
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
+  // Bilder für die Fächer (bilder/faecher/), sonst der Anfangsbuchstabe
+  function fachBild(f) {
+    var k = String(f || '').toLowerCase().replace(/[^a-zäöü]/g, '');
+    var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
+    return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
+  }
   var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz', umfrage: 'umfrage' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
@@ -2990,9 +3002,11 @@
   };
   K.shell = function (body, back) {
     if (back === null) return '<div class="kid"><div class="kid-in">' + body + '</div></div>';
-    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="kid-marke"><img src="bilder/eule.webp" alt="" width="52" height="52"><small>' + h(C.PORTAL_NAME) + '</small></span>' +
-      (back ? '<button class="kid-btn" data-a="kBack">' + back + '</button>' : '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>') +
-      '</div>' + body + '</div></div>';
+    var marke = '<span class="kid-marke"><img src="bilder/eule.webp" alt="" width="52" height="52"><small>' + h(C.PORTAL_NAME) + '</small></span>';
+    var top = back === 'Abmelden' ? marke + '<button class="kid-btn" data-a="kBack">Abmelden</button>'
+      : back ? backBtn('data-a="kBack"', back)
+      : marke + '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>';
+    return '<div class="kid"><div class="kid-in"><div class="kid-top">' + top + '</div>' + body + '</div></div>';
   };
   K.render = function () {
     document.body.classList.add('kidv');
@@ -3054,7 +3068,7 @@
       var gs = games.filter(function (g) { return g.fach === f; }), n = gs.length;
       // Ein Fach, das nur aus der Vokabelkiste besteht: Kachel mit dem Kisten-Symbol, öffnet die Vokabelkiste direkt
       if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic ic-bild"><img src="bilder/kacheln/vokabelkiste.webp" alt="" draggable="false"></span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
-      return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
+      return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '">' + (fachBild(f) ? '<span class="ic ic-bild">' + fachBild(f) + '</span>' : '<span class="ic">' + h(f.charAt(0)) + '</span>') + '<b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
