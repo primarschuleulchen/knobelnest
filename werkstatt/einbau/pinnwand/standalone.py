@@ -64,5 +64,6 @@ rep('    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} };',
 exec(open(os.path.join(here, 'vorlagen.py'), encoding='utf-8').read())
 exec(open(os.path.join(here, 'vorlagen2.py'), encoding='utf-8').read())
 exec(open(os.path.join(here, 'vorlagen3.py'), encoding='utf-8').read())
+exec(open(os.path.join(here, 'vorlagen4.py'), encoding='utf-8').read())
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
