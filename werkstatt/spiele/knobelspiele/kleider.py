@@ -127,7 +127,7 @@ CSS = r"""
 .laut{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--sky);border:2px solid var(--ink);font-size:24px;box-shadow:var(--sch-k);flex:none}
 .laut:active{transform:scale(.94)}
 .bild{width:min(56vw,230px);aspect-ratio:1;display:grid;place-items:center;background:#fff;border:3px solid var(--gold);border-radius:30px;box-shadow:inset 0 0 0 6px #fff,var(--sch);padding:16px;position:relative}
-.bild .art{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.bild .art{position:absolute;inset:9%;display:flex;align-items:center;justify-content:center}
 .bild .art img{max-width:100%;max-height:100%;object-fit:contain;display:block;filter:drop-shadow(0 3px 4px rgba(63,120,168,.18))}
 .bild .art.zwei img{max-width:62%}.bild .art.zwei img+img{margin-left:-14%;margin-top:-18%}
 .bild .laut{position:absolute;right:-14px;bottom:-14px}
@@ -161,6 +161,9 @@ CSS = r"""
 .kind-bild{height:min(30vh,230px);width:auto;max-width:100%;display:block;object-fit:contain}
 .ring{width:150px;height:150px;background:none;border:0;padding:0;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
 .kind .nm2{background:var(--sun);border-radius:10px;padding:0 10px;font-size:20px;margin-top:2px}
+/* Person, der es gehört (über die gesprochen wird): goldener Schein um die Figur, Name in Gold */
+.kind.own .kind-bild{filter:drop-shadow(0 0 7px rgba(240,194,75,.95)) drop-shadow(0 0 16px rgba(240,194,75,.75))}
+.kind.own .nm2{background:#f0c24b;font-weight:700}
 .ding{grid-row:2;grid-column:2;display:flex;align-items:center;padding-bottom:34px}
 .ding .bild{width:min(30vw,150px);padding:10px;border-width:3px}
 .ding.l{justify-content:flex-start}.ding.r{justify-content:flex-end}.ding.m{justify-content:center}
