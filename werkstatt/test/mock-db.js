@@ -15,7 +15,13 @@
   var me = function () { return D.profiles.filter(function (p) { return D.session && p.id === D.session.user.id; })[0]; };
   var delay = function (v) { return new Promise(function (r) { setTimeout(function () { r(JSON.parse(JSON.stringify(v === undefined ? null : v))); }, 30); }); };
   var norm = function (c) { return String(c || '').replace(/\s/g, '').toUpperCase(); };
-  function kidOf(token) { var s = D.sessions[token]; if (!s) throw new Error('Anmeldung abgelaufen'); return D.kids.filter(function (k) { return k.id === s; })[0]; }
+  function licOk(cid) {
+    var c = D.classes.filter(function (x) { return x.id === cid; })[0], p = c && D.profiles.filter(function (x) { return x.id === c.teacher_id; })[0];
+    return !p || p.is_admin || !p.valid_until || p.valid_until >= new Date().toLocaleDateString('sv-SE');
+  }
+  function kidOf(token) { var s = D.sessions[token]; if (!s) throw new Error('Anmeldung abgelaufen');
+    var k = D.kids.filter(function (k) { return k.id === s; })[0];
+    if (!licOk(k.class_id)) throw new Error('Eure Klassenkiste ist gerade pausiert. Sag es deiner Lehrperson.'); return k; }
   function hasGame(tid, gid) {
     var g = D.games.filter(function (x) { return x.id === gid; })[0]; if (!g) return false;
     var p = D.profiles.filter(function (x) { return x.id === tid; })[0];
@@ -82,11 +88,13 @@
     tafelTeacher: function (cid) { return delay({ me: null, state: state(cid) }); },
     kidClass: function (code) {
       var c = D.classes.filter(function (x) { return norm(x.code) === norm(code); })[0]; if (!c) return delay(null);
+      if (!licOk(c.id)) return delay({ pausiert: true, kids: [] });
       return delay({ class_id: c.id, class_name: c.name, bild: c.bild || null, kids: D.kids.filter(function (k) { return k.class_id === c.id; }).sort(function (a, b) { var x = a.nr == null ? 1e9 : a.nr, y = b.nr == null ? 1e9 : b.nr; return x - y || a.name.localeCompare(b.name); }).map(function (k) { return { id: k.id, name: k.name, nr: k.nr }; }) });
     },
     kidLogin: function (code, kid, pw) {
       var k = D.kids.filter(function (x) { return x.id === kid; })[0];
       if (!k) return delay({ ok: false, error: 'unbekannt' });
+      if (!licOk(k.class_id)) return delay({ ok: false, error: 'pausiert' });
       if (k.pw !== pw) return delay({ ok: false, error: 'falsch' });
       var t = uid(); D.sessions[t] = k.id; return delay({ ok: true, token: t, name: k.name });
     },

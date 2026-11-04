@@ -2192,7 +2192,7 @@
     LS.del('kn_kid'); K.sess = null;
     var code = LS.get('kn_code');
     if (code) {
-      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names';
+      try { var c = await DB.kidClass(code); if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; c = null; } if (c) { K.code = code; K.cls = c; K.step = 'names';
         var wk = K.wantKid && c.kids.filter(function (k) { return k.id === K.wantKid; })[0];
         if (wk) { K.kid = wk; K.pw = []; K.err = ''; K.step = 'pw'; } K.wantKid = null;
         return K.render(); } } catch (e) {}
@@ -2216,6 +2216,9 @@
     catch (e) {}
   };
   K.sessionLost = function (e) {
+    if (/pausiert/i.test((e && e.message) || '')) {
+      LS.del('kn_kid'); K.sess = null; K.home = null; K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; K.step = 'code'; return K.render();
+    }
     if (/Anmeldung|session/i.test((e && e.message) || '')) {
       LS.del('kn_kid'); K.sess = null; K.home = null; toast('Bitte melde dich nochmals an.'); return K.start();
     }
@@ -2399,6 +2402,7 @@
   ACT.kCode = async function (f) {
     var code = f.elements.code.value.trim(); if (!code) return;
     var c = await DB.kidClass(code);
+    if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; return K.render(); }
     if (!c) { K.err = 'Diesen Code kennen wir nicht. Schau nochmals an der Wandtafel.'; return K.render(); }
     K.err = ''; K.code = code; K.cls = c; LS.set('kn_code', code); K.step = 'names'; K.render();
   };
@@ -2416,8 +2420,9 @@
       if (!r.ok) {
         K.pw = [];
         K.err = r.error === 'gesperrt' ? 'Kurze Pause! Versuch es in ' + Math.max(1, Math.ceil((r.seconds || 60) / 60)) + ' Minuten wieder.' :
-          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
-        if (r.error === 'unbekannt') { LS.del('kn_code'); K.step = 'code'; }
+          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' :
+          r.error === 'pausiert' ? 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
+        if (r.error === 'unbekannt' || r.error === 'pausiert') { if (r.error === 'unbekannt') LS.del('kn_code'); K.step = 'code'; }
         return K.render();
       }
       K.sess = { token: r.token, name: r.name, code: K.code, kid: K.kid && K.kid.id, exp: Date.now() + 11.5 * 3600 * 1000 };
