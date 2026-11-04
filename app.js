@@ -203,7 +203,7 @@
     return false;
   }
   var UI = { confirm: null, view: null };
-  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); }
+  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); else if (UI.view === 'umfrage') U.render(); }
 
   // Overlays
   function overlay(html) {
@@ -359,6 +359,8 @@
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
+    var mu = hs.match(/^#\/umfrage\/([0-9a-f-]{36})/);
+    if (mu) return U.start(mu[1]);
     if (/^#\/quiz(\/|$)/.test(hs)) return QZ.start();
     var mq = hs.match(/^#\/q(?:\/(\d*))?\/?$/);
     if (mq) return QZ.play(mq[1] || '');
@@ -565,7 +567,7 @@
   // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
   var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
-  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage']];
   async function toolAccess(me) {
     var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
@@ -834,6 +836,581 @@
     }
   };
   // ===================================================================
+  // Umfrage (ähnlich wie Mentimeter): Die Lehrperson stellt Fragen an der Wandtafel, die Kinder antworten am iPad.
+  // Umfragen der Lehrperson (für alle Klassen): teacher_store «umfragen» = { list: [ { id, title, set, qs: [Frage] } ] }
+  // Live-Stand pro Klasse: teacher_store «umfrage-<Klasse>» = { live: {...}, ans: { Frage-ID: { Kind-ID: Antwort } } }
+  //   live (schreibt nur die Lehrperson, umfrage_put) = { on, sid, title, mode, cur, open, show, auto, kids, rev, hid, hidw, until, qs }
+  //   Antworten schreiben die Kinder mit kid_umfrage_send, lesen mit kid_umfrage (ohne Namen, Lösung erst nach dem Aufdecken).
+  // ===================================================================
+  var UMF_TYPES = [
+    ['wahl', 'Auswahl', '📊', 'Eine oder mehrere Antworten wählen'],
+    ['quiz', 'Quizfrage', '🏆', 'Eine Antwort ist richtig, mit Auflösung'],
+    ['stimmung', 'Stimmung', '😊', 'Gesichter, Ampel, Daumen oder Wetter'],
+    ['wort', 'Wortwolke', '☁️', 'Kurze Wörter werden zur Wolke'],
+    ['text', 'Offene Frage', '💬', 'Sätze und Ideen als Kärtchen'],
+    ['skala', 'Skala', '🎚️', 'Aussagen von 1 bis 5 bewerten'],
+    ['rang', 'Rangliste', '🥇', 'In die wichtigste Reihenfolge bringen'],
+    ['punkte', 'Sterne verteilen', '⭐', 'Sterne auf die Ideen verteilen'],
+    ['zahl', 'Schätzfrage', '🔢', 'Eine Zahl schätzen, mit Lösung'],
+    ['feld', 'Punkt setzen', '🎯', 'Einen Punkt ins Feld setzen'],
+    ['info', 'Infofolie', '📝', 'Nur Text, ohne Antwort']
+  ];
+  function umfType(t) { return UMF_TYPES.filter(function (x) { return x[0] === t; })[0] || UMF_TYPES[0]; }
+  var UMF_COL = ['#5f97c8', '#e8a33d', '#7ea56a', '#d9736a', '#9b7fc4', '#4fb0a8', '#d6ad45', '#c77ca6'];
+  var UMF_INK = ['#2f5f8f', '#a8650c', '#4a7536', '#a8443b', '#674c98', '#2a7a73', '#93701a', '#93456f'];
+  var UMF_TINT = ['#fbf3dc', '#dcf0fd', '#e9f1e3', '#fcefed', '#efe7f8', '#e0f4f1'];
+  var UMF_STIL = {
+    gesichter: ['😄 Super', '🙂 Gut', '😐 Geht so', '🙁 Nicht so gut', '😢 Schlecht'],
+    ampel: ['🟢 Alles klar', '🟡 Fast', '🔴 Noch nicht'],
+    daumen: ['👍 Ja', '🤷 Weiss nicht', '👎 Nein'],
+    wetter: ['☀️ Sonnig', '⛅ Wolkig', '🌧️ Regnerisch', '⛈️ Gewitter']
+  };
+  var UMF_STIL_NAME = { gesichter: 'Gesichter', ampel: 'Ampel', daumen: 'Daumen', wetter: 'Wetter' };
+  function umfId(p) { return p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 6); }
+  function umfNewQ(type) {
+    var q = { id: umfId('q'), type: type, text: '' };
+    if (type === 'wahl') { q.opts = ['', '', '']; q.multi = false; }
+    else if (type === 'quiz') { q.opts = ['', '', '', '']; q.ok = [0]; q.multi = false; }
+    else if (type === 'stimmung') { q.stil = 'gesichter'; q.opts = UMF_STIL.gesichter.slice(); q.text = 'Wie geht es dir heute?'; }
+    else if (type === 'wort') q.max = 3;
+    else if (type === 'text') q.max = 1;
+    else if (type === 'skala') { q.opts = ['']; q.max = 5; q.lo = 'stimmt gar nicht'; q.hi = 'stimmt genau'; }
+    else if (type === 'rang') q.opts = ['', '', ''];
+    else if (type === 'punkte') { q.opts = ['', '', '']; q.pts = 10; }
+    else if (type === 'zahl') { q.min = ''; q.max = ''; q.ok = ''; q.unit = ''; }
+    else if (type === 'feld') q.ax = ['müde', 'wach', 'traurig', 'fröhlich']; // links, rechts, unten, oben
+    else if (type === 'info') q.sub = '';
+    return q;
+  }
+  function umfNum(v) { var s = String(v == null ? '' : v).trim().replace(/[’']/g, '').replace(',', '.'); return s !== '' && /^-?\d+(\.\d+)?$/.test(s) ? +s : null; }
+  function umfFmtNum(x) { return x == null || !isFinite(x) ? '' : (Math.round(x * 100) / 100).toLocaleString('de-CH'); }
+  function umfHasOk(q) { return q.type === 'quiz' ? Array.isArray(q.ok) && q.ok.length > 0 : q.type === 'zahl' ? umfNum(q.ok) !== null : false; }
+  function umfSkMax(q) { return Math.min(10, Math.max(3, +q.max || 5)); }
+  // Emoji vorne abtrennen («😄 Super» -> ['😄', 'Super'])
+  function umfEmo(o) {
+    var m = /^(\S+)\s*(.*)$/.exec(String(o || '').trim());
+    try { if (m && /\p{Extended_Pictographic}/u.test(m[1])) return [m[1], m[2]]; } catch (e) {}
+    return ['', String(o || '')];
+  }
+  // Für den Start: leere Antworten weglassen, nur bekannte Felder (Lösung bei Quiz entsprechend umrechnen)
+  function umfClean(q) {
+    var c = { id: q.id, type: q.type, text: String(q.text || '').trim().slice(0, 200) };
+    if (q.opts) {
+      var map = {}, o = [];
+      q.opts.forEach(function (x, i) { x = String(x || '').trim().slice(0, 80); if (x) { map[i] = o.length; o.push(x); } });
+      c.opts = o;
+      if (q.type === 'quiz') c.ok = (q.ok || []).filter(function (i) { return map[i] != null; }).map(function (i) { return map[i]; });
+    }
+    if (q.type === 'wahl' || q.type === 'quiz') c.multi = !!q.multi;
+    if (q.type === 'wort' || q.type === 'text') c.max = +q.max || 1;
+    if (q.type === 'skala') { c.max = umfSkMax(q); c.lo = String(q.lo || '').slice(0, 40); c.hi = String(q.hi || '').slice(0, 40); }
+    if (q.type === 'punkte') c.pts = Math.min(100, Math.max(1, +q.pts || 10));
+    if (q.type === 'stimmung') c.stil = q.stil;
+    if (q.type === 'zahl') { c.min = umfNum(q.min); c.max = umfNum(q.max); c.ok = umfNum(q.ok); c.unit = String(q.unit || '').slice(0, 20); }
+    if (q.type === 'feld') c.ax = (q.ax || []).slice(0, 4).map(function (x) { return String(x || '').slice(0, 30); });
+    if (q.type === 'info') c.sub = String(q.sub || '').slice(0, 600);
+    return c;
+  }
+  function umfCheck(sv) {
+    if (!sv.qs.length) return 'Bitte zuerst eine Frage hinzufügen.';
+    for (var i = 0; i < sv.qs.length; i++) {
+      var q = umfClean(sv.qs[i]), nr = 'Frage ' + (i + 1) + ': ';
+      if (!q.text) return nr + 'Bitte die Frage eintippen.';
+      if (q.opts && q.opts.length < (q.type === 'skala' ? 1 : 2)) return nr + (q.type === 'skala' ? 'Bitte mindestens eine Aussage eintippen.' : 'Bitte mindestens zwei Antworten eintippen.');
+      if (q.type === 'quiz' && !q.ok.length) return nr + 'Bitte die richtige Antwort mit ✓ markieren.';
+      if (q.type === 'zahl' && q.min != null && q.max != null && q.min >= q.max) return nr + 'Die kleinste Zahl muss kleiner als die grösste sein.';
+    }
+    return '';
+  }
+  // Antwort als Text (Tabelle und Kinderansicht)
+  function umfFmt(q, v) {
+    if (v == null) return '';
+    var o = q.opts || [];
+    switch (q.type) {
+      case 'wahl': case 'quiz': case 'stimmung': return (v || []).map(function (i) { return o[i]; }).join(', ');
+      case 'wort': case 'text': return (v || []).join(' / ');
+      case 'skala': return (v || []).map(function (x, i) { return (o.length > 1 ? o[i] + ': ' : '') + x; }).join(', ');
+      case 'rang': return (v || []).map(function (i, p) { return (p + 1) + '. ' + o[i]; }).join(', ');
+      case 'punkte': return (v || []).map(function (x, i) { return x ? o[i] + ': ' + x : ''; }).filter(Boolean).join(', ');
+      case 'zahl': return umfFmtNum(+v) + (q.unit ? ' ' + q.unit : '');
+      case 'feld': return Math.round(v.x) + ' / ' + Math.round(v.y);
+    }
+    return '';
+  }
+  function umfQuizOk(q, v) { if (!Array.isArray(v) || !Array.isArray(q.ok)) return false; return v.slice().sort().join(',') === q.ok.slice().sort().join(','); }
+
+  // Ergebnisse einer Frage zeichnen. E = [{ v: Antwort, k: Kind-ID, n: Name }] (Kinder bekommen nur v)
+  // o = { rev: Lösung zeigen, names: Namen zeigen, mod: Lehrperson darf ausblenden, small: schmale Ansicht, hidw: ausgeblendete Wörter }
+  function umfRes(q, E, o) {
+    o = o || {}; var t = q.type, opts = q.opts || [], n = opts.length, N = E.length;
+    if (t === 'info') return '';
+    if (!N) return '<div class="ur-leer">Noch keine Antworten</div>';
+    var col = function (i) { return UMF_COL[i % UMF_COL.length]; };
+    var label = function (x) { var e = umfEmo(x); return e[0] ? '<span class="ur-emo">' + e[0] + '</span><span>' + h(e[1]) + '</span>' : '<span>' + h(x) + '</span>'; };
+    if (t === 'wahl' || t === 'quiz' || t === 'stimmung') {
+      var cnt = opts.map(function () { return 0; }), who = opts.map(function () { return []; });
+      E.forEach(function (e) { (e.v || []).forEach(function (i) { if (cnt[i] != null) { cnt[i]++; if (e.n) who[i].push(e.n); } }); });
+      var mx = Math.max.apply(null, cnt.concat([1])), okA = o.rev && Array.isArray(q.ok) ? q.ok : null;
+      var cls = function (i) { return okA ? (okA.indexOf(i) >= 0 ? ' ok' : ' no') : ''; };
+      var pc = function (i) { return Math.round(cnt[i] / N * 100) + '%'; };
+      if (o.small || n > 6) return '<div class="ur-hbars">' + opts.map(function (x, i) {
+        return '<div class="ur-h' + cls(i) + '"><span class="ur-l">' + (okA && okA.indexOf(i) >= 0 ? '✓ ' : '') + label(x) + '</span><span class="ur-t"><i style="width:' + Math.max(cnt[i] ? 3 : 0, Math.round(cnt[i] / mx * 100)) + '%;background:' + col(i) + '"></i></span><b>' + cnt[i] + '</b>' +
+          (o.names && who[i].length ? '<small class="ur-who">' + h(who[i].join(', ')) + '</small>' : '') + '</div>'; }).join('') + '</div>';
+      return '<div class="ur-cols" style="--n:' + n + '">' + opts.map(function (x, i) {
+        return '<div class="ur-col' + cls(i) + '"><b class="ur-c">' + cnt[i] + '<small>' + pc(i) + '</small></b><span class="ur-box"><span class="ur-bar" style="height:' + Math.max(cnt[i] ? 2 : 0, Math.round(cnt[i] / mx * 100)) + '%;background:' + col(i) + '"></span></span>' +
+          '<span class="ur-l' + (t === 'stimmung' ? ' emo' : '') + '">' + (okA && okA.indexOf(i) >= 0 ? '<span class="ur-ok">✓</span>' : '') + label(x) + '</span>' +
+          (o.names && who[i].length ? '<small class="ur-who">' + h(who[i].join(', ')) + '</small>' : '') + '</div>'; }).join('') + '</div>';
+    }
+    if (t === 'wort') {
+      var f = {}, show = {}, hw = o.hidw || [];
+      E.forEach(function (e) { (e.v || []).forEach(function (w) { w = String(w).trim(); var k = w.toLowerCase(); if (!k || hw.indexOf(k) >= 0) return; f[k] = (f[k] || 0) + 1; if (!show[k]) show[k] = w; }); });
+      var keys = Object.keys(f).sort(function (a, b) { return f[b] - f[a] || a.localeCompare(b); }); if (!keys.length) return '<div class="ur-leer">Noch keine Wörter</div>';
+      var top = f[keys[0]], arr = []; keys.forEach(function (k, i) { if (i % 2) arr.push(k); else arr.unshift(k); });
+      return '<div class="ur-cloud' + (o.small ? ' sm' : '') + '">' + arr.map(function (k) {
+        var s = o.small ? 15 + 22 * Math.pow(f[k] / top, .8) : 22 + 64 * Math.pow(f[k] / top, .8), r = (hash(k) % 3 - 1) * 3;
+        return '<span class="ur-w" style="font-size:' + Math.round(s) + 'px;color:' + UMF_INK[hash(k) % UMF_INK.length] + ';transform:rotate(' + r + 'deg)"' + (o.mod ? ' data-a="uHideW" data-w="' + h(k) + '" title="Wort ausblenden"' : '') + '>' + h(show[k]) + (f[k] > 1 ? '<sup>' + f[k] + '</sup>' : '') + '</span>';
+      }).join('') + '</div>';
+    }
+    if (t === 'text') {
+      var cards = []; E.forEach(function (e) { (e.v || []).forEach(function (s) { cards.push({ s: s, k: e.k, n: e.n }); }); });
+      return '<div class="ur-cards' + (o.small ? ' sm' : '') + '">' + cards.map(function (c, i) {
+        return '<div class="ur-card" style="background:' + UMF_TINT[(c.k ? hash(c.k) : i) % UMF_TINT.length] + '"><p>' + h(c.s) + '</p>' + (o.names && c.n ? '<small>' + h(c.n) + '</small>' : '') +
+          (o.mod && c.k ? '<button class="ur-x" data-a="uHide" data-k="' + h(c.k) + '" title="Ausblenden" aria-label="Antwort ausblenden">✕</button>' : '') + '</div>'; }).join('') + '</div>';
+    }
+    if (t === 'skala') {
+      var m = umfSkMax(q);
+      return '<div class="ur-skala' + (o.small ? ' sm' : '') + '"><div class="ur-skends"><span></span><span>1 = ' + h(q.lo || '') + '</span><span>' + m + ' = ' + h(q.hi || '') + '</span></div>' + opts.map(function (st, i) {
+        var c = []; for (var j = 0; j < m; j++) c.push(0); var s = 0, z = 0;
+        E.forEach(function (e) { var x = (e.v || [])[i]; if (x >= 1 && x <= m) { c[x - 1]++; s += x; z++; } });
+        var cm = Math.max.apply(null, c.concat([1])), avg = z ? s / z : 0;
+        return '<div class="ur-sk"><span class="ur-l">' + h(st) + '</span><div class="ur-skbar" style="--m:' + m + '">' + c.map(function (v, j) {
+          return '<span class="ur-skc"><i style="height:' + Math.round(v / cm * 100) + '%;background:' + col(i) + '"></i><small>' + (j + 1) + '</small></span>'; }).join('') +
+          (z ? '<span class="ur-avg" style="left:' + ((avg - .5) / m * 100) + '%"><b>Ø ' + avg.toFixed(1).replace('.', ',') + '</b></span>' : '') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'rang' || t === 'punkte') {
+      var sc = opts.map(function () { return 0; }), tot = 0;
+      E.forEach(function (e) { (e.v || []).forEach(function (x, p) { if (t === 'rang') { if (sc[x] != null) sc[x] += n - p; } else if (sc[p] != null) { sc[p] += +x || 0; } }); });
+      sc.forEach(function (x) { tot = Math.max(tot, x); });
+      var ord = opts.map(function (x, i) { return i; }).sort(function (a, b) { return sc[b] - sc[a] || a - b; });
+      return '<ol class="ur-rang' + (o.small ? ' sm' : '') + '">' + ord.map(function (i, p) {
+        var side = t === 'rang' ? 'Ø Platz ' + (n - sc[i] / N + 1).toFixed(1).replace('.', ',') : sc[i] + ' ⭐';
+        return '<li><span class="ur-p">' + (p < 3 ? medal(p + 1) : (p + 1) + '.') + '</span><span class="ur-l">' + h(opts[i]) + '</span><span class="ur-t"><i style="width:' + Math.round(sc[i] / Math.max(1, tot) * 100) + '%;background:' + col(i) + '"></i></span><b>' + side + '</b></li>';
+      }).join('') + '</ol>';
+    }
+    if (t === 'zahl') {
+      var xs = E.map(function (e) { return { x: +e.v, n: e.n }; }).filter(function (e) { return isFinite(e.x); }).sort(function (a, b) { return a.x - b.x; });
+      if (!xs.length) return '<div class="ur-leer">Noch keine Antworten</div>';
+      var okv = o.rev ? umfNum(q.ok) : null, lo = xs[0].x, hi = xs[xs.length - 1].x;
+      if (okv !== null) { lo = Math.min(lo, okv); hi = Math.max(hi, okv); }
+      if (lo === hi) { lo -= 1; hi += 1; }
+      var B = o.small ? 12 : 20, bins = []; for (var b = 0; b < B; b++) bins.push(0);
+      xs.forEach(function (e) { bins[Math.min(B - 1, Math.floor((e.x - lo) / (hi - lo) * B))]++; });
+      var bm = Math.max.apply(null, bins), sum = 0; xs.forEach(function (e) { sum += e.x; });
+      var med = xs.length % 2 ? xs[(xs.length - 1) / 2].x : (xs[xs.length / 2 - 1].x + xs[xs.length / 2].x) / 2, u = q.unit ? ' ' + h(q.unit) : '';
+      var near = okv !== null && o.names ? xs.filter(function (e) { return e.n; }).slice().sort(function (a, b) { return Math.abs(a.x - okv) - Math.abs(b.x - okv); }).slice(0, 3) : [];
+      return '<div class="ur-zahl' + (o.small ? ' sm' : '') + '"><div class="ur-zl">' + bins.map(function (c, j) {
+        return c ? '<span class="ur-zb" style="left:' + (j / B * 100) + '%;width:' + (100 / B) + '%"><i style="height:' + Math.round(c / bm * 100) + '%"></i><b>' + c + '</b></span>' : ''; }).join('') +
+        (okv !== null ? '<span class="ur-zok" style="left:' + ((okv - lo) / (hi - lo) * 100) + '%"><b>Lösung: ' + umfFmtNum(okv) + u + '</b></span>' : '') + '</div>' +
+        '<div class="ur-zax"><span>' + umfFmtNum(lo) + '</span><span>' + umfFmtNum(hi) + '</span></div>' +
+        '<div class="ur-stats"><span>Durchschnitt <b>' + umfFmtNum(sum / xs.length) + u + '</b></span><span>Mitte <b>' + umfFmtNum(med) + u + '</b></span><span>Kleinste <b>' + umfFmtNum(xs[0].x) + '</b></span><span>Grösste <b>' + umfFmtNum(xs[xs.length - 1].x) + '</b></span></div>' +
+        (near.length ? '<p class="ur-near">Am nächsten dran: ' + near.map(function (e) { return '<b>' + h(e.n) + '</b> (' + umfFmtNum(e.x) + ')'; }).join(', ') + '</p>' : '') + '</div>';
+    }
+    if (t === 'feld') {
+      var ax = q.ax || [], ux = 0, uy = 0;
+      E.forEach(function (e) { ux += +e.v.x || 0; uy += +e.v.y || 0; });
+      return umfFeld(ax, E.map(function (e, i) { return '<span class="ur-dot" style="left:' + e.v.x + '%;top:' + (100 - e.v.y) + '%;background:' + (e.n ? kidColor(e.n) : UMF_COL[i % UMF_COL.length]) + '">' + (o.names && e.n ? h(e.n.charAt(0)) : '') + '</span>'; }).join('') +
+        '<span class="ur-mitte" style="left:' + (ux / N) + '%;top:' + (100 - uy / N) + '%" title="Mitte der Klasse">✦</span>', o.small);
+    }
+    return '';
+  }
+  function umfFeld(ax, inner, small, act) {
+    return '<div class="ur-feld' + (small ? ' sm' : '') + '"><span class="ur-ax o">' + h(ax[3] || '') + ' ↑</span><span class="ur-ax l">← ' + h(ax[0] || '') + '</span>' +
+      '<div class="ur-fq"' + (act ? ' data-a="' + act + '"' : '') + '><i></i><i></i><i></i><i></i>' + inner + '</div><span class="ur-ax r">' + h(ax[1] || '') + ' →</span><span class="ur-ax u">↓ ' + h(ax[2] || '') + '</span></div>';
+  }
+  // Quiz-Rangliste: richtige Quizantworten pro Kind
+  function umfRank(qs, ans, kids) {
+    var quiz = qs.filter(function (q) { return q.type === 'quiz' && (q.ok || []).length; }), pts = {}, seen = {};
+    quiz.forEach(function (q) { var a = ans[q.id] || {}; Object.keys(a).forEach(function (id) { seen[id] = 1; pts[id] = (pts[id] || 0) + (umfQuizOk(q, a[id]) ? 1 : 0); }); });
+    return { n: quiz.length, list: kids.filter(function (k) { return seen[k.id]; }).map(function (k) { return { name: k.name, p: pts[k.id] || 0 }; }).sort(function (a, b) { return b.p - a.p || a.name.localeCompare(b.name); }) };
+  }
+
+  // Vorlagen (eigene Kopie beim Übernehmen)
+  function umfQ(type, text, x) { var q = umfNewQ(type); q.text = text; if (x) Object.keys(x).forEach(function (k) { q[k] = x[k]; }); return q; }
+  var UMF_VORLAGEN = [
+    ['🌈', 'Wie war die Woche?', 'Wochenrückblick am Freitag', function () { return [
+      umfQ('stimmung', 'Wie war deine Woche?'),
+      umfQ('wort', 'Ein Wort für diese Woche', { max: 1 }),
+      umfQ('wahl', 'Was hat dir am besten gefallen?', { opts: ['Mathe', 'Deutsch', 'NMG', 'Sport', 'Gestalten', 'Pause'], multi: true }),
+      umfQ('text', 'Das wünsche ich mir für nächste Woche')]; }],
+    ['🚦', 'Verstanden?', 'Kurze Lernkontrolle nach einer Lektion', function () { return [
+      umfQ('stimmung', 'Wie gut hast du es verstanden?', { stil: 'ampel', opts: UMF_STIL.ampel.slice() }),
+      umfQ('skala', 'Wie sicher bist du?', { opts: ['Ich kann es erklären.', 'Ich kann es allein lösen.'] }),
+      umfQ('text', 'Das ist mir noch unklar')]; }],
+    ['🇨🇭', 'Quiz: Schweiz', 'Vier Fragen mit Auflösung und Rangliste', function () { return [
+      umfQ('quiz', 'Wie heisst die Bundesstadt der Schweiz?', { opts: ['Zürich', 'Bern', 'Genf', 'Basel'], ok: [1] }),
+      umfQ('zahl', 'Wie viele Kantone hat die Schweiz? Schätze!', { min: '0', max: '100', ok: '26' }),
+      umfQ('quiz', 'Welche Sprache ist eine Landessprache?', { opts: ['Englisch', 'Spanisch', 'Rätoromanisch', 'Holländisch'], ok: [2] }),
+      umfQ('quiz', 'Wie heisst der höchste Berg der Schweiz?', { opts: ['Matterhorn', 'Eiger', 'Dufourspitze', 'Säntis'], ok: [2] })]; }],
+    ['🗣️', 'Klassenrat', 'Anliegen sammeln und gewichten', function () { return [
+      umfQ('info', 'Klassenrat', { sub: 'Heute sammeln wir eure Anliegen. Jede Stimme zählt!' }),
+      umfQ('text', 'Was möchtest du im Klassenrat besprechen?', { max: 2 }),
+      umfQ('punkte', 'Was ist dir am wichtigsten? Verteile deine Sterne.', { opts: ['Pausenplatz', 'Ämtli', 'Lautstärke', 'Klassenausflug'] })]; }],
+    ['🎒', 'Ausflug planen', 'Gemeinsam entscheiden', function () { return [
+      umfQ('wahl', 'Wohin soll der Ausflug gehen?', { opts: ['Zoo', 'Wald', 'Museum', 'See'] }),
+      umfQ('rang', 'Was ist beim Ausflug am wichtigsten?', { opts: ['Spielen', 'Feuer und Bräteln', 'Tiere sehen', 'Wandern'] }),
+      umfQ('wort', 'Was darf im Rucksack nicht fehlen?')]; }],
+    ['☀️', 'Morgen-Check', 'Wie fühlt ihr euch am Morgen?', function () { return [
+      umfQ('feld', 'Wie fühlst du dich gerade?'),
+      umfQ('stimmung', 'Wie hast du geschlafen?', { stil: 'wetter', opts: UMF_STIL.wetter.slice() })]; }]
+  ];
+
+  var U = { list: [], view: 'list', eid: null, qi: 0, doc: null, add: false, names: null, fehlt: false, rank: false, more: false };
+  U.start = async function (cid) {
+    UI.view = 'umfrage';
+    var s = await DB.session(); if (!s) { location.hash = '#/'; return; }
+    if (!(await toolGate('umfrage', 'Die Umfrage'))) return;
+    document.body.classList.add('lp');
+    app.innerHTML = '<p class="boot">Umfrage wird geladen …</p>';
+    try {
+      var r = await Promise.all([DB.listClasses(), DB.listKids(cid), DB.storeGet('umfragen'), DB.storeGet('umfrage-' + cid)]);
+      U.cls = r[0].filter(function (c) { return c.id === cid; })[0]; U.kids = (r[1] || []).slice().sort(kidSort);
+      U.list = r[2] && Array.isArray(r[2].list) ? r[2].list : [];
+      U.doc = r[3] && typeof r[3] === 'object' ? r[3] : { live: null, ans: {} };
+    } catch (e) { U.cls = null; }
+    if (!U.cls) { paint('<div class="main"><div class="card stack"><h2>Umfrage nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+    U.cid = cid; U.doc.ans = U.doc.ans || {}; U.add = false; U.fehlt = false; U.rank = false; U.more = false; U.off = 0;
+    var l = U.doc.live; U.view = l && l.on ? 'show' : 'list';
+    U.names = l && l.on ? U.namesDefault(l.sid) : null;
+    U.render();
+    every(1500, function () { if (!document.hidden && (U.view === 'show' || U.view === 'res')) U.poll(); });
+    every(500, U.tick);
+  };
+  U.find = function (id) { return U.list.filter(function (x) { return x.id === id; })[0] || null; };
+  U.namesDefault = function (sid) { var sv = U.find(sid); return !!(sv && sv.set && sv.set.anon === false); };
+  U.saveSoon = function () { clearTimeout(U.st); U.st = setTimeout(U.save, 700); var m = document.getElementById('ueSaved'); if (m) m.textContent = 'Wird gespeichert …'; };
+  U.save = function () {
+    clearTimeout(U.st); U.st = null;
+    return DB.storeSet('umfragen', { list: U.list }).then(function () { var m = document.getElementById('ueSaved'); if (m) m.textContent = '✓ Gespeichert'; })
+      .catch(function (e) { toast('Nicht gespeichert: ' + errMsg(e)); });
+  };
+  window.addEventListener('pagehide', function () { if (U.st) U.save(); });
+  U.poll = async function () {
+    if (U.busy) return; U.busy = true;
+    try { var d = await DB.storeGet('umfrage-' + U.cid), a = (d && d.ans) || {}; if (JSON.stringify(a) !== JSON.stringify(U.doc.ans)) { U.doc.ans = a; if (UI.view === 'umfrage') U.render(); } }
+    catch (e) {}
+    U.busy = false;
+  };
+  function umfSec(s) { s = Math.max(0, s); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  U.left = function () { var l = U.doc && U.doc.live; return l && l.until ? Math.ceil((l.until - (Date.now() + U.off)) / 1000) : null; };
+  U.tick = function () {
+    var l = U.doc && U.doc.live; if (UI.view !== 'umfrage' || U.view !== 'show' || !l || !l.until) return;
+    var left = U.left(), el = document.getElementById('umfTimer');
+    if (left <= 0 && !U.closing) { U.closing = true; toast('Die Zeit ist um.'); U.setLive({ open: false, until: null, show: true }).catch(function (e) { toast(errMsg(e)); }).then(function () { U.closing = false; }); return; }
+    if (el) el.textContent = umfSec(left);
+  };
+  // Live-Stand ändern (nur die Lehrperson schreibt ihn). sec = Timer starten, clear = Antworten dieser Fragen löschen
+  U.setLive = async function (patch, clear, sec, replace) {
+    var l = replace ? patch : Object.assign({}, U.doc.live || {}, patch); U.doc.live = l;
+    (clear || []).forEach(function (q) { if (q === '*') U.doc.ans = {}; else delete U.doc.ans[q]; });
+    var send = JSON.parse(JSON.stringify(l)); if (sec != null) send.sec = sec;
+    U.render();
+    var r = await DB.umfragePut(U.cid, send, clear || null);
+    if (r && r.now) { U.off = r.now - Date.now(); if (sec != null) { U.doc.live.until = r.until || null; U.render(); } }
+  };
+  U.render = function () {
+    if (UI.view !== 'umfrage') return;
+    document.body.classList.add('lp');
+    var l = U.doc.live;
+    if (U.view === 'show' && !(l && l.on)) U.view = 'list';
+    if (U.view === 'edit' && !U.find(U.eid)) U.view = 'list';
+    paint(U.view === 'show' ? U.viewShow() : U.view === 'edit' ? U.viewEdit() : U.view === 'res' ? U.viewRes() : U.viewList());
+    if (U.view === 'show') U.tick();
+  };
+  U.top = function (left, right) {
+    return '<div class="umf-top"><div class="row">' + left + '</div><span class="umf-kick"><img src="' + h(klassBild(U.cls.bild)) + '" alt="" width="40" height="40">Umfrage · Klasse ' + h(U.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><div class="row">' + (right || '') + '</div></div>';
+  };
+  U.answers = function (sv) { var n = 0; sv.qs.forEach(function (q) { n = Math.max(n, Object.keys(U.doc.ans[q.id] || {}).length); }); return n; };
+
+  // ---------- Liste der Umfragen ----------
+  U.viewList = function () {
+    var l = U.doc.live, out = '<div class="umf-page">' + U.top('<a class="btn sm" href="#/">← ' + h(C.PORTAL_NAME) + '</a>') +
+      '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
+      '<p>Stellen Sie der Klasse Fragen: Abstimmungen, Wortwolken, Quiz, Schätzfragen und mehr. Die Kinder antworten am iPad, die Ergebnisse erscheinen live an der Wandtafel.</p>' +
+      '<p class="muted small">Ihre Umfragen gelten für alle Ihre Klassen. Die Antworten werden pro Klasse gespeichert.</p></div>' +
+      '<button class="btn primary big" data-a="uNew">+ Neue Umfrage</button></section>';
+    if (l && l.on) out += '<div class="note row" style="justify-content:space-between"><span>✦ Gerade läuft: <b>' + h(l.title || 'Umfrage') + '</b></span><button class="btn sm primary" data-a="uToShow">Zur Anzeige</button></div>';
+    out += '<section class="stack"><h2>Meine Umfragen</h2>' + (U.list.length ? '<div class="umf-grid">' + U.list.map(function (sv) {
+      var a = U.answers(sv), del = UI.confirm === 'uDel' + sv.id;
+      return '<div class="umf-card card"><button class="umf-card-open" data-a="uEdit" data-id="' + sv.id + '"><b>' + h(sv.title || 'Ohne Titel') + '</b><span class="umf-icons">' + sv.qs.map(function (q) { return '<span title="' + h(umfType(q.type)[1]) + '">' + umfType(q.type)[2] + '</span>'; }).join('') + '</span>' +
+        '<small>' + plural(sv.qs.length, 'Frage', 'Fragen') + ' · ' + (sv.set && sv.set.mode === 'selbst' ? 'Selbsttempo' : 'Live') + (a ? ' · ' + plural(a, 'Kind hat', 'Kinder haben') + ' geantwortet' : '') + '</small></button>' +
+        '<div class="row umf-card-btns"><button class="btn sm primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button><button class="btn sm" data-a="uEdit" data-id="' + sv.id + '">✎ Bearbeiten</button>' +
+        (a ? '<button class="btn sm" data-a="uRes" data-id="' + sv.id + '">📊 Ergebnisse</button>' : '') +
+        '<button class="btn sm icon" data-a="uCopy" data-id="' + sv.id + '" title="Kopieren" aria-label="Kopieren">⧉</button>' +
+        '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uDel" data-id="' + sv.id + '">' + (del ? 'Wirklich löschen?' : '🗑') + '</button></div></div>';
+    }).join('') + '</div>' : '<div class="empty">Noch keine Umfrage. Beginnen Sie mit «+ Neue Umfrage» oder übernehmen Sie eine Vorlage.</div>') + '</section>';
+    out += '<section class="stack"><h2>Vorlagen</h2><div class="umf-grid tpl">' + UMF_VORLAGEN.map(function (v, i) {
+      var qs = v[3]();
+      return '<button class="umf-tpl" data-a="uTpl" data-i="' + i + '"><span class="umf-tpl-emo">' + v[0] + '</span><span><b>' + h(v[1]) + '</b><small>' + h(v[2]) + '</small><span class="umf-icons">' + qs.map(function (q) { return umfType(q.type)[2]; }).join('') + '</span></span></button>';
+    }).join('') + '</div></section></div>';
+    return out;
+  };
+  U.blank = function (title, qs) { return { id: umfId('u'), title: title || '', at: Date.now(), set: { mode: 'live', auto: 'live', kids: true, anon: true }, qs: qs || [] }; };
+  ACT.uNew = function () { var sv = U.blank('', []); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = true; U.view = 'edit'; U.save(); U.render(); var t = document.getElementById('ueTitle'); if (t) t.focus(); };
+  ACT.uTpl = function (el) { var v = UMF_VORLAGEN[+el.dataset.i]; var sv = U.blank(v[1], v[3]()); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.save(); U.render(); toast('Vorlage übernommen. Sie können alles anpassen.'); };
+  ACT.uEdit = function (el) { U.eid = el.dataset.id; U.qi = 0; U.add = !U.find(U.eid).qs.length; U.view = 'edit'; U.render(); window.scrollTo(0, 0); };
+  ACT.uCopy = function (el) {
+    var sv = JSON.parse(JSON.stringify(U.find(el.dataset.id))); sv.id = umfId('u'); sv.title = (sv.title || 'Umfrage') + ' (Kopie)'; sv.at = Date.now();
+    sv.qs.forEach(function (q) { q.id = umfId('q'); }); U.list.unshift(sv); U.save(); U.render(); toast('Kopie erstellt');
+  };
+  ACT.uDel = function (el) {
+    var id = el.dataset.id; if (!armed('uDel' + id)) return U.render();
+    U.list = U.list.filter(function (x) { return x.id !== id; }); U.save(); U.render(); toast('Umfrage gelöscht');
+  };
+  ACT.uList = function () { if (U.st) U.save(); U.view = 'list'; U.add = false; U.render(); window.scrollTo(0, 0); };
+  ACT.uToShow = function () { U.view = 'show'; if (U.names == null) U.names = U.namesDefault(U.doc.live.sid); U.render(); };
+
+  // ---------- Bearbeiten ----------
+  U.sv = function () { return U.find(U.eid); };
+  U.q = function () { var sv = U.sv(); return sv && sv.qs[U.qi] || null; };
+  U.viewEdit = function () {
+    var sv = U.sv(), set = sv.set || (sv.set = { mode: 'live', auto: 'live', kids: true, anon: true }), q = U.q();
+    var chip = function (k, v, txt) { return '<button class="chip" aria-pressed="' + (set[k] === v) + '" data-a="uSet" data-k="' + k + '" data-v="' + v + '">' + txt + '</button>'; };
+    var sw = function (k, on, txt) { return '<button class="switch" role="switch" aria-checked="' + on + '" data-a="uSetT" data-k="' + k + '"><span>' + txt + '</span><span class="track"></span></button>'; };
+    var list = sv.qs.map(function (x, i) {
+      var tp = umfType(x.type);
+      return '<div class="ue-q' + (!U.add && i === U.qi ? ' sel' : '') + '"><button class="ue-qsel" data-a="uQ" data-i="' + i + '"><span class="ue-n">' + (i + 1) + '</span><span class="ue-ic" title="' + h(tp[1]) + '">' + tp[2] + '</span><span class="ue-qt">' + (x.text ? h(x.text) : '<i>' + h(tp[1]) + ' ohne Text</i>') + '</span></button>' +
+        '<span class="ue-qb"><button data-a="uQMove" data-i="' + i + '" data-d="-1" aria-label="Nach oben"' + (i ? '' : ' disabled') + '>↑</button><button data-a="uQMove" data-i="' + i + '" data-d="1" aria-label="Nach unten"' + (i < sv.qs.length - 1 ? '' : ' disabled') + '>↓</button>' +
+        '<button data-a="uQCopy" data-i="' + i + '" aria-label="Kopieren" title="Kopieren">⧉</button><button data-a="uQDel" data-i="' + i + '" aria-label="Löschen" title="Löschen"' + (UI.confirm === 'uQDel' + x.id ? ' class="armed"' : '') + '>' + (UI.confirm === 'uQDel' + x.id ? '?' : '✕') + '</button></span></div>';
+    }).join('');
+    var aside = '<aside class="ue-side stack"><div class="card stack"><div class="field"><label for="ueTitle">Titel der Umfrage</label><input class="input" id="ueTitle" data-input="uTitle" maxlength="80" placeholder="z. B. Wie war die Woche?" value="' + h(sv.title) + '"></div>' +
+      '<div class="stack" style="gap:8px"><span class="lbl">Fragen</span>' + (list || '<p class="muted small">Noch keine Fragen.</p>') +
+      '<button class="btn' + (U.add ? ' primary' : '') + '" data-a="uAddOpen">+ Frage hinzufügen</button></div></div>' +
+      '<div class="card stack ue-set"><h3>Einstellungen</h3>' +
+      '<div><span class="lbl">Ablauf</span><div class="chips">' + chip('mode', 'live', '🎬 Live: Frage für Frage') + chip('mode', 'selbst', '🚶 Selbsttempo') + '</div><p class="muted small">' +
+        (set.mode === 'selbst' ? 'Die Kinder gehen alle Fragen selbst durch, z. B. als Rückmeldung während dem Tag.' : 'Sie zeigen eine Frage nach der anderen. Die Kinder sehen immer die aktuelle Frage.') + '</p></div>' +
+      '<div><span class="lbl">Ergebnis an der Wandtafel</span><div class="chips">' + chip('auto', 'live', 'Sofort zeigen') + chip('auto', 'aufdecken', 'Erst aufdecken') + '</div></div>' +
+      sw('kids', set.kids !== false, 'Kinder sehen das Ergebnis auch am iPad') + sw('anon', set.anon === false, 'Namen an der Wandtafel zeigen') +
+      '<p class="muted small">Die Kinder sehen die Antworten der anderen nie mit Namen.</p></div></aside>';
+    var main;
+    if (U.add || !q) main = '<div class="card stack"><h2>Was für eine Frage?</h2><div class="ue-types">' + UMF_TYPES.map(function (t) {
+      return '<button class="ue-type" data-a="uAdd" data-t="' + t[0] + '"><span class="ue-emo">' + t[2] + '</span><b>' + t[1] + '</b><small>' + t[3] + '</small></button>'; }).join('') + '</div>' +
+      (sv.qs.length ? '<button class="btn" style="align-self:flex-start" data-a="uAddClose">Abbrechen</button>' : '') + '</div>';
+    else main = '<div class="card stack ue-edit">' + U.qForm(q) + '</div><div class="card stack ue-prevcard"><span class="lbl">So sieht es am iPad aus</span><div class="ue-phone"><div class="ku ku-prev" id="uePrev">' + umfPreview(q) + '</div></div></div>';
+    return '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button><span class="muted small" id="ueSaved">' + (U.st ? 'Wird gespeichert …' : '✓ Gespeichert') + '</span>',
+      '<button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button>') + '<div class="umf-ed">' + aside + '<section class="ue-main stack">' + main + '</section></div></div>';
+  };
+  function umfPreview(q) {
+    var t = umfType(q.type);
+    return '<span class="ku-nr">' + t[2] + ' ' + h(t[1]) + '</span><h2 class="ku-q">' + (q.text ? h(q.text) : '…') + '</h2>' + umfInput(umfClean(q), null, true);
+  }
+  U.prev = function () { var p = document.getElementById('uePrev'), q = U.q(); if (p && q) p.innerHTML = umfPreview(q); };
+  U.qForm = function (q) {
+    var t = umfType(q.type), o = '';
+    var chips = function (f, vals, txt) { return '<div class="chips">' + vals.map(function (v) { return '<button class="chip" aria-pressed="' + (String(q[f]) === String(v)) + '" data-a="uqSet" data-f="' + f + '" data-v="' + v + '">' + txt(v) + '</button>'; }).join('') + '</div>'; };
+    var inp = function (id, f, lbl, ph, extra) { return '<div class="field"><label for="' + id + '">' + lbl + '</label><input class="input" id="' + id + '" data-input="uqF" data-f="' + f + '" value="' + h(q[f] == null ? '' : q[f]) + '" placeholder="' + h(ph || '') + '"' + (extra || '') + '></div>'; };
+    o += '<div class="row" style="justify-content:space-between"><span class="ue-badge">' + t[2] + ' ' + t[1] + '</span><span class="muted small">Frage ' + (U.qi + 1) + ' von ' + U.sv().qs.length + '</span></div>';
+    o += '<div class="field"><label for="uqText">' + (q.type === 'info' ? 'Titel' : 'Frage') + '</label><textarea class="input" id="uqText" rows="2" maxlength="200" data-input="uqF" data-f="text" placeholder="' + (q.type === 'info' ? 'z. B. Willkommen!' : 'Was möchten Sie die Klasse fragen?') + '">' + h(q.text) + '</textarea></div>';
+    if (q.type === 'info') o += '<div class="field"><label for="uqSub">Text</label><textarea class="input" id="uqSub" rows="4" maxlength="600" data-input="uqF" data-f="sub" placeholder="Was die Kinder lesen sollen">' + h(q.sub || '') + '</textarea></div>';
+    if (q.opts) {
+      var isSk = q.type === 'skala', isSt = q.type === 'stimmung', maxO = isSk ? 6 : 8;
+      if (isSt) o += '<div><span class="lbl">Aussehen</span><div class="chips">' + Object.keys(UMF_STIL).map(function (k) {
+        return '<button class="chip" aria-pressed="' + (q.stil === k) + '" data-a="uqStil" data-s="' + k + '">' + UMF_STIL[k].map(function (x) { return umfEmo(x)[0]; }).join('') + ' ' + UMF_STIL_NAME[k] + '</button>'; }).join('') + '</div></div>';
+      o += '<div class="stack" style="gap:8px"><span class="lbl">' + (isSk ? 'Aussagen' : 'Antworten') + (q.type === 'quiz' ? ' <span class="muted small">(richtige mit ✓ markieren)</span>' : '') + '</span>' + q.opts.map(function (x, i) {
+        var okOn = q.type === 'quiz' && (q.ok || []).indexOf(i) >= 0;
+        return '<div class="ue-opt"><span class="ue-dot" style="background:' + UMF_COL[i % UMF_COL.length] + '"></span><input class="input" id="uqO' + i + '" data-input="uqO" data-i="' + i + '" maxlength="80" value="' + h(x) + '" placeholder="' + (isSk ? 'Aussage ' : 'Antwort ') + (i + 1) + '">' +
+          (q.type === 'quiz' ? '<button class="ue-ok' + (okOn ? ' on' : '') + '" data-a="uqOk" data-i="' + i + '" aria-pressed="' + okOn + '">✓ richtig</button>' : '') +
+          (isSt ? '' : '<button class="btn sm icon" data-a="uqODel" data-i="' + i + '" aria-label="Entfernen"' + (q.opts.length > 1 ? '' : ' disabled') + '>✕</button>') + '</div>';
+      }).join('') + (isSt || q.opts.length >= maxO ? '' : '<button class="btn sm" style="align-self:flex-start" data-a="uqOAdd">+ ' + (isSk ? 'Aussage' : 'Antwort') + '</button>') + '</div>';
+      if (q.type === 'wahl' || q.type === 'quiz') o += '<button class="switch" role="switch" aria-checked="' + !!q.multi + '" data-a="uqTog" data-f="multi"><span>' + (q.type === 'quiz' ? 'Mehrere richtige Antworten' : 'Kinder dürfen mehrere Antworten wählen') + '</span><span class="track"></span></button>';
+    }
+    if (q.type === 'wort') o += '<div><span class="lbl">Wörter pro Kind</span>' + chips('max', [1, 2, 3, 5], function (v) { return v; }) + '</div>';
+    if (q.type === 'text') o += '<div><span class="lbl">Antworten pro Kind</span>' + chips('max', [1, 2, 3], function (v) { return v; }) + '</div>';
+    if (q.type === 'skala') o += '<div><span class="lbl">Skala</span>' + chips('max', [3, 5, 10], function (v) { return '1 bis ' + v; }) + '</div><div class="ue-two">' + inp('uqLo', 'lo', 'Text bei 1', 'stimmt gar nicht', ' maxlength="40"') + inp('uqHi', 'hi', 'Text bei ' + umfSkMax(q), 'stimmt genau', ' maxlength="40"') + '</div>';
+    if (q.type === 'punkte') o += '<div><span class="lbl">Sterne pro Kind</span>' + chips('pts', [3, 5, 10, 20], function (v) { return v + ' ⭐'; }) + '</div>';
+    if (q.type === 'zahl') o += '<div class="ue-two">' + inp('uqOk', 'ok', 'Lösung (freiwillig)', 'z. B. 26', ' inputmode="decimal"') + inp('uqUnit', 'unit', 'Einheit (freiwillig)', 'z. B. kg', ' maxlength="20"') + '</div>' +
+      '<div class="ue-two">' + inp('uqMin', 'min', 'Kleinste erlaubte Zahl', 'keine Grenze', ' inputmode="decimal"') + inp('uqMax', 'max', 'Grösste erlaubte Zahl', 'keine Grenze', ' inputmode="decimal"') + '</div>';
+    if (q.type === 'feld') o += '<div class="ue-four">' + ['links', 'rechts', 'unten', 'oben'].map(function (w, i) {
+      return '<div class="field"><label for="uqAx' + i + '">Text ' + w + '</label><input class="input" id="uqAx' + i + '" data-input="uqAx" data-i="' + i + '" maxlength="30" value="' + h((q.ax || [])[i] || '') + '"></div>'; }).join('') + '</div>';
+    return o;
+  };
+  ACT.uTitle = function (el) { U.sv().title = el.value; U.saveSoon(); };
+  ACT.uSet = function (el) { var s = U.sv().set; s[el.dataset.k] = el.dataset.v; U.saveSoon(); U.render(); };
+  ACT.uSetT = function (el) { var s = U.sv().set, k = el.dataset.k; if (k === 'kids') s.kids = s.kids === false; else s.anon = s.anon === false; U.saveSoon(); U.render(); };
+  ACT.uQ = function (el) { U.qi = +el.dataset.i; U.add = false; U.render(); };
+  ACT.uAddOpen = function () { U.add = true; U.render(); };
+  ACT.uAddClose = function () { U.add = false; U.render(); };
+  ACT.uAdd = function (el) { var sv = U.sv(), q = umfNewQ(el.dataset.t), at = sv.qs.length ? Math.min(sv.qs.length, U.qi + 1) : 0; sv.qs.splice(at, 0, q); U.qi = at; U.add = false; U.saveSoon(); U.render(); var t = document.getElementById('uqText'); if (t) t.focus(); };
+  ACT.uQMove = function (el) { var sv = U.sv(), i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= sv.qs.length) return; var x = sv.qs.splice(i, 1)[0]; sv.qs.splice(j, 0, x); U.qi = j; U.saveSoon(); U.render(); };
+  ACT.uQCopy = function (el) { var sv = U.sv(), i = +el.dataset.i, c = JSON.parse(JSON.stringify(sv.qs[i])); c.id = umfId('q'); sv.qs.splice(i + 1, 0, c); U.qi = i + 1; U.add = false; U.saveSoon(); U.render(); };
+  ACT.uQDel = function (el) { var sv = U.sv(), i = +el.dataset.i; if (!armed('uQDel' + sv.qs[i].id)) return U.render(); sv.qs.splice(i, 1); U.qi = Math.max(0, Math.min(U.qi, sv.qs.length - 1)); U.saveSoon(); U.render(); };
+  // Eingaben ohne neu zeichnen (Fokus bleibt), nur Liste links und Vorschau nachführen
+  ACT.uqF = function (el) {
+    var q = U.q(); q[el.dataset.f] = el.value; U.saveSoon(); U.prev();
+    if (el.dataset.f === 'text') { var t = document.querySelector('.ue-q.sel .ue-qt'); if (t) t.textContent = el.value || umfType(q.type)[1] + ' ohne Text'; }
+  };
+  ACT.uqO = function (el) { U.q().opts[+el.dataset.i] = el.value; U.saveSoon(); U.prev(); };
+  ACT.uqAx = function (el) { var q = U.q(); q.ax = q.ax || []; q.ax[+el.dataset.i] = el.value; U.saveSoon(); U.prev(); };
+  ACT.uqOAdd = function () { var q = U.q(); q.opts.push(''); U.saveSoon(); U.render(); var i = document.getElementById('uqO' + (q.opts.length - 1)); if (i) i.focus(); };
+  ACT.uqODel = function (el) {
+    var q = U.q(), i = +el.dataset.i; if (q.opts.length <= 1) return; q.opts.splice(i, 1);
+    if (q.type === 'quiz') q.ok = (q.ok || []).filter(function (x) { return x !== i; }).map(function (x) { return x > i ? x - 1 : x; });
+    U.saveSoon(); U.render();
+  };
+  ACT.uqOk = function (el) {
+    var q = U.q(), i = +el.dataset.i, ok = q.ok || [];
+    if (q.multi) { if (ok.indexOf(i) >= 0) ok = ok.filter(function (x) { return x !== i; }); else ok = ok.concat([i]); } else ok = [i];
+    q.ok = ok; U.saveSoon(); U.render();
+  };
+  ACT.uqTog = function (el) { var q = U.q(), f = el.dataset.f; q[f] = !q[f]; if (f === 'multi' && !q.multi && q.type === 'quiz' && (q.ok || []).length > 1) q.ok = [q.ok[0]]; U.saveSoon(); U.render(); };
+  ACT.uqSet = function (el) { var q = U.q(); q[el.dataset.f] = +el.dataset.v; U.saveSoon(); U.render(); };
+  ACT.uqStil = function (el) { var q = U.q(); q.stil = el.dataset.s; q.opts = UMF_STIL[q.stil].slice(); U.saveSoon(); U.render(); };
+
+  // ---------- Starten und Anzeige an der Wandtafel ----------
+  ACT.uStart = async function (el) {
+    var sv = U.find(el.dataset.id); if (!sv) return;
+    var bad = umfCheck(sv); if (bad) { if (U.view !== 'edit') { U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.render(); } return toast(bad); }
+    if (U.st) await U.save();
+    var has = sv.qs.some(function (q) { return Object.keys(U.doc.ans[q.id] || {}).length; }), l = U.doc.live;
+    var other = l && l.on && l.sid !== sv.id ? '<p class="note">Die laufende Umfrage «' + h(l.title || '') + '» wird dabei beendet.</p>' : '';
+    if (has) return overlay('<div class="card stack" style="width:min(560px,100%)"><h2>Diese Umfrage hat schon Antworten</h2>' +
+      '<p>Möchten Sie dort weitermachen oder neu beginnen? Beim Neubeginn werden die bisherigen Antworten dieser Klasse gelöscht.</p>' + other +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn" data-a="uGo" data-id="' + sv.id + '" data-neu="0">Weitermachen</button><button class="btn primary" data-a="uGo" data-id="' + sv.id + '" data-neu="1">Neu beginnen</button></div></div>');
+    if (other) return overlay('<div class="card stack" style="width:min(560px,100%)"><h2>Umfrage starten?</h2>' + other +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn primary" data-a="uGo" data-id="' + sv.id + '" data-neu="0">Starten</button></div></div>');
+    return ACT.uGo({ dataset: { id: sv.id, neu: '0' } });
+  };
+  ACT.uGo = async function (el) {
+    closeOverlays();
+    var sv = U.find(el.dataset.id), set = sv.set || {}, qs = sv.qs.map(umfClean);
+    var live = { on: true, sid: sv.id, title: sv.title || 'Umfrage', mode: set.mode === 'selbst' ? 'selbst' : 'live', cur: qs[0].id, open: true,
+      show: set.auto !== 'aufdecken', auto: set.auto === 'aufdecken' ? 'aufdecken' : 'live', kids: set.kids !== false, rev: [], hid: {}, hidw: {}, until: null, qs: qs };
+    U.view = 'show'; U.names = set.anon === false; U.fehlt = false; U.rank = false; U.more = false;
+    await U.setLive(live, el.dataset.neu === '1' ? qs.map(function (q) { return q.id; }) : null, null, true);
+    toast('Die Umfrage läuft. Die Kinder tippen auf «Umfrage».');
+  };
+  U.idx = function () { var l = U.doc.live, qs = l.qs || []; for (var i = 0; i < qs.length; i++) if (qs[i].id === l.cur) return i; return 0; };
+  U.viewShow = function () {
+    var l = U.doc.live, qs = l.qs || [], i = U.idx(), q = qs[i] || qs[0], ans = U.doc.ans[q.id] || {}, kidName = {};
+    U.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var hid = (l.hid || {})[q.id] || [], hidw = (l.hidw || {})[q.id] || [];
+    var E = Object.keys(ans).filter(function (k) { return hid.indexOf(k) < 0; }).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; });
+    var answered = Object.keys(ans).filter(function (k) { return kidName[k]; }).length, total = U.kids.length, rev = (l.rev || []).indexOf(q.id) >= 0, selbst = l.mode === 'selbst';
+    var hasQuiz = qs.some(function (x) { return x.type === 'quiz' && (x.ok || []).length; });
+    var head = '<div class="us-head"><img class="board-bild" src="' + h(klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · Klasse ' + h(U.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
+      '<div class="us-join">Mitmachen: ' + h(C.PORTAL_NAME) + ' öffnen und auf <b>«Umfrage»</b> tippen · Code <b>' + h(U.cls.code || '') + '</b></div>' +
+      '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button><button class="board-btn" data-a="uBack">Zur Liste</button><button class="board-btn' + (UI.confirm === 'uEnd' ? ' armed' : '') + '" data-a="uEnd">' + (UI.confirm === 'uEnd' ? 'Wirklich beenden?' : '■ Beenden') + '</button></div></div>';
+    var body;
+    if (U.rank) {
+      var R = umfRank(qs, U.doc.ans, U.kids), L = R.list;
+      body = '<div class="us-q"><span class="us-nr">🏆 Quiz-Rangliste</span><h1>Wer hatte am meisten richtig?</h1></div><div class="us-res spr-result"><div class="podium">' + [1, 0, 2].map(function (j) {
+        var x = L[j]; if (!x) return '<div class="pod p' + (j + 1) + ' empty"></div>';
+        return '<div class="pod p' + (j + 1) + '"><span class="m">' + medal(j + 1) + '</span><b>' + h(x.name) + '</b><span>' + x.p + ' von ' + R.n + '</span></div>'; }).join('') + '</div>' +
+        '<ol class="ranking" start="4">' + L.slice(3).map(function (x) { return '<li><b>' + h(x.name) + '</b> · ' + x.p + ' von ' + R.n + '</li>'; }).join('') + '</ol></div>';
+    } else {
+      var t = umfType(q.type);
+      body = '<div class="us-q"><span class="us-nr">' + t[2] + ' ' + (selbst ? 'Ergebnis ' : 'Frage ') + (i + 1) + ' von ' + qs.length + (selbst ? ' · Selbsttempo' : '') + '</span><h1>' + h(q.text) + '</h1></div>';
+      if (q.type === 'info') body += '<div class="us-res us-info"><p>' + h(q.sub || '') + '</p></div>';
+      else if (!l.show) body += '<div class="us-res us-hidden"><div class="us-bubbles">' + E.map(function (e, j) { return '<i style="background:' + UMF_COL[j % UMF_COL.length] + ';animation-delay:' + (j % 7) * .15 + 's"></i>'; }).join('') + '</div>' +
+        '<span class="us-big">' + E.length + '</span><span>' + (E.length === 1 ? 'Antwort' : 'Antworten') + '</span><small>Das Ergebnis ist noch verdeckt.</small></div>';
+      else body += '<div class="us-res">' + umfRes(q, E, { rev: rev, names: U.names, mod: true, hidw: hidw }) + '</div>';
+      if (U.fehlt && q.type !== 'info') {
+        var miss = U.kids.filter(function (k) { return ans[k.id] === undefined; });
+        body += '<div class="board-fehlt">' + (miss.length ? '<b>Noch keine Antwort:</b>' + miss.map(function (k) { return '<span class="tag"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span>'; }).join('') : '<b>✓ Alle Kinder haben geantwortet.</b>') + '</div>';
+      }
+    }
+    var left = U.left(), b = function (a, txt, extra) { return '<button class="board-btn' + (extra || '') + '" data-a="' + a + '">' + txt + '</button>'; };
+    var nHid = hid.length + hidw.length;
+    var more = U.more ? '<div class="us-more">' + b('uFehlt', U.fehlt ? '👤 Fehlende ausblenden' : '👤 Wer fehlt noch?') + b('uNames', U.names ? '🙈 Namen verbergen' : '🏷️ Namen zeigen') +
+      (nHid ? b('uUnhide', '↺ ' + nHid + ' Ausgeblendete wieder zeigen') : '') + (hasQuiz ? b('uRank', U.rank ? '← Zurück zur Frage' : '🏆 Quiz-Rangliste') : '') +
+      (q.type !== 'info' ? b('uClearQ', UI.confirm === 'uClearQ' ? 'Wirklich alle Antworten löschen?' : '🗑 Antworten dieser Frage löschen', UI.confirm === 'uClearQ' ? ' armed' : '') : '') + '</div>' : '';
+    var foot = '<div class="us-foot">' + more + '<div class="us-bar"><button class="board-btn" data-a="uNav" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="Vorherige Frage">◀</button>' +
+      (q.type !== 'info' ? '<span class="us-count"><b>' + answered + '</b> von ' + total + ' <span class="us-prog"><i style="width:' + (total ? Math.round(answered / total * 100) : 0) + '%"></i></span></span>' : '<span class="us-count">Infofolie</span>') +
+      '<span class="us-main-btns">' + (q.type !== 'info' ? b('uShow', l.show ? '🙈 Verdecken' : '👁 Ergebnis zeigen', l.show ? '' : ' hot') +
+        b('uOpen', l.open ? '🔒 Schliessen' : '🔓 Öffnen', l.open ? '' : ' warn') +
+        (!selbst ? (l.until ? '<button class="board-btn hot" data-a="uTimer">⏱ <span id="umfTimer">' + umfSec(left || 0) + '</span> ✕</button>' : b('uTimer', '⏱ Timer')) : '') +
+        (umfHasOk(q) ? b('uRev', rev ? '✓ Lösung verbergen' : '✓ Lösung zeigen', rev ? ' on' : '') : '') : '') +
+        b('uMore', '⋯ Mehr', U.more ? ' on' : '') + '</span>' +
+      '<button class="board-btn us-next" data-a="uNav" data-d="1"' + (i < qs.length - 1 ? '' : ' disabled') + '>Weiter ▶</button></div></div>';
+    return '<div class="umf-show' + (l.open ? '' : ' zu') + '">' + head + '<div class="us-mainarea">' + body + '</div>' + foot + '</div>';
+  };
+  ACT.uBack = function () { U.view = 'list'; U.render(); };
+  ACT.uEnd = async function () {
+    if (!armed('uEnd')) return U.render();
+    var sid = U.doc.live.sid; await U.setLive({ on: false, open: false, until: null });
+    U.rid = sid; U.view = U.find(sid) ? 'res' : 'list'; U.render(); toast('Umfrage beendet. Die Antworten bleiben gespeichert.');
+  };
+  ACT.uNav = function (el) {
+    var l = U.doc.live, qs = l.qs || [], j = U.idx() + +el.dataset.d; if (j < 0 || j >= qs.length) return;
+    U.rank = false; U.fehlt = false; UI.confirm = null;
+    U.setLive({ cur: qs[j].id, open: true, show: l.auto !== 'aufdecken', until: null }).catch(function (e) { toast(errMsg(e)); });
+  };
+  ACT.uShow = function () { U.setLive({ show: !U.doc.live.show }); };
+  ACT.uOpen = function () { U.setLive({ open: !U.doc.live.open, until: null }); };
+  ACT.uRev = function () {
+    var l = U.doc.live, rev = (l.rev || []).slice(), i = rev.indexOf(l.cur);
+    if (i >= 0) rev.splice(i, 1); else rev.push(l.cur);
+    U.setLive(i >= 0 ? { rev: rev } : { rev: rev, show: true });
+  };
+  ACT.uTimer = function () {
+    if (U.doc.live.until) return U.setLive({ until: null });
+    overlay('<div class="card stack" style="width:min(520px,100%)"><h2>⏱ Wie lange dürfen die Kinder antworten?</h2><p class="muted">Danach wird die Abstimmung geschlossen und das Ergebnis gezeigt.</p><div class="chips">' +
+      [[20, '20 Sekunden'], [30, '30 Sekunden'], [60, '1 Minute'], [120, '2 Minuten'], [180, '3 Minuten'], [300, '5 Minuten']].map(function (x) {
+        return '<button class="chip" data-a="uTimerGo" data-s="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div><button class="btn" style="align-self:flex-end" data-a="closeOverlay">Abbrechen</button></div>');
+  };
+  ACT.uTimerGo = function (el) { closeOverlays(); U.setLive({ open: true }, null, +el.dataset.s); };
+  ACT.uMore = function () { U.more = !U.more; U.render(); };
+  ACT.uFehlt = function () { U.fehlt = !U.fehlt; U.render(); };
+  ACT.uNames = function () { U.names = !U.names; U.render(); };
+  ACT.uRank = function () { U.rank = !U.rank; U.render(); };
+  ACT.uHide = function (el) { var l = U.doc.live, hid = JSON.parse(JSON.stringify(l.hid || {})); hid[l.cur] = (hid[l.cur] || []).concat([el.dataset.k]); U.setLive({ hid: hid }); };
+  ACT.uHideW = function (el) { var l = U.doc.live, hw = JSON.parse(JSON.stringify(l.hidw || {})); hw[l.cur] = (hw[l.cur] || []).concat([el.dataset.w]); U.setLive({ hidw: hw }); toast('Wort ausgeblendet'); };
+  ACT.uUnhide = function () { var l = U.doc.live, hid = Object.assign({}, l.hid), hw = Object.assign({}, l.hidw); delete hid[l.cur]; delete hw[l.cur]; U.setLive({ hid: hid, hidw: hw }); };
+  ACT.uClearQ = function () { if (!armed('uClearQ')) return U.render(); U.setLive({}, [U.doc.live.cur]); toast('Antworten gelöscht'); };
+  document.addEventListener('keydown', function (e) {
+    if (UI.view !== 'umfrage' || U.view !== 'show' || document.querySelector('.overlay') || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return;
+    var d = e.key === 'ArrowRight' || e.key === 'PageDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'PageUp' ? -1 : 0;
+    if (d) { e.preventDefault(); ACT.uNav({ dataset: { d: d } }); }
+  });
+
+  // ---------- Ergebnisse (nach der Umfrage) ----------
+  ACT.uRes = function (el) { U.rid = el.dataset.id; U.view = 'res'; U.render(); window.scrollTo(0, 0); };
+  U.viewRes = function () {
+    var sv = U.find(U.rid); if (!sv) { U.view = 'list'; return U.viewList(); }
+    var kidName = {}; U.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var qs = sv.qs.map(umfClean), del = UI.confirm === 'uResDel';
+    var hasQuiz = qs.some(function (q) { return q.type === 'quiz' && (q.ok || []).length; });
+    var out = '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button>',
+      '<button class="btn sm" data-a="uResNames">' + (U.resNames ? '🙈 Namen verbergen' : '🏷️ Namen zeigen') + '</button><button class="btn sm" data-a="uCsv">⬇ Tabelle</button>' +
+      '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uResDel">' + (del ? 'Wirklich alle Antworten löschen?' : '🗑 Antworten löschen') + '</button><button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Nochmals starten</button>') +
+      '<section class="stack"><h2>' + h(sv.title || 'Umfrage') + ' · Ergebnisse</h2><p class="muted">Klasse ' + h(U.cls.name) + '. Alle Antworten, auch ausgeblendete. Die Tabelle können Sie in Excel öffnen.</p>';
+    if (hasQuiz) {
+      var R = umfRank(qs, U.doc.ans, U.kids);
+      out += '<div class="card stack"><h3>🏆 Quiz-Rangliste</h3><ol class="ur-rangkids">' + R.list.map(function (x) { return '<li><b>' + h(x.name) + '</b> ' + x.p + ' von ' + R.n + ' richtig</li>'; }).join('') + '</ol></div>';
+    }
+    out += qs.map(function (q, i) {
+      var ans = U.doc.ans[q.id] || {}, E = Object.keys(ans).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; }), t = umfType(q.type);
+      return '<div class="card stack umf-rescard"><div class="row" style="justify-content:space-between"><span class="ue-badge">' + t[2] + ' ' + (i + 1) + '. ' + t[1] + '</span>' + (q.type !== 'info' ? '<span class="muted small">' + plural(E.length, 'Antwort', 'Antworten') + '</span>' : '') + '</div>' +
+        '<h3>' + h(q.text) + '</h3>' + (q.type === 'info' ? '<p>' + h(q.sub || '') + '</p>' : umfRes(q, E, { rev: true, names: U.resNames, small: true })) + '</div>';
+    }).join('') + '</section></div>';
+    return out;
+  };
+  ACT.uResNames = function () { U.resNames = !U.resNames; U.render(); };
+  ACT.uResDel = function () {
+    if (!armed('uResDel')) return U.render();
+    var sv = U.find(U.rid); U.setLive(null, sv.qs.map(function (q) { return q.id; })).then(function () { toast('Antworten gelöscht'); U.view = 'list'; U.render(); });
+  };
+  ACT.uCsv = function () {
+    var sv = U.find(U.rid), qs = sv.qs.map(umfClean).filter(function (q) { return q.type !== 'info'; });
+    var cell = function (s) { s = String(s == null ? '' : s); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    var rows = [['Kind'].concat(qs.map(function (q) { return q.text; }))];
+    U.kids.forEach(function (k) { rows.push([k.name].concat(qs.map(function (q) { var v = (U.doc.ans[q.id] || {})[k.id]; return v === undefined ? '' : umfFmt(q, v); }))); });
+    var blob = new Blob(['﻿' + rows.map(function (r) { return r.map(cell).join(';'); }).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Umfrage ' + (sv.title || '').replace(/[\\/:*?"<>|]/g, '') + ' ' + U.cls.name + '.csv';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  };
+
+  // ===================================================================
   // Gedächtniskiste: Vorschau aller Gedächtnisspiele für Lehrpersonen (gedaechtnis/index.html).
   // Die Spiele selbst liegen in gedaechtnis/<spiel>.html; in der Tabelle «games» steht nur ein Verweis (knobelnest-url).
   // ===================================================================
@@ -1036,6 +1613,7 @@
     ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen und kontrollieren, Berichte drucken. Die Kinder sehen alles am iPad.'],
     ['arbeitsstand', 'Arbeitsstand', 'Wer kann helfen, wer hat eine Frage? Live an der Wandtafel.'],
     ['pinnwand', 'Pinnwand', 'Ideen sammeln und gemeinsam abstimmen.'],
+    ['umfrage', 'Umfrage', 'Abstimmen, Wortwolken, Quiz und Schätzfragen. Die Kinder antworten am iPad, das Ergebnis erscheint live.'],
     ['otterteich', 'Lautstärkeregler', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.']];
   ACT.shopSoon = function () { toast('Der Shop kommt bald. Melden Sie sich bis dahin bei ' + C.CONTACT + '.'); };
   ACT.login = async function (f) {
@@ -1249,9 +1827,9 @@
       '</div></div>' + (function () {
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
-          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele']]
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live']]
           .filter(function (x) { return T.tools[x[0]]; });
-        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
+        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
         var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel">' + ttIcon('tafel', '🙋') + '<span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
@@ -1536,10 +2114,10 @@
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz' };
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz', umfrage: 'umfrage' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
-  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'tafel', 'vk', 'gd'];
+  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;
@@ -2416,6 +2994,7 @@
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
+      (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
       '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic ic-bild"><img src="bilder/kacheln/hausaufgaben.webp" alt="" draggable="false"></span>' +
@@ -2585,6 +3164,7 @@
       case 'heft': K.step = 'home'; K.render(); break;
       case 'pin': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'atelier': K.step = 'home'; K.render(); K.checkHeft(); break;
+      case 'umfrage': clearInterval(K.umfIv); K.U = null; K.step = 'home'; K.render(); K.checkRace(); break;
       case 'quiz': K.step = 'home'; K.loadHome(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
@@ -2826,6 +3406,8 @@
       var r = await DB.kidRace(K.sess.token), open = r.race && r.race.status !== 'done' ? r.race.id : null;
       if (open !== (K.raceOpen || null)) { K.raceOpen = open; if (K.step === 'home') K.render(); }
     } catch (e) {}
+    try { var u = await DB.kidUmfrage(K.sess.token), uo = u ? String(u.sid || '1') : null; if (uo !== (K.umfOpen || null)) { K.umfOpen = uo; if (K.step === 'home') K.render(); } }
+    catch (e) {}
   };
   ACT.kRace = async function () {
     var r = await DB.kidRaceJoin(K.sess.token, K.raceOpen);
@@ -2895,6 +3477,170 @@
       if (res && res.ok) { R.pos = res.pos; if (res.finished) { R.finished = true; R.place = res.place; } K.render(); }
     }).catch(function () {});
     setTimeout(function () { R.lock = false; R.state = ''; R.input = ''; R.task = sprTask(rows, t.key, race.settings.mode); if (R.pos >= goal) R.finished = true; K.render(); }, ok ? 350 : 1300);
+  };
+
+  // ---------- Kinder: Umfrage beantworten ----------
+  // Eingabe für eine Frage. dr = Entwurf des Kindes (null = Vorschau in der Bearbeitung)
+  function umfDraft0(q) {
+    var n = (q.opts || []).length, z = []; for (var i = 0; i < n; i++) z.push(0);
+    if (q.type === 'rang') return z.map(function (x, i) { return i; });
+    if (q.type === 'skala') return z.map(function () { return null; });
+    if (q.type === 'punkte') return z;
+    if (q.type === 'wort' || q.type === 'text') return [];
+    if (q.type === 'zahl') return '';
+    if (q.type === 'feld') return null;
+    return [];
+  }
+  function umfInput(q, dr, prev) {
+    var t = q.type, opts = q.opts || [];
+    if (dr == null) dr = umfDraft0(q);
+    if (t === 'info') return '<p class="ku-info">' + h(q.sub || '') + '</p>';
+    if (t === 'wahl' || t === 'quiz') return '<div class="ku-opts">' + opts.map(function (x, i) {
+      var on = dr.indexOf(i) >= 0;
+      return '<button class="ku-opt' + (on ? ' on' : '') + '" style="--c:' + UMF_COL[i % UMF_COL.length] + '" data-a="kuPick" data-i="' + i + '" aria-pressed="' + on + '"><span class="ku-mark">' + (q.multi ? (on ? '✓' : '') : String.fromCharCode(65 + i)) + '</span><span>' + h(x) + '</span></button>';
+    }).join('') + '</div>' + (q.multi ? '<p class="ku-hint">Du darfst mehrere wählen.</p>' : '');
+    if (t === 'stimmung') return '<div class="ku-emos" style="--n:' + opts.length + '">' + opts.map(function (x, i) {
+      var e = umfEmo(x), on = dr.indexOf(i) >= 0;
+      return '<button class="ku-emo' + (on ? ' on' : '') + '" data-a="kuPick" data-i="' + i + '" aria-pressed="' + on + '"><span class="e">' + (e[0] || '•') + '</span><small>' + h(e[1]) + '</small></button>'; }).join('') + '</div>';
+    if (t === 'wort' || t === 'text') {
+      var m = Math.max(1, +q.max || 1), o = '<div class="ku-ins">';
+      for (var i = 0; i < m; i++) o += t === 'wort' ? '<input class="kid-input ku-in" id="kuW' + i + '" data-input="kuW" data-i="' + i + '" maxlength="30" autocomplete="off" placeholder="' + (m > 1 ? (i + 1) + '. Wort' : 'Dein Wort') + '" value="' + h(dr[i] || '') + '">'
+        : '<textarea class="kid-input ku-in ku-ta" id="kuW' + i + '" data-input="kuW" data-i="' + i + '" maxlength="300" rows="3" placeholder="' + (m > 1 ? (i + 1) + '. Antwort' : 'Schreib hier deine Antwort') + '">' + h(dr[i] || '') + '</textarea>';
+      return o + '</div>' + (t === 'wort' ? '<p class="ku-hint">' + (m > 1 ? 'Bis zu ' + m + ' Wörter, ' : '') + 'kurz und knapp.</p>' : '');
+    }
+    if (t === 'skala') {
+      var mx = umfSkMax(q);
+      return '<div class="ku-skala">' + opts.map(function (st, i) {
+        var o = ''; for (var v = 1; v <= mx; v++) o += '<button class="ku-skb' + (dr[i] === v ? ' on' : '') + '" data-a="kuSk" data-i="' + i + '" data-v="' + v + '">' + v + '</button>';
+        return '<div class="ku-sk">' + (opts.length > 1 || st ? '<p>' + h(st) + '</p>' : '') + '<div class="ku-skr" style="--m:' + mx + '">' + o + '</div><div class="ku-ends"><span>' + h(q.lo || '') + '</span><span>' + h(q.hi || '') + '</span></div></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'rang') return '<p class="ku-hint">Das Wichtigste ganz nach oben.</p><ol class="ku-rang">' + dr.map(function (oi, p) {
+      return '<li><span class="ku-p">' + (p + 1) + '</span><span class="ku-l">' + h(opts[oi]) + '</span><button data-a="kuRang" data-p="' + p + '" data-d="-1" aria-label="Nach oben"' + (p ? '' : ' disabled') + '>▲</button><button data-a="kuRang" data-p="' + p + '" data-d="1" aria-label="Nach unten"' + (p < dr.length - 1 ? '' : ' disabled') + '>▼</button></li>';
+    }).join('') + '</ol>';
+    if (t === 'punkte') {
+      var P = Math.min(100, Math.max(1, +q.pts || 10)), used = 0; dr.forEach(function (x) { used += x; });
+      return '<p class="ku-left">Noch <b>' + (P - used) + '</b> ⭐ übrig</p><div class="ku-pts">' + opts.map(function (x, i) {
+        return '<div class="ku-pt"><span class="ku-l">' + h(x) + '</span><button data-a="kuPts" data-i="' + i + '" data-d="-1" aria-label="Weniger"' + (dr[i] ? '' : ' disabled') + '>−</button><b>' + (dr[i] || 0) + ' ⭐</b><button data-a="kuPts" data-i="' + i + '" data-d="1" aria-label="Mehr"' + (used < P ? '' : ' disabled') + '>+</button></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'zahl') return '<div class="ku-zahl"><input class="kid-input" id="kuZ" data-input="kuZ" inputmode="decimal" autocomplete="off" placeholder="Deine Zahl" value="' + h(dr) + '">' + (q.unit ? '<span>' + h(q.unit) + '</span>' : '') + '</div>' +
+      (q.min != null && q.max != null ? '<p class="ku-hint">Eine Zahl von ' + umfFmtNum(q.min) + ' bis ' + umfFmtNum(q.max) + '.</p>' : '');
+    if (t === 'feld') return '<p class="ku-hint">Tippe ins Feld, wo du gerade bist.</p>' + umfFeld(q.ax || [], dr ? '<span class="ur-dot me" style="left:' + dr.x + '%;top:' + (100 - dr.y) + '%"></span>' : '', true, prev ? null : 'kuFeld');
+    return '';
+  }
+  // Fertige Antwort aus dem Entwurf (null = noch nicht fertig)
+  function umfVal(q, dr) {
+    var t = q.type;
+    if (dr == null) return null;
+    if (t === 'wahl' || t === 'quiz' || t === 'stimmung') return dr.length ? dr.slice() : null;
+    if (t === 'wort' || t === 'text') { var a = dr.map(function (x) { return String(x || '').trim(); }).filter(Boolean); return a.length ? a : null; }
+    if (t === 'skala') return dr.every(function (x) { return x >= 1; }) ? dr.slice() : null;
+    if (t === 'rang') return dr.slice();
+    if (t === 'punkte') { var s = 0; dr.forEach(function (x) { s += x; }); return s ? dr.slice() : null; }
+    if (t === 'zahl') { var x = umfNum(dr); if (x === null || (q.min != null && x < q.min) || (q.max != null && x > q.max)) return null; return x; }
+    if (t === 'feld') return dr;
+    return null;
+  }
+  K.umfQ = function () {
+    var d = K.U && K.U.d; if (!d || !d.qs.length) return null;
+    if (d.mode !== 'selbst') return d.qs[0];
+    K.U.i = Math.max(0, Math.min(K.U.i || 0, d.qs.length - 1)); return d.qs[K.U.i];
+  };
+  K.umfDr = function (q) {
+    var U2 = K.U; if (U2.dr[q.id] !== undefined) return U2.dr[q.id];
+    var m = U2.d.mine[q.id], d;
+    if (m === undefined) d = umfDraft0(q);
+    else if (q.type === 'zahl') d = String(m).replace('.', ',');
+    else d = JSON.parse(JSON.stringify(m));
+    U2.dr[q.id] = d; return d;
+  };
+  K.umfLoad = async function () {
+    var d; try { d = await DB.kidUmfrage(K.sess.token); } catch (e) { return K.sessionLost(e); }
+    var U2 = K.U; if (!U2 || K.step !== 'umfrage') return;
+    var sig = JSON.stringify(d ? Object.assign({}, d, { now: 0 }) : null);
+    if (d) U2.off = d.now - Date.now();
+    if (sig === U2.sig) return; U2.sig = sig;
+    // Neue Frage oder neue Umfrage: alte Entwürfe weg
+    if (!d || !U2.d || d.sid !== U2.d.sid) { U2.dr = {}; U2.edit = {}; U2.i = 0; }
+    else if (d.mode !== 'selbst' && d.cur !== U2.d.cur) { U2.edit = {}; }
+    U2.d = d; K.render();
+  };
+  ACT.kUmf = function () {
+    K.step = 'umfrage'; K.U = { d: null, dr: {}, edit: {}, i: 0, sig: '', off: 0, first: true }; K.render();
+    K.umfLoad(); clearInterval(K.umfIv); var n = 0;
+    K.umfIv = setInterval(function () {
+      if (UI.view !== 'kid' || K.step !== 'umfrage' || !K.U) { clearInterval(K.umfIv); return; }
+      var d = K.U.d, el = document.getElementById('kuTimer');
+      if (el && d && d.until) { var s = Math.ceil((d.until - (Date.now() + K.U.off)) / 1000); el.textContent = s > 0 ? '⏱ Noch ' + umfSec(s) : '⏱ Die Zeit ist um'; }
+      if (++n % 4 === 0 && !document.hidden) K.umfLoad();
+    }, 500);
+  };
+  K.view_umfrage = function () {
+    var U2 = K.U, d = U2 && U2.d;
+    if (!U2 || (!d && U2.sig === '')) return K.shell('<div class="kid-card"><p class="lead">Umfrage wird geladen …</p></div>', 'Zurück');
+    if (!d) return K.shell('<div class="kid-card"><div class="ku-big">🎉</div><h1>Die Umfrage ist fertig</h1><p class="lead">Danke fürs Mitmachen!</p><button class="kid-go" data-a="kBack">Zurück</button></div>', 'Zurück');
+    var q = K.umfQ(), selbst = d.mode === 'selbst';
+    if (!q) return K.shell('<div class="kid-card"><div class="ku-big">👀</div><h1>Schau nach vorne</h1><p class="lead">Gleich kommt die nächste Frage.</p></div>', 'Zurück');
+    var mine = d.mine[q.id], t = umfType(q.type), rev = (d.rev || []).indexOf(q.id) >= 0, editing = U2.edit[q.id] || mine === undefined;
+    var o = '<div class="kid-card ku">';
+    if (selbst) o += '<div class="ku-dots">' + d.qs.map(function (x, j) { return '<button class="ku-d' + (j === U2.i ? ' cur' : '') + (d.mine[x.id] !== undefined || x.type === 'info' ? ' ok' : '') + '" data-a="kuGo" data-i="' + j + '" aria-label="Frage ' + (j + 1) + '">' + (j + 1) + '</button>'; }).join('') + '</div>';
+    o += '<span class="ku-nr">' + t[2] + ' ' + h(d.title || 'Umfrage') + '</span><h1 class="ku-q">' + h(q.text) + '</h1>';
+    if (d.until && d.open) o += '<p class="ku-timer" id="kuTimer"></p>';
+    if (q.type === 'info') o += umfInput(q, null) + (selbst ? '' : '<p class="lead">Schau nach vorne an die Wandtafel.</p>');
+    else if (!editing) {
+      o += '<div class="ku-done"><span class="ku-big">✓</span><b>Danke! Deine Antwort ist angekommen.</b><span>' + h(umfFmt(q, mine)) + '</span></div>';
+      if (rev && umfHasOk(q)) o += q.type === 'quiz' ? (umfQuizOk(q, mine) ? '<p class="ku-rich ok">🎉 Richtig!</p>' : '<p class="ku-rich no">Die richtige Antwort ist: <b>' + h((q.ok || []).map(function (i) { return q.opts[i]; }).join(', ')) + '</b></p>')
+        : '<p class="ku-rich">Die Lösung ist <b>' + umfFmtNum(q.ok) + (q.unit ? ' ' + h(q.unit) : '') + '</b>. Du hast ' + umfFmtNum(+mine) + ' geschätzt.</p>';
+      if (d.open) o += '<button class="kid-btn" data-a="kuEdit">Antwort ändern</button>';
+    } else if (!d.open) o += '<p class="lead">Die Abstimmung ist geschlossen.</p>';
+    else {
+      var dr = K.umfDr(q);
+      o += umfInput(q, dr) + '<button class="kid-go" data-a="kuSend"' + (umfVal(q, dr) == null ? ' disabled' : '') + '>Abschicken</button>';
+      if (mine !== undefined) o += '<button class="kid-btn" data-a="kuCancel">Nicht ändern</button>';
+    }
+    if (d.show && d.res[q.id] && q.type !== 'info' && (mine !== undefined || !d.open)) o += '<div class="ku-res"><span class="ku-nr">So hat die Klasse geantwortet</span>' + umfRes(q, d.res[q.id].map(function (v) { return { v: v }; }), { small: true, rev: rev }) + '</div>';
+    if (selbst) {
+      var last = U2.i >= d.qs.length - 1, all = d.qs.every(function (x) { return x.type === 'info' || d.mine[x.id] !== undefined; });
+      o += '<div class="ku-nav"><button class="kid-btn" data-a="kuStep" data-d="-1"' + (U2.i ? '' : ' disabled') + '>◀ Zurück</button>' +
+        (last ? (all ? '<span class="ku-fertig">🎉 Fertig! Danke.</span>' : '') : '<button class="kid-btn" data-a="kuStep" data-d="1">Weiter ▶</button>') + '</div>';
+    }
+    return K.shell(o + '</div>', 'Zurück');
+  };
+  ACT.kuGo = function (el) { K.U.i = +el.dataset.i; K.render(); window.scrollTo(0, 0); };
+  ACT.kuStep = function (el) { K.U.i += +el.dataset.d; K.render(); window.scrollTo(0, 0); };
+  ACT.kuEdit = function () { var q = K.umfQ(); K.U.edit[q.id] = true; delete K.U.dr[q.id]; K.render(); };
+  ACT.kuCancel = function () { var q = K.umfQ(); delete K.U.edit[q.id]; delete K.U.dr[q.id]; K.render(); };
+  function kuSendState() { var q = K.umfQ(), b = document.querySelector('[data-a="kuSend"]'); if (q && b) b.disabled = umfVal(q, K.umfDr(q)) == null; }
+  ACT.kuPick = function (el) {
+    var q = K.umfQ(), dr = K.umfDr(q), i = +el.dataset.i;
+    if (q.multi) { var j = dr.indexOf(i); if (j >= 0) dr.splice(j, 1); else dr.push(i); } else { dr.length = 0; dr.push(i); }
+    K.render();
+  };
+  ACT.kuW = function (el) { var q = K.umfQ(), dr = K.umfDr(q); dr[+el.dataset.i] = el.value; kuSendState(); };
+  ACT.kuZ = function (el) { var q = K.umfQ(); K.U.dr[q.id] = el.value; kuSendState(); };
+  ACT.kuSk = function (el) { var q = K.umfQ(), dr = K.umfDr(q); dr[+el.dataset.i] = +el.dataset.v; K.render(); };
+  ACT.kuRang = function (el) { var q = K.umfQ(), dr = K.umfDr(q), p = +el.dataset.p, j = p + +el.dataset.d; if (j < 0 || j >= dr.length) return; var x = dr[p]; dr[p] = dr[j]; dr[j] = x; K.render(); };
+  ACT.kuPts = function (el) {
+    var q = K.umfQ(), dr = K.umfDr(q), i = +el.dataset.i, P = Math.min(100, Math.max(1, +q.pts || 10)), used = 0; dr.forEach(function (x) { used += x; });
+    if (+el.dataset.d > 0 && used < P) dr[i]++; else if (+el.dataset.d < 0 && dr[i] > 0) dr[i]--; K.render();
+  };
+  ACT.kuFeld = function (el, ev) {
+    var q = K.umfQ(), r = el.getBoundingClientRect(); if (!ev || !r.width) return;
+    K.U.dr[q.id] = { x: Math.round(Math.max(0, Math.min(100, (ev.clientX - r.left) / r.width * 100)) * 10) / 10, y: Math.round(Math.max(0, Math.min(100, 100 - (ev.clientY - r.top) / r.height * 100)) * 10) / 10 };
+    K.render();
+  };
+  ACT.kuSend = async function () {
+    var U2 = K.U, q = K.umfQ(); if (!q || U2.busy) return;
+    var v = umfVal(q, K.umfDr(q)); if (v == null) return;
+    U2.busy = true;
+    try {
+      var ok = await DB.kidUmfrageSend(K.sess.token, q.id, v);
+      if (!ok) { toast('Das hat nicht geklappt. Vielleicht ist die Abstimmung schon geschlossen.'); U2.sig = ''; return K.umfLoad(); }
+      U2.d.mine[q.id] = v; delete U2.edit[q.id]; delete U2.dr[q.id]; U2.sig = '';
+      K.render(); K.umfLoad();
+    } catch (e) { K.sessionLost(e); }
+    finally { U2.busy = false; }
   };
 
   // ===================================================================
