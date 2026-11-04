@@ -65,3 +65,5 @@
 @media (max-width:760px){.pl{font-size:14px;padding:0 7px}}
 /* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
 .lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
+.owbox .card img.jb{float:right;height:118px;margin:-2px -4px 4px 10px}
+@media (max-width:760px){.owbox .card img.jb{height:80px}}
