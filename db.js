@@ -125,6 +125,10 @@
     kidHeft: async function (token) { return ok(await sb.rpc('kid_heft', { p_token: token })); },
     kidPin: async function (token) { return ok(await sb.rpc('kid_pin', { p_token: token })); },
     kidPinIdea: async function (token, board, text) { return ok(await sb.rpc('kid_pin_idea', { p_token: token, p_board: String(board || ''), p_text: String(text || '') })); },
+    // Version 23: mit Kategorie und Bild (die Pinnwand entscheidet, ob direkt angepinnt wird)
+    kidPinPost: async function (token, board, text, cat, img) {
+      return ok(await sb.rpc('kid_pin_post', { p_token: token, p_board: String(board || ''), p_text: String(text || ''), p_cat: cat ? String(cat) : null, p_img: img ? String(img) : null }));
+    },
     kidPinVote: async function (token, body) { return ok(await sb.rpc('kid_pin_vote', { p_token: token, p_body: body })); },
     kidAtelier: async function (token) { return ok(await sb.rpc('kid_atelier', { p_token: token })); },
     kidAtelierSet: async function (token, patch) { return ok(await sb.rpc('kid_atelier_set', { p_token: token, p_patch: patch })); },
@@ -207,6 +211,15 @@
     kidRace: async function (token) { return ok(await sb.rpc('kid_race', { p_token: token })); },
     kidRaceJoin: async function (token, race) { return ok(await sb.rpc('kid_race_join', { p_token: token, p_race: race })); },
     kidRaceStep: async function (token, race, isOk) { return ok(await sb.rpc('kid_race_step', { p_token: token, p_race: race, p_ok: !!isOk })); },
+    // Live-Quiz (Version 23)
+    quizOpen: async function (title, qs) { return ok(await sb.rpc('quiz_open', { p_title: title, p_questions: qs })); },
+    quizStep: async function (id, phase, q) { return ok(await sb.rpc('quiz_step', { p_id: id, p_phase: phase, p_q: q })); },
+    quizHost: async function (id) { return ok(await sb.rpc('quiz_host', { p_id: id })); },
+    quizKick: async function (id, pid) { return ok(await sb.rpc('quiz_kick', { p_id: id, p_player: pid })); },
+    quizClose: async function (id) { try { await sb.rpc('quiz_close', { p_id: id }); } catch (e) {} },
+    quizJoin: async function (pin, name, av) { return ok(await sb.rpc('quiz_join', { p_pin: String(pin || ''), p_name: String(name || ''), p_avatar: String(av || '') })); },
+    quizState: async function (token) { return ok(await sb.rpc('quiz_state', { p_token: token })); },
+    quizAnswer: async function (token, q, ans) { return ok(await sb.rpc('quiz_answer', { p_token: token, p_q: q, p_ans: ans })); },
     tafelGet: async function (token) { return ok(await sb.rpc('tafel_get', { p_token: token })); },
     tafelSet: async function (token, subject, col) { return ok(await sb.rpc('tafel_set', { p_token: token, p_subject: subject, p_col: col })); }
   };
