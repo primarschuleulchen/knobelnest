@@ -16,17 +16,17 @@ def alle(spiel):
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Bilder 1 Stern, pro Stufe bis 10
           kurz='Bilder im Museum auf Englisch beschreiben, lesen und malen.',
           intro='Willkommen im Museum! Hier hängen bunte Bilder. Beschreibe sie auf Englisch: <b>There is a</b> + Farbe + Form + Ort.',
-          levels=[dict(name='Leicht', info='Read and choose: das richtige Bild finden', t='wahl', min=1, max=2, extra=False, alle=False),
-                  dict(name='Gut', info='Look and describe: Sätze bauen', t='sag', min=2, max=2, extra=False, alle=False),
-                  dict(name='Mittel', info='Read and draw: das Bild malen', t='mal', min=2, max=3, extra=False, alle=True, pause=1300),
-                  dict(name='Schwer', info='Look and describe*: big, little, light, dark, facing', t='sag', min=2, max=3, extra=True, alle=True),
-                  dict(name='Profi', info='Listen and draw*: zuhören und malen', t='mal', min=3, max=4, extra=True, alle=True, hoer=True, tempo=.68, pause=1800)],
+          levels=[dict(name='Bild finden', info='Read and choose: Welches Bild ist es?', t='wahl', min=1, max=2, extra=False, alle=False),
+                  dict(name='Bild beschreiben', info='Look and describe: Sätze bauen', t='sag', min=2, max=2, extra=False, alle=False),
+                  dict(name='Bild malen', info='Read and draw: lesen und malen', t='mal', min=2, max=3, extra=False, alle=True, pause=1300),
+                  dict(name='Genau beschreiben', info='big, little, light, dark, facing …', t='sag', min=2, max=3, extra=True, alle=True),
+                  dict(name='Zuhören und malen', info='Listen and draw: nur hören', t='mal', min=3, max=4, extra=True, alle=True, hoer=True, tempo=.68, pause=1800)],
           css=CSS, js=JS)
 
 
 CSS = r"""
-/* bis 10 Sterne pro Stufe: im Stufen-Menü in eine eigene Zeile */
-.lv{flex-wrap:wrap}.lv .stars{width:100%;text-align:center;font-size:21px;letter-spacing:1px;margin-top:-2px}
+/* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
+.lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
 .mu{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start;width:100%;max-width:1040px}
 .spalte{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(100%,470px)}
 .wand{position:relative;width:100%;border-radius:26px;padding:22px 20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;
