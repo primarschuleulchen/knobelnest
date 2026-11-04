@@ -577,6 +577,11 @@ G.play = function (lv, api) {
 """)
 
 
+# ================================================================== Zweite Lieferung (weitere.py)
+import weitere
+weitere.alle(spiel)
+
+
 # ------------------------------------------------------------------ Prüfen und bauen
 def runs(line):
     r, c = [], 0
