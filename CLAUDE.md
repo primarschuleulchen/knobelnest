@@ -80,7 +80,7 @@ So läuft ein Werkzeug im Portal:
 | Live-Quiz | `window.knQuiz` (`mode` teacher/player) | `quiz`, `quiz-<id>` (nicht pro Klasse) | `quiz_join`, `quiz_state`, `quiz_answer` (ohne Kinder-Anmeldung) |
 
 - **Otterteich in der Tagesfolie:** Die Tagesfolie zeigt den Otterteich als Baustein. Dafür liegt das Fenster `otterteich.html?embed` dauerhaft über dem Baustein, damit Mikrofon und Otter weiterlaufen. Es findet `knOtter` über `window.parent.parent`.
-- **Werkzeuge freigeben:** Der Admin gibt Werkzeuge pro Lehrperson frei. Die Freigaben stehen in `shared_store` «werkzeuge» = `{Lehrperson-ID: {folie, heft, pin, otter, atelier, quiz: true}}`. Die Liste dazu ist `TOOLS` in `app.js`, die Prüfung `toolGate()`. Für Admins ist immer alles frei.
+- **Werkzeuge freigeben:** Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (`BASE_TOOLS`). Die übrigen gibt der Admin pro Lehrperson frei: `shared_store` «werkzeuge» = `{Lehrperson-ID: {heft, tafel, vk, atelier, quiz: true}}`, Liste `TOOLS` in `app.js`, Prüfung `toolGate()`/`toolAccess()`. Ohne `tafel` keine Arbeitsstand-Kachel, kein Reiter, keine Wandtafel; ohne `vk` keine Vokabelkiste-Kachel (beim Freigeben wird das Spiel Vokabelkiste mit zugeteilt). Für Admins ist immer alles frei.
 - **Neues Werkzeug:**
   - eine Zeile in `TOOLS`
   - eine Route in `route()`
@@ -119,7 +119,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=91`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=92`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
