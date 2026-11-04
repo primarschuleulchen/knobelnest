@@ -10,6 +10,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Lehrperson: Reiter «Übersicht» (`T.tab = 'uebersicht'`, Start und Klick aufs Logo) = Klassen-Banner mit Werkzeug-Kacheln; Reiter «Spiele» = Fächer und Spiele (beides `T.tabSpiele`). Kachel-Bilder in `bilder/kacheln/` (`KACHEL_BILD`, `ttIcon()`).
 - Anmeldeseite: Werkzeug-Galerie mit Vorschau beim Darüberfahren (`LOGIN_TOOLS`), Knopf «Noch kein Login?» → `C.SHOP_URL` in `config.js` (leer = Hinweis «kommt bald»). Kreisbilder in `bilder/kacheln/` und `bilder/maskottchen/` sind rund zugeschnitten (durchsichtige Ecken), den Goldrand macht das CSS.
 - Kinderansicht: `body.kidv` (in `K.render`), heller Stil wie die Lehrpersonen-Seite, Schriften Fredoka/Andika bleiben. Startseite ohne Kopfleiste, «Abmelden» neben der Begrüssung (`K.shell(body, null)`).
+- Umfrage (Version 23, wie Mentimeter): Modul `U` in `app.js`, Route `#/umfrage/<Klasse>`, Freigabe-Schlüssel `umfrage` in `TOOLS`. Umfragen der Lehrperson (für alle Klassen) in `teacher_store` «umfragen» = `{list:[{id,title,set:{mode,auto,kids,anon},qs}]}`; Live-Stand und Antworten pro Klasse in «umfrage-<Klasse>» = `{live, ans:{Frage:{Kind:Antwort}}}`. «live» schreibt nur die Lehrperson (`umfrage_put`, Timer über `sec`), Kinder lesen mit `kid_umfrage` (Lösung `ok` erst nach Aufdecken `rev`, Antworten anderer ohne Namen und nur bei `show`) und antworten mit `kid_umfrage_send` (Prüfung pro Fragetyp). Fragetypen `UMF_TYPES` (wahl, quiz, stimmung, wort, text, skala, rang, punkte, zahl, feld, info), Ergebnisse `umfRes()`, Eingabe der Kinder `umfInput()`, Vorlagen `UMF_VORLAGEN`. Kinder: Kachel «Umfrage!» (`K.umfOpen`, geprüft in `K.checkRace`), Ansicht `K.view_umfrage`.
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -43,7 +44,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 22) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 23) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -74,6 +75,7 @@ So läuft ein Werkzeug im Portal:
 | Hausaufgabenheft | `window.knHeft` | `hat-<Klasse>` | `kid_heft`, `kid_heft_tick`, `kid_heft_own` |
 | Pinnwand | `window.knPin` (`pinBridge` baut die `claude.use('db')`-Sammlungen nach) | `pin-<Klasse>` | `kid_pin`, `kid_pin_idea`, `kid_pin_vote`; Lehrperson schreibt mit `pin_put` |
 | Otterteich | `window.knOtter` (`otterBridge`) | `otter-<Klasse>` (Einstellungen und `run` = Stand des Teichs) | – |
+| Umfrage | – (direkt im Portal, Modul `U`) | «umfragen», `umfrage-<Klasse>` | `kid_umfrage`, `kid_umfrage_send`; Lehrperson schreibt mit `umfrage_put` |
 | Atelier | `window.knAtelier` | `atelier-<Klasse>` = `{open, arten, kids:{id:{thema,umsetzung,stufe,farbe,x,y}}}` | `kid_atelier`, `kid_atelier_set`; Lehrperson schreibt mit `atelier_put` |
 
 - **Otterteich in der Tagesfolie:** Die Tagesfolie zeigt den Otterteich als Baustein. Dafür liegt das Fenster `otterteich.html?embed` dauerhaft über dem Baustein, damit Mikrofon und Otter weiterlaufen. Es findet `knOtter` über `window.parent.parent`.
@@ -106,7 +108,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 22).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 23).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -116,7 +118,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=90`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=91`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 22)
+-- Knobelnest – Datenbank-Einrichtung (Version 23)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1209,5 +1209,155 @@ begin
 end;
 $$;
 grant execute on function public.kid_class(text), public.kid_login(text, uuid, text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- Version 23: Umfrage (Lehrperson stellt Fragen an der Wandtafel, Kinder antworten am iPad)
+--   Umfragen der Lehrperson: teacher_store «umfragen» (schreibt die Lehrperson direkt)
+--   Live-Stand pro Klasse: teacher_store «umfrage-<Klasse>» = { live: {...}, ans: { Frage-ID: { Kind-ID: Antwort } } }
+--   live = { on, sid, title, mode (live/selbst), cur, open, show, kids, rev:[], hid:{Frage:[Kind]}, hidw:{Frage:[Wort]}, until, qs:[Fragen] }
+--   Die Lehrperson schreibt «live» (umfrage_put), die Kinder nur ihre eigene Antwort (kid_umfrage_send).
+--   Kinder sehen die Lösung erst nach dem Aufdecken, die Antworten der anderen nur ohne Namen und nur, wenn sie gezeigt werden.
+-- ---------------------------------------------------------------------
+create or replace function public._umf_ints(p jsonb, lo numeric, hi numeric) returns boolean
+language sql immutable set search_path = public as $$
+  select case when jsonb_typeof(p) is distinct from 'array' then false else not exists (select 1 from jsonb_array_elements(p) e
+    where jsonb_typeof(e) <> 'number' or (e #>> '{}')::numeric % 1 <> 0 or (e #>> '{}')::numeric < lo or (e #>> '{}')::numeric > hi) end;
+$$;
+
+create or replace function public._umf_num(p jsonb, d numeric) returns numeric
+language sql immutable set search_path = public as $$
+  select case when jsonb_typeof(p) = 'number' then (p #>> '{}')::numeric
+              when jsonb_typeof(p) = 'string' and (p #>> '{}') ~ '^\s*-?[0-9]+([.,][0-9]+)?\s*$' then replace(btrim(p #>> '{}'), ',', '.')::numeric
+              else d end;
+$$;
+
+create or replace function public.umfrage_put(p_class uuid, p_live jsonb, p_clear jsonb default null) returns json
+language plpgsql security definer set search_path = public as $$
+declare t uuid; d jsonb; dk text := 'umfrage-' || p_class::text; q text;
+  nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  select teacher_id into t from public.classes where id = p_class;
+  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  if p_live is not null and (jsonb_typeof(p_live) <> 'object' or octet_length(p_live::text) > 60000) then raise exception 'Ungültig'; end if;
+  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{"live":null,"ans":{}}'::jsonb) on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if jsonb_typeof(d->'ans') is distinct from 'object' then d := jsonb_set(d, '{ans}', '{}'::jsonb, true); end if;
+  if p_live is not null then
+    -- «sec» = Timer in Sekunden; die Datenbank rechnet die Endzeit selbst aus
+    if jsonb_typeof(p_live->'sec') = 'number' then
+      p_live := (p_live - 'sec') || jsonb_build_object('until', case when (p_live->>'sec')::numeric > 0
+        then nowms + least(3600, (p_live->>'sec')::numeric)::bigint * 1000 else null end);
+    end if;
+    d := jsonb_set(d, '{live}', p_live, true);
+  end if;
+  if jsonb_typeof(p_clear) = 'array' then
+    for q in select jsonb_array_elements_text(p_clear) loop
+      if q = '*' then d := jsonb_set(d, '{ans}', '{}'::jsonb); else d := jsonb_set(d, '{ans}', (d->'ans') - q); end if;
+    end loop;
+  end if;
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return json_build_object('now', nowms, 'until', d #> '{live,until}');
+end;
+$$;
+
+create or replace function public.kid_umfrage(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; l jsonb; q jsonb; qid text; qs jsonb := '[]'::jsonb; mine jsonb := '{}'::jsonb; res jsonb := '{}'::jsonb;
+  hk jsonb; hw jsonb; sh boolean; nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'umfrage-' || k.class_id::text;
+  l := d->'live';
+  if l is null or jsonb_typeof(l) <> 'object' or not coalesce((l->>'on')::boolean, false) then return null; end if;
+  sh := coalesce((l->>'show')::boolean, false) and coalesce((l->>'kids')::boolean, true);
+  for q in select x from jsonb_array_elements(case when jsonb_typeof(l->'qs') = 'array' then l->'qs' else '[]'::jsonb end) x loop
+    qid := q->>'id';
+    continue when qid is null or (coalesce(l->>'mode', 'live') <> 'selbst' and qid is distinct from l->>'cur');
+    if not (coalesce(l->'rev', '[]'::jsonb) ? qid) then q := q - 'ok'; end if;
+    qs := qs || jsonb_build_array(q);
+    if d #> array['ans', qid, k.id::text] is not null then mine := mine || jsonb_build_object(qid, d #> array['ans', qid, k.id::text]); end if;
+    if sh then
+      hk := coalesce(l #> array['hid', qid], '[]'::jsonb); hw := coalesce(l #> array['hidw', qid], '[]'::jsonb);
+      res := res || jsonb_build_object(qid, coalesce((select jsonb_agg(case when q->>'type' = 'wort' and jsonb_typeof(a.value) = 'array'
+          then (select coalesce(jsonb_agg(w.value), '[]'::jsonb) from jsonb_array_elements(a.value) w where not (hw ? lower(w.value #>> '{}')))
+          else a.value end)
+        from jsonb_each(case when jsonb_typeof(d #> array['ans', qid]) = 'object' then d #> array['ans', qid] else '{}'::jsonb end) a
+        where not (hk ? a.key)), '[]'::jsonb));
+    end if;
+  end loop;
+  return jsonb_build_object('sid', l->'sid', 'title', l->'title', 'mode', coalesce(l->>'mode', 'live'), 'cur', l->'cur',
+    'open', coalesce((l->>'open')::boolean, false), 'show', sh, 'until', l->'until', 'now', nowms,
+    'rev', coalesce(l->'rev', '[]'::jsonb), 'qs', qs, 'mine', mine, 'res', res);
+end;
+$$;
+
+create or replace function public.kid_umfrage_send(p_token uuid, p_q text, p_val jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; dk text; l jsonb; q jsonb; ty text; n int; mx int; v jsonb; x numeric; y numeric;
+  nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  k := public._kid(p_token);
+  if p_q is null or length(p_q) > 40 or p_val is null or octet_length(p_val::text) > 2000 then return false; end if;
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'umfrage-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  l := d->'live';
+  if l is null or jsonb_typeof(l) <> 'object' or not coalesce((l->>'on')::boolean, false) or not coalesce((l->>'open')::boolean, false) then return false; end if;
+  if jsonb_typeof(l->'until') = 'number' and nowms > (l->>'until')::numeric + 3000 then return false; end if;
+  if coalesce(l->>'mode', 'live') <> 'selbst' and p_q is distinct from l->>'cur' then return false; end if;
+  select x2 into q from jsonb_array_elements(case when jsonb_typeof(l->'qs') = 'array' then l->'qs' else '[]'::jsonb end) x2 where x2->>'id' = p_q limit 1;
+  if q is null then return false; end if;
+  ty := q->>'type';
+  n := case when jsonb_typeof(q->'opts') = 'array' then jsonb_array_length(q->'opts') else 0 end;
+  if ty in ('wahl', 'quiz', 'stimmung') then
+    mx := case when coalesce((q->>'multi')::boolean, false) then n else 1 end;
+    if not public._umf_ints(p_val, 0, n - 1) or jsonb_array_length(p_val) < 1 or jsonb_array_length(p_val) > mx
+       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> jsonb_array_length(p_val) then return false; end if;
+    v := p_val;
+  elsif ty in ('wort', 'text') then
+    if jsonb_typeof(p_val) <> 'array' then return false; end if;
+    mx := least(case when ty = 'wort' then 5 else 3 end, greatest(1, public._umf_num(q->'max', case when ty = 'wort' then 3 else 1 end)))::int;
+    select coalesce(jsonb_agg(to_jsonb(left(btrim(e.j #>> '{}'), case when ty = 'wort' then 30 else 300 end)) order by e.o), '[]'::jsonb) into v
+      from jsonb_array_elements(p_val) with ordinality as e(j, o) where jsonb_typeof(e.j) = 'string' and btrim(e.j #>> '{}') <> '';
+    if jsonb_array_length(v) < 1 or jsonb_array_length(v) > mx then return false; end if;
+  elsif ty = 'skala' then
+    mx := least(10, greatest(3, public._umf_num(q->'max', 5)))::int;
+    if not public._umf_ints(p_val, 1, mx) or jsonb_array_length(p_val) <> n then return false; end if;
+    v := p_val;
+  elsif ty = 'rang' then
+    if not public._umf_ints(p_val, 0, n - 1) or jsonb_array_length(p_val) <> n
+       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> n then return false; end if;
+    v := p_val;
+  elsif ty = 'punkte' then
+    mx := least(100, greatest(1, public._umf_num(q->'pts', 10)))::int;
+    if not public._umf_ints(p_val, 0, mx) or jsonb_array_length(p_val) <> n then return false; end if;
+    if (select sum((e #>> '{}')::numeric) from jsonb_array_elements(p_val) e) not between 1 and mx then return false; end if;
+    v := p_val;
+  elsif ty = 'zahl' then
+    if jsonb_typeof(p_val) <> 'number' then return false; end if;
+    x := (p_val #>> '{}')::numeric;
+    if x < public._umf_num(q->'min', -1e12) or x > public._umf_num(q->'max', 1e12) or abs(x) > 1e12 then return false; end if;
+    v := to_jsonb(round(x, 2));
+  elsif ty = 'feld' then
+    if jsonb_typeof(p_val) <> 'object' or jsonb_typeof(p_val->'x') <> 'number' or jsonb_typeof(p_val->'y') <> 'number' then return false; end if;
+    x := greatest(0, least(100, (p_val->>'x')::numeric)); y := greatest(0, least(100, (p_val->>'y')::numeric));
+    v := jsonb_build_object('x', round(x, 1), 'y', round(y, 1));
+  else
+    return false;
+  end if;
+  if jsonb_typeof(d->'ans') is distinct from 'object' then d := jsonb_set(d, '{ans}', '{}'::jsonb, true); end if;
+  if jsonb_typeof(d #> array['ans', p_q]) is distinct from 'object' then d := jsonb_set(d, array['ans', p_q], '{}'::jsonb, true); end if;
+  d := jsonb_set(d, array['ans', p_q, k.id::text], v, true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return true;
+end;
+$$;
+
+revoke execute on function public._umf_ints(jsonb, numeric, numeric), public._umf_num(jsonb, numeric) from public, anon;
+revoke execute on function public.kid_umfrage(uuid), public.kid_umfrage_send(uuid, text, jsonb), public.umfrage_put(uuid, jsonb, jsonb) from public;
+grant execute on function public.kid_umfrage(uuid), public.kid_umfrage_send(uuid, text, jsonb) to anon, authenticated;
+revoke execute on function public.umfrage_put(uuid, jsonb, jsonb) from anon;
+grant execute on function public.umfrage_put(uuid, jsonb, jsonb) to authenticated;
 
 -- Fertig.

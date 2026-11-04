@@ -129,6 +129,10 @@
     kidAtelier: async function (token) { return ok(await sb.rpc('kid_atelier', { p_token: token })); },
     kidAtelierSet: async function (token, patch) { return ok(await sb.rpc('kid_atelier_set', { p_token: token, p_patch: patch })); },
     atelierPut: async function (cid, kid, patch) { return ok(await sb.rpc('atelier_put', { p_class: cid, p_kid: kid, p_patch: patch })); },
+    // Umfrage (Version 23)
+    umfragePut: async function (cid, live, clear) { return ok(await sb.rpc('umfrage_put', { p_class: cid, p_live: live == null ? null : live, p_clear: clear || null })); },
+    kidUmfrage: async function (token) { return ok(await sb.rpc('kid_umfrage', { p_token: token })); },
+    kidUmfrageSend: async function (token, q, val) { return ok(await sb.rpc('kid_umfrage_send', { p_token: token, p_q: String(q || ''), p_val: val })); },
     pinPut: async function (cid, coll, id, obj) { return ok(await sb.rpc('pin_put', { p_class: cid, p_coll: coll, p_id: id, p_obj: obj })); },
     kidHeftOwn: async function (token, entry, del) { return ok(await sb.rpc('kid_heft_own', { p_token: token, p_entry: entry, p_delete: !!del })); },
     kidHeftTick: async function (token, id, on) { return ok(await sb.rpc('kid_heft_tick', { p_token: token, p_entry: String(id), p_on: !!on })); },
