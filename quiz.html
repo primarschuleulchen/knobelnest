@@ -146,6 +146,15 @@ select.input{padding-right:8px}
 .memwahl button{min-height:44px;padding:0 16px;border-radius:999px;border:2px solid var(--line2);background:#fff;font-size:19px}
 .memwahl button[aria-pressed="true"]{background:var(--sky-soft);border-color:var(--sky-deep)}
 .memwahl button[aria-pressed="true"]::before{content:"✓ "}
+.new.ki{border-color:var(--sky-deep);background:rgba(220,240,253,.55)}
+.new.ki:hover{background:var(--sky-soft)}
+.new.ki span{color:var(--sky-deep);font-size:40px}
+.ovbox.ki{width:min(720px,100%)}
+.kischritt{display:flex;gap:12px;align-items:flex-start}
+.kischritt>b{flex:none;width:36px;height:36px;border-radius:50%;background:var(--sun-soft);box-shadow:0 0 0 2px var(--gold);display:grid;place-items:center;font-weight:400;font-size:20px}
+.kigrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kigrid label{display:flex;flex-direction:column;gap:4px}
+#kiIn{font-family:ui-monospace,Menlo,monospace;font-size:14px;min-height:110px}
 .textok{display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:18px;box-shadow:var(--schatten);padding:18px}
 .reihe-ed .ans .nr{flex:none;width:44px;height:44px;border-radius:50%;background:var(--sun-soft);box-shadow:0 0 0 2px var(--gold);display:grid;place-items:center;font-size:22px}
 
@@ -394,7 +403,8 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     var o = L.ordner.filter(function (x) { return x.id === L.view; })[0];
     var l = L.list.filter(function (x) { return !o || x.ordner === o.id; }).sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     var kopfzeile = o ? '<div class="row ohead"><h2>📁 ' + h(o.name) + '</h2><span class="grow"></span><button class="btn sm" data-a="oRen">✎ Umbenennen</button><button class="btn sm danger" data-a="oDel">Ordner löschen</button></div>' : '';
-    return kopfzeile + '<div class="qlist"><button class="new" data-a="neu"><span>+</span>Neues Quiz' + (o ? '<small class="muted">in «' + h(o.name) + '»</small>' : '') + '</button>' + l.map(function (x) {
+    return kopfzeile + '<div class="qlist"><button class="new" data-a="neu"><span>+</span>Neues Quiz' + (o ? '<small class="muted">in «' + h(o.name) + '»</small>' : '') + '</button>' +
+      '<button class="new ki" data-a="kiOpen"><span>✨</span>Mit KI erstellen<small class="muted">aus einem PDF oder Arbeitsblatt</small></button>' + l.map(function (x) {
       var on = L.ordner.filter(function (y) { return y.id === x.ordner; })[0];
       return '<div class="qcard"><h3>' + h(x.titel || 'Ohne Titel') + '</h3><p class="muted small">' + anzahl(x.n) + (x.at ? ' · ' + datum(x.at) : '') + (!o && on ? ' · 📁 ' + h(on.name) : '') + '</p>' +
         '<div class="row"><button class="btn gold" data-a="live" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn sm" data-a="edit" data-id="' + h(x.id) + '">✎ Bearbeiten</button>' +
@@ -625,6 +635,131 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   }
 
   // =================================================================
+  // ✨ Mit KI erstellen (ohne eigenen KI-Zugang): Die Klassenkiste schreibt einen Auftrag für Claude.
+  // Die Lehrperson gibt ihn mit dem PDF in claude.ai ein und fügt die Antwort (JSON) hier wieder ein.
+  // =================================================================
+  var KI_TYPEN = { quiz: 'Quiz (2 bis 4 Antworten)', rf: 'Richtig oder falsch', text: 'Antwort eingeben (kurzes Wort oder Zahl)', reihe: 'Reihenfolge (3 bis 5 Teile ordnen)' };
+  var KI = null;
+  function kiCfg() { var d = { n: 10, stufe: '4. Klasse', sprache: 'Deutsch (Schweizer Schreibweise, ss statt ß)', typen: { quiz: true, rf: true, text: false, reihe: false }, extra: '' };
+    try { var s = JSON.parse(localStorage.getItem('kn_quiz_ki') || 'null'); if (s) { Object.keys(d).forEach(function (k) { if (s[k] != null) d[k] = s[k]; }); } } catch (e) {} return d; }
+  function kiSaveCfg() { try { localStorage.setItem('kn_quiz_ki', JSON.stringify(KI.cfg)); } catch (e) {} }
+  function kiAuftrag(c) {
+    var typen = Object.keys(KI_TYPEN).filter(function (k) { return c.typen[k]; }); if (!typen.length) typen = ['quiz'];
+    return 'Erstelle aus dem angehängten Dokument ein Quiz für Kinder der ' + (c.stufe || 'Primarschule') + '.\n\n' +
+      '- Genau ' + c.n + ' Fragen, nur zum Inhalt des Dokuments.\n' +
+      '- Kurz, klar und kindgerecht formuliert. Fragen höchstens 200 Zeichen, Antworten höchstens 80 Zeichen.\n' +
+      '- Sprache: ' + (c.sprache || 'Deutsch') + '.\n' +
+      '- Fragetypen (bitte mischen): ' + typen.map(function (k) { return '«' + k + '» = ' + KI_TYPEN[k]; }).join(', ') + '.\n' +
+      '- Bei «quiz»: Die falschen Antworten sollen plausibel sein. Meist ist genau eine Antwort richtig.\n' +
+      (String(c.extra || '').trim() ? '- Zusätzlich: ' + String(c.extra).trim() + '\n' : '') +
+      '\nAntworte NUR mit JSON in genau diesem Format, ohne weiteren Text:\n' +
+      '{\n  "titel": "Kurzer Titel",\n  "fragen": [\n' + typen.map(function (k) { return '    ' + {
+        quiz: '{"typ": "quiz", "frage": "…", "antworten": ["…", "…", "…", "…"], "richtig": [0]}',
+        rf: '{"typ": "rf", "frage": "Eine Aussage …", "richtig": true}',
+        text: '{"typ": "text", "frage": "…", "antworten": ["Lösung", "andere gültige Schreibweise"]}',
+        reihe: '{"typ": "reihe", "frage": "Ordne …", "antworten": ["zuerst", "dann", "zuletzt"]}' }[k]; }).join(',\n') +
+      '\n  ]\n}\n\n' +
+      'Regeln: Bei "quiz" ist "richtig" die Liste der Nummern der richtigen Antworten (0 = erste Antwort). Bei "rf" ist "richtig" true oder false. ' +
+      'Bei "text" stehen unter "antworten" alle Schreibweisen, die als richtig gelten. Bei "reihe" stehen die Teile in der richtigen Reihenfolge.';
+  }
+  // Antwort von Claude lesen: JSON finden (auch mit ```json …```), Fragen ins Quiz-Format bringen
+  function kiLesen(txt) {
+    txt = String(txt || '').replace(/[“”„]/g, '"');
+    var a = txt.indexOf('{'), b = txt.lastIndexOf('}'), a2 = txt.indexOf('['), d = null;
+    var obj = function () { try { var x = JSON.parse(txt.slice(a, b + 1)); return x && Array.isArray(x.fragen || x.questions) ? x : null; } catch (e) { return null; } };
+    var arr = function () { try { var x = JSON.parse(txt.slice(a2, txt.lastIndexOf(']') + 1)); return Array.isArray(x) ? { fragen: x } : null; } catch (e) { return null; } };
+    if (a >= 0) d = obj();
+    if (!d && a2 >= 0) d = arr();
+    if (Array.isArray(d)) d = { fragen: d };
+    if (!d || !Array.isArray(d.fragen || d.questions)) return null;
+    var str = function (x, n) { return String(x == null ? '' : x).replace(/\s+/g, ' ').trim().slice(0, n); };
+    var out = [];
+    (d.fragen || d.questions).slice(0, 50).forEach(function (f) {
+      if (!f || typeof f !== 'object') return;
+      var typ = String(f.typ || f.type || 'quiz').toLowerCase(), frage = str(f.frage || f.question, 240); if (!frage) return;
+      if (/richtig|wahr|true|rf/.test(typ) && typ !== 'quiz') typ = 'rf';
+      if (/text|eingabe|eingeben/.test(typ)) typ = 'text';
+      if (/reihe|reihenfolge|order/.test(typ)) typ = 'reihe';
+      if (['quiz', 'rf', 'text', 'reihe'].indexOf(typ) < 0) typ = 'quiz';
+      var q = neueFrage(typ), ans = (Array.isArray(f.antworten || f.answers) ? (f.antworten || f.answers) : []).map(function (x) { return str(x, typ === 'quiz' ? 90 : 60); }).filter(Boolean);
+      q.frage = frage;
+      if (ZEITEN.indexOf(+f.zeit) >= 0) q.zeit = +f.zeit;
+      if (typ === 'quiz') {
+        if (ans.length < 2) return;
+        q.antworten = ans.slice(0, 6);
+        var r = Array.isArray(f.richtig) ? f.richtig : f.richtig != null ? [f.richtig] : [];
+        q.richtig = r.map(function (x) { return typeof x === 'number' ? x : q.antworten.indexOf(str(x, 90)); })
+          .filter(function (x, i, l) { return x >= 0 && x < q.antworten.length && l.indexOf(x) === i; }).sort();
+        q.mehrfach = q.richtig.length > 1;
+      } else if (typ === 'rf') {
+        var v = f.richtig; if (Array.isArray(v)) v = v[0] === 0 || v[0] === true;
+        if (typeof v === 'string') v = /^(true|wahr|richtig|ja)$/i.test(v.trim());
+        q.richtig = [v === false ? 1 : 0];
+      } else if (typ === 'text') {
+        var ok = ans.length ? ans : (Array.isArray(f.richtig) ? f.richtig : [f.richtig]).map(function (x) { return str(x, 60); }).filter(Boolean);
+        if (!ok.length) return; q.richtig = ok.slice(0, 5);
+      } else {
+        if (ans.length < 2) return; q.antworten = ans.slice(0, 6);
+      }
+      out.push(q);
+    });
+    return { titel: str(d.titel || d.title, 80), fragen: out };
+  }
+  ACT.kiOpen = function () { KI = { cfg: kiCfg(), zuQuiz: !!(L.cur && document.querySelector('.ed')) }; kiRender(); };
+  function kiRender() {
+    var c = KI.cfg, old = document.getElementById('kiOv'), paste = old && old.querySelector('#kiIn') ? old.querySelector('#kiIn').value : '';
+    if (old) old.remove();
+    var o = document.createElement('div'); o.className = 'ov'; o.id = 'kiOv';
+    o.innerHTML = '<div class="ovbox ki"><h2>✨ Quiz mit KI erstellen</h2>' +
+      '<p class="muted small">Aus einem PDF, einem Foto vom Arbeitsblatt oder einem Text. Dafür brauchen Sie Claude (claude.ai), die Klassenkiste gibt Ihnen den Auftrag dazu.</p>' +
+      '<div class="kischritt"><b>1</b><div class="stack" style="gap:10px;flex:1">' +
+      '<div class="kigrid"><label><span class="lbl">Anzahl Fragen</span><select class="input" data-ch="kiN">' + [5, 8, 10, 12, 15, 20].map(function (n) { return '<option' + (c.n === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<label><span class="lbl">Für</span><input class="input" data-in="kiStufe" maxlength="40" value="' + h(c.stufe) + '" placeholder="z. B. 4. Klasse"></label></div>' +
+      '<div class="stack" style="gap:6px"><span class="lbl">Fragetypen</span><div class="memwahl">' + Object.keys(KI_TYPEN).map(function (k) {
+        return '<button data-a="kiTyp" data-t="' + k + '" aria-pressed="' + !!c.typen[k] + '">' + TYPEN[k][0] + ' ' + TYPEN[k][1] + '</button>'; }).join('') + '</div></div>' +
+      '<label class="stack" style="gap:4px"><span class="lbl">Sprache</span><input class="input" data-in="kiSprache" maxlength="80" value="' + h(c.sprache) + '"></label>' +
+      '<label class="stack" style="gap:4px"><span class="lbl">Wünsche (freiwillig)</span><input class="input" data-in="kiExtra" maxlength="200" value="' + h(c.extra) + '" placeholder="z. B. nur Seite 3, eher leicht, mit Zahlen"></label>' +
+      '<div class="row"><button class="btn gold" data-a="kiCopy">📋 Auftrag kopieren</button><a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude öffnen ↗</a></div></div></div>' +
+      '<div class="kischritt"><b>2</b><p style="flex:1">In Claude das <b style="font-weight:400;color:var(--sky-deep)">PDF hochladen</b> (📎), den Auftrag einfügen und senden. Unter der Antwort auf «Kopieren» tippen.</p></div>' +
+      '<div class="kischritt"><b>3</b><div class="stack" style="gap:8px;flex:1"><span>Die Antwort von Claude hier einfügen:</span>' +
+      '<textarea class="input" id="kiIn" rows="5" placeholder="{ &quot;titel&quot;: … }">' + h(paste) + '</textarea>' +
+      '<p class="err" id="kiErr" style="text-align:left"></p></div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn sm quiet" data-a="kiX">Abbrechen</button><button class="btn gold" data-a="kiGo">' + (KI.zuQuiz ? '✦ Fragen hinzufügen' : '✦ Quiz erstellen') + '</button></div></div>';
+    o.addEventListener('click', function (e) { if (e.target === o) ACT.kiX(); });
+    document.body.appendChild(o);
+  }
+  ACT.kiN = function (el) { KI.cfg.n = +el.value; kiSaveCfg(); };
+  ACT.kiStufe = function (el) { KI.cfg.stufe = el.value; kiSaveCfg(); };
+  ACT.kiSprache = function (el) { KI.cfg.sprache = el.value; kiSaveCfg(); };
+  ACT.kiExtra = function (el) { KI.cfg.extra = el.value; kiSaveCfg(); };
+  ACT.kiTyp = function (el) { var t = el.dataset.t; KI.cfg.typen[t] = !KI.cfg.typen[t]; if (!Object.keys(KI.cfg.typen).some(function (k) { return KI.cfg.typen[k]; })) KI.cfg.typen.quiz = true; kiSaveCfg(); kiRender(); };
+  ACT.kiX = function () { KI = null; var o = document.getElementById('kiOv'); if (o) o.remove(); };
+  ACT.kiCopy = async function () {
+    var t = kiAuftrag(KI.cfg), ok = false;
+    try { await navigator.clipboard.writeText(t); ok = true; } catch (e) {
+      var ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch (e2) { ok = false; } ta.remove();
+    }
+    toast(ok ? 'Auftrag kopiert. Jetzt in Claude einfügen.' : 'Kopieren ging nicht. Bitte nochmals tippen.');
+  };
+  ACT.kiGo = async function () {
+    var inp = document.getElementById('kiIn'), err = document.getElementById('kiErr'), r = kiLesen(inp && inp.value);
+    if (!r || !r.fragen.length) { if (err) err.textContent = 'Das ist keine passende Antwort von Claude. Bitte die ganze Antwort kopieren und einfügen.'; return; }
+    var n = r.fragen.length;
+    if (KI.zuQuiz && L.cur) {
+      var Q = L.cur, leer = Q.fragen.length === 1 && !String(Q.fragen[0].frage || '').trim();
+      if (leer) Q.fragen = []; var start = Q.fragen.length;
+      Q.fragen = Q.fragen.concat(r.fragen); if (!String(Q.titel || '').trim() && r.titel) Q.titel = r.titel;
+      ACT.kiX(); L.sel = start; changed(true);
+    } else {
+      var q = { id: uid(), titel: r.titel || 'Quiz', fragen: r.fragen }, e = { id: q.id, titel: q.titel, n: n, at: Date.now() };
+      if (L.ordner.some(function (x) { return x.id === L.view; })) e.ordner = L.view;
+      ACT.kiX(); L.list.push(e); await B.save(q.id, q); await saveList(); edStart(q);
+    }
+    toast(n + (n === 1 ? ' Frage' : ' Fragen') + ' erstellt. Bitte kurz kontrollieren.');
+  };
+
+  // =================================================================
   // Editor
   // =================================================================
   function edStart(q) {
@@ -692,7 +827,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     app.innerHTML = '<header class="top"><button class="btn sm quiet" data-a="edBack">← ' + (Q.src === 'kid' && B.mode !== 'kid' ? 'Von den Kindern' : 'Meine Quiz') + '</button><span class="marke"><img src="bilder/eule.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span>' +
       '<input class="input" id="titel" data-in="fTitel" maxlength="80" placeholder="Titel des Quiz" value="' + h(Q.titel) + '" style="flex:1 1 220px;max-width:460px"><span class="grow"></span>' + rechts + '</header>' +
       '<div class="ed"><nav class="side" aria-label="Fragen">' + Q.fragen.map(thumb).join('') +
-      '<div class="addq"><button class="btn primary" data-a="qAdd" data-t="quiz">+ Frage</button><button class="btn sm" data-a="qAdd" data-t="rf">+ Richtig / falsch</button></div></nav>' +
+      '<div class="addq"><button class="btn primary" data-a="qAdd" data-t="quiz">+ Frage</button><button class="btn sm" data-a="qAdd" data-t="rf">+ Richtig / falsch</button>' + (B.mode === 'kid' ? '' : '<button class="btn sm" data-a="kiOpen">✨ Fragen mit KI</button>') + '</div></nav>' +
       '<section class="center">' + mitte + '</section>' + props + '</div>';
   }
   function cur() { return L.cur.fragen[L.sel]; }
