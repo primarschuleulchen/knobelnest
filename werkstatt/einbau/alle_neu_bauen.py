@@ -6,7 +6,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 W = os.path.join(ROOT, 'werkstatt')
 JOBS = [  # (Einbau-Skript, Original, Ziel im Hauptordner)
     ('einbau/hausaufgaben/heft_patch.py',  'originale/hausaufgabentafel.html', 'hausaufgaben.html'),
-    ('einbau/pinnwand/pin_patch.py',       'originale/klassen-pinnwand.html',  'pinnwand.html'),
+    ('einbau/pinnwand/pin6_patch.py',      'originale/klassen-pinnwand.html',  'pinnwand.html'),
     ('einbau/tagesfolie/patch.py',         'originale/tagesfolien.html',       'tagesfolie.html'),
     ('einbau/otterteich/otter2_patch.py',  'originale/otterteich.html',        'otterteich.html'),
     ('einbau/atelier/atelier_patch.py',    'originale/atelier/index.html',     'atelier.html'),

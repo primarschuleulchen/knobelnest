@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 22)
+-- Knobelnest – Datenbank-Einrichtung (Version 23)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1209,5 +1209,131 @@ begin
 end;
 $$;
 grant execute on function public.kid_class(text), public.kid_login(text, uuid, text) to anon, authenticated;
+
+-- =====================================================================
+-- Version 23: Klassen-Pinnwand 6 (Leinwand, Vorlagen, Bilder, Kategorien wählen, direkt anpinnen, Umfrage)
+--   Kinder bekommen alle Einstellungen der offenen Pinnwände (stammen von der Lehrperson) und an den Zetteln
+--   zusätzlich Bild, Position, Umfrage und – nur wenn die Lehrperson «Namen zeigen» eingeschaltet hat – den Namen.
+--   Kinder können ein Bild (höchstens 250 kB) anhängen, wenn die Pinnwand das erlaubt, eine Kategorie wählen
+--   und bei «direkt anpinnen» ohne Freigabe posten. Stimmen: neu auch «like» und «poll».
+-- =====================================================================
+create or replace function public.pin_put(p_class uuid, p_coll text, p_id text, p_obj jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare t uuid; d jsonb; dk text := 'pin-' || p_class::text;
+begin
+  select teacher_id into t from public.classes where id = p_class;
+  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  if p_coll not in ('boards', 'ideas', 'settings') or coalesce(p_id, '') !~ '^[A-Za-z0-9_-]{1,40}$' then raise exception 'Ungültig'; end if;
+  if p_obj is not null and (jsonb_typeof(p_obj) <> 'object'
+     or octet_length(p_obj::text) > case when p_coll = 'ideas' then 400000 else 60000 end) then raise exception 'Ungültig'; end if;
+  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{}'::jsonb) on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if jsonb_typeof(d->p_coll) is distinct from 'object' then d := jsonb_set(d, array[p_coll], '{}'::jsonb, true); end if;
+  if p_obj is null then d := jsonb_set(d, array[p_coll], (d->p_coll) - p_id);
+  else d := jsonb_set(d, array[p_coll, p_id], p_obj, true); end if;
+  if octet_length(d::text) > 12000000 then raise exception 'Die Pinnwand ist voll. Bitte alte Zettel oder Bilder löschen.'; end if;
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+end;
+$$;
+
+create or replace function public.kid_pin(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; sid text; b jsonb; i jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'pin-' || k.class_id::text;
+  sid := k.id::text;
+  if d is null then return jsonb_build_object('boards', '{}'::jsonb, 'ideas', '{}'::jsonb, 'labels', '{}'::jsonb, 'my', null, 'me', sid, 'name', k.name); end if;
+  select coalesce(jsonb_object_agg(x.key, x.value || jsonb_build_object('visible', true)), '{}'::jsonb) into b
+    from jsonb_each(case when jsonb_typeof(d->'boards') = 'object' then d->'boards' else '{}'::jsonb end) as x
+   where jsonb_typeof(x.value) = 'object' and x.value->>'visible' = 'true';
+  select coalesce(jsonb_object_agg(x.key, case when x.value->>'status' = 'ok'
+           then jsonb_strip_nulls(jsonb_build_object('text', x.value->'text', 'boardId', x.value->'boardId', 'status', 'ok', 'tools', x.value->'tools', 'at', x.value->'at',
+                  'okAt', x.value->'okAt', 'order', x.value->'order', 'lp', x.value->'lp', 'cat', x.value->'cat', 'img', x.value->'img', 'pos', x.value->'pos',
+                  'poll', x.value->'poll', 'uid', case when x.value->>'uid' = sid then to_jsonb(sid) end,
+                  'by', case when b #>> array[x.value->>'boardId', 'names'] = 'true' or x.value->>'uid' = sid then x.value->'by' end))
+           else jsonb_strip_nulls(jsonb_build_object('text', x.value->'text', 'boardId', x.value->'boardId', 'status', 'pending', 'at', x.value->'at', 'uid', sid,
+                  'cat', x.value->'cat', 'img', x.value->'img', 'by', x.value->'by')) end), '{}'::jsonb) into i
+    from jsonb_each(case when jsonb_typeof(d->'ideas') = 'object' then d->'ideas' else '{}'::jsonb end) as x
+   where jsonb_typeof(x.value) = 'object' and b ? coalesce(x.value->>'boardId', '')
+     and (x.value->>'status' = 'ok' or (x.value->>'status' = 'pending' and x.value->>'uid' = sid));
+  return jsonb_build_object('boards', b, 'ideas', i, 'labels', coalesce(d #> '{settings,main,labels}', '{}'::jsonb),
+    'my', d #> array['votes', sid], 'me', sid, 'name', k.name);
+end;
+$$;
+
+-- Kind postet einen Zettel (mit Kategorie und Bild, wenn die Pinnwand das erlaubt)
+create or replace function public.kid_pin_post(p_token uuid, p_board text, p_text text, p_cat text, p_img text) returns text
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; bd jsonb; sid text; nid text; n int; dk text; o jsonb; txt text := left(btrim(coalesce(p_text, '')), 280);
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'pin-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  bd := d #> array['boards', coalesce(p_board, '')];
+  if d is null or bd->>'visible' is distinct from 'true' then raise exception 'Diese Pinnwand ist im Moment nicht offen.'; end if;
+  if p_img is not null and (bd->>'imgs' is distinct from 'true' or p_img !~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$' or length(p_img) > 250000) then
+    raise exception 'Dieses Bild geht leider nicht.';
+  end if;
+  if length(txt) = 0 and p_img is null then raise exception 'Leer'; end if;
+  if p_cat is not null and not exists (select 1 from jsonb_array_elements(case when jsonb_typeof(bd->'cats') = 'array' then bd->'cats' else '[]'::jsonb end) c
+                                        where c->>'id' = p_cat) then p_cat := null; end if;
+  sid := k.id::text;
+  select count(*) into n from jsonb_each(case when jsonb_typeof(d->'ideas') = 'object' then d->'ideas' else '{}'::jsonb end) as x
+   where x.value->>'uid' = sid and (x.value->>'status' = 'pending' or (x.value ? 'img' and x.value->>'img' is not null));
+  if n >= 30 then raise exception 'Zu viele Zettel warten schon.'; end if;
+  if octet_length(d::text) > 12000000 then raise exception 'Die Pinnwand ist voll.'; end if;
+  nid := 'k' || substr(md5(random()::text || clock_timestamp()::text), 1, 12);
+  o := jsonb_build_object('text', txt, 'by', k.name, 'uid', sid, 'boardId', p_board, 'at', floor(extract(epoch from now()) * 1000)::bigint);
+  if p_cat is not null then o := o || jsonb_build_object('cat', p_cat); end if;
+  if p_img is not null then o := o || jsonb_build_object('img', p_img); end if;
+  if bd->>'direct' = 'true' then
+    o := o || jsonb_build_object('status', 'ok', 'okAt', floor(extract(epoch from now()) * 1000)::bigint,
+                                 'tools', case when jsonb_typeof(bd->'tools') = 'object' then bd->'tools' else '{}'::jsonb end);
+  else o := o || jsonb_build_object('status', 'pending'); end if;
+  if jsonb_typeof(d->'ideas') is distinct from 'object' then d := jsonb_set(d, '{ideas}', '{}'::jsonb, true); end if;
+  d := jsonb_set(d, array['ideas', nid], o, true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return nid;
+end;
+$$;
+
+create or replace function public.kid_pin_vote(p_token uuid, p_body jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; sid text; dk text; x record; o jsonb; r jsonb := '{}'::jsonb; ok jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'pin-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null or jsonb_typeof(p_body) is distinct from 'object' or jsonb_typeof(p_body->'r') is distinct from 'object' then return false; end if;
+  sid := k.id::text;
+  for x in select key, value from jsonb_each(p_body->'r') loop
+    if jsonb_typeof(x.value) <> 'object' or d #>> array['ideas', x.key, 'status'] is distinct from 'ok'
+       or d #>> array['boards', coalesce(d #>> array['ideas', x.key, 'boardId'], ''), 'visible'] is distinct from 'true' then continue; end if;
+    o := '{}'::jsonb;
+    if jsonb_typeof(x.value->'rate') = 'number' and (x.value->>'rate')::numeric between 1 and 10 then o := o || jsonb_build_object('rate', round((x.value->>'rate')::numeric)); end if;
+    if jsonb_typeof(x.value->'rate2') = 'number' and (x.value->>'rate2')::numeric between 1 and 10 then o := o || jsonb_build_object('rate2', round((x.value->>'rate2')::numeric)); end if;
+    if x.value->>'agree' in ('ja', 'teils', 'nein') then o := o || jsonb_build_object('agree', x.value->>'agree'); end if;
+    if jsonb_typeof(x.value->'comment') = 'string' and length(btrim(x.value->>'comment')) > 0 then o := o || jsonb_build_object('comment', left(x.value->>'comment', 400)); end if;
+    if jsonb_typeof(x.value->'baro') = 'number' and (x.value->>'baro')::numeric between 0 and 10 then o := o || jsonb_build_object('baro', (x.value->>'baro')::numeric); end if;
+    if x.value->'like' = 'true'::jsonb then o := o || jsonb_build_object('like', true); end if;
+    if jsonb_typeof(x.value->'poll') = 'number' and (x.value->>'poll')::numeric between 0 and 9 then o := o || jsonb_build_object('poll', round((x.value->>'poll')::numeric)); end if;
+    if o <> '{}'::jsonb then r := r || jsonb_build_object(x.key, o); end if;
+  end loop;
+  ok := coalesce(d #> array['votes', sid, 'r'], '{}'::jsonb);
+  select coalesce(jsonb_object_agg(y.key, y.value), '{}'::jsonb) into ok from jsonb_each(case when jsonb_typeof(ok) = 'object' then ok else '{}'::jsonb end) as y
+   where d #>> array['boards', coalesce(d #>> array['ideas', y.key, 'boardId'], ''), 'visible'] is distinct from 'true';
+  if jsonb_typeof(d->'votes') is distinct from 'object' then d := jsonb_set(d, '{votes}', '{}'::jsonb, true); end if;
+  d := jsonb_set(d, array['votes', sid], jsonb_build_object('r', ok || r, 'at', floor(extract(epoch from now()) * 1000)::bigint), true);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return true;
+end;
+$$;
+
+revoke execute on function public.kid_pin_post(uuid, text, text, text, text) from public;
+grant execute on function public.kid_pin_post(uuid, text, text, text, text) to anon, authenticated;
 
 -- Fertig.
