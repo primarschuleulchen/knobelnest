@@ -1682,7 +1682,7 @@
   // ---------- Liste der Umfragen ----------
   U.viewList = function () {
     var out = '<div class="umf-page">' + U.top(backBtn('href="#/"')) +
-      '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
+      '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage-kiste.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
       '<p>Stellen Sie der Klasse Fragen: Abstimmungen, Wortwolken, Quiz, Schätzfragen und mehr. Die Kinder antworten am iPad, die Ergebnisse erscheinen live an der Wandtafel.</p>' +
       '<p class="muted small">Ihre Umfragen gelten für alle Ihre Klassen. Die Antworten werden pro Klasse gespeichert.</p></div>' +
       '<button class="btn primary big" data-a="uNew">+ Neue Umfrage</button></section>';
@@ -1939,7 +1939,7 @@
     var E = Object.keys(ans).filter(function (k) { return hid.indexOf(k) < 0; }).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; });
     var answered = Object.keys(ans).filter(function (k) { return kidName[k]; }).length, total = U.kids.length, rev = (l.rev || []).indexOf(q.id) >= 0, selbst = l.mode === 'selbst';
     var hasQuiz = qs.some(function (x) { return x.type === 'quiz' && (x.ok || []).length; });
-    var head = '<div class="us-head"><img class="board-bild" src="' + h(U.src === 'offen' ? 'bilder/kacheln/umfrage.webp' : klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · ' + (U.src === 'offen' ? 'offen für alle' : 'Klasse ' + h(U.cls.name)) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
+    var head = '<div class="us-head"><img class="board-bild" src="' + h(U.src === 'offen' ? 'bilder/kacheln/umfrage-kiste.webp' : klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · ' + (U.src === 'offen' ? 'offen für alle' : 'Klasse ' + h(U.cls.name)) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
       (U.src === 'offen' ? '<button class="us-join us-offen" data-a="uQr" title="QR-Code gross zeigen"><span class="us-qrmini" id="usQr"></span><span>Mitmachen ohne Login:<br><b>' + h(shortUrl(umfGastUrl())) + '</b> · Nummer <b class="us-nr6">' + h(umfNr(U.doc.nr)) + '</b></span></button>'
         : '<div class="us-join">Mitmachen: ' + h(C.PORTAL_NAME) + ' öffnen und auf <b>«Umfrage»</b> tippen · Code <b>' + h(U.cls.code || '') + '</b></div>') +
       '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button><button class="board-btn" data-a="uBack">Zur Liste</button><button class="board-btn' + (UI.confirm === 'uEnd' ? ' armed' : '') + '" data-a="uEnd">' + (UI.confirm === 'uEnd' ? 'Wirklich beenden?' : '■ Beenden') + '</button></div></div>';
@@ -2141,7 +2141,7 @@
   // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
   // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
   // ===================================================================
-  var QUIZ_VER = '6';
+  var QUIZ_VER = '7';
   function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
   var QZ = {
     start: async function () {
@@ -2261,7 +2261,7 @@
     ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen und kontrollieren, Berichte drucken. Die Kinder sehen alles am iPad.'],
     ['arbeitsstand', 'Arbeitsstand', 'Wer kann helfen, wer hat eine Frage? Live an der Wandtafel.'],
     ['pinnwand', 'Pinnwand', 'Ideen sammeln und gemeinsam abstimmen.'],
-    ['umfrage', 'Umfrage', 'Abstimmen, Wortwolken, Quiz und Schätzfragen. Die Kinder antworten am iPad, das Ergebnis erscheint live.'],
+    ['umfrage-kiste', 'Umfrage', 'Abstimmen, Wortwolken, Quiz und Schätzfragen. Die Kinder antworten am iPad, das Ergebnis erscheint live.'],
     ['otterteich', 'Lautstärkeregler', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.']];
   ACT.shopSoon = function () { toast('Der Shop kommt bald. Melden Sie sich bis dahin bei ' + C.CONTACT + '.'); };
   ACT.login = async function (f) {
@@ -2769,7 +2769,7 @@
     var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
     return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
   }
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz', umfrage: 'umfrage', eltern: 'eltern' };
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'live-quiz', umfrage: 'umfrage-kiste', eltern: 'eltern' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
   var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern'];
@@ -3651,7 +3651,7 @@
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
-      (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
+      (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage-kiste.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
       '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic ic-bild"><img src="bilder/kacheln/hausaufgaben.webp" alt="" draggable="false"></span>' +
@@ -3661,7 +3661,7 @@
       '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>') +
       (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic ic-bild"><img src="bilder/kacheln/pinnwand.webp" alt="" draggable="false"></span>' +
       '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
-      (kt.kid_tools.quiz === true ? '<button class="tafel-tile quiz-tile" data-a="kQuiz"><span class="ic ic-bild"><img src="bilder/kacheln/quiz.webp" alt="" draggable="false"></span>' +
+      (kt.kid_tools.quiz === true ? '<button class="tafel-tile quiz-tile" data-a="kQuiz"><span class="ic ic-bild"><img src="bilder/kacheln/live-quiz.webp" alt="" draggable="false"></span>' +
       '<span><b>Quiz erstellen</b><span>Bau dein eigenes Quiz für die Klasse.</span></span></button>' : '') +
       (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic ic-bild"><img src="bilder/kacheln/atelier.webp" alt="" draggable="false"></span>' +
       '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
