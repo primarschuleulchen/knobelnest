@@ -35,7 +35,7 @@ def alle(spiel):
 
 CSS = r"""
 /* Logo statt Emoji im Kreis oben */
-.ring{width:150px;height:150px;background:none;border:none;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
+.ring{width:150px;height:150px;background:#fff;border:3px solid var(--gold);padding:5px;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
 /* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
 .lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
 .mu{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start;width:100%;max-width:1040px}
