@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gedächtniskiste</title>
+<style>
+@font-face{font-family:"Patrick Hand";src:url(../schriften/patrick-hand.woff2) format("woff2");font-display:swap}
+*{box-sizing:border-box}
+:root{--bg:#f4f9fd;--ink:#1f2421;--soft:#5f6963;--line:#e1edf7;--line2:#c5d8e8;--gold:#d6ad45;--gold-d:#c4952f;
+  --sky:#dcf0fd;--sky-d:#3f78a8;--leaf:#e9f1e3;--rose:#fcefed;--sun:#fbf3dc;--ok:#5f9a4a;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);--sch-h:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14)}
+html,body{margin:0}
+body{background:radial-gradient(1200px 600px at 0% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 600px at 110% 100%,#fbf3dc 0%,transparent 60%),var(--bg);
+  color:var(--ink);font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;font-size:19px;line-height:1.35;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{position:sticky;top:0;z-index:5;background:rgba(244,249,253,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 1px 0 rgba(214,173,69,.35)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 24px;min-height:84px}
+.marke{display:flex;align-items:center;gap:12px;flex:1}
+.marke img{width:58px;height:58px;border-radius:50%;border:3px solid var(--gold);box-shadow:inset 0 0 0 3px #fff,var(--sch);background:#fff;object-fit:cover}
+.marke b{display:block;font-weight:400;font-size:28px;line-height:1}
+.marke b i{font-style:normal;color:var(--gold);font-size:.55em;vertical-align:super;margin-left:4px}
+.marke small{color:var(--soft);font-size:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border:2px solid var(--ink);border-radius:14px;background:#fff;font-size:18px;
+  box-shadow:var(--sch);transition:transform .15s,box-shadow .15s;text-decoration:none;color:var(--ink)}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--sch-h)}.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--sky)}.btn.sun{background:var(--sun)}.btn.sm{min-height:40px;font-size:16px;border-radius:11px;padding:0 14px;box-shadow:0 4px 12px rgba(63,120,168,.14)}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
+main{max-width:1180px;margin:0 auto;padding:24px 24px 60px}
+.banner{display:flex;flex-wrap:wrap;gap:22px 30px;align-items:center;background:linear-gradient(180deg,#fff 0%,#f3faff 100%);border:1.5px solid var(--line);border-radius:32px;padding:26px 30px;box-shadow:var(--sch)}
+.ring{flex:none;width:130px;height:130px;border-radius:50%;display:grid;place-items:center;font-size:68px;background:var(--sun);border:3px solid var(--gold);box-shadow:inset 0 0 0 7px #fff,0 8px 18px rgba(63,120,168,.18)}
+.banner .txt{flex:1 1 340px}
+.klein{font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--sky-d)}
+.banner h1{margin:2px 0 6px;font-weight:400;font-size:46px;line-height:1}
+.banner h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.banner p{margin:0;color:var(--soft)}
+.zahlen{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.zahlen span{background:#fff;border:1.5px solid var(--line2);border-radius:999px;padding:3px 14px;font-size:17px}
+.zahlen b{font-weight:400;color:var(--sky-d)}
+.frei{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:230px}
+.frei .stand{font-size:20px}
+.note{margin-top:18px;background:var(--sun);border:1.5px dashed var(--gold);border-radius:20px;padding:14px 18px;color:#4a3d1a;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.note p{margin:0;flex:1 1 300px}
+.deko{text-align:center;color:var(--gold);letter-spacing:.4em;font-size:14px;margin:26px 0 8px}
+.filter{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
+.chip{border:1.5px solid var(--line2);background:#fff;border-radius:999px;padding:6px 16px;font-size:18px;min-height:42px}
+.chip[aria-pressed="true"]{background:var(--sky);border-color:var(--ink)}
+.spiele{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.sp{display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:28px;padding:20px 20px 16px;box-shadow:var(--sch);transition:transform .2s,box-shadow .2s}
+.sp:hover{transform:translateY(-4px);box-shadow:var(--sch-h)}
+.sp-kopf{display:flex;gap:14px;align-items:center}
+.sp .ic{flex:none;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font-size:40px;border:3px solid var(--gold);box-shadow:inset 0 0 0 5px #fff,0 6px 14px rgba(63,120,168,.15);transition:transform .35s}
+.sp:hover .ic{transform:rotate(-6deg) scale(1.05)}
+.sp h3{margin:0;font-weight:400;font-size:27px;line-height:1.05}
+.sp h3::after{content:"✦ ✧ ✦";display:block;font-size:10px;letter-spacing:.3em;color:var(--gold);margin-top:5px}
+.bereich{font-size:15px;color:var(--sky-d);letter-spacing:.05em}
+.sp p{margin:0}
+.sp .uebt{color:var(--soft);font-size:17px}
+.stufen{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.stufen button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid transparent;background:none;border-radius:12px;padding:3px 8px;font-size:17px}
+.stufen button:hover{background:var(--sky);border-color:var(--line2)}
+.stufen .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:16px;border:2px solid var(--gold);background:#fff}
+.stufen .nm{width:62px;flex:none}
+.stufen .inf{color:var(--soft)}
+.sp-fuss{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px;border-top:1.5px dashed rgba(214,173,69,.6)}
+.rel{flex:1 1 180px;border:1.5px solid var(--line2);border-radius:12px;background:#f7fbfe;min-height:40px;font-size:16px;padding:0 10px}
+.rel.on{background:var(--leaf);border-color:#7ea56a;color:#3f6b2e}
+.rel[disabled]{cursor:default;opacity:.75}
+.tipps{margin-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.tipp{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:18px 20px;box-shadow:var(--sch)}
+.tipp b{display:block;font-weight:400;font-size:22px;margin-bottom:4px}
+.tipp p{margin:0;color:var(--soft)}
+.ov{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column}
+.ov[hidden]{display:none}
+.ov-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 16px;background:#fff;box-shadow:0 1px 0 rgba(214,173,69,.45)}
+.ov-bar b{font-weight:400;font-size:24px;margin-right:auto}
+.ov-bar .lvb{min-width:40px;min-height:40px;border-radius:50%;border:2px solid var(--gold);background:#fff;font-size:17px}
+.ov-bar .lvb[aria-pressed="true"]{background:var(--sun)}
+.ov iframe{flex:1;border:0;width:100%}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 18px;z-index:30;font-size:18px}
+@media (max-width:640px){.top-in{padding:8px 14px;min-height:70px}.marke img{width:46px;height:46px}.marke b{font-size:23px}main{padding:16px 14px 40px}
+  .banner{padding:20px}.banner h1{font-size:36px}.ring{width:96px;height:96px;font-size:50px}.spiele{grid-template-columns:1fr}.ov-bar b{font-size:20px;width:100%}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="marke"><img src="../bilder/eule.webp" alt=""><span><b>Gedächtniskiste<i>✦</i></b><small id="kl">für Lehrpersonen</small></span></div>
+  <button class="btn sm" id="zur">← Klassenkiste</button>
+</div></header>
+<main>
+  <section class="banner">
+    <span class="ring" aria-hidden="true">🧠</span>
+    <div class="txt">
+      <span class="klein">Werkzeug</span>
+      <h1>Gedächtniskiste</h1>
+      <p>Spiele, die das Gedächtnis der Kinder fördern: Bilder, Orte, Reihenfolgen und Namen merken. Jedes Spiel hat fünf Stufen, von leicht bis Profi. Probieren Sie die Spiele hier selbst aus oder spielen Sie sie mit der ganzen Klasse an der Wandtafel.</p>
+      <div class="zahlen" id="zahlen"></div>
+    </div>
+    <div class="frei" id="frei"></div>
+  </section>
+  <div id="note"></div>
+  <div class="deko">✦ ✧ ✦</div>
+  <nav class="filter" id="filter" aria-label="Bereiche"></nav>
+  <section class="spiele" id="spiele"></section>
+  <div class="deko">✦ ✧ ✦</div>
+  <section class="tipps">
+    <div class="tipp"><b>🧑‍🏫 An der Wandtafel</b><p>Öffnen Sie ein Spiel mit «Ausprobieren» und tippen Sie auf «Vollbild». Die Klasse ruft die Antworten, ein Kind tippt.</p></div>
+    <div class="tipp"><b>📈 Stufe für Stufe</b><p>Kinder sehen ihre Sterne pro Stufe. Ab 7 von 10 richtig erscheint der Knopf «Nächste Stufe».</p></div>
+    <div class="tipp"><b>⏱️ Kurz und oft</b><p>Eine Runde dauert 2 bis 4 Minuten. Am meisten bringt es, mehrmals pro Woche kurz zu üben.</p></div>
+  </section>
+</main>
+<div class="ov" id="ov" hidden>
+  <div class="ov-bar"><button class="btn sm" id="ovZu">✕ Schliessen</button><b id="ovT"></b><span id="ovLv"></span><button class="btn sm" id="ovVoll">Vollbild</button></div>
+  <iframe id="ovF" title="Spiel" allow="fullscreen; autoplay"></iframe>
+</div>
+<script>
+var KAT = [{"id": "paare-finden", "title": "Paare finden", "icon": "🃏", "thema": "Bilder merken", "kurz": "Karten aufdecken und gleiche Bilder finden.", "uebt": "Bild und Ort zusammen merken", "sort": 1, "levels": [{"name": "Leicht", "info": "3 Paare"}, {"name": "Gut", "info": "4 Paare"}, {"name": "Mittel", "info": "6 Paare"}, {"name": "Schwer", "info": "8 Paare"}, {"name": "Profi", "info": "10 Paare, ähnliche Tiergesichter"}], "pack": {"title": "Paare finden", "description": "Karten aufdecken und gleiche Bilder finden.", "fach": "Gedächtnis", "thema": "Bilder merken", "stufe": "1.–6. Klasse", "sort": 1, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/paare-finden.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: &quot;runde&quot;, &quot;max&quot;: 3, &quot;proLevel&quot;: true}\"><title>Paare finden<\/title><\/head><body><p>Paare finden: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "was-fehlt", "title": "Was fehlt?", "icon": "🔍", "thema": "Bilder merken", "kurz": "Bilder anschauen. Dann ist eines weg: Welches fehlt?", "uebt": "Viele Bilder auf einmal merken", "sort": 2, "levels": [{"name": "Leicht", "info": "3 Bilder, gleicher Platz"}, {"name": "Gut", "info": "4 Bilder, gleicher Platz"}, {"name": "Mittel", "info": "5 Bilder, sie werden gemischt"}, {"name": "Schwer", "info": "6 ähnliche Bilder, gemischt"}, {"name": "Profi", "info": "8 ähnliche Bilder, gemischt"}], "pack": {"title": "Was fehlt?", "description": "Bilder anschauen. Dann ist eines weg: Welches fehlt?", "fach": "Gedächtnis", "thema": "Bilder merken", "stufe": "1.–6. Klasse", "sort": 2, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/was-fehlt.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Was fehlt?<\/title><\/head><body><p>Was fehlt?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "was-ist-anders", "title": "Was ist anders?", "icon": "🕵️", "thema": "Bilder merken", "kurz": "Ein Bild ist neu oder zwei haben getauscht. Was hat sich verändert?", "uebt": "Genau hinschauen und vergleichen", "sort": 3, "levels": [{"name": "Leicht", "info": "4 Bilder, eines ist neu"}, {"name": "Gut", "info": "6 Bilder, eines ist neu"}, {"name": "Mittel", "info": "8 ähnliche Bilder, eines ist neu"}, {"name": "Schwer", "info": "6 Bilder, zwei haben getauscht"}, {"name": "Profi", "info": "9 Bilder, zwei haben getauscht"}], "pack": {"title": "Was ist anders?", "description": "Ein Bild ist neu oder zwei haben getauscht. Was hat sich verändert?", "fach": "Gedächtnis", "thema": "Bilder merken", "stufe": "1.–6. Klasse", "sort": 3, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/was-ist-anders.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Was ist anders?<\/title><\/head><body><p>Was ist anders?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "wie-viele", "title": "Wie viele?", "icon": "🍎", "thema": "Bilder merken", "kurz": "Ein Bild blitzt kurz auf. Wie viele Äpfel waren es?", "uebt": "Mengen schnell erfassen und merken", "sort": 4, "levels": [{"name": "Leicht", "info": "2 Sorten, je 1 bis 3"}, {"name": "Gut", "info": "2 Sorten, je 1 bis 4"}, {"name": "Mittel", "info": "3 Sorten, je 1 bis 4"}, {"name": "Schwer", "info": "3 Sorten, je 1 bis 5"}, {"name": "Profi", "info": "4 Sorten, je 1 bis 5"}], "pack": {"title": "Wie viele?", "description": "Ein Bild blitzt kurz auf. Wie viele Äpfel waren es?", "fach": "Gedächtnis", "thema": "Bilder merken", "stufe": "1.–6. Klasse", "sort": 4, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/wie-viele.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Wie viele?<\/title><\/head><body><p>Wie viele?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "wo-war-es", "title": "Wo war es?", "icon": "📍", "thema": "Orte merken", "kurz": "Bilder werden zugedeckt. Wo lag der Fuchs?", "uebt": "Orte und Plätze merken", "sort": 5, "levels": [{"name": "Leicht", "info": "2 Bilder auf 4 Feldern"}, {"name": "Gut", "info": "3 Bilder auf 9 Feldern"}, {"name": "Mittel", "info": "4 Bilder auf 9 Feldern"}, {"name": "Schwer", "info": "5 Bilder auf 16 Feldern"}, {"name": "Profi", "info": "7 Bilder auf 16 Feldern"}], "pack": {"title": "Wo war es?", "description": "Bilder werden zugedeckt. Wo lag der Fuchs?", "fach": "Gedächtnis", "thema": "Orte merken", "stufe": "1.–6. Klasse", "sort": 5, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/wo-war-es.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Wo war es?<\/title><\/head><body><p>Wo war es?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "weg-merken", "title": "Weg merken", "icon": "🦉", "thema": "Orte merken", "kurz": "Die Eule hüpft über das Feld. Den Weg merken und nachtippen.", "uebt": "Wege und Richtungen merken", "sort": 6, "levels": [{"name": "Leicht", "info": "3 × 3 Felder, 2 bis 3 Schritte"}, {"name": "Gut", "info": "3 × 3 Felder, 3 bis 4 Schritte"}, {"name": "Mittel", "info": "4 × 4 Felder, 4 bis 5 Schritte"}, {"name": "Schwer", "info": "4 × 4 Felder, 5 bis 7 Schritte"}, {"name": "Profi", "info": "5 × 5 Felder, 7 bis 9 Schritte"}], "pack": {"title": "Weg merken", "description": "Die Eule hüpft über das Feld. Den Weg merken und nachtippen.", "fach": "Gedächtnis", "thema": "Orte merken", "stufe": "1.–6. Klasse", "sort": 6, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/weg-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Weg merken<\/title><\/head><body><p>Weg merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "zahlen-verstecken", "title": "Zahlen verstecken", "icon": "🔢", "thema": "Orte merken", "kurz": "Zahlen stehen kurz auf dem Feld. Dann der Reihe nach antippen: 1, 2, 3 …", "uebt": "Orte und Reihenfolge zusammen merken", "sort": 7, "levels": [{"name": "Leicht", "info": "3 Zahlen auf 9 Feldern"}, {"name": "Gut", "info": "4 Zahlen auf 9 Feldern"}, {"name": "Mittel", "info": "5 Zahlen auf 16 Feldern"}, {"name": "Schwer", "info": "6 Zahlen, alle Felder zugedeckt"}, {"name": "Profi", "info": "8 Zahlen auf 25 Feldern, alle zugedeckt"}], "pack": {"title": "Zahlen verstecken", "description": "Zahlen stehen kurz auf dem Feld. Dann der Reihe nach antippen: 1, 2, 3 …", "fach": "Gedächtnis", "thema": "Orte merken", "stufe": "1.–6. Klasse", "sort": 7, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/zahlen-verstecken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Zahlen verstecken<\/title><\/head><body><p>Zahlen verstecken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "farben-reihe", "title": "Farben-Reihe", "icon": "🚦", "thema": "Reihenfolgen merken", "kurz": "Felder leuchten nacheinander auf. Die Reihenfolge nachtippen.", "uebt": "Reihenfolgen sehen und hören", "sort": 8, "levels": [{"name": "Leicht", "info": "4 Felder, 2 bis 3 Mal leuchten"}, {"name": "Gut", "info": "4 Felder, 3 bis 4 Mal leuchten"}, {"name": "Mittel", "info": "6 Felder, 4 bis 5 Mal leuchten"}, {"name": "Schwer", "info": "9 Felder, 5 bis 6 Mal leuchten"}, {"name": "Profi", "info": "9 Felder, 6 bis 8 Mal, schneller"}], "pack": {"title": "Farben-Reihe", "description": "Felder leuchten nacheinander auf. Die Reihenfolge nachtippen.", "fach": "Gedächtnis", "thema": "Reihenfolgen merken", "stufe": "1.–6. Klasse", "sort": 8, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/farben-reihe.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Farben-Reihe<\/title><\/head><body><p>Farben-Reihe: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "bilder-reihe", "title": "Bilder-Reihe", "icon": "🎞️", "thema": "Reihenfolgen merken", "kurz": "Bilder erscheinen nacheinander. In der richtigen Reihenfolge antippen.", "uebt": "Reihenfolgen merken, auch rückwärts", "sort": 9, "levels": [{"name": "Leicht", "info": "2 bis 3 Bilder"}, {"name": "Gut", "info": "3 bis 4 Bilder, 2 zum Verwechseln"}, {"name": "Mittel", "info": "4 bis 5 Bilder, 3 zum Verwechseln"}, {"name": "Schwer", "info": "5 bis 6 Bilder, 3 zum Verwechseln"}, {"name": "Profi", "info": "Rückwärts! 4 bis 5 Bilder"}], "pack": {"title": "Bilder-Reihe", "description": "Bilder erscheinen nacheinander. In der richtigen Reihenfolge antippen.", "fach": "Gedächtnis", "thema": "Reihenfolgen merken", "stufe": "1.–6. Klasse", "sort": 9, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/bilder-reihe.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Bilder-Reihe<\/title><\/head><body><p>Bilder-Reihe: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "koffer-packen", "title": "Koffer packen", "icon": "🧳", "thema": "Reihenfolgen merken", "kurz": "Ich packe in meinen Koffer … Jedes Mal kommt etwas dazu.", "uebt": "Eine wachsende Liste merken", "sort": 10, "levels": [{"name": "Leicht", "info": "Start mit 1 Sache, 8 zur Auswahl"}, {"name": "Gut", "info": "Start mit 2 Sachen, 10 zur Auswahl"}, {"name": "Mittel", "info": "Start mit 3 Sachen, 12 zur Auswahl"}, {"name": "Schwer", "info": "Start mit 4 Sachen, 14 zur Auswahl"}, {"name": "Profi", "info": "Start mit 5 ähnlichen Sachen"}], "pack": {"title": "Koffer packen", "description": "Ich packe in meinen Koffer … Jedes Mal kommt etwas dazu.", "fach": "Gedächtnis", "thema": "Reihenfolgen merken", "stufe": "1.–6. Klasse", "sort": 10, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/koffer-packen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Koffer packen<\/title><\/head><body><p>Koffer packen: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "zahlen-merken", "title": "Zahlen merken", "icon": "🧮", "thema": "Reihenfolgen merken", "kurz": "Ziffern erscheinen nacheinander. Merken und eintippen, auch rückwärts.", "uebt": "Zahlenfolgen merken", "sort": 11, "levels": [{"name": "Leicht", "info": "3 Ziffern"}, {"name": "Gut", "info": "4 Ziffern"}, {"name": "Mittel", "info": "5 Ziffern"}, {"name": "Schwer", "info": "6 bis 7 Ziffern"}, {"name": "Profi", "info": "Rückwärts! 4 bis 5 Ziffern"}], "pack": {"title": "Zahlen merken", "description": "Ziffern erscheinen nacheinander. Merken und eintippen, auch rückwärts.", "fach": "Gedächtnis", "thema": "Reihenfolgen merken", "stufe": "1.–6. Klasse", "sort": 11, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/zahlen-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Zahlen merken<\/title><\/head><body><p>Zahlen merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}, {"id": "namen-merken", "title": "Namen merken", "icon": "🐾", "thema": "Namen merken", "kurz": "Tiere stellen sich mit Namen vor. Wie heisst der Hase?", "uebt": "Namen und Gesichter verbinden", "sort": 12, "levels": [{"name": "Leicht", "info": "2 Tiere mit Namen"}, {"name": "Gut", "info": "3 Tiere mit Namen"}, {"name": "Mittel", "info": "4 Tiere mit Namen"}, {"name": "Schwer", "info": "5 Tiere, auch umgekehrt gefragt"}, {"name": "Profi", "info": "6 ähnliche Tiere, auch umgekehrt"}], "pack": {"title": "Namen merken", "description": "Tiere stellen sich mit Namen vor. Wie heisst der Hase?", "fach": "Gedächtnis", "thema": "Namen merken", "stufe": "1.–6. Klasse", "sort": 12, "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/namen-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Namen merken<\/title><\/head><body><p>Namen merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.<\/p><\/body><\/html>"}}], FARBE = {"Bilder merken": "#fbf3dc", "Orte merken": "#e9f1e3", "Reihenfolgen merken": "#dcf0fd", "Namen merken": "#fcefed"};
+var B = null; try { B = window.parent !== window && window.parent.knGd ? window.parent.knGd : null; } catch (e) {}
+var DBG = {}, FIL = 'alle', BUSY = false, CUR = null;
+function $(id) { return document.getElementById(id); }
+function h(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2600); }
+$('zur').onclick = function () { if (B && B.back) B.back(); else location.href = '../'; };
+if (B && B.className) $('kl').textContent = 'Klasse ' + B.className;
+var bereiche = []; KAT.forEach(function (g) { if (bereiche.indexOf(g.thema) < 0) bereiche.push(g.thema); });
+$('zahlen').innerHTML = '<span><b>' + KAT.length + '</b> Spiele</span><span><b>' + (KAT.length * 5) + '</b> Stufen</span><span><b>' + bereiche.length + '</b> Bereiche</span>';
+
+function filter() {
+  $('filter').innerHTML = ['alle'].concat(bereiche).map(function (b) {
+    var n = b === 'alle' ? KAT.length : KAT.filter(function (g) { return g.thema === b; }).length;
+    return '<button class="chip" aria-pressed="' + (FIL === b) + '" data-f="' + h(b) + '">' + (b === 'alle' ? 'Alle Spiele' : h(b)) + ' · ' + n + '</button>';
+  }).join('');
+}
+function relBtn(g) {
+  if (!B) return '';
+  var d = DBG[g.title.toLowerCase()];
+  if (!d) return '<button class="rel" disabled>' + (B.admin ? 'Noch nicht in der Klassenkiste' : 'Für Sie noch nicht freigeschaltet') + '</button>';
+  return '<button class="rel' + (d.on ? ' on' : '') + '" data-rel="' + h(d.id) + '">' + (d.on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>';
+}
+function cards() {
+  $('spiele').innerHTML = KAT.filter(function (g) { return FIL === 'alle' || g.thema === FIL; }).map(function (g) {
+    return '<article class="sp"><div class="sp-kopf"><span class="ic" style="background:' + (FARBE[g.thema] || '#dcf0fd') + '">' + g.icon + '</span><div><span class="bereich">' + h(g.thema) + '</span><h3>' + h(g.title) + '</h3></div></div>' +
+      '<p>' + h(g.kurz) + '</p><p class="uebt">Übt: ' + h(g.uebt) + '</p>' +
+      '<ol class="stufen">' + g.levels.map(function (l, i) { return '<li><button data-play="' + g.id + '" data-lv="' + (i + 1) + '" title="Stufe ' + (i + 1) + ' ausprobieren"><span class="n">' + (i + 1) + '</span><span class="nm">' + h(l.name) + '</span><span class="inf">' + h(l.info) + '</span></button></li>'; }).join('') + '</ol>' +
+      '<div class="sp-fuss"><button class="btn sm primary" data-play="' + g.id + '">▶ Ausprobieren</button>' + relBtn(g) + '</div></article>';
+  }).join('');
+}
+function freiBox() {
+  if (!B) { $('frei').innerHTML = ''; return; }
+  var have = KAT.filter(function (g) { return DBG[g.title.toLowerCase()]; }), on = have.filter(function (g) { return DBG[g.title.toLowerCase()].on; });
+  $('frei').innerHTML = have.length ? '<span class="stand">' + on.length + ' von ' + have.length + ' Spielen für die Klasse freigegeben</span>' +
+    '<button class="btn sun" data-all="1"' + (on.length === have.length ? ' disabled' : '') + '>✦ Alle freigeben</button>' +
+    (on.length ? '<button class="btn sm" data-all="0">Alle sperren</button>' : '') : '';
+  var miss = KAT.length - have.length, o = '';
+  if (B.admin && miss) o = '<div class="note"><p><b>Admin:</b> ' + miss + (miss === 1 ? ' Spiel ist' : ' Spiele sind') + ' noch nicht in der Klassenkiste. Mit einem Tipp nehmen Sie ' + (miss === 1 ? 'es' : 'sie') + ' auf (Fach «Gedächtnis»). Danach können Sie sie wie alle Spiele den Lehrpersonen zuteilen.</p><button class="btn primary" data-inst>Spiele in die Klassenkiste aufnehmen</button></div>';
+  else if (!B.admin && miss === KAT.length) o = '<div class="note"><p>Die Spiele können Sie hier ausprobieren. Damit Ihre Kinder sie spielen können, muss die Administratorin sie Ihnen noch freischalten.</p></div>';
+  $('note').innerHTML = o;
+}
+function draw() { filter(); cards(); freiBox(); }
+async function load() {
+  if (!B) return draw();
+  try { var list = await B.games(); DBG = {}; list.forEach(function (g) { DBG[String(g.title).toLowerCase()] = g; }); } catch (e) { console.warn(e); }
+  draw();
+}
+function open(id, lv) {
+  var g = KAT.filter(function (x) { return x.id === id; })[0]; if (!g) return; CUR = g;
+  $('ovT').textContent = g.icon + ' ' + g.title;
+  $('ovLv').innerHTML = '<span style="color:var(--soft);font-size:16px;margin-right:6px">Stufe</span>' + g.levels.map(function (l, i) { return '<button class="lvb" data-ovlv="' + (i + 1) + '" title="' + h(l.name + ': ' + l.info) + '" aria-pressed="' + (lv === i + 1) + '">' + (i + 1) + '</button>'; }).join(' ');
+  $('ovF').src = g.id + '.html?vorschau' + (lv ? '&stufe=' + lv : '') + '&t=' + Date.now();
+  $('ov').hidden = false; document.body.style.overflow = 'hidden';
+}
+function close() { $('ov').hidden = true; $('ovF').src = 'about:blank'; document.body.style.overflow = ''; try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} }
+$('ovZu').onclick = close;
+$('ovVoll').onclick = function () { var e = $('ov'); try { (e.requestFullscreen || e.webkitRequestFullscreen).call(e); } catch (x) {} };
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('ov').hidden && !document.fullscreenElement) close(); });
+document.addEventListener('click', async function (e) {
+  var t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.f) { FIL = t.dataset.f; filter(); cards(); return; }
+  if (t.dataset.play) { open(t.dataset.play, t.dataset.lv ? +t.dataset.lv : 0); return; }
+  if (t.dataset.ovlv) { open(CUR.id, +t.dataset.ovlv); return; }
+  if (BUSY || !B) return;
+  if (t.dataset.rel) {
+    var d = null; Object.keys(DBG).forEach(function (k) { if (DBG[k].id === t.dataset.rel) d = DBG[k]; });
+    if (!d) return; d.on = !d.on; cards(); freiBox();
+    try { await B.rel(d.id, d.on); } catch (x) { d.on = !d.on; cards(); freiBox(); toast('Das hat nicht geklappt.'); }
+    return;
+  }
+  if (t.dataset.all) {
+    var on = t.dataset.all === '1', todo = Object.keys(DBG).map(function (k) { return DBG[k]; }).filter(function (d) { return d.on !== on; });
+    BUSY = true; todo.forEach(function (d) { d.on = on; }); draw();
+    try { for (var i = 0; i < todo.length; i++) await B.rel(todo[i].id, on); toast(on ? 'Alle Spiele freigegeben' : 'Alle Spiele gesperrt'); }
+    catch (x) { toast('Das hat nicht geklappt.'); await load(); }
+    BUSY = false; return;
+  }
+  if (t.hasAttribute('data-inst')) {
+    BUSY = true; t.disabled = true; t.textContent = 'Wird aufgenommen …';
+    try { var r = await B.install(KAT.map(function (g) { return g.pack; })); toast(r.neu + ' Spiele aufgenommen' + (r.aktualisiert ? ', ' + r.aktualisiert + ' aktualisiert' : '')); }
+    catch (x) { console.warn(x); toast('Das hat nicht geklappt.'); }
+    BUSY = false; await load();
+  }
+});
+load();
+</script>
+</body>
+</html>
