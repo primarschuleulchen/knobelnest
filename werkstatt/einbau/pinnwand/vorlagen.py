@@ -35,6 +35,7 @@ const LAYOUTS = [["wand", "Wand"], ["spalten", "Spalten"], ["liste", "Liste"], [
 const BGS = [["", "Aquarell"], ["kork", "Kork"], ["karo", "Karo"], ["linien", "Linien"], ["himmel", "Himmel"], ["wiese", "Wiese"]];
 const CCOL = [["c0", "Gelb"], ["c1", "Rosa"], ["c2", "Blau"], ["c3", "Grün"], ["c4", "Lila"]];
 const newId = p => p + Math.random().toString(36).slice(2, 9);
+const timeCmp = (x, y) => ((x.okAt || x.at || 0) - (y.okAt || y.at || 0)) * ((curBoard() || {}).newPos === "oben" ? -1 : 1);
 const layoutOf = () => { const b = curBoard(); return (b && b.layout) || "wand"; };
 const tplOf = b => TPL.find(t => t.id === (b && b.tpl)) || null;
 const curDefaults = () => (curBoard() && curBoard().tools) || S.defaults;
@@ -97,8 +98,8 @@ function layoutBoard(lay, list, fn, kid) {
   const rest = list.filter(([, i]) => catIdx(i) >= 1e6);
   if (lay === "zeit") {
     const ord = i => typeof i.order === "number" ? i.order : 1e9;
-    const l = list.slice().sort((a, b) => ord(a[1]) - ord(b[1]) || (a[1].okAt || a[1].at || 0) - (b[1].okAt || b[1].at || 0));
-    return `<div class="tl" role="list">${l.map((x, k) => { const c = cs.find(c => c.id === x[1].cat); return `<div class="tl-it" role="listitem"><span class="tl-dot">${k + 1}</span><span class="tl-stem"></span>${c ? `<span class="tl-cat">${esc(c.title)}</span>` : ""}${fn(x)}</div>`; }).join("")}</div>`;
+    const l = list.slice().sort((a, b) => ord(a[1]) - ord(b[1]) || timeCmp(a[1], b[1])), drag = !kid && S.view === "lp";
+    return `${drag && l.length > 1 ? `<p class="sub tl-tip">Zum Verschieben die Nummer eines Zettels anfassen und nach links oder rechts ziehen.</p>` : ""}<div class="tl" id="tl" role="list">${l.map((x, k) => { const c = cs.find(c => c.id === x[1].cat); return `<div class="tl-it" role="listitem" data-tid="${x[0]}">${drag ? `<button type="button" class="tl-dot tl-h" data-tlh="${x[0]}" title="Ziehen, um den Zettel zu verschieben" aria-label="Zettel ${k + 1} verschieben (Pfeiltasten)">${k + 1}</button>` : `<span class="tl-dot">${k + 1}</span>`}<span class="tl-stem"></span>${c ? `<span class="tl-cat">${esc(c.title)}</span>` : ""}${fn(x)}</div>`; }).join("")}</div>`;
   }
   if (lay === "spalten") {
     if (!cs.length) return `<div class="board">${list.map(fn).join("")}</div>`;
@@ -113,14 +114,19 @@ function layoutBoard(lay, list, fn, kid) {
   const one = matchMedia("(max-width:760px)").matches || br.length === 1;
   const half = one ? 0 : Math.floor(br.length / 2), left = br.slice(br.length - half), right = br.slice(0, br.length - half);
   const leaf = ([id, i]) => `<button type="button" class="mm-leaf note ${noteColor(id, i)}${S.mmFocus === id ? " cur" : ""}" data-act="mmfocus" data-id="${id}">${esc(i.text)}${b.names && i.by && (!kid || i.by !== "Lehrperson") ? `<small>${esc(i.by)}</small>` : ""}</button>`;
-  const branch = side => ({ c, l, bare }) => `<div class="mm-br ${side}" data-c="${(c && c.color) || ""}">${bare ? "" : `<div class="mm-node">${c ? esc(c.title) : "Weitere"}</div>`}<div class="mm-leaves">${l.length ? l.map(leaf).join("") : `<span class="mm-empty">${kid ? "noch leer" : "noch kein Zettel"}</span>`}</div></div>`;
+  const edit = !kid && S.view === "lp";
+  const node = c => !c ? `<div class="mm-node">Weitere</div>` : edit && S.astEdit === c.id
+    ? `<div class="mm-node mm-ed"><input class="field" id="ast-${c.id}" data-keep maxlength="60" value="${esc(c.title)}" aria-label="Name des Astes"><span class="row"><button class="btn small" type="button" data-act="astsave" data-id="${c.id}">OK</button><button class="del ${S.armed === "k:" + c.id ? "arm" : ""}" type="button" data-act="delcat" data-id="${c.id}">${S.armed === "k:" + c.id ? "Wirklich löschen?" : "Löschen"}</button></span></div>`
+    : edit ? `<button type="button" class="mm-node" data-act="astedit" data-id="${c.id}" title="Ast umbenennen oder löschen">${esc(c.title)}</button>` : `<div class="mm-node">${esc(c.title)}</div>`;
+  const branch = side => ({ c, l, bare }) => `<div class="mm-br ${side}" data-c="${(c && c.color) || ""}">${bare ? "" : node(c)}<div class="mm-leaves">${l.length ? l.map(leaf).join("") : `<span class="mm-empty">${kid ? "noch leer" : "noch kein Zettel"}</span>`}</div></div>`;
   const f = S.mmFocus && list.find(([id]) => id === S.mmFocus);
   return `<div class="mm-wrap"><div class="mm${one ? " one" : ""}" id="mm"><svg class="mm-svg" id="mmSvg" aria-hidden="true"></svg>
       ${one ? "" : `<div class="mm-side l">${left.map(branch("l")).join("")}</div>`}
       <div class="mm-center">${esc(b.prompt || b.title || "Thema")}</div>
       <div class="mm-side r">${right.map(branch("r")).join("")}</div></div></div>
-    ${f ? `<div class="mm-focus"><div class="row" style="justify-content:space-between"><span class="tool-l">Zettel im Detail</span><button class="btn ghost small" type="button" data-act="mmclose">Schliessen</button></div><div class="board">${fn(f)}</div></div>`
-      : list.length ? `<p class="sub mm-hint">Tippe auf einen Zettel, um ihn gross zu sehen${kid ? " und mitzumachen" : ""}.</p>` : ""}`;
+    ${f ? `<div class="mm-focus"><div class="row" style="justify-content:space-between"><span class="tool-l">Zettel im Detail</span><button class="btn ghost small" type="button" data-act="mmclose">Schliessen</button></div>${edit && cs.length ? `<label class="row lpcat"><span class="tool-l">An den Ast</span><select class="field" data-act="leafcat" data-id="${f[0]}"><option value="">ohne Ast</option>${cs.map(c => `<option value="${c.id}" ${f[1].cat === c.id ? "selected" : ""}>${esc(c.title)}</option>`).join("")}</select></label>` : ""}<div class="board">${fn(f)}</div></div>`
+      : list.length ? `<p class="sub mm-hint">Tippe auf einen Zettel, um ihn gross zu sehen${kid ? " und mitzumachen" : ""}.${edit ? " Tippen Sie auf einen Ast, um ihn umzubenennen." : ""}</p>` : ""}
+    ${edit ? `<div class="row mm-add"><input class="field grow" id="newAst" data-keep maxlength="60" placeholder="Neuer Ast, z. B. «Feinde»" aria-label="Name des neuen Astes"><button class="btn" type="button" data-act="addast">+ Ast</button></div>` : ""}`;
 }
 function drawMind() {
   const mm = document.getElementById("mm"), svg = document.getElementById("mmSvg"); if (!mm || !svg) return;
