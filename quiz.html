@@ -76,7 +76,18 @@ select.input{padding-right:8px}
 .hero p{font-size:20px;color:var(--soft);max-width:640px}
 .qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
 .qcard{display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:20px;box-shadow:var(--schatten);padding:18px;position:relative;overflow:hidden}
-.qcard::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:linear-gradient(90deg,#d9675c,#3f78a8,#d6ad45,#5d8f4a)}
+.qcard{border:2px solid transparent}
+.qcard.farbig .qc-n{background:rgba(255,255,255,.75)}
+.qcard.farbig .qc-fuss{border-top-color:rgba(31,36,33,.14)}
+.qcard.farbig .ib:hover{background:rgba(255,255,255,.7)}
+.ib{display:inline-flex;align-items:center;gap:6px}
+.ib svg{flex:none;opacity:.85}
+.qc-o{background:rgba(255,255,255,.8)!important;color:var(--soft)!important;box-shadow:inset 0 0 0 1.5px rgba(31,36,33,.12)}
+.ohead h2 .dot.big{display:inline-block;width:22px;height:22px;border-radius:50%;margin-right:10px;vertical-align:-2px;box-shadow:inset 0 0 0 1.5px rgba(31,36,33,.18)}
+.chip .dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:-1px;box-shadow:inset 0 0 0 1.5px rgba(31,36,33,.18)}
+.farben{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.farben button{width:36px;height:36px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line2);padding:0}
+.farben button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
 .qcard h3{font-size:26px;word-break:break-word}
 .qcard .row{margin-top:auto}
 .qcard{gap:8px;padding:20px 18px 12px}
@@ -421,12 +432,21 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     try { var r = await Promise.all([B.kidClasses(), B.kidList()]); L.kc = r[0] || []; L.kq = r[1] || []; }
     catch (e) { L.kc = []; L.kq = []; toast('Die Quiz der Kinder konnten nicht geladen werden.'); }
   }
+  // Ordnerfarben (sanft, im Stil der Eulenkiste). Karte = helle Fläche, Rand = mittlere Stufe.
+  var OFARBEN = ['#e9c46a', '#e8968c', '#9cc48a', '#8fbbe0', '#b9a3d9', '#7fc8bf', '#f0a868', '#c9b48f'];
+  function mischen(hex, w) { var n = parseInt(hex.slice(1), 16), f = function (v) { return Math.round(v + (255 - v) * w); };
+    return 'rgb(' + f(n >> 16) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')'; }
+  function ico(d) { return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; }
+  var IC = { edit: ico('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'), copy: ico('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+    trash: ico('<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/>'), group: ico('<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.6 0 4.4 1.6 5 4.5"/>') };
+  function oFarbe(o) { return o && /^#[0-9a-f]{6}$/i.test(o.farbe || '') ? o.farbe : null; }
+  function karteStil(o) { var f = oFarbe(o); return f ? ' farbig" style="background:' + mischen(f, .78) + ';border-color:' + mischen(f, .35) : ''; }
   function kidName(cid, id) { var c = L.kc.filter(function (x) { return x.id === cid; })[0], k = c && c.kids.filter(function (x) { return x.id === id; })[0]; return k ? k.name : ''; }
   function listRender() {
     var chips = [['alle', 'Alle Quiz', L.list.length]].concat(L.ordner.map(function (o) {
-      return [o.id, '📁 ' + o.name, L.list.filter(function (x) { return x.ordner === o.id; }).length]; })).concat([['kinder', '✦ Von den Kindern', null]]);
+      return [o.id, o.name, L.list.filter(function (x) { return x.ordner === o.id; }).length, oFarbe(o) || '#d9dee3']; })).concat([['kinder', '✦ Von den Kindern', null]]);
     var bar = '<div class="ordner" role="tablist">' + chips.map(function (c) {
-      return '<button class="chip" role="tab" data-a="view" data-v="' + h(c[0]) + '" aria-selected="' + (L.view === c[0]) + '">' + h(c[1]) + (c[2] != null ? ' <small>' + c[2] + '</small>' : '') + '</button>'; }).join('') +
+      return '<button class="chip" role="tab" data-a="view" data-v="' + h(c[0]) + '" aria-selected="' + (L.view === c[0]) + '">' + (c[3] ? '<span class="dot" style="background:' + c[3] + '"></span>' : '') + h(c[1]) + (c[2] != null ? ' <small>' + c[2] + '</small>' : '') + '</button>'; }).join('') +
       '<button class="chip plus" data-a="oNeu">+ Ordner</button></div>';
     var hero = L.view === 'alle' ? '<div class="hero"><img class="eule-wackel" src="bilder/eule.webp" alt="" width="110" height="110" style="border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 3px var(--gold),var(--schatten)">' +
       '<div class="stack" style="gap:6px;flex:1 1 320px"><span class="sterne">✦ ✧ ✦</span><h1>Live-Quiz mit der ganzen Klasse</h1>' +
@@ -436,17 +456,20 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   function ownHTML() {
     var o = L.ordner.filter(function (x) { return x.id === L.view; })[0];
     var l = L.list.filter(function (x) { return !o || x.ordner === o.id; }).sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
-    var kopfzeile = o ? '<div class="row ohead"><h2>📁 ' + h(o.name) + '</h2><span class="grow"></span><button class="btn sm" data-a="oRen">✎ Umbenennen</button><button class="btn sm danger" data-a="oDel">Ordner löschen</button></div>' : '';
+    var kopfzeile = o ? '<div class="row ohead"><h2><span class="dot big" style="background:' + (oFarbe(o) || '#d9dee3') + '"></span>' + h(o.name) + '</h2><span class="grow"></span><button class="btn sm" data-a="oRen">✎ Umbenennen</button><button class="btn sm danger" data-a="oDel">Ordner löschen</button></div>' +
+      '<div class="farben" style="margin:-4px 0 16px"><span class="muted small">Farbe des Ordners:</span>' + OFARBEN.map(function (f) {
+        return '<button data-a="oFarbe" data-f="' + f + '" aria-pressed="' + (oFarbe(o) === f) + '" aria-label="Farbe" style="background:' + mischen(f, .35) + '"></button>'; }).join('') +
+      '<button data-a="oFarbe" data-f="" aria-pressed="' + !oFarbe(o) + '" aria-label="Keine Farbe" style="background:#fff;font-size:16px;color:var(--soft)">–</button></div>' : '';
     return kopfzeile + '<div class="qlist"><button class="new" data-a="neu"><span>+</span>Neues Quiz' + (o ? '<small class="muted">in «' + h(o.name) + '»</small>' : '') + '</button>' +
       '<button class="new ki" data-a="kiOpen"><span>✨</span>Mit KI erstellen<small class="muted">aus einem PDF oder Arbeitsblatt</small></button>' + l.map(function (x) {
       var on = L.ordner.filter(function (y) { return y.id === x.ordner; })[0];
-      return '<div class="qcard"><div class="qc-kopf"><span class="qc-n">' + anzahl(x.n) + '</span>' + (!o && on ? '<span class="qc-o">📁 ' + h(on.name) + '</span>' : '') + '</div>' +
+      return '<div class="qcard' + karteStil(on) + '"><div class="qc-kopf"><span class="qc-n">' + anzahl(x.n) + '</span>' + (!o && on ? '<span class="qc-o">' + h(on.name) + '</span>' : '') + '</div>' +
         '<h3>' + h(x.titel || 'Ohne Titel') + '</h3><p class="muted small">' + (x.at ? 'geändert ' + datum(x.at) : '') + '</p>' +
         '<div class="qc-main"><button class="btn gold" data-a="live" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn" data-a="vor" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>👁 Vorschau</button></div>' +
-        '<div class="qc-fuss"><button class="ib" data-a="edit" data-id="' + h(x.id) + '">✎ Bearbeiten</button><button class="ib" data-a="dup" data-id="' + h(x.id) + '" title="Kopie erstellen">⧉ Kopie</button>' +
-        (L.ordner.length ? '<select class="ib" data-ch="move" data-id="' + h(x.id) + '" title="Ordner" aria-label="Ordner"><option value="">📁 kein Ordner</option>' +
-          L.ordner.map(function (y) { return '<option value="' + h(y.id) + '"' + (x.ordner === y.id ? ' selected' : '') + '>📁 ' + h(y.name) + '</option>'; }).join('') + '</select>' : '') +
-        '<span class="grow"></span><button class="ib del" data-a="del" data-id="' + h(x.id) + '" title="Löschen">🗑</button></div></div>';
+        '<div class="qc-fuss"><button class="ib" data-a="edit" data-id="' + h(x.id) + '">' + IC.edit + 'Bearbeiten</button><button class="ib" data-a="dup" data-id="' + h(x.id) + '" title="Kopie erstellen">' + IC.copy + 'Kopie</button>' +
+        (L.ordner.length ? '<select class="ib" data-ch="move" data-id="' + h(x.id) + '" title="In einen Ordner verschieben" aria-label="Ordner"><option value="">Ohne Ordner</option>' +
+          L.ordner.map(function (y) { return '<option value="' + h(y.id) + '"' + (x.ordner === y.id ? ' selected' : '') + '>' + h(y.name) + '</option>'; }).join('') + '</select>' : '') +
+        '<span class="grow"></span><button class="ib del" data-a="del" data-id="' + h(x.id) + '" title="Löschen" aria-label="Löschen">' + IC.trash + '</button></div></div>';
     }).join('') + '</div>';
   }
   function kidHTML() {
@@ -463,8 +486,8 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
               '<p class="muted small">' + datum(q.updated_at) + (q.updated_by ? ' · zuletzt ' + h(q.updated_by) : '') + '</p>' +
               '<div class="mem">' + (names.length ? names.map(function (n) { return '<span>' + h(n) + '</span>'; }).join('') : '<em class="muted small">noch niemand</em>') + '</div>' +
               '<div class="qc-main"><button class="btn gold" data-a="kLive" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn" data-a="kVor" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>👁 Vorschau</button></div>' +
-              '<div class="qc-fuss"><button class="ib" data-a="kEdit" data-id="' + h(q.id) + '">✎ Bearbeiten</button><button class="ib" data-a="kMem" data-c="' + h(c.id) + '" data-id="' + h(q.id) + '">👥 Gruppe</button>' +
-              '<button class="ib" data-a="kCopy" data-id="' + h(q.id) + '" title="In meine Quiz kopieren">⧉ Kopie</button><span class="grow"></span><button class="ib del" data-a="kDel" data-id="' + h(q.id) + '" title="Löschen">🗑</button></div></div>';
+              '<div class="qc-fuss"><button class="ib" data-a="kEdit" data-id="' + h(q.id) + '">' + IC.edit + 'Bearbeiten</button><button class="ib" data-a="kMem" data-c="' + h(c.id) + '" data-id="' + h(q.id) + '">' + IC.group + 'Gruppe</button>' +
+              '<button class="ib" data-a="kCopy" data-id="' + h(q.id) + '" title="In meine Quiz kopieren">' + IC.copy + 'Kopie</button><span class="grow"></span><button class="ib del" data-a="kDel" data-id="' + h(q.id) + '" title="Löschen" aria-label="Löschen">' + IC.trash + '</button></div></div>';
           }).join('') + '</div>' : '<p class="muted">' + (c.on ? 'Noch keine Quiz von Kindern.' : 'Eingeschaltet erscheint bei den Kindern die Kachel «Quiz erstellen».') + '</p>') + '</section>';
       }).join('');
   }
@@ -473,7 +496,13 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   ACT.view = async function (el) { L.view = el.dataset.v; if (L.view === 'kinder') { app.innerHTML = kopf() + LADEN; await kidLoad(); } listRender(); };
   ACT.oNeu = async function () {
     var n = (prompt('Name des neuen Ordners:') || '').trim().slice(0, 40); if (!n) return;
-    var o = { id: uid(), name: n }; L.ordner.push(o); L.view = o.id; await saveList(); listRender();
+    var frei = OFARBEN.filter(function (f) { return !L.ordner.some(function (x) { return x.farbe === f; }); });
+    var o = { id: uid(), name: n, farbe: (frei[0] || OFARBEN[L.ordner.length % OFARBEN.length]) }; L.ordner.push(o); L.view = o.id; await saveList(); listRender();
+  };
+  ACT.oFarbe = async function (el) {
+    var o = L.ordner.filter(function (x) { return x.id === L.view; })[0]; if (!o) return;
+    if (el.dataset.f) o.farbe = el.dataset.f; else delete o.farbe;
+    listRender(); await saveList();
   };
   ACT.oRen = async function () {
     var o = L.ordner.filter(function (x) { return x.id === L.view; })[0]; if (!o) return;
@@ -584,7 +613,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
       return '<div class="qcard"><div class="qc-kopf"><span class="qc-n">' + anzahl(q.n) + '</span></div><h3>' + h(q.title || 'Ohne Titel') + '</h3><p class="muted small">' + (q.updated_by ? 'zuletzt ' + h(q.updated_by) : '') + '</p>' +
         (mit.length ? '<div class="mem"><span class="muted small" style="background:none;padding:0">Gemeinsam mit</span>' + mit.map(function (n) { return '<span>' + h(n) + '</span>'; }).join('') + '</div>' : '') +
         '<div class="qc-main"><button class="btn gold" data-a="kidEdit" data-id="' + h(q.id) + '">✎ Bearbeiten</button><button class="btn" data-a="kidVor" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>👁 Ausprobieren</button></div>' +
-        (q.mine ? '<div class="qc-fuss"><span class="grow"></span><button class="ib del" data-a="kidDel" data-id="' + h(q.id) + '" title="Löschen">🗑 Löschen</button></div>' : '') + '</div>';
+        (q.mine ? '<div class="qc-fuss"><span class="grow"></span><button class="ib del" data-a="kidDel" data-id="' + h(q.id) + '" title="Löschen">' + IC.trash + 'Löschen</button></div>' : '') + '</div>';
     }).join('') + '</div></div>';
   }
   function kidFehler(r) { return { aus: 'Deine Lehrperson hat das Quiz-Erstellen ausgeschaltet.', viele: 'Du hast schon sehr viele Quiz. Lösche zuerst eines.', weg: 'Dieses Quiz gibt es nicht mehr.' }[r && r.error] || 'Das hat nicht geklappt.'; }
