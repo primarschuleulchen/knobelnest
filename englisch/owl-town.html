@@ -1202,9 +1202,14 @@ function camStep(dt) {
   if (CAM.mode === 'view' && CAM.view) { tp = CAM.view.pos; tl = CAM.view.look; }
   else if (CAM.mode === 'top') { var T = CAM.top; tp = new THREE.Vector3(T.x, T.h, T.z + T.h * .35); tl = new THREE.Vector3(T.x, 0, T.z); }
   else {
-    var dist = 13, H = 7.5 + CAM.tilt;
-    for (; dist > 3; dist -= .5) { var px = o.x - fx * dist, pz = o.z - fz * dist; if (!WD.boxes.some(function (b) { return px > b.x0 - .8 && px < b.x1 + .8 && pz > b.z0 - .8 && pz < b.z1 + .8 && H < b.h + 6; })) break; }
-    var ahead = 6; if (dist < 8) { H = Math.max(H, 7.5 + (8 - dist) * 2.4); ahead = 2.5; }
+    // Abstand hinter der Eule: kürzer, wenn ein Haus im Weg ist; weich angepasst, damit nichts springt
+    var dist = 13, H0 = 7.5 + CAM.tilt;
+    for (; dist > 3; dist -= .25) { var ok = true; for (var q = .2; q <= 1.001 && ok; q += .2) { var px = o.x - fx * dist * q, pz = o.z - fz * dist * q, py = 1.5 + (H0 - 1.5) * q;
+      ok = !WD.boxes.some(function (b) { return px > b.x0 - 1.2 && px < b.x1 + 1.2 && pz > b.z0 - 1.2 && pz < b.z1 + 1.2 && py < b.h + 2; }); } if (ok) break; }
+    if (CAM.d == null || CAM.snap) CAM.d = dist;
+    CAM.d += (dist - CAM.d) * Math.min(1, dt * (dist < CAM.d ? 12 : 3));
+    dist = CAM.d;
+    var H = H0 + Math.max(0, 8 - dist) * 1.4, ahead = dist < 8 ? 2.5 + (dist - 3) * .7 : 6;
     tp = new THREE.Vector3(o.x - fx * dist, H, o.z - fz * dist); tl = new THREE.Vector3(o.x + fx * ahead, 1.2, o.z + fz * ahead);
   }
   if (CAM.snap || !CAM.pos) { CAM.pos = tp.clone(); CAM.look = tl.clone(); CAM.snap = false; }
@@ -1321,7 +1326,7 @@ function dragSetup(el) {
   el.addEventListener('pointerdown', function (e) { if (CAM.mode === 'follow') CAM.drag = true; pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (x) {} pinch = 0; });
   el.addEventListener('pointermove', function (e) {
     var p0 = pts[e.pointerId]; if (!p0) return;
-    if (CAM.mode === 'follow') { if (n() === 1) { CAM.yaw += (e.clientX - p0.x) * .008; CAM.tilt = Math.max(-5, Math.min(22, CAM.tilt + (e.clientY - p0.y) * .05)); } p0.x = e.clientX; p0.y = e.clientY; return; }
+    if (CAM.mode === 'follow') { if (n() === 1) { CAM.yaw -= (e.clientX - p0.x) * .007; CAM.tilt = Math.max(-5, Math.min(22, CAM.tilt + (e.clientY - p0.y) * .05)); } p0.x = e.clientX; p0.y = e.clientY; return; }
     if (n() === 1) { panBy(e.clientX - p0.x, e.clientY - p0.y); CAM.snap = true; }
     p0.x = e.clientX; p0.y = e.clientY;
     if (n() === 2) { var k = Object.keys(pts), a = pts[k[0]], b = pts[k[1]], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch) zoomBy(pinch / d); pinch = d; CAM.snap = true; }
