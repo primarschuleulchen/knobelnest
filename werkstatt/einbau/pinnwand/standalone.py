@@ -51,8 +51,16 @@ body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}''')
 # Zeilenumbruch erhalten: die Erweiterungen setzen ihren CSS-Text vor diesen Anker
 here = os.path.dirname(os.path.abspath(__file__))
-for sec in ('sec5.py', 'sec6.py', 'sec7.py', 'sec8.py', 'sec9.py', 'sec10.py'):
+for sec in ('sec5.py', 'sec6.py', 'sec7.py', 'sec8.py', 'sec9.py', 'sec10.py', 'sec11.py', 'sec12.py'):
     exec(open(os.path.join(here, sec), encoding='utf-8').read())
 s = s.replace('/* Erweiterungen */', '/* Erweiterungen */', 1)
+# Kinder-Ansicht der Lehrperson: eigene Stimmen bleiben unberührt, solange ein Kind angeschaut wird
+rep('function touchMy(delay = 600) {\n', 'function touchMy(delay = 600) {\n  if (S.peek) return;\n')
+rep('const all = new Map(S.votes); all.set(myKey(), S.my);', 'const all = new Map(S.votes); all.set(myKey(), S.peek ? (ownMy || { r: {} }) : S.my);')
+rep('const v = S.votes.get(b.dataset.uid), txt =', 'const v = b.dataset.uid === myKey() ? (S.peek ? ownMy : S.my) : S.votes.get(b.dataset.uid), txt =')
+rep('S.ideas = new Map(snap.docs.map(d => [d.id, d.data()]));', 'S.ideas = new Map(snap.docs.map(d => [d.id, JSON.parse(JSON.stringify(d.data()))]));')
+rep('    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} };', '    if (data && S.peek) { ownMy = { name: data.name || (ownMy && ownMy.name) || "", r: data.r || {} }; render(); return; }\n    if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} };')
+# Vorlagen und Darstellungen
+exec(open(os.path.join(here, 'vorlagen.py'), encoding='utf-8').read())
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
