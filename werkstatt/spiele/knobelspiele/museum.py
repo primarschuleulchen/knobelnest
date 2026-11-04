@@ -18,9 +18,9 @@ def alle(spiel):
           intro='Willkommen im Museum! Hier hängen bunte Bilder. Beschreibe sie auf Englisch: <b>There is a</b> + Farbe + Form + Ort.',
           levels=[dict(name='Leicht', info='Read and choose: das richtige Bild finden', t='wahl', min=1, max=2, extra=False, alle=False),
                   dict(name='Gut', info='Look and describe: Sätze bauen', t='sag', min=2, max=2, extra=False, alle=False),
-                  dict(name='Mittel', info='Read and draw: das Bild malen', t='mal', min=2, max=3, extra=False, alle=True),
+                  dict(name='Mittel', info='Read and draw: das Bild malen', t='mal', min=2, max=3, extra=False, alle=True, pause=1300),
                   dict(name='Schwer', info='Look and describe*: big, little, light, dark, facing', t='sag', min=2, max=3, extra=True, alle=True),
-                  dict(name='Profi', info='Listen and draw*: zuhören und malen', t='mal', min=3, max=4, extra=True, alle=True, hoer=True)],
+                  dict(name='Profi', info='Listen and draw*: zuhören und malen', t='mal', min=3, max=4, extra=True, alle=True, hoer=True, tempo=.68, pause=1800)],
           css=CSS, js=JS)
 
 
@@ -143,26 +143,38 @@ function satz(x, voll) {
 }
 function text(b, voll) { return [satzHinter(b)].concat(b.it.map(function (x) { return satz(x, voll); })); }
 
-// ---------- Vorlesen (englische Stimme des Geräts)
-var STIMME = null;
+// ---------- Vorlesen: dieselbe Stimmenwahl wie in der Vokabelkiste (englische Frauenstimme, en-GB bevorzugt, «natural» besser)
+var FEMALE = /\b(female|samantha|karen|moira|tessa|serena|kate|stephanie|martha|fiona|victoria|allison|ava|susan|zira|hazel|libby|sonia|aria|jenny|emma|amy|joanna|salli|kimberly|olivia|natasha|clara)\b/i;
+var MALE = /\b(male|daniel|alex|fred|oliver|george|ryan|guy|david|mark|james|thomas|arthur|rishi|aaron|gordon|reed|rocko|eddy|grandpa)\b/i;
 function stimme() {
-  if (STIMME || !window.speechSynthesis) return STIMME;
-  var v = speechSynthesis.getVoices() || [];
-  STIMME = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); })[0] || v.filter(function (x) { return /^en/i.test(x.lang); })[0] || null;
-  return STIMME;
+  var vs = []; try { vs = speechSynthesis.getVoices().filter(function (v) { return v.lang && /^en/i.test(v.lang); }); } catch (e) {}
+  if (!vs.length) return null;
+  function sc(v) { var n = v.name.replace(/female/ig, ''); return (FEMALE.test(v.name) ? 10 : 0) - (MALE.test(n) ? 10 : 0) + (/en[-_]gb/i.test(v.lang) ? 3 : 0) + (/natural|neural|premium|enhanced|online/i.test(v.name) ? 4 : 0); }
+  return vs.slice().sort(function (a, b) { return sc(b) - sc(a); })[0];
 }
-if (window.speechSynthesis) try { speechSynthesis.onvoiceschanged = function () { STIMME = null; stimme(); }; } catch (e) {}
 function kannSprechen() { return !!(window.speechSynthesis && window.SpeechSynthesisUtterance); }
+// Tempo und Pause zwischen den Sätzen (pro Stufe, gesetzt in G.play)
+var TEMPO = .8, PAUSE = 900, SPRICH = 0, AKT_U = null;
+// t = ein Satz oder eine Liste von Sätzen; jeder Satz einzeln, mit Pause dazwischen
 function sag(t, immer) {
   if ((ST.mute && !immer) || !kannSprechen()) return;
-  try {
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; u.rate = .85;
-    var v = stimme(); if (v) u.voice = v;
-    speechSynthesis.speak(u);
-  } catch (e) {}
+  var liste = [].concat(t), nr = ++SPRICH, i = 0;
+  try { var ss = speechSynthesis; if (ss.speaking || ss.pending) ss.cancel(); if (ss.paused) ss.resume(); } catch (e) {}
+  function weiter() {
+    if (nr !== SPRICH || i >= liste.length) return;
+    var satz = liste[i++], fertig = false, notfall;
+    function danach() { if (fertig) return; fertig = true; clearTimeout(notfall); if (nr === SPRICH && i < liste.length) setTimeout(weiter, PAUSE); }
+    try {
+      var u = new SpeechSynthesisUtterance(satz), v = stimme();
+      if (v) { u.voice = v; u.lang = String(v.lang).replace('_', '-'); } else u.lang = 'en-GB';
+      u.rate = TEMPO; u.pitch = 1; u.onend = danach; u.onerror = danach; AKT_U = u; // Referenz halten (sonst bricht Safari ab)
+      speechSynthesis.speak(u);
+      notfall = setTimeout(danach, 4000 + satz.length * 140 / TEMPO); // falls das Gerät «fertig» nicht meldet
+    } catch (e) {}
+  }
+  weiter();
 }
-function still() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+function still() { SPRICH++; try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
 
 // ---------- Zeichnen (SVG 300 × 210, 3 × 3 Felder à 100 × 70)
 function formSvg(s, cx, cy, r, d, fill, extra) {
@@ -202,7 +214,7 @@ function weiterKnopf(api, wo, fn, label) {
 }
 
 G.play = function (lv, api) {
-  still();
+  still(); TEMPO = lv.tempo || .8; PAUSE = lv.pause || 900;
   var idx = 0, titel = pick(TITEL, G.n);
   function schild() { return '«' + titel[idx] + '» · No. ' + (idx + 1); }
   ({ wahl: waehlen, sag: beschreiben, mal: malen })[lv.t]();
@@ -225,7 +237,7 @@ G.play = function (lv, api) {
       saetze.map(function (s) { return '<p lang="en">' + h(s) + '</p>'; }).join('') + '</div><div class="drei">' +
       reihe.map(function (i) { return '<button data-i="' + i + '" aria-label="Bild">' + wand(bilder[i], '', null, true) + '</button>'; }).join('') + '</div><div class="steuer"></div>';
     api.msg('<span class="em">🔍</span> Bild ' + (idx + 1) + ' von ' + G.n + ': Welches Bild passt zur Beschreibung?');
-    var hb = api.stage.querySelector('[data-hoer]'); if (hb) hb.onclick = function () { sag(saetze.join(' '), true); };
+    var hb = api.stage.querySelector('[data-hoer]'); if (hb) hb.onclick = function () { sag(saetze, true); };
     api.stage.querySelector('.drei').onclick = function (e) {
       var k = e.target.closest('[data-i]'); if (!k || fertig) return; fertig = true;
       var ok = k.dataset.i === '0';
@@ -339,7 +351,7 @@ G.play = function (lv, api) {
     }
     zeigeText();
     beschr.onclick = function (e) {
-      if (e.target.closest('[data-hoer]')) sag(saetze.join(' '), true);
+      if (e.target.closest('[data-hoer]')) sag(saetze, true);
       if (e.target.closest('[data-zeig]')) { offen = true; zeigeText(); }
     };
     function zeigeBild() { platz.innerHTML = wand(mein, schild(), { felder: !fertig, fehler: fehlerFelder }); }
@@ -418,7 +430,7 @@ G.play = function (lv, api) {
     steuer.firstChild.onclick = pruefen;
     api.msg('<span class="em">🎨</span> Bild ' + (idx + 1) + ' von ' + G.n + ': ' + (offen ? 'Lies die Beschreibung und male das Bild.' : 'Hör gut zu und male das Bild.'));
     zeigeBild(); werkzeug();
-    if (!offen) api.later(function () { sag(saetze.join(' ')); }, 600);
+    if (!offen) api.later(function () { sag(saetze); }, 600);
   }
 };
 """
