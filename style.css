@@ -1171,6 +1171,7 @@ body.kidv .kid-go[disabled]{background:#c9d6e2;color:#5f6963;box-shadow:none;cur
 .tile .sw.sw-bild{padding:0;overflow:hidden;background:#fff!important}
 .tile .sw.sw-bild img{width:100%;height:100%;display:block;border-radius:50%}
 body.lp .tile .sw.sw-bild{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--gold)}
+body.wechsel #app{visibility:hidden}
 /* Elterngespräche Version 29: Liste, Aufklappen, «dabei» */
 .eg .umf-hero h1{font-size:clamp(32px,4.5vw,46px)}
 .eg-ttitle{font-size:24px;font-weight:400;line-height:1.2}

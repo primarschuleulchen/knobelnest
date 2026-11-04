@@ -163,7 +163,7 @@
   function paint(html) {
     var a = document.activeElement, id = a && a.id, s = null, e = null;
     try { s = a.selectionStart; e = a.selectionEnd; } catch (x) {}
-    app.innerHTML = html;
+    app.innerHTML = html; document.body.classList.remove('wechsel');
     if (id) {
       var n = document.getElementById(id);
       if (n) { n.focus(); try { if (s != null) n.setSelectionRange(s, e); } catch (x) {} }
@@ -348,6 +348,9 @@
   function stopTimers() { timers.forEach(clearInterval); timers = []; }
   function route() {
     stopTimers(); closeOverlays(); closePlayer(); UI.confirm = null; document.body.classList.remove('lp'); document.body.classList.remove('kidv');
+    // Beim Wechsel die alte Seite ausblenden, bis die neue gezeichnet ist (sonst blitzt sie kurz ohne Gestaltung auf)
+    document.body.classList.add('wechsel'); clearTimeout(UI.wechselT);
+    UI.wechselT = setTimeout(function () { document.body.classList.remove('wechsel'); }, 1500);
     var hs = location.hash || '';
     if (/error_description=/.test(hs)) return linkError(hs);
     if (/access_token=|type=recovery/.test(hs)) { setTimeout(function () { if (/access_token=/.test(location.hash) && UI.view !== 'recovery') { location.hash = '#/'; } }, 4000); return; }
