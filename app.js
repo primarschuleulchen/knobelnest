@@ -2489,7 +2489,7 @@
         if (vt && T.tools.vk) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
         return '<div class="tooltiles">' + keys.map(function (k) { return tiles[k].replace(/<a class="tt-open"/, '<a draggable="false" class="tt-open"').replace(/<img /g, '<img draggable="false" '); }).join('') + '</div>' +
-          '<p class="muted small tt-tipp">Tipp: Kacheln mit der Maus ziehen (am iPad kurz gedrückt halten), um die Reihenfolge zu ändern.</p>';
+          '<p class="muted small tt-tipp">Tipp: Kacheln mit der Maus ziehen (am iPad kurz gedrückt halten), um die Reihenfolge zu ändern.</p>' + mehrTiles();
       })() + '</section>';
     // Reiter «Übersicht» = Klasse und Werkzeuge; Reiter «Spiele» = Fächer und Spiele
     if (T.tab === 'uebersicht') return out;
@@ -2769,6 +2769,34 @@
     var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
     return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
   }
+  // Werkzeuge, die eine Lehrperson (noch) nicht hat: grau unten, mit Vorschau und «Hol es dir» (Bilder in bilder/vorschau/)
+  var MEHR = [
+    ['heft', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', ['Aufgaben, Lernkontrollen und Termine für die ganze Woche', 'Die Kinder sehen alles am iPad und haken ab, was erledigt ist', 'Auf einen Blick: Wer hat was gemacht?', 'Berichte für Elterngespräche drucken']],
+    ['tafel', '🙋', 'Arbeitsstand', 'Wer kann helfen, wer hat Fragen', ['Die Kinder zeigen am iPad, wo sie in jedem Fach stehen', 'Live an der Wandtafel: Wer kann helfen, wer hat eine Frage?', 'Eigene Spalten, Namen und Farben', 'Die Kinder helfen sich gegenseitig']],
+    ['vk', '📦', 'Vokabelkiste', 'Wörter üben mit Karteikasten', ['Wörter üben mit Karteikasten, Schreiben und Spielen', 'Eigene Wortlisten, Portionen für die Klasse freigeben', 'Vorlesestimme für die richtige Aussprache', 'Tagessterne, Serien und Abzeichen motivieren', 'Übersicht pro Kind und pro Portion']],
+    ['quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', ['Fragen mit Auswahl, Richtig/Falsch, Text oder Reihenfolge', 'Die Kinder spielen per QR-Code am iPad mit', 'Punkte und Rangliste live an der Wandtafel', 'Quiz mit KI aus einem Arbeitsblatt erstellen', 'Die Kinder können auch eigene Quiz erstellen']],
+    ['gd', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', ['12 Spiele mit je 5 Stufen', 'Bilder, Orte, Reihenfolgen und Namen merken', 'Selbst ausprobieren, bevor die Klasse spielt', 'Pro Klasse freigeben, Fortschritt pro Kind']],
+    ['umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', ['Abstimmung, Wortwolke, Skala, Schätzfrage und mehr', 'Ergebnisse erscheinen live an der Wandtafel', 'Mit der Klasse oder offen per QR-Code (z. B. am Elternabend)', 'Fertige Vorlagen für Klassenrat, Wochenrückblick und mehr']],
+    ['eltern', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', ['Termine anbieten, die Eltern wählen per Link ohne Anmeldung', 'Der Plan wird automatisch erstellt', 'Anspruchsvolle Gespräche nicht direkt hintereinander', 'Alle Gespräche der Klasse an einem Ort']]];
+  function mehrList() { return T.me && T.me.is_admin ? [] : MEHR.filter(function (x) { return !T.tools[x[0]]; }); }
+  function shopBtn(txt, cls) {
+    return C.SHOP_URL ? '<a class="' + cls + '" href="' + h(C.SHOP_URL) + '" target="_blank" rel="noopener">' + txt + '</a>' : '<button type="button" class="' + cls + '" data-a="shopSoon">' + txt + '</button>';
+  }
+  function mehrTiles() {
+    var l = mehrList(); if (!l.length) return '';
+    return '<div class="tt-mehr-kopf"><h3>Noch mehr in der ' + h(C.PORTAL_NAME) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></h3><p>Diese Werkzeuge können Sie dazuholen. In der Vorschau sehen Sie, was sie können.</p></div>' +
+      '<div class="tooltiles tt-mehr">' + l.map(function (x) {
+        return '<div class="tooltile tt-card tt-zu"><button class="tt-open" data-a="ttVorschau" data-k="' + x[0] + '">' + ttIcon(x[0], x[1]) + '<span><b>' + x[2] + '</b><small>' + x[3] + '</small></span><span class="tt-schloss" aria-hidden="true">🔒</span></button>' +
+          '<div class="tt-zu-fuss"><button class="tt-vor" data-a="ttVorschau" data-k="' + x[0] + '">👁 Vorschau</button>' + shopBtn('✦ Hol es dir', 'tt-hol') + '</div></div>';
+      }).join('') + '</div>';
+  }
+  ACT.ttVorschau = function (el) {
+    var x = MEHR.filter(function (m) { return m[0] === el.dataset.k; })[0]; if (!x) return;
+    overlay('<div class="tt-vorschau" role="dialog" aria-label="Vorschau ' + x[2] + '"><div class="tt-v-kopf">' + ttIcon(x[0], x[1]) + '<div><span class="klein">Vorschau</span><h2>' + x[2] + '</h2><p>' + x[3] + '</p></div></div>' +
+      '<img class="tt-v-bild" src="bilder/vorschau/' + x[0] + '.webp" alt="So sieht ' + x[2] + ' aus" onerror="this.remove()">' +
+      '<ul class="tt-v-liste">' + x[4].map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul>' +
+      '<div class="row" style="justify-content:flex-end;gap:10px"><button class="btn" data-a="closeOverlay">Schliessen</button>' + shopBtn('✦ Hol es dir', 'btn amber') + '</div></div>');
+  };
   var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'live-quiz', umfrage: 'umfrage-kiste', eltern: 'eltern' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
