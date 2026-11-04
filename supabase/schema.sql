@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 21)
+-- Knobelnest – Datenbank-Einrichtung (Version 22)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1108,5 +1108,40 @@ begin
   return json_build_object('me', k.id, 'state', public._tafel_state(k.class_id));
 end;
 $$;
+
+-- =====================================================================
+-- Version 22: Lizenz «gültig bis» pro Lehrperson
+--   profiles.valid_until = letzter gültiger Tag (leer = unbefristet). Neue Konten bekommen automatisch
+--   heute + 1 Jahr (das allererste Konto = Admin bleibt unbefristet). Ändern darf das nur der Admin
+--   mit admin_set_valid. Nach Ablauf zeigt das Portal der Lehrperson einen Hinweis zum Verlängern.
+-- =====================================================================
+alter table public.profiles add column if not exists valid_until date;
+
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare first boolean := not exists (select 1 from public.profiles);
+begin
+  insert into public.profiles (id, email, is_admin, valid_until)
+  values (new.id, new.email, first,
+          case when first then null else ((now() at time zone 'Europe/Zurich')::date + interval '1 year')::date end)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create or replace function public.admin_set_valid(p_teacher uuid, p_until date) returns void
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Nur für den Admin' using errcode = '42501';
+  end if;
+  if p_until is not null and (p_until < date '2020-01-01' or p_until > date '2100-12-31') then
+    raise exception 'Datum ungültig' using errcode = 'P0001';
+  end if;
+  update public.profiles set valid_until = p_until where id = p_teacher;
+end;
+$$;
+revoke execute on function public.admin_set_valid(uuid, date) from public, anon;
+grant execute on function public.admin_set_valid(uuid, date) to authenticated;
 
 -- Fertig.

@@ -5,7 +5,7 @@
   var D = {
     session: null,
     profiles: [{ id: 'u-admin-0000-0000-0000-000000000001', email: 'admin@x.ch', name: null, is_admin: true, created_at: now() },
-               { id: 'u-lp-00000-0000-0000-000000000002', email: 'lp@x.ch', name: 'Herr Muster', is_admin: false, created_at: now() }],
+               { id: 'u-lp-00000-0000-0000-000000000002', email: 'lp@x.ch', name: 'Herr Muster', is_admin: false, created_at: now(), valid_until: null }],
     games: [], teacher_games: [], classes: [], kids: [], class_games: [], progress: [], sessions: {}, subjects: [], entries: []
   };
   var GAME_HTML = '<!doctype html><html><head><title>Testspiel</title></head><body><h1 id="h">Testspiel</h1>' +
@@ -52,6 +52,10 @@
     setGameForAll: function (id, on) { D.games.filter(function (g) { return g.id === id; })[0].for_all = on; return delay(); },
     setTeacherGames: function (t, ids, on) { D.teacher_games = D.teacher_games.filter(function (x) { return !(x.teacher_id === t && ids.indexOf(x.game_id) >= 0); }); if (on) ids.forEach(function (g) { D.teacher_games.push({ teacher_id: t, game_id: g }); }); return delay(); },
     listTeachers: function () { return delay(D.profiles); },
+    setValidUntil: function (t, day) {
+      if (!me().is_admin) return Promise.reject(new Error('Nur für Admin'));
+      D.profiles.filter(function (x) { return x.id === t; })[0].valid_until = day || null; return delay();
+    },
     listTeacherGames: function () { return delay(D.teacher_games); },
     setTeacherGame: function (t, g, on) { D.teacher_games = D.teacher_games.filter(function (x) { return !(x.teacher_id === t && x.game_id === g); }); if (on) D.teacher_games.push({ teacher_id: t, game_id: g }); return delay(); },
     listClasses: function () { return delay(D.classes.filter(function (c) { return c.teacher_id === me().id; })); },

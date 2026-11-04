@@ -31,7 +31,10 @@
 
     me: async function () {
       var s = await this.session(); if (!s) return null;
-      var rows = ok(await sb.from('profiles').select('id,email,name,is_admin').eq('id', s.user.id));
+      // Version 22: valid_until (gültig bis). Solange das SQL noch nicht ausgeführt ist, ohne dieses Feld.
+      var r = await sb.from('profiles').select('id,email,name,is_admin,valid_until').eq('id', s.user.id);
+      if (r.error && /valid_until|column/i.test(r.error.message || '')) r = await sb.from('profiles').select('id,email,name,is_admin').eq('id', s.user.id);
+      var rows = ok(r);
       return rows[0] || { id: s.user.id, email: s.user.email, name: null, is_admin: false };
     },
     setMyName: async function (id, name) { ok(await sb.from('profiles').update({ name: name }).eq('id', id)); },
@@ -55,7 +58,14 @@
     setGameForAll: async function (id, on) { ok(await sb.from('games').update({ for_all: on }).eq('id', id)); },
 
     // ---------- Lehrpersonen (Admin) ----------
-    listTeachers: async function () { return ok(await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at')); },
+    listTeachers: async function () {
+      var r = await sb.from('profiles').select('id,email,name,is_admin,created_at,valid_until').order('created_at');
+      this.noLicense = false;
+      if (r.error && /valid_until|column/i.test(r.error.message || '')) { this.noLicense = true; r = await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at'); }
+      return ok(r);
+    },
+    // Lizenz «gültig bis» setzen (null = unbefristet), nur Admin
+    setValidUntil: async function (tid, day) { ok(await sb.rpc('admin_set_valid', { p_teacher: tid, p_until: day || null })); },
     listTeacherGames: async function () { return ok(await sb.from('teacher_games').select('teacher_id,game_id,created_at')); },
     setTeacherGames: async function (tid, gids, on) {
       if (on) ok(await sb.from('teacher_games').upsert(gids.map(function (g) { return { teacher_id: tid, game_id: g }; }), { onConflict: 'teacher_id,game_id', ignoreDuplicates: true }));
