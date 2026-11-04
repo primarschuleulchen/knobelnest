@@ -80,36 +80,20 @@ def schrank():
     return ''.join(o) + '</div>'
 
 
-# ------------------------------------------------------------------ Mia und Noah
-def kind(haar, oben, unten, zopf):
-    haut = '#f7d5b8'
-    o = (f'<svg viewBox="0 0 100 180" class="kind-svg">'
-         f'<path {K} fill="{unten}" d="M36 126 L48 126 L48 164 L36 164 Z M52 126 L64 126 L64 164 L52 164 Z"/>'
-         f'<path {K} fill="#5f6963" d="M32 164 L49 164 L49 172 L30 172 Q30 166 32 164 Z M51 164 L68 164 Q70 166 70 172 L51 172 Z"/>'
-         f'<path d="M30 86 Q16 106 22 126 M70 86 Q84 106 78 126" fill="none" stroke="#2b2f2c" stroke-width="12" stroke-linecap="round"/>'
-         f'<path d="M30 86 Q16 106 22 126 M70 86 Q84 106 78 126" fill="none" stroke="{haut}" stroke-width="7" stroke-linecap="round"/>'
-         f'<path {K} fill="{oben}" d="M30 82 Q50 72 70 82 L74 134 L26 134 Z"/>'
-         f'<rect {K} fill="{haut}" x="44" y="68" width="12" height="10"/>')
-    if zopf:
-        o += f'<circle {K} fill="{haar}" cx="22" cy="54" r="9"/><circle {K} fill="{haar}" cx="78" cy="54" r="9"/>'
-    o += f'<circle {K} fill="{haut}" cx="50" cy="48" r="24"/>'
-    if zopf:
-        o += f'<path {K} fill="{haar}" d="M26 50 Q22 20 50 20 Q78 20 74 50 Q70 34 56 34 Q52 40 44 34 Q30 34 26 50 Z"/>'
-    else:
-        o += f'<path {K} fill="{haar}" d="M26 46 Q24 20 50 20 Q76 20 74 46 Q70 36 62 36 L60 30 L54 36 L48 29 L42 36 L36 31 Q30 36 26 46 Z"/>'
-    o += ('<circle cx="41" cy="50" r="2.8" fill="#2b2f2c"/><circle cx="59" cy="50" r="2.8" fill="#2b2f2c"/>'
-          '<circle cx="36" cy="58" r="4" fill="#f3a6a0" opacity=".6"/><circle cx="64" cy="58" r="4" fill="#f3a6a0" opacity=".6"/>'
-          f'<path {L} d="M43 60 Q50 66 57 60"/></svg>')
-    return o
+# ------------------------------------------------------------------ Mia und Noah (Bild der Lehrerin kinder-original.webp, ausgeschnitten in kleider_ausschneiden.py)
+def kind_bild(k):
+    return f'<img class="kind-bild" alt="" src="{data_url(k + ".webp")}">'
 
 
-MIA = kind('#8a5a33', '#f2a0a8', '#5d6f8a', True)
-NOAH = kind('#3b2b22', '#7fb069', '#4a77a8', False)
+def logo():
+    # Logo des Spiels (rund, Goldrand im Bild), eingebettet wie bei «Im Museum»
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logos', 'kleiderschrank.webp'), 'rb') as f:
+        return '<img class="logo" alt="" src="data:image/webp;base64,' + base64.b64encode(f.read()).decode() + '">'
 
 
 def alle(spiel):
     items = [dict(w) for w in WORT]
-    spiel(id='kleiderschrank', titel='Kleiderschrank', icon='👚', fach='Englisch', thema='Clothes', stufe='3.–6. Klasse', sort=1, n=10,
+    spiel(id='kleiderschrank', titel='Kleiderschrank', icon=logo(), fach='Englisch', thema='Clothes', stufe='3.–6. Klasse', sort=1, n=10,
           sterne={'modus': 'runde', 'n': 10},
           kurz='Kleider auf Englisch: anschauen, hören, schreiben, sprechen und «This is my dress.»',
           intro='Im Schrank hängen viele Kleider. Wie heissen sie auf Englisch? Hör gut zu und sprich nach!',
@@ -119,7 +103,7 @@ def alle(spiel):
                   dict(name='Sprechen', info='Das Wort laut sagen 🎤', t=3),
                   dict(name='my, your, his, her', info='Wem gehört es?', t=4),
                   dict(name='Sätze', info='This is my … / These are my …', t=5)],
-          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': MIA, 'noah': NOAH, 'aehnlich': AEHNLICH},
+          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': kind_bild('mia'), 'noah': kind_bild('noah'), 'aehnlich': AEHNLICH},
           css=CSS, js=JS)
 
 
@@ -167,7 +151,8 @@ CSS = r"""
 .erzaehl img{width:54px;height:54px;object-fit:contain}
 .erzaehl .blase::after{display:none}
 .kind{grid-row:2;display:flex;flex-direction:column;align-items:center;position:relative}
-.kind-svg{width:min(100%,120px);height:auto;display:block}
+.kind-bild{height:min(30vh,230px);width:auto;max-width:100%;display:block;object-fit:contain}
+.ring{width:150px;height:150px;background:none;border:0;padding:0;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
 .kind .nm2{background:var(--sun);border-radius:10px;padding:0 10px;font-size:20px;margin-top:2px}
 .kind.own::before{content:"";position:absolute;left:8%;right:8%;bottom:20px;height:22px;border-radius:50%;background:radial-gradient(#f0c24b 0%,rgba(240,194,75,0) 70%)}
 .ding{grid-row:2;grid-column:2;display:flex;align-items:center;padding-bottom:34px}
@@ -185,7 +170,7 @@ CSS = r"""
 .satz .pkt{font-size:26px}
 .de{font-size:clamp(22px,5vw,28px);text-align:center}
 @media (max-height:700px){.bild{width:min(44vw,170px)}.mik{width:92px;height:92px;font-size:40px}}
-@media (max-width:520px){.kind-svg{max-width:88px}.ding .bild{width:min(32vw,118px)}.buehne .sprech{min-height:56px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
+@media (max-width:520px){.kind-bild{height:min(26vh,170px)}.ding .bild{width:min(32vw,118px)}.buehne .sprech{min-height:56px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
 """
 
 JS = r"""

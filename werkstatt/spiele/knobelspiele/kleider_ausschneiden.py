@@ -109,7 +109,23 @@ def karten():
         c.save(os.path.join(ORD, 'karte-' + k + '.webp'), quality=80, method=6)
         print('karte', k, c.size)
 
+def kinder():
+    # Mia (links) und Noah (rechts) aus kinder-original.webp, Logo rund aus logos/kleiderschrank-original.webp
+    im = Image.open(os.path.join(ORD, 'kinder-original.webp')).convert('RGBA'); w, h = im.size
+    for k, box in (('mia', (0, 0, w // 2, h)), ('noah', (w // 2, 0, w, h))):
+        c = im.crop(box); c = c.crop(c.split()[3].point(lambda a: 255 if a > 20 else 0).getbbox()); c.thumbnail((400, 440), Image.LANCZOS)
+        c.save(os.path.join(ORD, k + '.webp'), quality=82, method=6)
+    from PIL import ImageDraw
+    lg = Image.open(os.path.join(HIER, 'logos', 'kleiderschrank-original.webp')).convert('RGBA'); w, h = lg.size; px = lg.load()
+    dunkel = lambda p: sum(p[:3]) < 700
+    x0 = next(x for x in range(w) if dunkel(px[x, h // 2])); x1 = next(x for x in range(w - 1, 0, -1) if dunkel(px[x, h // 2]))
+    y0 = next(y for y in range(h) if dunkel(px[w // 2, y])); y1 = next(y for y in range(h - 1, 0, -1) if dunkel(px[w // 2, y]))
+    S = 1200; c = lg.crop((x0, y0, x1 + 1, y1 + 1)).resize((S, S), Image.LANCZOS)
+    m = Image.new('L', (S * 2, S * 2), 0); ImageDraw.Draw(m).ellipse((0, 0, S * 2 - 1, S * 2 - 1), fill=255)
+    c.putalpha(m.resize((S, S), Image.LANCZOS)); c.resize((320, 320), Image.LANCZOS).save(os.path.join(HIER, 'logos', 'kleiderschrank.webp'), quality=85, method=6)
+
 if __name__ == '__main__':
+    kinder()
     karten()
     im = schrank()
     im.save(os.path.join(ORD, 'schrank.webp'), quality=82, method=6)
