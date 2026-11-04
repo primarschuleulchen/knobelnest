@@ -71,6 +71,15 @@ button.card:active{transform:scale(.96)}
 .karte{padding-bottom:22%}
 @media (max-height:640px){.ring{width:80px;height:80px;font-size:40px}.kopf h1{font-size:32px}.msg{min-height:50px;font-size:21px}}
 
+/* Stern-Fortschritt über der Aufgabe (die Punkte-Reihe braucht es dann nicht) */
+.dots{display:none}
+.sternz{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 4px;font-size:21px;color:var(--soft)}
+.sternz svg{width:54px;height:50px;overflow:visible;filter:drop-shadow(0 2px 3px rgba(196,149,47,.3))}
+.sternz .stfill{transform-box:fill-box;transform-origin:50% 100%;transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.sternz b{font-weight:400;color:var(--ink)}
+.sternz small{font-size:18px}
+.sternz.voll svg{animation:stv 1.2s}
+@keyframes stv{0%{transform:scale(1)}30%{transform:scale(1.35) rotate(-8deg)}60%{transform:scale(1.2) rotate(6deg)}100%{transform:scale(1)}}
 /* Logo statt Emoji im Kreis oben */
 .ring{width:150px;height:150px;background:#fff;border:3px solid var(--gold);padding:5px;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
 /* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
@@ -281,9 +290,34 @@ function weiterKnopf(api, wo, fn, label) {
   nb.onclick = fn; wo.innerHTML = ''; wo.appendChild(nb);
 }
 
-G.play = function (lv, api) {
+// ---------- Stern, der sich mit jeder richtigen Antwort mehr golden färbt (je 10 richtige = 1 Stern, wie im Portal)
+// Zähler pro Stufe im Spielstand: ST.mu['Stufe N'] = Anzahl richtige
+var STERN_PFAD = 'M50 6l12.6 27.3 29.9 3.4-22.3 20.3 6.2 29.4L50 71.6 23.6 86.4l6.2-29.4L7.5 36.7l29.9-3.4z';
+function sternLeiste(key) {
+  var el = document.createElement('div'); el.className = 'sternz';
+  el.innerHTML = '<svg viewBox="0 0 100 92" aria-hidden="true"><defs><clipPath id="stclip"><path d="' + STERN_PFAD + '"/></clipPath></defs>' +
+    '<path d="' + STERN_PFAD + '" fill="#e8eef3"/><g clip-path="url(#stclip)"><rect class="stfill" x="0" y="0" width="100" height="92" fill="url(#stgold)"/></g>' +
+    '<linearGradient id="stgold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2c94c"/><stop offset="1" stop-color="#c99520"/></linearGradient>' +
+    '<path d="' + STERN_PFAD + '" fill="none" stroke="#c4952f" stroke-width="4" stroke-linejoin="round"/></svg><span class="sttxt"></span>';
+  var fill = el.querySelector('.stfill'), txt = el.querySelector('.sttxt');
+  function zahl() { ST.mu = ST.mu || {}; return +ST.mu[key] || 0; }
+  function zeige(neu) {
+    var c = zahl(), st = Math.min(10, Math.floor(c / 10)), rest = st >= 10 ? 10 : c % 10;
+    if (neu && rest === 0 && st > 0) rest = 10; // eben voll geworden: kurz ganz golden zeigen
+    fill.style.transform = 'scaleY(' + (rest / 10) + ')';
+    txt.innerHTML = '<b>' + (st >= 10 ? 'Alle Sterne!' : rest + ' von 10') + '</b> richtig' + (st ? '<small> · ' + st + (st === 1 ? ' Stern' : ' Sterne') + '</small>' : '');
+    if (neu && rest === 10) { el.classList.remove('voll'); void el.offsetWidth; el.classList.add('voll'); setTimeout(function () { el.classList.remove('voll'); zeige(false); }, 1600); }
+  }
+  zeige(false);
+  return { el: el, richtig: function () { ST.mu = ST.mu || {}; ST.mu[key] = zahl() + 1; save(); zeige(true); } };
+}
+
+G.play = function (lv, api, li) {
   still(); TEMPO = lv.tempo || .8; PAUSE = lv.pause || 900;
   var idx = 0, titel = pick(TITEL, G.n);
+  var stern = sternLeiste('Stufe ' + ((li || 0) + 1)), msgEl = document.getElementById('msg');
+  if (msgEl) msgEl.parentNode.insertBefore(stern.el, msgEl);
+  function antwort(ok, leise) { if (ok) stern.richtig(); return api.answer(ok, leise); }
   function schild() { return '«' + titel[idx] + '» · No. ' + (idx + 1); }
   ({ wahl: waehlen, sag: beschreiben, mal: malen })[lv.t]();
 
@@ -312,7 +346,7 @@ G.play = function (lv, api) {
       k.classList.add(ok ? 'ok' : 'no');
       if (!ok) api.stage.querySelector('[data-i="0"]').classList.add('hint');
       api.msg(ok ? '' + pick(LOB, 1)[0] + ' Das ist das richtige Bild.' : 'Fast! Das Bild mit dem goldenen Rand passt. Lies nochmal genau.');
-      if (api.answer(ok)) weiterKnopf(api, api.stage.querySelector('.steuer'), function () { idx++; waehlen(); });
+      if (antwort(ok)) weiterKnopf(api, api.stage.querySelector('.steuer'), function () { idx++; waehlen(); });
     };
   }
 
@@ -398,7 +432,7 @@ G.play = function (lv, api) {
       var ok = fehler <= erlaubt;
       api.msg(ok ? '' + pick(LOB, 1)[0] + ' Das ganze Bild ist beschrieben' + (fehler ? '.' : ', ganz ohne Fehler!') :
         'Geschafft! Es waren noch ' + fehler + ' Fehler. Beim nächsten Bild klappt es besser.');
-      if (api.answer(ok, true)) weiterKnopf(api, steuer, function () { idx++; beschreiben(); });
+      if (antwort(ok, true)) weiterKnopf(api, steuer, function () { idx++; beschreiben(); });
       if (ok) good();
     }
     neuerSatz();
@@ -477,7 +511,7 @@ G.play = function (lv, api) {
       if (bgOk && !falsch.length) {
         fertig = true; fehlerFelder = []; zeigeBild();
         api.msg('' + pick(LOB, 1)[0] + ' Dein Bild hängt jetzt im Museum!' + (versuch === 1 ? ' Beim ersten Versuch!' : ''));
-        if (api.answer(versuch <= 2)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
+        if (antwort(versuch <= 2)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
         werk.innerHTML = ''; if (!offen) { offen = true; zeigeText(); }
         return;
       }
@@ -488,7 +522,7 @@ G.play = function (lv, api) {
         offen = true; zeigeText();
         werk.innerHTML = '<div class="loes">' + wand(b, 'So sieht das Bild aus', null, true) + '</div>';
         api.msg('Schau, so sieht das Bild aus. Lies die Beschreibung nochmal.');
-        if (api.answer(false, true)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
+        if (antwort(false, true)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
         return;
       }
       api.msg('Noch nicht ganz: ' + (n === 1 ? 'eine Sache stimmt' : n + ' Sachen stimmen') + ' noch nicht.' + (bgOk ? '' : ' <small>Schau auch den Hintergrund an!</small>') +
