@@ -153,7 +153,7 @@ function save() {
   if (MODE === 'url') send({ type: 'store', data: { ks: s } }); else try { localStorage.setItem('ks', s); } catch (e) {}
 }
 var app = document.getElementById('app'), TM = [], RUN = 0, AC = null, CUR = -1;
-var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];
+var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#fdebd8'];
 function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function pick(a, n) { return shuffle(a).slice(0, n); }

@@ -281,7 +281,7 @@
   var ZR_VER = '1';
   var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
-  var KS_VER = '1'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
+  var KS_VER = '2'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '1'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
@@ -295,6 +295,8 @@
     f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
     var url = gameUrl(html);
+    // Kleiderschrank (Stufe «Sprechen»): Mikrofon für die Spracherkennung erlauben (eigene Datei aus dem Repo)
+    if (url && /^knobelspiele\/kleiderschrank\.html/.test(url)) { f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media; microphone'); f.setAttribute('sandbox', f.getAttribute('sandbox') + ' allow-same-origin'); }
     if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : /^gedaechtnis\//.test(url) ? GD_VER : /^knobelspiele\//.test(url) ? KS_VER : /^englisch\//.test(url) ? EN_VER : ZR_VER);
     else f.srcdoc = prepare(html, seed);
     if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken
@@ -3392,7 +3394,10 @@
     var pack = '<section class="card stack"><h2>Spielpaket importieren</h2><p class="muted">Mehrere Spiele auf einmal hochladen, zum Beispiel die Datei <b>knobelnest-spielpaket.json</b>. Spiele mit gleichem Titel werden übersprungen.</p>' +
       '<label class="row" style="gap:10px"><input type="checkbox" style="width:22px;height:22px" data-change="packUpd"' + (A.packUpd ? ' checked' : '') + '> Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen (Fach, Thema, Zuteilungen und Fortschritt bleiben)</label>' +
       '<div class="field"><label for="gPack">Spielpaket (.json)</label><input class="input" id="gPack" type="file" accept=".json,application/json" data-change="gPack"' + (A.importing ? ' disabled' : '') + '></div>' +
-      (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') + '</section>';
+      (A.importing ? '<p class="note">' + h(A.importing) + '</p>' : '') +
+      // Spiele eines Fachs als Spielpaket herunterladen (z. B. um sie überarbeiten zu lassen und wieder zu importieren)
+      '<div class="stack" style="gap:6px;border-top:1.5px dashed var(--line2,#d9e4ee);padding-top:12px"><b>Spielpaket herunterladen</b><p class="muted small" style="margin:0">Alle Spiele eines Fachs in einer Datei, zum Beispiel zum Überarbeiten. Danach oben mit «ersetzen» wieder importieren.</p><div class="row" style="gap:8px;flex-wrap:wrap">' +
+      uniq(T.games.filter(function (g) { return !isVok(g); }).map(function (g) { return g.fach; })).map(function (f) { return '<button class="btn sm" data-a="packExport" data-f="' + h(f) + '">⬇ ' + h(f) + '</button>'; }).join('') + '</div></div></section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
       '<div class="cols2"><div class="wide">' + pack + form + kbCard() + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
@@ -3440,6 +3445,20 @@
       toast(plural(added, 'Spiel', 'Spiele') + ' neu' + (updated ? ', ' + updated + ' aktualisiert' : '') + (skipped ? ', ' + skipped + ' schon vorhanden' : '') + (failed ? ', ' + failed + ' fehlgeschlagen' : '') + '.');
     };
     r.readAsText(file, 'utf-8');
+  };
+  ACT.packExport = async function (el) {
+    var f = el.dataset.f, list = T.games.filter(function (g) { return g.fach === f && !isVok(g); }), out = [];
+    toast('Spiele werden zusammengestellt …');
+    for (var i = 0; i < list.length; i++) {
+      var g = list[i], html = await DB.gameHtml(g.id);
+      if (gameUrl(html)) continue; // Verweise (z. B. Gedächtniskiste) liegen auf GitHub
+      out.push({ title: g.title, description: g.description || '', fach: g.fach, thema: g.thema, stufe: g.stufe || '', sort: g.sort || 0, for_all: !!g.for_all, html: html });
+    }
+    if (!out.length) return toast('In diesem Fach gibt es keine Spiele zum Herunterladen.');
+    var blob = new Blob([JSON.stringify({ format: 'knobelnest-spielpaket', version: 1, games: out }, null, 1)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'spielpaket-' + f.toLowerCase().replace(/[^a-z0-9äöü]+/g, '-') + '.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    toast(plural(out.length, 'Spiel', 'Spiele') + ' heruntergeladen.');
   };
   ACT.packUpd = function (el) { T.admin.packUpd = el.checked; };
   ACT.gSave = async function () {
