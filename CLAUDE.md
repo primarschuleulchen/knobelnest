@@ -167,8 +167,8 @@ Wenn die Lehrerin Änderungen direkt im Knobelnest will, ändere auch das Einbau
 Claude arbeitet in einer Cloud-Sitzung und darf nicht direkt auf `main` schreiben. Die Seite zeigt aber nur, was auf `main` liegt. Darum:
 
 1. **Commit und Push:** Jede Sitzung hat einen eigenen Arbeitszweig (z. B. `claude/…`, steht in den Sitzungsangaben). Dort committen (kurze deutsche Commit-Nachricht) und pushen. Online ist damit noch nichts.
-2. **Pull Request:** Wenn die Lehrerin sagt «online stellen» (oder Ähnliches), erstellt Claude einen Pull Request vom Arbeitszweig nach `main`.
-3. **Zusammenführen:** Die Lehrerin will, dass Claude das selbst macht: Bei «online stellen» führt Claude den Pull Request gleich selbst zusammen (vorher mit dem neusten `main` zusammenführen und testen). Ausnahme: Braucht die Änderung neues SQL, zuerst die Lehrerin das SQL ausführen lassen und erst zusammenführen, wenn sie bestätigt, dass es gelaufen ist.
+2. **Pull Request:** Nach dem Testen erstellt Claude einen Pull Request vom Arbeitszweig nach `main` – immer, auch ohne dass die Lehrerin «online stellen» sagt.
+3. **Zusammenführen:** Die Lehrerin will, dass Claude Änderungen **immer direkt selbst online stellt**: Pull Request gleich selbst zusammenführen, ohne nachzufragen (vorher mit dem neusten `main` zusammenführen und testen). Ausnahme: Braucht die Änderung neues SQL, zuerst die Lehrerin das SQL ausführen lassen und erst zusammenführen, wenn es gelaufen ist (prüfen, ob die neue Funktion antwortet).
 4. **Online:** GitHub Pages ist 1–2 Minuten nach dem Zusammenführen aktuell. Falls ein Gerät noch Altes zeigt: Seite neu laden (Cache-Bremse prüfen).
 
 - **SQL zuerst:** Braucht die Änderung neues SQL, muss die Lehrerin es in Supabase ausführen, bevor sie zusammenführt.
