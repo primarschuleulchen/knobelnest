@@ -318,19 +318,43 @@ function shortest(from, toSet) {
 }
 
 // ---------------------------------------------------------------------- Sprache (Englisch vorlesen)
-var VOICE = null;
+// Stimme wählen wie in der Vokabelkiste: lieber Frauenstimme, britisch, «natural/neural/premium/enhanced/online»; Spassstimmen nie.
+var FEMALE = /\b(female|samantha|karen|moira|tessa|serena|kate|stephanie|martha|fiona|victoria|allison|ava|susan|zira|hazel|libby|sonia|aria|jenny|emma|amy|joanna|salli|kimberly|olivia|natasha|clara)\b/i;
+var MALE = /\b(male|daniel|alex|fred|oliver|george|ryan|guy|david|mark|james|thomas|arthur|rishi|aaron|gordon|reed|rocko|eddy|grandpa)\b/i;
+var SILLY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|kathy|princess|deranged|hysterical|pipe organ)\b/i;
+var VKEY = 'kn_ow_voice', VOICE = null, curU = null, SAYRUN = 0;
+function enVoices() { try { return (speechSynthesis.getVoices() || []).filter(function (v) { return v.lang && /^en/i.test(v.lang) && !SILLY.test(v.name); }); } catch (e) { return []; } }
 function pickVoice() {
-  try {
-    var v = speechSynthesis.getVoices() || [];
-    VOICE = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); })[0] || v.filter(function (x) { return /^en/i.test(x.lang); })[0] || null;
-  } catch (e) {}
+  var vs = enVoices(); if (!vs.length) return;
+  var want = null; try { want = localStorage.getItem(VKEY); } catch (e) {}
+  var w = want && vs.filter(function (v) { return v.name === want; })[0]; if (w) { VOICE = w; return; }
+  function sc(v) { var n = v.name.replace(/female/ig, ''); return (FEMALE.test(v.name) ? 10 : 0) - (MALE.test(n) ? 10 : 0) + (/en[-_]gb/i.test(v.lang) ? 3 : 0) + (/natural|neural|premium|enhanced|online/i.test(v.name) ? 4 : 0); }
+  VOICE = vs.slice().sort(function (a, b) { return sc(b) - sc(a); })[0];
 }
-try { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {}
+try { pickVoice(); speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) {}
 function canSay() { try { return !!window.speechSynthesis && !!window.SpeechSynthesisUtterance; } catch (e) { return false; } }
-function say(t, rate) {
-  if (!canSay()) return false;
-  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; if (VOICE) u.voice = VOICE; u.rate = rate || .85; speechSynthesis.speak(u); return true; } catch (e) { return false; }
+function utter(t, rate) {
+  if (!VOICE) pickVoice();
+  var u = new SpeechSynthesisUtterance(t); if (VOICE) { u.voice = VOICE; u.lang = String(VOICE.lang).replace('_', '-'); } else u.lang = 'en-GB';
+  u.rate = rate || .9; u.pitch = 1; curU = u; return u;
 }
+function say(t, rate) { return sayList([t], rate, 0); }
+// Mehrere Sätze nacheinander, mit Pause dazwischen (Stufe «Listening»)
+function sayList(list, rate, pause) {
+  if (!canSay()) return false;
+  var run = ++SAYRUN, k = 0;
+  try { var ss = speechSynthesis; if (ss.speaking || ss.pending) ss.cancel(); if (ss.paused) ss.resume(); } catch (e) { return false; }
+  function next() {
+    if (run !== SAYRUN || k >= list.length) return;
+    var t = list[k++], done = false, u = utter(t, rate);
+    function fin() { if (done) return; done = true; setTimeout(next, pause || 0); }
+    u.onend = fin; u.onerror = fin;
+    setTimeout(fin, 1500 + t.split(' ').length * 650 / (rate || .9)); // falls «onend» nicht kommt
+    try { speechSynthesis.speak(u); } catch (e) {}
+  }
+  next(); return true;
+}
+function stopSay() { SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} }
 
 // ---------------------------------------------------------------------- 3D-Welt
 var WD = null; // die Welt (wird nur einmal gebaut)
@@ -361,6 +385,14 @@ function sign(L, par, y, wmax) {
   var m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 160 / 768), new THREE.MeshBasicMaterial({ map: t }));
   m.position.set(0, y, L.d / 2 + 0.08); par.add(m); return m;
 }
+function placeSprite(text) {
+  var t = canvasTex(640, 128, function (g, w, h) {
+    g.font = '72px ' + FONT; var m = Math.min(w - 16, g.measureText(text).width + 56);
+    rr(g, (w - m) / 2, 12, m, h - 24, 40); g.fillStyle = 'rgba(31,36,33,.82)'; g.fill(); g.lineWidth = 5; g.strokeStyle = '#d6ad45'; g.stroke();
+    g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + 4);
+  });
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, sizeAttenuation: false })); s.scale.set(.25, .05, 1); s.renderOrder = 5; return s;
+}
 function emoSprite(emo, sz) {
   var t = canvasTex(128, 128, function (g) { g.font = '100px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(emo, 64, 72); });
   var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.scale.set(sz, sz, 1); s.renderOrder = 11; return s;
@@ -376,10 +408,22 @@ function labelSprite(text, bg, fg) {
 var WIN = {};
 function wallMat(col, kind) {
   var k = col + kind; if (WIN[k]) return WIN[k];
-  var t = canvasTex(64, 64, function (g) {
-    g.fillStyle = col; g.fillRect(0, 0, 64, 64);
-    if (kind === 'office') { g.fillStyle = '#7fa8c8'; g.fillRect(6, 10, 52, 40); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(8, 12, 20, 18); }
-    else { g.fillStyle = '#6f93b3'; g.fillRect(16, 14, 32, 34); g.fillStyle = '#fff'; g.fillRect(30, 14, 4, 34); g.fillRect(16, 29, 32, 4); g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 3; g.strokeRect(16, 14, 32, 34); }
+  var t = canvasTex(128, 128, function (g) {
+    g.fillStyle = col; g.fillRect(0, 0, 128, 128);
+    g.fillStyle = 'rgba(0,0,0,.05)'; for (var y = 0; y < 128; y += 8) g.fillRect(0, y, 128, 1);
+    var gl = g.createLinearGradient(0, 20, 0, 100); gl.addColorStop(0, '#9cc3de'); gl.addColorStop(.55, '#5f87a8'); gl.addColorStop(1, '#7ea6c4');
+    if (kind === 'office') {
+      g.fillStyle = gl; g.fillRect(8, 16, 112, 84); g.fillStyle = shade(col, -.25); g.fillRect(8, 98, 112, 8);
+      g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(62, 16, 4, 84); g.fillRect(8, 56, 112, 3);
+      g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.moveTo(14, 96); g.lineTo(44, 20); g.lineTo(58, 20); g.lineTo(28, 96); g.fill();
+    } else {
+      g.fillStyle = '#ffffff'; g.fillRect(30, 22, 68, 76);
+      g.fillStyle = gl; g.fillRect(36, 28, 56, 64);
+      g.fillStyle = ['#e8d8b0', '#f0c8c0', '#d0e0c8', '#ffffff'][col.length % 4]; g.fillRect(36, 28, 12, 64); g.fillRect(80, 28, 12, 64);
+      g.fillStyle = '#ffffff'; g.fillRect(62, 28, 4, 64); g.fillRect(36, 56, 56, 4);
+      g.fillStyle = shade(col, -.3); g.fillRect(26, 98, 76, 7);
+      g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.moveTo(40, 88); g.lineTo(56, 30); g.lineTo(62, 30); g.lineTo(46, 88); g.fill();
+    }
   });
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return (WIN[k] = new THREE.MeshLambertMaterial({ map: t }));
@@ -413,7 +457,33 @@ function awning(par, L, w, c1, c2, y) {
 }
 function columns(par, L, n, h, w, c) { for (var k = 0; k < n; k++) cyl(.45, .5, h, c || '#fbf6ec', -w / 2 + w * k / (n - 1), h / 2 + .6, L.d / 2 + 1.4, par); bx(w + 3, .6, 3.6, '#efe6d6', 0, .3, L.d / 2 + 1.2, par); }
 var TG = null;
+function treeAt(x, z, s, kind) {
+  var I = WD.INS; s = s || 1;
+  I.trunk.push([x, s, z, s, s, s]);
+  if (kind === 'laub') I.crown.push([x, 3.6 * s, z, 2.2 * s, 2 * s, 2.2 * s]); else I.cone.push([x, 3.4 * s, z, s, s, s]);
+}
+function instM(g, x, y, z, sx, sy, sz) { var o = new THREE.Object3D(); o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.updateMatrix(); return new THREE.Matrix4().multiplyMatrices(g.matrixWorld, o.matrix); }
+function buildInst(geo, mat, list, sh, cols) {
+  if (!list.length) return null;
+  var m = new THREE.InstancedMesh(geo, mat, list.length), o = new THREE.Object3D(), c = new THREE.Color();
+  list.forEach(function (p, k) {
+    if (p.isMatrix4) m.setMatrixAt(k, p); else { o.position.set(p[0], p[1], p[2]); o.scale.set(p[3], p[4], p[5]); o.rotation.set(0, 0, 0); o.updateMatrix(); m.setMatrixAt(k, o.matrix); }
+    if (cols) m.setColorAt(k, c.set(cols[k % cols.length]));
+  });
+  m.castShadow = sh !== false; m.receiveShadow = true; WD.city.add(m); return m;
+}
+function noiseTex(col, amt, cell, tiles) {
+  return (function () {
+    var t = canvasTex(128, 128, function (g) {
+      g.fillStyle = col; g.fillRect(0, 0, 128, 128); var R = rng(col.length * 7 + amt);
+      for (var k = 0; k < 900; k++) { var v = (R() - .5) * amt; g.fillStyle = v > 0 ? 'rgba(255,255,255,' + v / 100 + ')' : 'rgba(0,0,0,' + (-v) / 100 + ')'; g.fillRect(R() * 128, R() * 128, 1 + R() * 3, 1 + R() * 3); }
+      if (tiles) { g.strokeStyle = 'rgba(0,0,0,.09)'; g.lineWidth = 2; for (var q = 0; q <= 128; q += 32) { g.beginPath(); g.moveTo(q, 0); g.lineTo(q, 128); g.moveTo(0, q); g.lineTo(128, q); g.stroke(); } }
+    });
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  })();
+}
 function tree(par, x, z, s, c) {
+  if (par === WD.city) return treeAt(x, z, s, c === 'laub' || (c == null && ((x * 7 + z * 3) | 0) % 3 === 0) ? 'laub' : 'nadel');
   s = s || 1; TG = TG || { st: new THREE.CylinderGeometry(.25, .35, 2, 6), co: new THREE.ConeGeometry(1.6, 3.6, 7) };
   var a = mesh(TG.st, '#8a5a3a', x, s, z, par); a.scale.setScalar(s);
   var k = mesh(TG.co, c || '#4f9a4a', x, 3.4 * s, z, par); k.scale.setScalar(s);
@@ -511,7 +581,7 @@ function placeBuild(L, g) {
       var cm = new THREE.Mesh(new THREE.CircleGeometry(1.2, 20), new THREE.MeshBasicMaterial({ map: ck })); cm.position.set(0, 10.6, fz - 5.9); g.add(cm);
       door(g, L, 3, 3.6, '#7a4a24').position.z = fz - 5.9; sign(L, g, 7.6).position.z = fz - 5.85;
       cyl(.12, .12, 9, '#cccccc', w / 2 - 4, 4.5, fz - 1, g, 6); bx(2.2, 1.4, .05, '#d23a3a', w / 2 - 2.8, 8.2, fz - 1, g);
-      bx(w, .1, 6, '#e6d6b8', 0, .05, fz - 3, g, false); break;
+      bx(w, .1, 6, '#e6d6b8', 0, .3, fz - 3, g, false); break;
     case 'church':
       house(12, 9, d - 4, P.col, 'win', g, 0, 0, -2); roof(12, d - 4, 4.5, '#8a3a5a', g, 9).position.z = -2;
       var tw = new THREE.Group(); tw.position.set(0, 0, fz - 4); g.add(tw);
@@ -552,20 +622,20 @@ function placeBuild(L, g) {
       cyl(2, 2.4, 2, '#555', 0, 1, 0, rk); bx(1, 24, 1, '#9aa8b8', 4, 12, 0, rk);
       var dr2 = door(g, L, 3, 3.4, '#5a7a9a'); dr2.position.x = -10; dr2.position.z = fz - 3.9; var sg2 = sign(L, g, 6.4, 12); sg2.position.x = -10; sg2.position.z = fz - 3.85; break;
     case 'park':
-      bx(w, .2, d, '#8fd46a', 0, .1, 0, g, false);
+      bx(w, .2, d, '#8fd46a', 0, .3, 0, g, false);
       var pond = new THREE.Mesh(new THREE.CircleGeometry(5, 24), new THREE.MeshLambertMaterial({ color: '#6ab8e8' })); pond.rotation.x = -Math.PI / 2; pond.position.set(-8, .25, -1); g.add(pond);
       [[-17, -5], [-14, 5], [2, -6], [9, 4], [16, -4], [14, 6], [-2, 5]].forEach(function (p, k) { tree(g, p[0], p[1], 1 + (k % 3) * .2, k % 2 ? '#5aa84a' : '#3f8a3f'); });
       bx(4, .5, 1.2, '#a06a3a', 4, .8, 3, g); bx(4, 1, .2, '#a06a3a', 4, 1.3, 2.5, g);
       var arch = new THREE.Group(); arch.position.set(0, 0, fz - .6); g.add(arch); cyl(.25, .25, 5, '#7a5a3a', -3, 2.5, 0, arch, 6); cyl(.25, .25, 5, '#7a5a3a', 3, 2.5, 0, arch, 6);
       sign(L, g, 4.6, 7.5).position.z = fz - .4; break;
     case 'site':
-      bx(w, .2, d, '#c8a46a', 0, .1, 0, g, false);
+      bx(w, .2, d, '#c8a46a', 0, .3, 0, g, false);
       for (var c4 = -5; c4 <= 5; c4 += 2.5) mesh(new THREE.ConeGeometry(.4, 1, 8), '#f08a2c', c4, .5, fz - .6, g);
       var cr = new THREE.Group(); cr.position.set(-3, 0, -3); g.add(cr); bx(1, 18, 1, '#f6c623', 0, 9, 0, cr); bx(16, .8, .8, '#f6c623', 4, 18, 0, cr); bx(.1, 8, .1, '#333', 10, 14, 0, cr); bx(1.6, 1, 1.6, '#8a8a8a', 10, 9.6, 0, cr);
       bx(4, 1.6, 3, '#9a7a4a', 3, .8, -2, g); bx(2.4, 2.4, 2.4, '#d0a040', 3, 1.2, 1.8, g);
       sign(L, g, 2.6, 9).position.z = fz + .1; break;
     case 'taxi':
-      bx(w, .1, d, '#bcbcbc', 0, .05, 0, g, false); car(g, -3, -1, 0, '#f3c623', 'taxi'); car(g, 1.5, -1, 0, '#f3c623', 'taxi');
+      bx(w, .1, d, '#a9aaa6', 0, .3, 0, g, false); car(g, -3, -1, 0, '#f3c623', 'taxi'); car(g, 1.5, -1, 0, '#f3c623', 'taxi');
       cyl(.12, .12, 4, '#555', 4.5, 2, fz - 1, g, 6); var ts = sign(L, g, 4.2, 5); ts.position.set(4.5, 4.2, fz - .9); break;
   }
 }
@@ -573,29 +643,35 @@ function placeBuild(L, g) {
 function buildWorld() {
   var w = WD = { spin: [], boxes: [], workers: [], hl: [] };
   var R = rng(11);
-  var sc = w.scene = new THREE.Scene(); sc.background = new THREE.Color('#bfe3f7'); sc.fog = new THREE.Fog('#bfe3f7', 140, 420);
-  var ren = w.ren = new THREE.WebGLRenderer({ antialias: true }); ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  var sc = w.scene = new THREE.Scene(); sc.background = new THREE.Color('#bfe3f7'); sc.fog = new THREE.Fog('#cfe8f6', 180, 620);
+  var ren = w.ren = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
   ren.shadowMap.enabled = true; ren.shadowMap.type = THREE.PCFSoftShadowMap;
-  w.cam = new THREE.PerspectiveCamera(58, 1, .5, 900);
+  w.cam = new THREE.PerspectiveCamera(58, 1, 1, 900);
   sc.add(new THREE.HemisphereLight('#ffffff', '#8ab07a', 1.6));
   var sun = new THREE.DirectionalLight('#fff6e0', 2.0); sun.position.set(-120, 200, -60); sun.target.position.set(140, 0, 80);
   sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); var sc2 = sun.shadow.camera; sc2.left = -220; sc2.right = 220; sc2.top = 200; sc2.bottom = -200; sc2.near = 10; sc2.far = 600; sun.shadow.bias = -0.0008;
   sc.add(sun); sc.add(sun.target);
   var city = w.city = new THREE.Group(); sc.add(city);
+  var PAVE = new THREE.MeshLambertMaterial({ map: noiseTex('#e2ddd2', 18, 3.2, true) }); PAVE.map.repeat.set(14, 10);
   // Boden, Fluss, Gleise, Piste
-  var gr = mesh(new THREE.PlaneGeometry(1000, 800), '#9fd47c', 140, 0, 80, city); gr.rotation.x = -Math.PI / 2; gr.castShadow = false;
-  var rv = mesh(new THREE.PlaneGeometry(RIV[1] - RIV[0], 800), '#5fb3e6', (RIV[0] + RIV[1]) / 2, .04, 80, city); rv.rotation.x = -Math.PI / 2; rv.castShadow = false; w.river = rv;
-  [RIV[0] - 1, RIV[1] + 1].forEach(function (x) { var bk = mesh(new THREE.PlaneGeometry(2, 800), '#d9c79a', x, .03, 80, city); bk.rotation.x = -Math.PI / 2; bk.castShadow = false; });
+  var grM = new THREE.MeshLambertMaterial({ map: noiseTex('#9cd27a', 26) }); grM.map.repeat.set(160, 130);
+  var gr = mesh(new THREE.PlaneGeometry(1000, 800), grM, 140, 0, 80, city); gr.rotation.x = -Math.PI / 2; gr.castShadow = false;
+  var rv = mesh(new THREE.PlaneGeometry(RIV[1] - RIV[0], 800), '#5fb3e6', (RIV[0] + RIV[1]) / 2, .08, 80, city); rv.rotation.x = -Math.PI / 2; rv.castShadow = false; w.river = rv;
+  [RIV[0] - 1, RIV[1] + 1].forEach(function (x) { var bk = mesh(new THREE.PlaneGeometry(2.4, 800), '#d9c79a', x + (x < RIV[0] ? -.7 : .7), .03, 80, city); bk.rotation.x = -Math.PI / 2; bk.castShadow = false; });
   bx(500, .3, 1.2, '#8a7a6a', 120, .15, 203, city, false); bx(500, .3, 1.2, '#8a7a6a', 120, .15, 207, city, false);
   for (var s = -120; s < 360; s += 3) bx(.6, .2, 6, '#6a4a2a', s, .1, 205, city, false);
   bx(14, .1, 200, '#5a5a5a', 345, .06, 80, city, false); for (var rz = -10; rz < 180; rz += 12) bx(.6, .12, 5, '#ffffff', 345, .1, rz, city, false);
   // Häuserblöcke als Trottoir
   for (var i = 0; i < GX.length - 1; i++) for (var j = 0; j < GZ.length - 1; j++) {
     if (i === 3) continue;
-    bx(GX[i + 1] - GX[i] - 8, .16, GZ[j + 1] - GZ[j] - 8, '#e4e0d6', (GX[i] + GX[i + 1]) / 2, .08, (GZ[j] + GZ[j + 1]) / 2, city, false).receiveShadow = true;
+    var bw2 = GX[i + 1] - GX[i] - 8, bd2 = GZ[j + 1] - GZ[j] - 8, cx2 = (GX[i] + GX[i + 1]) / 2, cz2 = (GZ[j] + GZ[j + 1]) / 2;
+    bx(bw2, .22, bd2, '#b9b4aa', cx2, .11, cz2, city, false);
+    bx(bw2 - .7, .04, bd2 - .7, PAVE, cx2, .22, cz2, city, false);
   }
   // Strassen
-  var roadM = M('#5d6166'), dashM = M('#ffffff');
+  var roadM = new THREE.MeshLambertMaterial({ color: '#ffffff', map: noiseTex('#5b5f64', 14) }), dashM = M('#ffffff');
+  roadM.map.repeat.set(6, 6);
+  var INS = { dash: [], zebra: [], pole: [], lamp: [], trunk: [], cone: [], crown: [], balc: [], rail: [] }; w.INS = INS;
   SEGS.forEach(function (s) {
     var A = { x: GX[s.i], z: GZ[s.j] }, B = s.d === 'H' ? { x: GX[s.i + 1], z: GZ[s.j] } : { x: GX[s.i], z: GZ[s.j + 1] };
     var len = Math.hypot(B.x - A.x, B.z - A.z), cx = (A.x + B.x) / 2, cz = (A.z + B.z) / 2;
@@ -612,10 +688,22 @@ function buildWorld() {
     for (var t = 8; t < len - 6; t += 5) {
       var px = s.d === 'H' ? A.x + t : A.x, pz = s.d === 'H' ? A.z : A.z + t;
       if (Math.hypot(px - RBX, pz - RBZ) < RB.r + 5) continue;
-      s.d === 'H' ? bx(2.2, .02, .3, dashM, px, .12, pz, city, false) : bx(.3, .02, 2.2, dashM, px, .12, pz, city, false);
+      INS.dash.push(s.d === 'H' ? [px, .13, pz, 2.2, 1, .3] : [px, .13, pz, .3, 1, 2.2]);
     }
+    // Laternen beidseits
+    for (var lt = 12; lt < len - 8; lt += 18) [-5, 5].forEach(function (o) {
+      var lx = s.d === 'H' ? A.x + lt : A.x + o, lz = s.d === 'H' ? A.z + o : A.z + lt;
+      if (Math.hypot(lx - RBX, lz - RBZ) < 16) return;
+      if (s.d === 'V' && (lx > RIV[0] - 4 && lx < RIV[1] + 4)) return;
+      INS.pole.push([lx, 2.9, lz, 1, 1, 1]); INS.lamp.push([lx - (s.d === 'V' ? o * .12 : 0), 5.6, lz - (s.d === 'H' ? o * .12 : 0), 1, 1, 1]);
+    });
+    // Zebrastreifen an den Kreuzungen
+    [[A, 1], [B, -1]].forEach(function (q) {
+      var nd = q[0], dir = q[1]; if (isRB(GX.indexOf(nd.x), GZ.indexOf(nd.z))) return;
+      for (var k = -3; k <= 3; k += 1.2) INS.zebra.push(s.d === 'H' ? [nd.x + dir * 6.3, .13, nd.z + k, 2, 1, .6] : [nd.x + k, .13, nd.z + dir * 6.3, .6, 1, 2]);
+    });
   });
-  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length; j++) if (!isRB(i, j)) bx(8, .1, 8, roadM, GX[i], .061, GZ[j], city, false);
+  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length; j++) if (!isRB(i, j)) bx(8, .1, 8, roadM, GX[i], .09, GZ[j], city, false);
   // Kreisel
   var ring = mesh(new THREE.RingGeometry(RB.r - 4, RB.r + 4, 40), roadM, RBX, .13, RBZ, city); ring.rotation.x = -Math.PI / 2; ring.castShadow = false;
   var isl = cyl(RB.r - 4, RB.r - 4, .5, '#8fd46a', RBX, .3, RBZ, city, 30); isl.castShadow = false;
@@ -625,12 +713,23 @@ function buildWorld() {
     var g = new THREE.Group(); g.position.set(L.x, 0, L.z); g.rotation.y = Math.atan2(L.fx, L.fz); city.add(g); L.g = g;
     if (L.place) placeBuild(L, g);
     else {
-      var hh = L.h; house(L.w - 1, hh, L.d - 1, L.wall, hh >= 14 ? 'office' : 'win', g);
-      if (L.roof === 'dach') roof(L.w - 1, L.d - 1, 3, ['#c0392b', '#8a4a2a', '#5a6a7a'][Math.floor(R() * 3)], g, hh);
-      else { bx(2.4, 1.6, 2.4, '#c8c8c8', (R() - .5) * 4, hh + .8, (R() - .5) * 4, g); }
+      var hh = L.h, ww = L.w - 1, dd = L.d - 1, tall = hh >= 14;
+      house(ww, hh, dd, L.wall, tall ? 'office' : 'win', g);
+      bx(ww + .3, 1.1, dd + .3, shade(L.wall, -.32), 0, .55, 0, g);                    // Sockel
+      if (L.roof === 'dach') { roof(ww, dd, 3, ['#b5402f', '#8a4a2a', '#5a6a7a', '#a0522d'][Math.floor(R() * 4)], g, hh); bx(.9, 2.4, .9, '#8a5a4a', ww * .25, hh + 2, -dd * .15, g); }
+      else {
+        bx(ww + .4, .7, dd + .4, shade(L.wall, -.22), 0, hh + .35, 0, g);           // Dachrand
+        bx(2.4, 1.6, 2.4, '#c8c8c8', (R() - .5) * 4, hh + 1.5, (R() - .5) * 4, g);
+        if (tall && R() < .5) { cyl(1.1, 1.1, 2.4, '#9a8a7a', -ww * .25, hh + 1.9, dd * .2, g, 10); cyl(.08, .08, 4, '#555', ww * .3, hh + 2.7, -dd * .2, g, 4); }
+      }
+      if (tall && L.wall.charCodeAt(2) % 2 === 0) { g.updateMatrixWorld(true); for (var fy = 4.6; fy < hh - 1.5; fy += 3.6) [-1, 1].forEach(function (sx) { var bxp = sx * ww * .24;
+        INS.balc.push(instM(g, bxp, fy, dd / 2 + .6, ww * .36, .25, 1.2)); INS.rail.push(instM(g, bxp, fy + .55, dd / 2 + 1.15, ww * .36, .9, .08)); }); }
       bx(1.8, 2.8, .3, '#6b4a2f', 0, 1.4, L.d / 2 - .4, g);
+      bx(2.6, .25, 1.4, '#c9c3b8', 0, 3.1, L.d / 2 + .2, g);
     }
-    var hgt = L.place ? 12 : L.h; w.boxes.push({ x0: L.x - (L.fx ? L.d : L.w) / 2, x1: L.x + (L.fx ? L.d : L.w) / 2, z0: L.z - (L.fz ? L.d : L.w) / 2, z1: L.z + (L.fz ? L.d : L.w) / 2, h: hgt });
+    var hgt = L.place ? 14 : L.h + 1, ex = L.place ? 3 : .5, bx0 = L.x - (L.fx ? L.d : L.w) / 2, bx1 = L.x + (L.fx ? L.d : L.w) / 2, bz0 = L.z - (L.fz ? L.d : L.w) / 2, bz1 = L.z + (L.fz ? L.d : L.w) / 2;
+    if (L.fx > 0) bx1 += ex; if (L.fx < 0) bx0 -= ex; if (L.fz > 0) bz1 += ex; if (L.fz < 0) bz0 -= ex;
+    w.boxes.push({ x0: bx0, x1: bx1, z0: bz0, z1: bz1, h: hgt });
   });
   // Bäume an den Nord–Süd-Strassen und am Fluss
   for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length - 1; j++) {
@@ -638,11 +737,38 @@ function buildWorld() {
     for (var tz = GZ[j] + 9; tz < GZ[j + 1] - 6; tz += 9) [-5.6, 5.6].forEach(function (o) {
       var x = GX[i] + o; if (x > RIV[0] - 3 && x < RIV[1] + 3) return; if (Math.hypot(x - RBX, tz - RBZ) < 14) return;
       if (i === 3 && o > 0) return; if (i === 4 && o < 0) return;
-      tree(city, x, tz, .75, R() < .5 ? '#4f9a4a' : '#5fae52');
+      tree(city, x, tz, .7 + R() * .2, R() < .6 ? 'laub' : 'nadel');
     });
   }
   for (var q = -40; q < 210; q += 10) { tree(city, RIV[0] - 7, q + 3, .9); tree(city, RIV[1] + 7, q, .9); }
   for (q = 0; q < 50; q++) { var ox = -90 + R() * 500, oz = -90 + R() * 360; if ((ox > -30 && ox < 310 && oz > -40 && oz < 200)) continue; tree(city, ox, oz, .8 + R() * .8); }
+  // Instanzen bauen
+  var GREENS = ['#4f9a4a', '#5fae52', '#3f8a3f', '#6cb85a', '#4a8f5a'];
+  buildInst(new THREE.BoxGeometry(1, .02, 1), dashM, INS.dash, false); buildInst(new THREE.BoxGeometry(1, .02, 1), dashM, INS.zebra, false);
+  buildInst(new THREE.CylinderGeometry(.11, .15, 5.8, 6), M('#4a4f57'), INS.pole);
+  buildInst(new THREE.CylinderGeometry(.18, .42, .45, 8), M('#3a3f47'), INS.lamp.map(function (q) { return [q[0], q[1] + .2, q[2], 1, 1, 1]; }));
+  buildInst(new THREE.SphereGeometry(.3, 8, 6), new THREE.MeshBasicMaterial({ color: '#fff1b8' }), INS.lamp.map(function (q) { return [q[0], q[1] - .05, q[2], 1, .6, 1]; }), false);
+  buildInst(new THREE.CylinderGeometry(.25, .35, 2, 6), M('#8a5a3a'), INS.trunk);
+  buildInst(new THREE.ConeGeometry(1.6, 3.6, 7), new THREE.MeshLambertMaterial({ color: '#ffffff' }), INS.cone, true, GREENS);
+  buildInst(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshLambertMaterial({ color: '#ffffff', flatShading: true }), INS.crown, true, GREENS);
+  buildInst(new THREE.BoxGeometry(1, 1, 1), M('#d8d4cc'), INS.balc); buildInst(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color: '#9fc4dc', transparent: true, opacity: .7 }), INS.rail, false);
+  // Wolken
+  w.clouds = [];
+  for (q = 0; q < 9; q++) { var cl = new THREE.Group(); var ca = R() * Math.PI * 2, cr = 330 + R() * 90; cl.position.set(140 + Math.cos(ca) * cr, 55 + R() * 30, 80 + Math.sin(ca) * cr); cl.scale.setScalar(1.6); for (var cb = 0; cb < 5; cb++) { var sp = mesh(new THREE.SphereGeometry(5 + R() * 5, 10, 8), '#ffffff', cb * 6 - 12, R() * 3, R() * 6 - 3, cl, false); } sc.add(cl); w.clouds.push(cl); }
+  // Autos, die um die Häuserblöcke fahren (Rechtsverkehr, Block auf der rechten Seite)
+  w.cars = [];
+  [[0, 0], [2, 0], [4, 0], [0, 2], [4, 2], [0, 3], [1, 3], [4, 3], [3, 1], [3, 1]].forEach(function (b, k) {
+    var loop = b[0] === 3 ? [[3, 1], [4, 1], [4, 3], [3, 3]] : [[b[0], b[1]], [b[0] + 1, b[1]], [b[0] + 1, b[1] + 1], [b[0], b[1] + 1]];
+    var pts2 = loop.map(function (q2) { return { x: GX[q2[0]], z: GZ[q2[1]] }; }), per = 0, legs = [];
+    pts2.forEach(function (a, i2) { var c2 = pts2[(i2 + 1) % pts2.length], L2 = Math.hypot(c2.x - a.x, c2.z - a.z); legs.push({ a: a, b: c2, L: L2, s: per }); per += L2; });
+    var cols = ['#d23a3a', '#2f6fd0', '#f4f4f4', '#3a3a3a', '#f3c623', '#3a9a5a', '#e8833a', '#8a5ad0', '#9aa8b8', '#c0392b'];
+    var cg = car(city, 0, 0, 0, cols[k], k === 4 ? 'taxi' : k === 7 ? 'van' : 'car');
+    w.cars.push({ g: cg, legs: legs, per: per, s: (k * 37) % per, v: 7 + (k % 3) * 1.5 });
+  });
+  // Ortsnamen hoch über den Gebäuden (Stufe Places/Jobs, freies Spazieren und Karte von oben)
+  w.plabels = [];
+  var TOP = { hospital: 26, space: 32, church: 29, police: 14, school: 15, airport: 24, site: 21, cinema: 12, bank: 12, museum: 13, court: 13, library: 12 };
+  LOTS.forEach(function (L) { if (!L.place) return; var P = PLACES[L.place], sp2 = placeSprite(P.emo + ' ' + P.en); sp2.position.set(L.x, (TOP[L.place] || 10) + 4, L.z); city.add(sp2); w.plabels.push(sp2); });
   // Leute vor ihren Arbeitsorten
   var byPlace = {}; JOBS.forEach(function (J) { (byPlace[J[2]] = byPlace[J[2]] || []).push(J); });
   LOTS.forEach(function (L) {
@@ -655,7 +781,7 @@ function buildWorld() {
       if (L.place === 'farm') { lx = 4; lz = L.d / 2 - 3; }
       if (L.place === 'school') lz = L.d / 2 - 2;
       if (L.place === 'church') lz = L.d / 2 - .5;
-      p.position.set(lx, 0, lz); L.g.add(p);
+      p.position.set(lx, .24, lz); L.g.add(p);
       if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
       if (J[0] === 'musician') bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
       var lb = labelSprite(J[0]); lb.position.set(lx, 4.3, lz); L.g.add(lb);
@@ -773,6 +899,16 @@ function loop() {
   owlStep(dt); camStep(dt);
   var t = performance.now() / 1000;
   WD.spin.forEach(function (s) { s.rotation.y = t * 1.5; });
+  WD.cars.forEach(function (c) {
+    c.s = (c.s + dt * c.v) % c.per; var lg = c.legs.filter(function (l) { return c.s >= l.s && c.s < l.s + l.L; })[0] || c.legs[0], f = (c.s - lg.s) / lg.L;
+    var dx = (lg.b.x - lg.a.x) / lg.L, dz = (lg.b.z - lg.a.z) / lg.L;
+    c.g.position.set(lg.a.x + (lg.b.x - lg.a.x) * f - dz * 2, (lg.L > 58 && f > .2 && f < .8) ? .7 : 0, lg.a.z + (lg.b.z - lg.a.z) * f + dx * 2);
+    var want = Math.atan2(dx, dz), cur = c.g.rotation.y; c.g.rotation.y = cur + angd(want, cur) * Math.min(1, dt * 8);
+  });
+  WD.clouds.forEach(function (c, k) { var a = Math.atan2(c.position.z - 80, c.position.x - 140) + dt * .004, r = Math.hypot(c.position.z - 80, c.position.x - 140); c.position.x = 140 + Math.cos(a) * r; c.position.z = 80 + Math.sin(a) * r; });
+  var showP = LABELS === 'immer' || CAM.mode !== 'follow';
+  var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
+  WD.plabels.forEach(function (s2) { s2.visible = showP && Math.hypot(s2.position.x - op.x, s2.position.z - op.z) < far; });
   WD.workers.forEach(function (w) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; });
   WD.hl.forEach(function (m) { m.position.y = m.userData.y0 + Math.sin(t * 3) * .5; if (m.userData.spin) m.rotation.y = t * 2; });
   if (WD.grow) { var gr = WD.grow; gr.t = Math.min(1, gr.t + dt / gr.dur); gr.list.forEach(function (m) { m.geometry.setDrawRange(0, Math.floor(m.geometry.index.count * gr.t / 6) * 6); }); if (gr.t >= 1) WD.grow = null; }
@@ -803,7 +939,7 @@ function clearMarks() {
   WD.hl = []; WD.grow = null; WD.miniPaths = null; WD.miniStar = null;
   WD.workers.forEach(function (w) { w.lb.visible = MODE_LABELS; });
 }
-var MODE_LABELS = true;
+var MODE_LABELS = true, LABELS = 'immer';
 function pts(list, y) {
   var a = [];
   list.forEach(function (id, k) {
@@ -868,8 +1004,12 @@ var HELP = [
 function helper() {
   var o = '<div class="pp"><h3>Little Helper ✦</h3><table>';
   HELP.forEach(function (x) { o += '<tr><td class="ic">' + x[0] + '</td><td><b data-say="' + h(x[1]) + '">' + h(x[1]) + '</b></td><td>' + x[2] + '</td></tr>'; });
+  var vs = enVoices();
+  if (vs.length) { o += '</table><p class="kl">Stimme: <select id="owVoice">' + vs.map(function (v) { return '<option value="' + h(v.name) + '"' + (VOICE && VOICE.name === v.name ? ' selected' : '') + '>' + h(v.name.replace(/^(Microsoft|Google)\s+/, '')) + ' (' + h(v.lang) + ')</option>'; }).join('') + '</select> <button class="pill" data-x="vt">🔊 Probehören</button></p><table style="display:none">'; }
   o += '</table><p class="kl">Tasten: ⬆ gehen (gedrückt halten = weiterlaufen) · ⬅ ➡ drehen · ⬇ umdrehen · Leertaste = Ziel markieren<br>Am Anfang stehst du mit dem Rücken zum Gebäude.</p><button class="go" data-x="zu">OK</button></div>';
-  popup(o, function (b) { return b.dataset.x === 'zu'; });
+  popup(o, function (b) { if (b.dataset.x === 'vt') { say('Turn left at the second crossing. Then walk straight on.'); return false; } return b.dataset.x === 'zu'; });
+  var sel = UI.pop.querySelector('#owVoice');
+  if (sel) sel.onchange = function () { var v = enVoices().filter(function (x) { return x.name === sel.value; })[0]; if (v) { VOICE = v; try { localStorage.setItem(VKEY, v.name); } catch (e) {} say('Hello! This is my voice.'); } };
 }
 function popup(html, onClick) {
   var p = UI.pop; p.innerHTML = html; p.hidden = false; var was = OW.lock; OW.lock = true;
@@ -930,6 +1070,7 @@ G.play = function (lv, api, li) {
 function play(lv, api, li, run) {
   clearMarks(); CAM.mode = 'follow'; CAM.view = null;
   MODE_LABELS = lv.typ !== 'job'; WD.workers.forEach(function (w) { w.lb.visible = MODE_LABELS; });
+  LABELS = lv.typ === 'weg' ? 'karte' : 'immer';
   var U = ui(api, lv), N = G.n, k = 0, task = null, used = {};
   var alive = function () { return run === GAME.run && document.body.contains(U.box); };
   OW.onBump = function () {
@@ -1005,7 +1146,10 @@ function play(lv, api, li, run) {
     if (task.typ === 'weg' && lv.listen && !task.heard) { task.heard = 1; setTimeout(function () { if (alive()) sayTask(); }, 500); }
   }
   function sayTask() {
-    if (task.typ === 'weg') { if (!say(task.r.steps.map(function (s) { return s.text; }).join(' ') + ' Where are you?', .8)) { task.show = true; showTask(); toast('Vorlesen geht auf diesem Gerät nicht – lies den Text.'); } }
+    if (task.typ === 'weg') {
+      var sent = task.r.steps.map(function (s) { return s.text; }).concat(['Where are you?']);
+      if (!(lv.listen ? sayList(sent, .78, 1600) : sayList(sent, .88, 600))) { task.show = true; showTask(); toast('Vorlesen geht auf diesem Gerät nicht – lies den Text.'); }
+    }
     else if (task.typ === 'job') say('Where does the ' + task.job[0] + ' work?');
     else say('Walk to the ' + PLACES[task.place].en + '.');
   }
