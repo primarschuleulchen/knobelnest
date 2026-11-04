@@ -110,6 +110,7 @@ So läuft ein Werkzeug im Portal:
   - Sie lädt die neue Datei in der Verwaltung wieder hoch: beim Spiel unter «Spiel-Datei» oder als Paket mit «Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen».
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
 - **Gedächtniskiste:** Fach «Gedächtnis», 12 Spiele mit je 5 Stufen (Bereiche Bilder, Orte, Reihenfolgen, Namen merken), Stil der Eulenkiste. Alles gebaut mit `python3 werkstatt/spiele/gedaechtnis/bauen.py` → `gedaechtnis/<spiel>.html` (Spiele), `gedaechtnis/index.html` (Werkzeug für Lehrpersonen: Vorschau, Ausprobieren mit `?vorschau&stufe=N`, Freigeben, Admin «Spiele in die Klassenkiste aufnehmen» = `knGd.install`). In `games` steht pro Spiel nur ein Verweis (`knobelnest-url`), Änderungen kommen also über GitHub (dann `GD_VER` erhöhen). Sterne-Level «Stufe 1» … «Stufe 5», Spielstand-Eintrag `gd`. Werkzeug-Freigabe `gd` in `TOOLS`, Route `#/gedaechtnis/<Klasse>`, Modul `GD`.
+- **Knobelspiele:** Rechen-Rakete (Mathematik), Wort-Raten (Deutsch), Bilderrätsel = Nonogramm und Eulen-Weg = Programmieren (Fach «Knobeln»), je 5 Stufen. Gebaut mit `python3 werkstatt/spiele/knobelspiele/bauen.py` → `knobelspiele/<spiel>.html` und `knobelspiele/knobelspiele-spielpaket.json` (Import in der Verwaltung). Rahmen und Stil kommen aus `werkstatt/spiele/gedaechtnis/bauen.py`, Spielstand-Eintrag `ks`. In `games` steht nur ein Verweis (`knobelnest-url`), Änderungen über GitHub, dann `KS_VER` erhöhen. Bilder fürs Bilderrätsel in `werkstatt/spiele/knobelspiele/bilder.py` (das Skript prüft, dass jedes ohne Raten lösbar ist). Keine fremden Spielnamen (z. B. «Wordle», «Picross») verwenden.
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
@@ -133,8 +134,8 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=107`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=108`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 
