@@ -43,7 +43,7 @@ def logo(name):
 
 SPIELE = [dict(
     id='owl-town', titel='Owl Town', icon=logo('owl-town'), fach='Englisch', thema='Town, jobs & directions', stufe='4.–6. Klasse', sort=1, n=5,
-    sterne={'modus': 'runde', 'n': 5},
+    sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Aufgaben 1 Stern, pro Stufe bis 10
     kurz='3D-Stadt: Gebäude und Berufe finden, Wegbeschreibungen laufen.',
     intro='Lauf mit der Eule durch die Stadt! Mit den Pfeiltasten ⬆ ⬅ ➡ ⬇ gehst und drehst du dich. Am Ziel drückst du 📍.',
     levels=[

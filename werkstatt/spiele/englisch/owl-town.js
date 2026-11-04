@@ -79,13 +79,15 @@ var RIV = [183, 201];
 var OFF = { a: 13, b: 27, c: 41, B: 27 };
 // [Ort, H/V, i, j, Seite, Platz]   H-Strassen (Ost–West) haben Plätze a, b, c oder gross B; V-Strassen nur aussen (Platz B in der Mitte)
 var NAMED = [
-  ['farm', 'H', 0, 0, 'N', 'B'], ['school', 'H', 1, 0, 'N', 'B'], ['church', 'H', 2, 0, 'N', 'B'], ['space', 'H', 4, 0, 'N', 'B'],
-  ['bakery', 'H', 0, 0, 'S', 'b'], ['postoffice', 'H', 1, 0, 'S', 'a'], ['museum', 'H', 2, 0, 'S', 'b'], ['vet', 'H', 4, 0, 'S', 'b'],
-  ['park', 'H', 0, 1, 'N', 'B'], ['butcher', 'H', 1, 1, 'N', 'a'], ['bank', 'H', 2, 1, 'N', 'b'], ['pharmacy', 'H', 4, 1, 'N', 'a'],
-  ['restaurant', 'H', 0, 1, 'S', 'b'], ['cinema', 'H', 1, 1, 'S', 'b'], ['police', 'H', 2, 1, 'S', 'B'], ['supermarket', 'H', 4, 1, 'S', 'B'],
-  ['court', 'H', 0, 2, 'N', 'b'], ['firestation', 'H', 2, 2, 'N', 'c'], ['site', 'H', 4, 2, 'N', 'b'],
-  ['casino', 'H', 0, 2, 'S', 'a'], ['library', 'H', 1, 3, 'N', 'b'],
-  ['taxi', 'H', 1, 4, 'N', 'c'], ['station', 'H', 1, 4, 'S', 'B'], ['hospital', 'H', 4, 4, 'S', 'B'],
+  ['farm', 'H', 0, 0, 'N', 'B'], ['school', 'H', 2, 0, 'N', 'B'], ['space', 'H', 4, 0, 'N', 'B'],
+  ['bakery', 'H', 1, 0, 'S', 'b'], ['vet', 'H', 4, 0, 'S', 'a'],
+  ['park', 'H', 0, 1, 'N', 'B'], ['bank', 'H', 2, 1, 'N', 'b'], ['pharmacy', 'H', 4, 1, 'N', 'c'],
+  ['restaurant', 'H', 1, 1, 'S', 'a'], ['police', 'H', 4, 1, 'S', 'B'],
+  ['cinema', 'H', 0, 2, 'N', 'b'], ['firestation', 'H', 2, 2, 'N', 'c'], ['site', 'H', 4, 2, 'N', 'b'],
+  ['museum', 'H', 1, 2, 'S', 'a'], ['casino', 'H', 4, 2, 'S', 'b'],
+  ['butcher', 'H', 0, 3, 'N', 'a'], ['library', 'H', 2, 3, 'N', 'b'], ['postoffice', 'H', 4, 3, 'N', 'a'],
+  ['court', 'H', 1, 3, 'S', 'b'], ['supermarket', 'H', 2, 3, 'S', 'B'],
+  ['taxi', 'H', 1, 4, 'N', 'c'], ['church', 'H', 0, 4, 'S', 'B'], ['station', 'H', 1, 4, 'S', 'B'], ['hospital', 'H', 4, 4, 'S', 'B'],
   ['airport', 'V', 5, 1, 'E', 'B']
 ];
 
@@ -444,10 +446,23 @@ function shade(hex, f) {
   function c(v) { return Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f))); }
   return '#' + ((1 << 24) + (c(r) << 16) + (c(g) << 8) + c(b)).toString(16).slice(1);
 }
+var TILE = {};
+function tileMat(col) {
+  if (TILE[col]) return TILE[col];
+  var t = canvasTex(64, 64, function (g) {
+    g.fillStyle = col; g.fillRect(0, 0, 64, 64);
+    for (var y = 0; y < 64; y += 8) { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, y + 6, 64, 2); for (var x = (y / 8) % 2 ? 4 : 0; x < 64; x += 8) { g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(x, y, 1, 7); g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x + 1, y, 3, 3); } }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(.35, .35);
+  return (TILE[col] = [new THREE.MeshLambertMaterial({ color: shade(col, -.1) }), new THREE.MeshLambertMaterial({ map: t })]);
+}
 function roof(w, d, hr, col, par, y) {
-  var s = new THREE.Shape(); s.moveTo(-d / 2 - .5, 0); s.lineTo(d / 2 + .5, 0); s.lineTo(0, hr); s.closePath();
-  var g = new THREE.ExtrudeGeometry(s, { depth: w + 1, bevelEnabled: false }); g.translate(0, 0, -(w + 1) / 2); g.rotateY(Math.PI / 2);
-  return mesh(g, col, 0, y, 0, par);
+  var s = new THREE.Shape(); s.moveTo(-d / 2 - .8, -.2); s.lineTo(d / 2 + .8, -.2); s.lineTo(0, hr); s.closePath();
+  var g = new THREE.ExtrudeGeometry(s, { depth: w + 1.2, bevelEnabled: false }); g.translate(0, 0, -(w + 1.2) / 2); g.rotateY(Math.PI / 2);
+  var m = new THREE.Mesh(g, tileMat(col)); m.position.set(0, y, 0); m.castShadow = m.receiveShadow = true; par.add(m);
+  // Giebeldreieck in Hausfarbe vorne und hinten sieht man durch das Dach; Firstbalken
+  bx(w + 1.3, .3, .3, shade(col, -.3), 0, y + hr - .05, 0, par);
+  return m;
 }
 function door(par, L, w, h, c) { return bx(w || 2, h || 3, .3, c || '#6b4a2f', 0, (h || 3) / 2, L.d / 2 + .1, par); }
 function awning(par, L, w, c1, c2, y) {
@@ -726,6 +741,20 @@ function buildWorld() {
         INS.balc.push(instM(g, bxp, fy, dd / 2 + .6, ww * .36, .25, 1.2)); INS.rail.push(instM(g, bxp, fy + .55, dd / 2 + 1.15, ww * .36, .9, .08)); }); }
       bx(1.8, 2.8, .3, '#6b4a2f', 0, 1.4, L.d / 2 - .4, g);
       bx(2.6, .25, 1.4, '#c9c3b8', 0, 3.1, L.d / 2 + .2, g);
+      var fz2 = dd / 2;
+      if (tall) {
+        // Laden im Erdgeschoss: Schaufenster und Markise
+        var shopC = ['#c0392b', '#2f7d4a', '#2a6fb0', '#e0782c', '#7a4ab0'][Math.floor(R() * 5)];
+        [-1, 1].forEach(function (sx) {
+          var sw = ww * .3; bx(sw, 2.4, .2, '#a8cbe0', sx * ww * .27, 1.6, fz2 + .05, g, false);
+          bx(sw + .3, .18, .3, '#ffffff', sx * ww * .27, 2.9, fz2 + .1, g, false);
+          var aw = bx(sw + .4, .2, 1.6, shopC, sx * ww * .27, 3.4, fz2 + .8, g); aw.rotation.x = .3;
+        });
+      } else {
+        // Blumenkisten unter den Fenstern, Hecke vor dem Haus
+        [-1, 1].forEach(function (sx) { bx(1.8, .45, .5, '#8a5a3a', sx * ww * .28, 4.0, fz2 + .3, g); bx(1.7, .35, .45, ['#e0368a', '#f6c623', '#d23a3a'][Math.floor(R() * 3)], sx * ww * .28, 4.35, fz2 + .3, g); });
+        bx(ww * .28, .9, .7, '#4f8a3f', -ww * .32, .7, fz2 + .7, g); bx(ww * .28, .9, .7, '#4f8a3f', ww * .32, .7, fz2 + .7, g);
+      }
     }
     var hgt = L.place ? 14 : L.h + 1, ex = L.place ? 3 : .5, bx0 = L.x - (L.fx ? L.d : L.w) / 2, bx1 = L.x + (L.fx ? L.d : L.w) / 2, bz0 = L.z - (L.fz ? L.d : L.w) / 2, bz1 = L.z + (L.fz ? L.d : L.w) / 2;
     if (L.fx > 0) bx1 += ex; if (L.fx < 0) bx0 -= ex; if (L.fz > 0) bz1 += ex; if (L.fz < 0) bz0 -= ex;
@@ -768,7 +797,11 @@ function buildWorld() {
   // Ortsnamen hoch über den Gebäuden (Stufe Places/Jobs, freies Spazieren und Karte von oben)
   w.plabels = [];
   var TOP = { hospital: 26, space: 32, church: 29, police: 14, school: 15, airport: 24, site: 21, cinema: 12, bank: 12, museum: 13, court: 13, library: 12 };
-  LOTS.forEach(function (L) { if (!L.place) return; var P = PLACES[L.place], sp2 = placeSprite(P.emo + ' ' + P.en); sp2.position.set(L.x, (TOP[L.place] || 10) + 4, L.z); city.add(sp2); w.plabels.push(sp2); });
+  w.plWrap = document.createElement('div'); w.plWrap.className = 'pls';
+  LOTS.forEach(function (L) {
+    if (!L.place) return; var P = PLACES[L.place], el = document.createElement('div'); el.className = 'pl'; el.textContent = P.emo + ' ' + P.en; w.plWrap.appendChild(el);
+    w.plabels.push({ el: el, v: new THREE.Vector3(L.x, (TOP[L.place] || 10) + 3, L.z), w: 0 });
+  });
   // Leute vor ihren Arbeitsorten
   var byPlace = {}; JOBS.forEach(function (J) { (byPlace[J[2]] = byPlace[J[2]] || []).push(J); });
   LOTS.forEach(function (L) {
@@ -909,12 +942,29 @@ function loop() {
   WD.clouds.forEach(function (c, k) { var a = Math.atan2(c.position.z - 80, c.position.x - 140) + dt * .004, r = Math.hypot(c.position.z - 80, c.position.x - 140); c.position.x = 140 + Math.cos(a) * r; c.position.z = 80 + Math.sin(a) * r; });
   var showP = LABELS === 'immer' || CAM.mode !== 'follow';
   var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
-  WD.plabels.forEach(function (s2) { s2.visible = showP && Math.hypot(s2.position.x - op.x, s2.position.z - op.z) < far; });
+  placeLabels(showP, op, far);
   WD.workers.forEach(function (w) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; });
   WD.hl.forEach(function (m) { m.position.y = m.userData.y0 + Math.sin(t * 3) * .5; if (m.userData.spin) m.rotation.y = t * 2; });
   if (WD.grow) { var gr = WD.grow; gr.t = Math.min(1, gr.t + dt / gr.dur); gr.list.forEach(function (m) { m.geometry.setDrawRange(0, Math.floor(m.geometry.index.count * gr.t / 6) * 6); }); if (gr.t >= 1) WD.grow = null; }
   if (WD.mini.isConnected && (++LOOP.last % 3 === 0)) drawMini();
   WD.ren.render(WD.scene, WD.cam);
+}
+// Ortsnamen: Position auf dem Bildschirm, nahe zuerst; was ein anderes Schild verdecken würde, bleibt weg
+var PV = null;
+function placeLabels(show, op, far) {
+  var W = WD.el.clientWidth, H = WD.el.clientHeight, cp = WD.cam.position, done = [];
+  PV = PV || new THREE.Vector3();
+  WD.plabels.map(function (l) { return { l: l, d: l.v.distanceTo(cp) }; }).sort(function (a, b) { return a.d - b.d; }).forEach(function (o) {
+    var l = o.l, ok = show && Math.hypot(l.v.x - op.x, l.v.z - op.z) < far;
+    if (ok) { PV.copy(l.v).project(WD.cam); ok = PV.z < 1 && Math.abs(PV.x) < 1.05 && Math.abs(PV.y) < 1.05; }
+    if (ok) {
+      if (!l.w) { l.w = l.el.offsetWidth || 100; l.h = l.el.offsetHeight || 26; }
+      var x = (PV.x + 1) / 2 * W, y = (1 - PV.y) / 2 * H, r = { x0: x - l.w / 2 - 3, x1: x + l.w / 2 + 3, y0: y - l.h - 2, y1: y + 2 };
+      ok = !done.some(function (q) { return r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0; });
+      if (ok) { done.push(r); l.el.style.transform = 'translate(' + Math.round(x - l.w / 2) + 'px,' + Math.round(y - l.h) + 'px)'; }
+    }
+    if (l.on !== ok) { l.on = ok; l.el.style.visibility = ok ? 'visible' : 'hidden'; }
+  });
 }
 function startLoop() { if (!LOOP.on) { LOOP.on = true; WD.clock.getDelta(); requestAnimationFrame(loop); } }
 
@@ -1006,7 +1056,7 @@ function ui(api, lv) {
     '<div class="tools"><button class="pill" data-k="top" title="Von oben schauen">🗺 Karte</button><button class="pill" data-k="help" title="Little Helper">💡 Helper</button></div>' +
     '<div class="pad"><span></span><button data-c="U" aria-label="geradeaus">⬆</button><span></span><button data-c="L" aria-label="links drehen">⬅</button><button data-c="B" aria-label="umdrehen">⬇</button><button data-c="R" aria-label="rechts drehen">➡</button></div>' +
     '<button class="mark" data-c="M">📍 Hier ist das Ziel!</button><div class="near" id="owNear"></div><div class="pop" id="owPop" hidden></div><div class="toast" id="owToast"></div>';
-  box.insertBefore(WD.el, box.firstChild); box.appendChild(WD.mini); WD.mini.classList.toggle('aus', lv.mini === false);
+  box.insertBefore(WD.el, box.firstChild); box.insertBefore(WD.plWrap, WD.el.nextSibling); WD.plabels.forEach(function (l) { l.w = 0; }); box.appendChild(WD.mini); WD.mini.classList.toggle('aus', lv.mini === false);
   api.stage.appendChild(box);
   var U = UI = { box: box, card: box.querySelector('#owCard'), near: box.querySelector('#owNear'), pop: box.querySelector('#owPop'), toast: box.querySelector('#owToast') };
   Array.prototype.forEach.call(box.querySelectorAll('[data-c]'), function (b) {
