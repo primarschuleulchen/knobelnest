@@ -93,6 +93,8 @@ So läuft ein Werkzeug im Portal:
   - Du bearbeitest ihre HTML-Datei.
   - Sie lädt die neue Datei in der Verwaltung wieder hoch: beim Spiel unter «Spiel-Datei» oder als Paket mit «Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen».
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
+- **Einstellungen für Spiele:** `game_settings.settings` (pro Klasse und Spiel) bekommt ein hochgeladenes Spiel als `knobelnest.einstellungen()` (`shimMain`, Kind über `kid_state`, Lehrperson in «Selbst ansehen»).
+- **Wort des Tages:** Quelle `werkstatt/spiele/` (`wort-des-tages.src.html`, `woerter.py`, bauen mit `bau_wort_des_tages.py` → `wort-des-tages.html` zum Hochladen). Erkannt am Titel (`isWdt()`). Lehrperson: Knopf «✏️ Eigene Wörter» (`ACT.wdtOpen`) = `settings {woerter, start, danach}`: ein Wort pro Schultag ab `start`, 3–8 Buchstaben; danach die Wörter des Spiels (`spiel`) oder von vorne (`eigene`).
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
@@ -116,7 +118,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=90`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=91`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

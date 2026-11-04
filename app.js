@@ -219,7 +219,7 @@
 
   // Spiel-Player (Spiel läuft abgeschirmt in einem iframe)
   // Läuft im Spiel (iframe): Speicher nachbilden, gespeicherten Stand laden, Meldungen an das Portal
-  function shimMain(seed, aw, lvls) {
+  function shimMain(seed, aw, lvls, cfg) {
     function send(m) { try { m.knobelnest = 1; parent.postMessage(m, '*'); } catch (e) {} }
     function mem(init, onchange) {
       var m = {}, k;
@@ -249,6 +249,8 @@
     // Bisheriger Stand pro Level aus dem Portal: { 'Level': { c: richtig, a: Versuche } }
     window.knobelnest.levels = function () { return lvls && typeof lvls === 'object' ? lvls : {}; };
     window.knobelnest.alle = function () { return { lv: AW.lv || {}, max: +AW.max || 0 }; };
+    // Einstellungen der Lehrperson für dieses Spiel und diese Klasse (game_settings), z. B. eigene Wörter beim «Wort des Tages»
+    window.knobelnest.einstellungen = function () { return cfg && typeof cfg === 'object' ? cfg : null; };
     window.addEventListener('message', function (e) {
       if (e.source !== parent || !e.data || !e.data.knobelnestAward) return;
       AW = e.data.knobelnestAward;
@@ -260,7 +262,7 @@
     seed = seed || {};
     var aw = seed.award || { lv: {}, max: starMax(starCfg(html)) };
     var J = function (v) { return JSON.stringify(v == null ? null : v).replace(/</g, '\\u003c'); };
-    var tag = '<script>(' + shimMain.toString() + ')(' + J(seed.store) + ',' + J(aw) + ',' + J(seed.levels || {}) + ');<\/script>';
+    var tag = '<script>(' + shimMain.toString() + ')(' + J(seed.store) + ',' + J(aw) + ',' + J(seed.levels || {}) + ',' + J(seed.settings) + ');<\/script>';
     var m = /<head[^>]*>/i.exec(html);
     return m ? html.slice(0, m.index + m[0].length) + tag + html.slice(m.index + m[0].length) : tag + html;
   }
@@ -1209,7 +1211,8 @@
             (isWall(g) ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
             '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') +
             (isZeit(g) ? '<button class="btn primary" data-a="zrOpen" data-id="' + g.id + '">🔓 Zeiten & Fortschritt</button>' : '') +
-            (isVok(g) ? '<button class="btn primary" data-a="vkOpen" data-id="' + g.id + '">📚 Wörter & Freigaben</button>' : '') + '</div></div></article>';
+            (isVok(g) ? '<button class="btn primary" data-a="vkOpen" data-id="' + g.id + '">📚 Wörter & Freigaben</button>' : '') +
+            (isWdt(g) ? '<button class="btn primary" data-a="wdtOpen" data-id="' + g.id + '">✏️ Eigene Wörter</button>' : '') + '</div></div></article>';
         }).join('') + '</div>');
     });
     return out + '</section>';
@@ -1285,6 +1288,69 @@
     if (i >= 0) l.splice(i, 1); else l.push(e);
     if (!l.length) delete ZR.cfg.kids[k];
     return zrSave();
+  };
+  // ---------- Wort des Tages: eigene Wörter pro Klasse (game_settings: { woerter, start, danach }) ----------
+  // Die Wörter kommen der Reihe nach dran, eines pro Schultag ab «start» (Samstag/Sonntag gilt das Wort vom Freitag).
+  // Danach: 'eigene' = wieder von vorne, sonst die eingebauten Wörter des Spiels.
+  function isWdt(g) { return /wort des tages/i.test(g.title || ''); }
+  function wdtWords(txt) {
+    var ok = [], bad = [];
+    String(txt || '').split(/[\s,;.]+/).forEach(function (w) {
+      if (!w) return; var u = w.toUpperCase().replace(/ß/g, 'SS');
+      if (/^[A-ZÄÖÜ]{3,8}$/.test(u)) { if (ok.indexOf(u) < 0) ok.push(u); } else if (bad.indexOf(w) < 0) bad.push(w);
+    });
+    return { ok: ok, bad: bad };
+  }
+  function wdtDate(start, n) { // n-ter Schultag ab start (0 = erster)
+    var p = start.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+    for (var i = 0; i < n; i++) { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6); }
+    return d;
+  }
+  var WDT = null;
+  ACT.wdtOpen = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], c = T.cur();
+    if (!g || !c) return toast('Bitte zuerst eine Klasse wählen.');
+    var cfg = await DB.gameSettingsGet(T.cls, g.id).catch(function () { return null; });
+    cfg = cfg && typeof cfg === 'object' ? cfg : {};
+    WDT = { g: g, cfg: cfg };
+    overlay('<form class="card stack wdt" style="width:min(600px,100%);max-height:calc(100dvh - 32px);overflow:auto" data-a="wdtSave">' +
+      '<h2 style="margin:0">✏️ Eigene Wörter · Klasse ' + h(c.name) + '</h2>' +
+      '<p class="muted" style="margin:0">Jeden Schultag kommt das nächste Wort dran (Samstag und Sonntag bleibt das Wort vom Freitag). Erlaubt sind Wörter mit 3 bis 8 Buchstaben, Ä, Ö und Ü zählen als ein Buchstabe.</p>' +
+      '<div class="field"><label for="wdtTxt">Wörter (mit Leerschlag, Komma oder je auf einer Zeile)</label>' +
+      '<textarea class="input" id="wdtTxt" name="w" rows="6" data-input="wdtPrev" style="text-transform:uppercase;font-family:inherit">' + h((cfg.woerter || []).join('\n')) + '</textarea></div>' +
+      '<div class="field"><label>Wenn alle Wörter dran waren</label>' +
+      '<label class="row" style="gap:8px"><input type="radio" name="danach" value="spiel"' + (cfg.danach !== 'eigene' ? ' checked' : '') + '> weiter mit den Wörtern des Spiels</label>' +
+      '<label class="row" style="gap:8px"><input type="radio" name="danach" value="eigene"' + (cfg.danach === 'eigene' ? ' checked' : '') + '> meine Wörter wieder von vorne</label></div>' +
+      '<label class="row" style="gap:8px"><input type="checkbox" name="neu"' + (cfg.start ? '' : ' checked') + ' data-change="wdtPrev"> Heute mit dem ersten Wort beginnen</label>' +
+      '<div id="wdtPrev" class="small"></div>' +
+      '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn primary">Speichern</button></div></form>');
+    ACT.wdtPrev();
+  };
+  function wdtStart(f) { return f.neu.checked || !WDT.cfg.start ? today() : WDT.cfg.start; }
+  ACT.wdtPrev = function () {
+    var f = document.querySelector('.overlay .wdt'), box = document.getElementById('wdtPrev'); if (!f || !box || !WDT) return;
+    var r = wdtWords(f.w.value), st = wdtStart(f), t0 = today(), o = '';
+    if (r.bad.length) o += '<p style="margin:0 0 6px;color:#9a3b33">Geht nicht (nur Buchstaben, 3 bis 8): ' + r.bad.map(h).join(', ') + '</p>';
+    if (!r.ok.length) o += '<p class="muted" style="margin:0">Ohne eigene Wörter spielt die Klasse mit den Wörtern des Spiels.</p>';
+    else {
+      o += '<p style="margin:0 0 4px">So kommen die Wörter dran:</p><div style="display:flex;flex-wrap:wrap;gap:6px">';
+      r.ok.forEach(function (w, i) {
+        var d = wdtDate(st, i), ds = d.toLocaleDateString('sv-SE'), past = ds < t0, now = ds === t0;
+        o += '<span class="pill" style="' + (now ? 'background:var(--sun-soft);box-shadow:0 0 0 1.5px var(--gold)' : past ? 'opacity:.55' : '') + '">' +
+          (now ? 'heute' : d.toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric' })) + ': <b>' + h(w) + '</b></span>';
+      });
+      o += '</div>';
+    }
+    box.innerHTML = o;
+  };
+  ACT.wdtSave = async function (f) {
+    var r = wdtWords(f.w.value);
+    if (r.bad.length) return toast('Bitte zuerst diese Wörter korrigieren: ' + r.bad.join(', '));
+    var cfg = Object.assign({}, WDT.cfg, { woerter: r.ok, start: wdtStart(f), danach: f.danach.value === 'eigene' ? 'eigene' : 'spiel' });
+    try { await DB.gameSettingsSet(T.cls, WDT.g.id, cfg); } catch (e) { return toast('Speichern ging nicht: ' + errMsg(e)); }
+    WDT.cfg = cfg; closeOverlays();
+    toast(r.ok.length ? r.ok.length + ' eigene Wörter in der Klassenkiste gespeichert' : 'Die Klasse spielt mit den Wörtern des Spiels');
   };
   // ---------- Vokabelkiste: Wortlisten und Freigaben pro Klasse (game_settings: { content }) ----------
   function isVok(g) { return /vokabelkiste/i.test(g.title || ''); }
@@ -1508,7 +1574,9 @@
   ACT.preview = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
     toast('Spiel wird geladen …');
-    openPlayer(g.title + ' (Vorschau)', await DB.gameHtml(g.id));
+    // «Wort des Tages»: Vorschau mit den eigenen Wörtern der Klasse
+    var cfg = isWdt(g) && T.cls ? await DB.gameSettingsGet(T.cls, g.id).catch(function () { return null; }) : null;
+    openPlayer(g.title + ' (Vorschau)', await DB.gameHtml(g.id), null, null, cfg ? { settings: cfg } : undefined);
   };
   ACT.showCode = function () {
     var c = T.cur();

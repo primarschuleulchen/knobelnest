@@ -46,11 +46,11 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 
 /* Spielfeld */
 .feld{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
-.gitter{display:grid;grid-template-rows:repeat(6,1fr);gap:7px;height:min(100%,calc((100vw - 24px) * 1.2),420px);aspect-ratio:5/6}
-.reihe{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.gitter{--n:5;display:grid;grid-template-rows:repeat(6,1fr);gap:7px;height:min(100%,calc((100vw - 24px) * 6 / var(--n)),440px);aspect-ratio:var(--n)/6}
+.reihe{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:7px}
 .reihe.wackeln{animation:wackeln .4s}
 @keyframes wackeln{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
-.kachel{display:grid;place-items:center;border-radius:12px;background:#fff;border:2px solid var(--line2);font-size:clamp(26px,7.5vmin,38px);text-transform:uppercase;line-height:1;user-select:none}
+.kachel{display:grid;place-items:center;border-radius:12px;background:#fff;border:2px solid var(--line2);font-size:clamp(20px,calc(37.5vmin / var(--n)),38px);text-transform:uppercase;line-height:1;user-select:none}
 .kachel.voll{border-color:var(--ink);animation:plopp .12s}
 @keyframes plopp{50%{transform:scale(1.08)}}
 .kachel.ok,.kachel.near,.kachel.no{border-color:transparent;color:#fff;animation:drehen .5s both}
@@ -88,6 +88,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .sterne{color:var(--gold);letter-spacing:4px;text-align:center;margin:6px 0}
 .bsp{display:flex;gap:5px;margin:10px 0 4px}
 .bsp .kachel{width:44px;height:44px;font-size:26px;animation:none}
+.bsp{--n:5}
 .bsp+p{margin-top:2px;color:var(--soft)}
 .zahlen{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:6px 0 12px}
 .zahlen b{display:block;font-size:34px;font-weight:400;line-height:1}
@@ -124,7 +125,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="decke" id="dHilfe" hidden><div class="fenster" role="dialog" aria-labelledby="hH">
   <div class="fk"><h2 id="hH">So geht's</h2><button class="zu" data-zu aria-label="Schliessen">✕</button></div>
   <div class="inhalt">
-    <p>Finde das geheime Wort mit <b>5 Buchstaben</b>. Du hast <b>6 Versuche</b>. Jeden Tag gibt es ein neues Wort!</p>
+    <p>Finde das geheime Wort mit <b id="hN">5 Buchstaben</b>. Du hast <b>6 Versuche</b>. Jeden Tag gibt es ein neues Wort!</p>
     <p>Tippe ein Wort und drücke «Wort prüfen». Danach zeigen die Farben, wie nahe du dran bist. Ä, Ö und Ü sind eigene Tasten.</p>
     <div class="sterne">✦ ✧ ✦</div>
     <div class="bsp"><span class="kachel ok">K</span><span class="kachel voll">I</span><span class="kachel voll">S</span><span class="kachel voll">T</span><span class="kachel voll">E</span></div>
@@ -148,7 +149,12 @@ button{font-family:inherit;color:inherit;cursor:pointer}
   'use strict';
   var LOESUNGEN = __WOERTER__;
   var EXTRA = __EXTRA__;
-  var ALLE = {}; LOESUNGEN.concat(EXTRA).forEach(function (w) { ALLE[w] = 1; });
+  // Eigene Wörter der Lehrperson (im Portal: «✏️ Eigene Wörter», gespeichert pro Klasse)
+  var CFG = null; try { CFG = window.knobelnest && window.knobelnest.einstellungen ? window.knobelnest.einstellungen() : null; } catch (e) {}
+  CFG = CFG && typeof CFG === 'object' ? CFG : {};
+  var EIGENE = (Array.isArray(CFG.woerter) ? CFG.woerter : []).map(function (w) { return String(w).toUpperCase(); })
+    .filter(function (w, i, a) { return /^[A-ZÄÖÜ]{3,8}$/.test(w) && a.indexOf(w) === i; });
+  var ALLE = {}; LOESUNGEN.concat(EXTRA, EIGENE).forEach(function (w) { ALLE[w] = 1; });
   var KEY = 'wort-des-tages';
   var LOB = ['Wow, auf Anhieb!', 'Super gemacht!', 'Toll geknobelt!', 'Sehr gut!', 'Geschafft!', 'Puh, knapp geschafft!'];
   var $ = function (id) { return document.getElementById(id); };
@@ -165,7 +171,22 @@ button{font-family:inherit;color:inherit;cursor:pointer}
   }
   var REIHE = mischen(LOESUNGEN.length, 2611);
   var heute = new Date(), HEUTE = iso(heute);
-  var WORT_HEUTE = LOESUNGEN[REIHE[tagNr(heute) % LOESUNGEN.length]];
+  // Wie viele Schultage seit dem Start der eigenen Liste? (Samstag/Sonntag: das Wort vom Freitag)
+  function schultag(start, d) {
+    var p = String(start || '').split('-'); if (p.length !== 3) return -1;
+    var a = new Date(+p[0], +p[1] - 1, +p[2]), e = new Date(d.getFullYear(), d.getMonth(), d.getDate()), n = 0;
+    if (isNaN(a) || e < a) return -1;
+    for (var x = new Date(a); x < e; x.setDate(x.getDate() + 1)) if (x.getDay() !== 0 && x.getDay() !== 6) n++;
+    if (e.getDay() === 0 || e.getDay() === 6) n--;
+    return Math.max(0, n);
+  }
+  var WORT_HEUTE = LOESUNGEN[REIHE[tagNr(heute) % LOESUNGEN.length]], VON_LP = false;
+  if (EIGENE.length) {
+    var nr = schultag(CFG.start, heute);
+    if (nr >= 0 && (nr < EIGENE.length || CFG.danach === 'eigene')) { WORT_HEUTE = EIGENE[nr % EIGENE.length]; VON_LP = true; }
+  }
+  // Übungswörter: nur die eigenen, wenn die Lehrperson das so will, sonst alle
+  var POOL = EIGENE.length && CFG.danach === 'eigene' ? EIGENE : LOESUNGEN.concat(EIGENE.filter(function (w) { return LOESUNGEN.indexOf(w) < 0; }));
   // Letzter Schultag vor einem Datum (Wochenende zählt für die Serie nicht)
   function vorher(isoTag) {
     var p = isoTag.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
@@ -174,19 +195,21 @@ button{font-family:inherit;color:inherit;cursor:pointer}
   }
   var TAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   var MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-  $('datum').innerHTML = '<span class="stern">✦</span> ' + TAGE[heute.getDay()] + ', ' + heute.getDate() + '. ' + MONATE[heute.getMonth()];
+  $('datum').innerHTML = '<span class="stern">✦</span> ' + TAGE[heute.getDay()] + ', ' + heute.getDate() + '. ' + MONATE[heute.getMonth()] + (VON_LP ? ' · von deiner Lehrperson' : '');
 
   // ---------- Speicher (im Portal: Spielstand des Kindes) ----------
   var D;
   try { D = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { D = null; }
   if (!D || typeof D !== 'object') D = {};
   D.stat = D.stat || { gespielt: 0, geloest: 0, serie: 0, beste: 0, letzt: '', vert: [0, 0, 0, 0, 0, 0] };
-  if (!D.tag || D.tag.d !== HEUTE) D.tag = { d: HEUTE, g: [] };
-  if (!D.ueben || !D.ueben.w || LOESUNGEN.indexOf(D.ueben.w) < 0) D.ueben = { w: neuesUebungswort(), g: [] };
+  // Neuer Tag oder die Lehrperson hat das heutige Wort geändert: neu beginnen
+  if (!D.tag || D.tag.d !== HEUTE || (D.tag.w && D.tag.w !== WORT_HEUTE) || (!D.tag.w && D.tag.g.length && D.tag.g[0].length !== WORT_HEUTE.length)) D.tag = { d: HEUTE, w: WORT_HEUTE, g: [] };
+  D.tag.w = WORT_HEUTE;
+  if (!D.ueben || !D.ueben.w || POOL.indexOf(D.ueben.w) < 0) D.ueben = { w: neuesUebungswort(), g: [] };
   var neu = !D.gesehen;
   function speichern() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
   function neuesUebungswort() {
-    var w; do { w = LOESUNGEN[Math.floor(Math.random() * LOESUNGEN.length)]; } while (w === WORT_HEUTE && LOESUNGEN.length > 1);
+    var w; do { w = POOL[Math.floor(Math.random() * POOL.length)]; } while (w === WORT_HEUTE && POOL.length > 1);
     return w;
   }
   function melde(art, wert) { try { if (window.knobelnest && window.knobelnest[art]) window.knobelnest[art](wert); } catch (e) {} }
@@ -199,19 +222,23 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 
   // Farben eines Versuchs: 2 = richtiger Platz, 1 = im Wort, 0 = nicht im Wort
   function bewerten(rate, ziel) {
-    var r = [0, 0, 0, 0, 0], rest = {}, i;
-    for (i = 0; i < 5; i++) { if (rate[i] === ziel[i]) r[i] = 2; else rest[ziel[i]] = (rest[ziel[i]] || 0) + 1; }
-    for (i = 0; i < 5; i++) if (r[i] !== 2 && rest[rate[i]]) { r[i] = 1; rest[rate[i]]--; }
+    var r = [], rest = {}, i;
+    for (i = 0; i < ziel.length; i++) { r.push(0); if (rate[i] === ziel[i]) r[i] = 2; else rest[ziel[i]] = (rest[ziel[i]] || 0) + 1; }
+    for (i = 0; i < ziel.length; i++) if (r[i] !== 2 && rest[rate[i]]) { r[i] = 1; rest[rate[i]]--; }
     return r;
   }
   var KL = ['no', 'near', 'ok'];
 
   // ---------- Zeichnen ----------
-  var gitter = $('gitter');
-  for (var z = 0; z < 6; z++) {
-    var row = document.createElement('div'); row.className = 'reihe';
-    for (var s = 0; s < 5; s++) { var k = document.createElement('div'); k.className = 'kachel'; row.appendChild(k); }
-    gitter.appendChild(row);
+  var gitter = $('gitter'), LEN = 0;
+  function bauen(n) {
+    if (n === LEN) return; LEN = n;
+    gitter.innerHTML = ''; gitter.style.setProperty('--n', n);
+    for (var z = 0; z < 6; z++) {
+      var row = document.createElement('div'); row.className = 'reihe';
+      for (var s = 0; s < n; s++) { var k = document.createElement('div'); k.className = 'kachel'; row.appendChild(k); }
+      gitter.appendChild(row);
+    }
   }
   var TR = [['Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P', 'Ü'], ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ö', 'Ä'], ['⌫', 'Y', 'X', 'C', 'V', 'B', 'N', 'M', '✓']];
   var tasten = $('tasten'), TASTE = {};
@@ -229,15 +256,16 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 
   function zeichnen(neuReihe) {
     var r = runde(), ziel = loesung(), best = {};
+    bauen(ziel.length); $('hN').textContent = ziel.length + ' Buchstaben';
     for (var i = 0; i < 6; i++) {
       var row = gitter.children[i], w = r.g[i], f = w ? bewerten(w, ziel) : null;
       row.classList.remove('wackeln', 'jubel');
-      for (var j = 0; j < 5; j++) {
+      for (var j = 0; j < LEN; j++) {
         var k = row.children[j];
         if (w) {
           k.textContent = w[j];
           k.className = 'kachel ' + KL[f[j]] + (i === neuReihe ? '' : ' sofort');
-          k.style.animationDelay = i === neuReihe ? (j * 0.25) + 's' : '';
+          k.style.animationDelay = i === neuReihe ? (j * 1.2 / LEN).toFixed(2) + 's' : '';
           best[w[j]] = Math.max(best[w[j]] == null ? -1 : best[w[j]], f[j]);
         } else if (i === r.g.length && !fertig()) {
           k.textContent = eingabe[j] || ''; k.className = 'kachel' + (eingabe[j] ? ' voll' : ''); k.style.animationDelay = '';
@@ -245,7 +273,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
       }
     }
     Object.keys(TASTE).forEach(function (b) { TASTE[b].className = 'taste' + (best[b] != null ? ' ' + KL[best[b]] : ''); });
-    $('bPruefen').disabled = eingabe.length !== 5 || fertig();
+    $('bPruefen').disabled = eingabe.length !== LEN || fertig();
     Array.prototype.forEach.call(document.querySelectorAll('.modus'), function (b) { b.setAttribute('aria-pressed', b.dataset.m === modus ? 'true' : 'false'); });
   }
 
@@ -268,7 +296,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
     if (sperre || fertig()) return;
     if (t === 'del') { eingabe = eingabe.slice(0, -1); unbekannt = ''; }
     else if (t === 'enter') return pruefen();
-    else if (eingabe.length < 5) { eingabe += t; unbekannt = ''; }
+    else if (eingabe.length < LEN) { eingabe += t; unbekannt = ''; }
     zeichnen();
   }
   function wackeln() {
@@ -277,9 +305,9 @@ button{font-family:inherit;color:inherit;cursor:pointer}
   }
   function pruefen() {
     if (sperre || fertig()) return;
-    if (eingabe.length < 5) { meldung('Es braucht 5 Buchstaben.'); wackeln(); return; }
+    if (eingabe.length < LEN) { meldung('Es braucht ' + LEN + ' Buchstaben.'); wackeln(); return; }
     if (!/[AEIOUÄÖÜY]/.test(eingabe)) { meldung('Da fehlt ein Selbstlaut (A, E, I, O, U).'); wackeln(); return; }
-    if (!ALLE[eingabe] && unbekannt !== eingabe) {
+    if (LEN === 5 && !ALLE[eingabe] && unbekannt !== eingabe) { // nur für 5 Buchstaben gibt es eine Wortliste
       unbekannt = eingabe; meldung('Kenne ich nicht. Ist es ein echtes Wort? Dann nochmals prüfen.', false, true); wackeln(); return;
     }
     var r = runde(), w = eingabe, ziel = loesung();
