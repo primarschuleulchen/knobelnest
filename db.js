@@ -219,6 +219,17 @@
     kidRace: async function (token) { return ok(await sb.rpc('kid_race', { p_token: token })); },
     kidRaceJoin: async function (token, race) { return ok(await sb.rpc('kid_race_join', { p_token: token, p_race: race })); },
     kidRaceStep: async function (token, race, isOk) { return ok(await sb.rpc('kid_race_step', { p_token: token, p_race: race, p_ok: !!isOk })); },
+    // ---------- Elterngespräche (Version 28/29) ----------
+    // Version 29: mehrere Gespräche pro Klasse (Schlüssel id)
+    talkList: async function (cid) { return ok(await sb.from('talks').select('id,class_id,token,cfg,answers,created_at,updated_at').eq('class_id', cid).order('created_at', { ascending: false })); },
+    talkGet: async function (id) { var r = ok(await sb.from('talks').select('id,class_id,token,cfg,answers,created_at,updated_at').eq('id', id)); return r[0] || null; },
+    talkNew: async function (cid, cfg) { return ok(await sb.from('talks').insert({ class_id: cid, cfg: cfg }).select('id,class_id,token,cfg,answers,created_at,updated_at').single()); },
+    talkSave: async function (id, cfg) { ok(await sb.from('talks').update({ cfg: cfg, updated_at: new Date().toISOString() }).eq('id', id)); },
+    talkReset: async function (id, patch) { ok(await sb.from('talks').update(Object.assign({ updated_at: new Date().toISOString() }, patch)).eq('id', id)); },
+    talkDelete: async function (id) { ok(await sb.from('talks').delete().eq('id', id)); },
+    talkAnswerPut: async function (id, kid, ans) { return ok(await sb.rpc('talk_answer_put', { p_talk: id, p_kid: kid, p_ans: ans })); },
+    elternGet: async function (token, kid, key) { return ok(await sb.rpc('eltern_get', { p_token: token, p_kid: kid || null, p_key: key || null })); },
+    elternSet: async function (token, kid, key, a) { return ok(await sb.rpc('eltern_set', { p_token: token, p_kid: kid, p_key: key, p_name: a.name || '', p_slots: a.slots || [], p_note: a.note || '', p_none: !!a.none })); },
     // Live-Quiz (Version 23)
     quizOpen: async function (title, qs) { return ok(await sb.rpc('quiz_open', { p_title: title, p_questions: qs })); },
     quizStep: async function (id, phase, q) { return ok(await sb.rpc('quiz_step', { p_id: id, p_phase: phase, p_q: q })); },

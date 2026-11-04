@@ -787,6 +787,94 @@ body.lp .kidlink{margin-top:4px}
 .ltool:first-child .ltip::after,.ltool:nth-child(3n+1) .ltip::after{left:36px}
 .login{overflow-x:hidden}
 
+/* =====================================================================
+   Elterngespräche (#/gespraeche/… für die Lehrperson, #/eltern/… für die Eltern) im Eulenkisten-Stil
+   ===================================================================== */
+.eg .kick{font-size:18px;color:var(--soft)}
+.eg .sterne{color:var(--gold,#d6ad45);letter-spacing:.2em;font-size:14px}
+.eg-banner{background:linear-gradient(135deg,#fbf3dc 0%,#dcf0fd 100%);border:1.5px solid #e1edf7;border-radius:28px;box-shadow:var(--schatten)}
+.eg-banner .banner-bild{width:120px;height:120px;object-fit:cover;padding:0}
+.eg-stats .pill{background:#fff;border:1.5px solid var(--line2);font-size:16px;padding:4px 12px}
+.eg-stats .pill.eg-bad,.eg .pill.eg-bad{background:var(--rose-soft,#fcefed);border-color:#b5524a;color:#9a3b33}
+.eg .card h2{font-size:30px}
+.eg h3{font-size:22px}
+.eg-add{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;align-items:end}
+.eg-day{border-top:1.5px dashed var(--gold,#d6ad45);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.eg-chips{display:flex;flex-wrap:wrap;gap:8px}
+.eg-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 12px;border-radius:999px;background:var(--sky-soft,#dcf0fd);border:1.5px solid var(--line2);font-size:17px}
+.eg-chip.fix{background:var(--sun-soft,#fbf3dc);border-color:var(--gold,#d6ad45)}
+.eg-chip button{border:0;background:transparent;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:20px;line-height:1;color:var(--soft)}
+.eg-chip button:hover{background:#fff;color:#9a3b33}
+.eg-link{display:flex;flex-wrap:wrap;gap:10px}
+.eg-link .input{flex:1 1 260px;font-size:16px}
+.eg-planday{display:flex;flex-direction:column;gap:8px}
+.eg-planday h3::after{content:" ✦";color:var(--gold,#d6ad45);font-size:14px}
+.eg-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.eg-rows li{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 12px;border-radius:16px;border:1.5px solid var(--line);background:#fff;min-height:54px}
+.eg-rows li.fix{background:var(--leaf-soft,#e9f1e3);border-color:#9fc08b}
+.eg-rows li.vor{background:#f7fbfe}
+.eg-rows li.blk{background:#f1f1ef}
+.eg-rows li.frei{border-style:dashed}
+.eg-time{flex:none;width:118px;font-size:20px}
+.eg-who{flex:1 1 180px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.eg-who b{font-size:20px}
+.eg-dot{flex:none;width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.12)}
+.eg .pill.eg-fix{background:#fff;border:1.5px solid #7ea56a;color:#3f6b2e}
+.eg .pill.eg-vor{background:#fff;border:1.5px solid var(--line2);color:var(--soft)}
+.eg-sel{flex:0 1 240px;min-height:42px!important;padding:6px 10px!important;font-size:16px!important}
+.eg-kids li{gap:10px 16px}
+.eg-kid{flex:1 1 220px;display:flex;flex-direction:column;gap:2px}
+.eg-kid b{font-size:21px}
+.eg-st{font-size:16px;color:var(--soft)}
+.eg-st.ok{color:#3f6b2e}
+.eg-st.bad{color:#9a3b33}
+.eg-note{font-size:16px;color:#6b5418}
+.eg-diff{display:flex;flex-wrap:wrap;gap:6px}
+.eg-diff .chip{min-height:38px;padding:0 12px;font-size:16px}
+body.lp .eg-diff .chip[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.eg-dlg{width:min(640px,100%)}
+.eg-dday{display:flex;flex-direction:column;gap:6px}
+.eg-tick{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;border:1.5px solid var(--line2);cursor:pointer;font-size:17px}
+.eg-tick:has(input:checked){background:var(--sky-soft,#dcf0fd);border-color:var(--ink)}
+.eg-tick.off{opacity:.45;cursor:default}
+/* Eltern */
+.eg-eltern{max-width:760px}
+.eg-info{white-space:pre-line;color:var(--ink)!important}
+.eg-kidpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.eg-kidbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:60px;padding:10px 16px;border-radius:16px;border:2px solid var(--ink);background:#fff;cursor:pointer;text-align:left;box-shadow:var(--schatten);font-family:inherit}
+.eg-kidbtn b{font-size:22px;font-weight:400}
+.eg-kidbtn small{font-size:15px;color:#3f6b2e}
+.eg-kidbtn:hover{transform:translateY(-2px)}
+.eg-kidbtn.mine{background:var(--leaf-soft,#e9f1e3)}
+.eg-kidbtn.done{border-color:var(--line2);box-shadow:none;opacity:.6;cursor:default;transform:none}
+.eg-kidbtn.done small{color:var(--soft)}
+.eg-pday{display:flex;flex-direction:column;gap:8px;border-top:1.5px dashed var(--gold,#d6ad45);padding-top:12px}
+.eg-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.eg-slot{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 12px;border-radius:14px;border:2px solid var(--line2);background:#fff;cursor:pointer;font-family:inherit;font-size:20px;color:var(--ink)}
+.eg-slot[aria-pressed="true"]{border-color:var(--ink);background:var(--sky-soft,#dcf0fd);box-shadow:var(--schatten)}
+.eg-box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--ink);background:#fff;display:grid;place-items:center;font-size:18px;color:#3f6b2e}
+.eg-count{font-size:20px;color:#3f6b2e}
+.eg-none{display:flex;align-items:center;gap:10px;font-size:19px;cursor:pointer}
+.eg-none input{width:24px;height:24px}
+.eg-send{min-height:56px;font-size:22px!important}
+.eg-done h2{color:#3f6b2e}
+.eg-big{font-size:26px;line-height:1.3;background:var(--sun-soft,#fbf3dc);border:1.5px dashed var(--gold,#d6ad45);border-radius:20px;padding:14px 18px}
+.eg-chosen{margin:0;padding-left:22px;font-size:19px}
+@media (max-width:600px){
+  .eg-time{width:auto}
+  .eg-rows li{gap:6px 10px}
+  .eg-banner{flex-wrap:nowrap;align-items:flex-start;padding:18px;gap:14px}
+  .eg-banner .banner-bild{width:64px;height:64px;border-width:2px}
+  .eg .h1{font-size:34px}
+  .eg-slots{grid-template-columns:repeat(2,1fr)}
+}
+@media print{
+  body.lp{background:#fff}
+  .top,.eg-noprint,#toast{display:none!important}
+  .eg .card{box-shadow:none!important;border:0!important;padding:0}
+  .eg-rows li{break-inside:avoid;min-height:0}
+  .main{padding:0}
+}
 /* ---- Version 91: Umfrage (Lehrperson, Wandtafel, Kinder) ---- */
 .umf-page{max-width:1240px;margin:0 auto;padding:18px 24px 72px;display:flex;flex-direction:column;gap:26px}
 .umf-top{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
@@ -1084,3 +1172,33 @@ body.kidv .kid-go[disabled]{background:#c9d6e2;color:#5f6963;box-shadow:none;cur
 .tile .sw.sw-bild img{width:100%;height:100%;display:block;border-radius:50%}
 body.lp .tile .sw.sw-bild{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--gold)}
 body.wechsel #app{visibility:hidden}
+/* Elterngespräche Version 29: Liste, Aufklappen, «dabei» */
+.eg .umf-hero h1{font-size:clamp(32px,4.5vw,46px)}
+.eg-ttitle{font-size:24px;font-weight:400;line-height:1.2}
+.eg .pill.eg-st-eg-auf{background:var(--leaf-soft,#e9f1e3);border:1.5px solid #7ea56a;color:#3f6b2e}
+.eg .pill.eg-st-eg-alt{background:#f1f1ef;border:1.5px solid #c9c9c4;color:#6b6b66}
+.eg .pill.eg-st-{background:var(--sun-soft,#fbf3dc);border:1.5px solid var(--gold,#d6ad45);color:#6b5418}
+.eg-tcard .pill{align-self:flex-start}
+button.eg-time{white-space:nowrap;flex:none;width:auto;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;color:var(--ink);cursor:pointer;padding:4px 6px;margin-left:-6px;border-radius:10px;text-align:left}
+button.eg-time:hover{background:var(--sky-soft,#dcf0fd)}
+.eg-pfeil{font-size:14px;color:var(--soft);width:12px}
+.eg-n{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--sky-soft,#dcf0fd);border:1.5px solid var(--line2);font-size:14px;display:inline-grid;place-items:center;color:var(--sky-deep,#3f78a8)}
+.eg-rows li.auf{box-shadow:var(--schatten)}
+.eg-wholist{flex:1 1 100%;background:#fff;border:1.5px dashed var(--gold,#d6ad45);border-radius:14px;padding:10px 14px;font-size:17px}
+.eg-wholist ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.eg-wholist li{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap;padding:0!important;border:0!important;background:none!important;min-height:0!important;box-shadow:none!important}
+.eg-in{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line2);background:#fff;font:inherit;font-size:16px;color:var(--soft);cursor:pointer}
+.eg-in.on{border:1.5px solid #7ea56a;background:var(--leaf-soft,#e9f1e3);color:#3f6b2e}
+.eg-in:hover{border-color:var(--ink)}
+@media print{ .eg .umf-page,.umf-page.eg{padding:0} .eg-wholist{display:none} }
+/* ---- Version 101: Umfrage-Vorlagen (eigene, für alle, löschen und wieder einfügen) ---- */
+.umf-tpl{flex-direction:column;align-items:stretch;gap:8px;cursor:default}
+.umf-tpl-open{all:unset;cursor:pointer;display:flex;gap:14px;align-items:flex-start;text-align:left;border-radius:16px}
+.umf-tpl-open:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.umf-tpl-badge{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:999px;background:#fbf3dc;border:1px solid #e9d39a;font-size:14px;color:#6b5418}
+.umf-tpl-acts{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.umf-weg{padding:12px 18px;display:flex;flex-direction:column;gap:10px}
+.umf-weg-head{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:19px;color:var(--soft)}
+.umf-weg-row{gap:10px;flex-wrap:nowrap}
+.umf-tpl-emo.sm{width:40px;height:40px;font-size:22px}
+.umf-emo-chips .chip{font-size:22px;padding:0 12px}
