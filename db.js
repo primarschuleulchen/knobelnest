@@ -31,7 +31,10 @@
 
     me: async function () {
       var s = await this.session(); if (!s) return null;
-      var rows = ok(await sb.from('profiles').select('id,email,name,is_admin').eq('id', s.user.id));
+      // Version 22: valid_until (gültig bis). Solange das SQL noch nicht ausgeführt ist, ohne dieses Feld.
+      var r = await sb.from('profiles').select('id,email,name,is_admin,valid_until').eq('id', s.user.id);
+      if (r.error && /valid_until|column/i.test(r.error.message || '')) r = await sb.from('profiles').select('id,email,name,is_admin').eq('id', s.user.id);
+      var rows = ok(r);
       return rows[0] || { id: s.user.id, email: s.user.email, name: null, is_admin: false };
     },
     setMyName: async function (id, name) { ok(await sb.from('profiles').update({ name: name }).eq('id', id)); },
@@ -55,7 +58,14 @@
     setGameForAll: async function (id, on) { ok(await sb.from('games').update({ for_all: on }).eq('id', id)); },
 
     // ---------- Lehrpersonen (Admin) ----------
-    listTeachers: async function () { return ok(await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at')); },
+    listTeachers: async function () {
+      var r = await sb.from('profiles').select('id,email,name,is_admin,created_at,valid_until').order('created_at');
+      this.noLicense = false;
+      if (r.error && /valid_until|column/i.test(r.error.message || '')) { this.noLicense = true; r = await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at'); }
+      return ok(r);
+    },
+    // Lizenz «gültig bis» setzen (null = unbefristet), nur Admin
+    setValidUntil: async function (tid, day) { ok(await sb.rpc('admin_set_valid', { p_teacher: tid, p_until: day || null })); },
     listTeacherGames: async function () { return ok(await sb.from('teacher_games').select('teacher_id,game_id,created_at')); },
     setTeacherGames: async function (tid, gids, on) {
       if (on) ok(await sb.from('teacher_games').upsert(gids.map(function (g) { return { teacher_id: tid, game_id: g }; }), { onConflict: 'teacher_id,game_id', ignoreDuplicates: true }));
@@ -115,10 +125,26 @@
     kidHeft: async function (token) { return ok(await sb.rpc('kid_heft', { p_token: token })); },
     kidPin: async function (token) { return ok(await sb.rpc('kid_pin', { p_token: token })); },
     kidPinIdea: async function (token, board, text) { return ok(await sb.rpc('kid_pin_idea', { p_token: token, p_board: String(board || ''), p_text: String(text || '') })); },
+    // Version 23: mit Kategorie und Bild (die Pinnwand entscheidet, ob direkt angepinnt wird)
+    kidPinPost: async function (token, board, text, cat, img) {
+      return ok(await sb.rpc('kid_pin_post', { p_token: token, p_board: String(board || ''), p_text: String(text || ''), p_cat: cat ? String(cat) : null, p_img: img ? String(img) : null }));
+    },
     kidPinVote: async function (token, body) { return ok(await sb.rpc('kid_pin_vote', { p_token: token, p_body: body })); },
     kidAtelier: async function (token) { return ok(await sb.rpc('kid_atelier', { p_token: token })); },
     kidAtelierSet: async function (token, patch) { return ok(await sb.rpc('kid_atelier_set', { p_token: token, p_patch: patch })); },
     atelierPut: async function (cid, kid, patch) { return ok(await sb.rpc('atelier_put', { p_class: cid, p_kid: kid, p_patch: patch })); },
+    // Umfrage (Version 23)
+    umfragePut: async function (cid, live, clear) { return ok(await sb.rpc('umfrage_put', { p_class: cid, p_live: live == null ? null : live, p_clear: clear || null })); },
+    kidUmfrage: async function (token) { return ok(await sb.rpc('kid_umfrage', { p_token: token })); },
+    kidUmfrageSend: async function (token, q, val) { return ok(await sb.rpc('kid_umfrage_send', { p_token: token, p_q: String(q || ''), p_val: val })); },
+    // Umfrage offen teilen (Version 27)
+    umfOffenOpen: async function (live) { return ok(await sb.rpc('umf_offen_open', { p_live: live })); },
+    umfOffenPut: async function (id, live, clear) { return ok(await sb.rpc('umf_offen_put', { p_id: id, p_live: live == null ? null : live, p_clear: clear || null })); },
+    umfOffenHost: async function (id) { return ok(await sb.rpc('umf_offen_host', { p_id: id || null })); },
+    umfOffenClose: async function (id) { return ok(await sb.rpc('umf_offen_close', { p_id: id })); },
+    umfGastJoin: async function (nr, name) { return ok(await sb.rpc('umf_gast_join', { p_nr: String(nr || ''), p_name: String(name || '') })); },
+    umfGast: async function (token) { return ok(await sb.rpc('umf_gast', { p_token: token })); },
+    umfGastSend: async function (token, q, val) { return ok(await sb.rpc('umf_gast_send', { p_token: token, p_q: String(q || ''), p_val: val })); },
     pinPut: async function (cid, coll, id, obj) { return ok(await sb.rpc('pin_put', { p_class: cid, p_coll: coll, p_id: id, p_obj: obj })); },
     kidHeftOwn: async function (token, entry, del) { return ok(await sb.rpc('kid_heft_own', { p_token: token, p_entry: entry, p_delete: !!del })); },
     kidHeftTick: async function (token, id, on) { return ok(await sb.rpc('kid_heft_tick', { p_token: token, p_entry: String(id), p_on: !!on })); },
@@ -200,6 +226,26 @@
     talkAnswerPut: async function (cid, kid, ans) { return ok(await sb.rpc('talk_answer_put', { p_class: cid, p_kid: kid, p_ans: ans })); },
     elternGet: async function (token, kid, key) { return ok(await sb.rpc('eltern_get', { p_token: token, p_kid: kid || null, p_key: key || null })); },
     elternSet: async function (token, kid, key, a) { return ok(await sb.rpc('eltern_set', { p_token: token, p_kid: kid, p_key: key, p_name: a.name || '', p_slots: a.slots || [], p_note: a.note || '', p_none: !!a.none })); },
+    // Live-Quiz (Version 23)
+    quizOpen: async function (title, qs) { return ok(await sb.rpc('quiz_open', { p_title: title, p_questions: qs })); },
+    quizStep: async function (id, phase, q) { return ok(await sb.rpc('quiz_step', { p_id: id, p_phase: phase, p_q: q })); },
+    quizHost: async function (id) { return ok(await sb.rpc('quiz_host', { p_id: id })); },
+    quizKick: async function (id, pid) { return ok(await sb.rpc('quiz_kick', { p_id: id, p_player: pid })); },
+    quizClose: async function (id) { try { await sb.rpc('quiz_close', { p_id: id }); } catch (e) {} },
+    quizJoin: async function (pin, name, av) { return ok(await sb.rpc('quiz_join', { p_pin: String(pin || ''), p_name: String(name || ''), p_avatar: String(av || '') })); },
+    quizState: async function (token) { return ok(await sb.rpc('quiz_state', { p_token: token })); },
+    // Kinder-Quiz (Version 24)
+    kidQuizList: async function (token) { return ok(await sb.rpc('kid_quiz_list', { p_token: token })); },
+    kidQuizGet: async function (token, id, ver) { return ok(await sb.rpc('kid_quiz_get', { p_token: token, p_id: id, p_ver: ver == null ? null : ver })); },
+    kidQuizSave: async function (token, id, ver, title, data) { return ok(await sb.rpc('kid_quiz_save', { p_token: token, p_id: id || null, p_ver: ver == null ? null : ver, p_title: String(title || ''), p_data: data })); },
+    kidQuizDelete: async function (token, id) { return ok(await sb.rpc('kid_quiz_delete', { p_token: token, p_id: id })); },
+    kqList: async function () { return ok(await sb.rpc('kq_list')); },
+    kqGet: async function (id, ver) { return ok(await sb.rpc('kq_get', { p_id: id, p_ver: ver == null ? null : ver })); },
+    kqSave: async function (id, ver, title, data) { return ok(await sb.rpc('kq_save', { p_id: id, p_ver: ver, p_title: String(title || ''), p_data: data })); },
+    kqNew: async function (cid, members, title) { return ok(await sb.rpc('kq_new', { p_class: cid, p_members: members || [], p_title: String(title || '') })); },
+    kqMembers: async function (id, members) { return ok(await sb.rpc('kq_members', { p_id: id, p_members: members || [] })); },
+    kqDelete: async function (id) { return ok(await sb.rpc('kq_delete', { p_id: id })); },
+    quizAnswer: async function (token, q, ans) { return ok(await sb.rpc('quiz_answer', { p_token: token, p_q: q, p_ans: ans })); },
     tafelGet: async function (token) { return ok(await sb.rpc('tafel_get', { p_token: token })); },
     tafelSet: async function (token, subject, col) { return ok(await sb.rpc('tafel_set', { p_token: token, p_subject: subject, p_col: col })); }
   };

@@ -134,6 +134,13 @@
   // Werkzeuge für die Kinder: fehlt ein Eintrag, gilt «freigegeben» (so bleiben bestehende Klassen wie bisher)
   function toolOn(c, k) { var t = c && c.kid_tools; return !(t && t[k] === false); }
 
+  // Einheitlicher Zurück-Knopf wie in der Eulenkiste: weisse Pille mit Pfeil und Eule (oben links)
+  function backBtn(attr, label) {
+    label = label || 'Zurück zur Klassenkiste';
+    var inner = '<span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34" draggable="false">';
+    return /href=/.test(attr) ? '<a class="kn-back" ' + attr + ' aria-label="' + h(label) + '" title="' + h(label) + '">' + inner + '</a>'
+      : '<button class="kn-back" ' + attr + ' aria-label="' + h(label) + '" title="' + h(label) + '">' + inner + '</button>';
+  }
   function ic(paths, size, color, sw) {
     return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') +
       '" stroke-width="' + (sw || 2.2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
@@ -203,7 +210,7 @@
     return false;
   }
   var UI = { confirm: null, view: null };
-  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); else if (UI.view === 'eg') E.render(); }
+  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); else if (UI.view === 'umfrage') U.render(); else if (UI.view === 'eg') E.render(); }
 
   // Overlays
   function overlay(html) {
@@ -272,20 +279,21 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '9'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
+  var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
     var p = document.createElement('div');
     p.className = 'player'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', title);
-    p.innerHTML = '<div class="player-bar"><button class="btn sm" data-a="closePlayer">' + ic(I.back) + ' Zurück</button><b>' + h(title) +
+    p.innerHTML = '<div class="player-bar">' + backBtn('data-a="closePlayer"', 'Zurück') + '<b>' + h(title) +
       '</b><button class="btn sm" data-a="playerFull">Vollbild</button></div>';
     var f = document.createElement('iframe');
     f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock');
     f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
     var url = gameUrl(html);
-    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : ZR_VER);
+    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : /^gedaechtnis\//.test(url) ? GD_VER : ZR_VER);
     else f.srcdoc = prepare(html, seed);
     if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
@@ -327,7 +335,7 @@
     var d = e.data; if (!d || typeof d !== 'object') return;
     if (PL.url && d.knobelnest && d.type === 'hello') {
       var sd = PL.seed || {};
-      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit, admin: !!sd.admin } }, '*'); } catch (x) {}
+      try { PL.frame.contentWindow.postMessage({ knobelnestInit: { store: sd.store || null, settings: sd.settings || null, teacher: sd.teacher != null ? !!sd.teacher : !PL.seed, edit: !!sd.edit, admin: !!sd.admin, award: sd.award || null } }, '*'); } catch (x) {}
       return;
     }
     if (PL.url && d.knobelnest && d.type === 'close') { closePlayer(); return; }
@@ -350,16 +358,25 @@
     if (mf) return F.start(mf[1]);
     var mo = hs.match(/^#\/otterteich\/([0-9a-f-]{36})/);
     if (mo) return O.start(mo[1]);
+    var mg = hs.match(/^#\/gedaechtnis\/([0-9a-f-]{36})/);
+    if (mg) return GD.start(mg[1]);
     var ma = hs.match(/^#\/atelier\/([0-9a-f-]{36})/);
     if (ma) return AT.start(ma[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
-    var mg = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})/);
-    if (mg) return E.start(mg[1]);
-    var me = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
-    if (me) return EP.start(me[1]);
+    var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})/);
+    if (mgs) return E.start(mgs[1]);
+    var mel = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
+    if (mel) return EP.start(mel[1]);
+    var mg = hs.match(/^#\/u(?:\/(\d*))?\/?$/);
+    if (mg) return G.start(mg[1] || '');
+    var mu = hs.match(/^#\/umfrage\/([0-9a-f-]{36})/);
+    if (mu) return U.start(mu[1]);
+    if (/^#\/quiz(\/|$)/.test(hs)) return QZ.start();
+    var mq = hs.match(/^#\/q(?:\/(\d*))?\/?$/);
+    if (mq) return QZ.play(mq[1] || '');
     var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
     if (ms) return S.start(ms[1]);
     return T.start();
@@ -375,11 +392,10 @@
     var mine = me ? entry[me] : null;
     var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
     var kid = mode === 'kid', emb = mode === 'embed';
-    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head"><img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
+    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
       '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
       '<p>' + (kid ? 'Tippe beim Fach auf das Feld, das zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
-      '<div class="row">' + (kid ? '<button class="board-btn" data-a="kBack">' + ic(I.back) + ' Zurück</button>' :
-        '<button class="board-btn" data-a="wallFull">Vollbild</button><a class="board-btn" href="#/">Zum Portal</a>') + '</div></div>';
+      (kid ? '' : '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button></div>') + '</div>';
     if (kid) {
       out += '<div class="mine"><b>Du (' + h(kidName[me] || '') + '):</b><span>' +
         (mine && subjName[mine.subject_id] ? h(subjName[mine.subject_id]) + ' · ' + (COL_LABEL[mine.col] || '') : 'Du stehst noch nicht auf der Tafel. Wähle unten dein Fach und die passende Spalte.') + '</span>' +
@@ -449,6 +465,7 @@
     start: async function (cid) {
       UI.view = 'sprint';
       var sess = await DB.session(); if (!sess) { location.hash = '#/'; return; }
+      if (!(await licGate())) return;
       S.cid = cid; S.race = null; S.runs = []; S.setup = S.setup || LS.get('kn_sprint') || { rows: [2, 3, 4, 5, 6, 7, 8, 9, 10], goal: 10 };
       app.innerHTML = '<p class="boot">Sprint wird geladen …</p>';
       try {
@@ -473,12 +490,12 @@
     countLeft: function () { if (!S.race || !S.race.starts_at) return -1; return Math.ceil((Date.parse(S.race.starts_at) - S.offset - Date.now()) / 1000); },
     render: function () {
       var cls = S.cls || { name: '' }, r = S.race, kidName = {}; (S.kids || []).forEach(function (k) { kidName[k.id] = k.name; });
-      var head = '<div class="spr-head"><div><span class="kick">Klassen-Sprint · Klasse ' + h(cls.name) + '</span><h1>' +
+      var head = '<div class="spr-head">' + backBtn('href="#/"') + '<div style="flex:1 1 auto"><span class="kick">Klassen-Sprint · Klasse ' + h(cls.name) + '</span><h1>' +
         (!r ? 'Neuer Sprint' : r.status === 'wait' ? 'Auf die Plätze …' : r.status === 'run' ? 'Los geht\'s!' : 'Zieleinlauf') + '</h1></div><div class="row">' +
         (r && r.status === 'wait' ? '<button class="btn primary big" data-a="sGo"' + (S.runs.length ? '' : ' disabled') + '>▶ Start</button><button class="btn" data-a="sCancel">Abbrechen</button>' : '') +
         (r && r.status === 'run' ? '<button class="btn" data-a="sEnd">Beenden</button>' : '') +
         (r && r.status === 'done' ? '<button class="btn primary" data-a="sNew">Neuer Sprint</button>' : '') +
-        '<button class="btn" data-a="wallFull">Vollbild</button><a class="btn" href="#/">Zum Portal</a></div></div>';
+        '<button class="btn" data-a="wallFull">Vollbild</button></div></div>';
       var body = '';
       if (!r) {
         body = '<div class="spr-setup card stack"><p class="lead">Alle Kinder rechnen gleichzeitig an ihrem iPad. Jede richtige Antwort bringt ihren Läufer einen Schritt weiter. Hier vorne sieht die ganze Klasse das Rennen.</p>' +
@@ -544,6 +561,7 @@
       UI.view = 'wall';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
+      if (!embed && !(await toolGate('tafel', 'Die Arbeitsstand-Tafel'))) return;
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); W.bild = wc && wc.bild; } catch (e) {}
       async function load() {
@@ -556,17 +574,47 @@
   };
 
   // ===================================================================
-  // Werkzeuge (Tagesfolie, Hausaufgabenheft, Pinnwand, Otterteich) gibt die Admin-Person pro Lehrperson frei.
-  // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { folie: true, heft: true, pin: true, otter: true } }
+  // Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (BASE_TOOLS).
+  // Die übrigen Werkzeuge (TOOLS) gibt die Admin-Person pro Lehrperson frei.
+  // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
-  var TOOLS = [['folie', '☀️ Tagesfolie'], ['heft', '📒 Hausaufgabenheft'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Otterteich'], ['atelier', '🚲 Atelier'], ['eltern', '🗓️ Elterngespräche']];
+  var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage'], ['eltern', '🗓️ Elterngespräche']];
   async function toolAccess(me) {
-    var all = {}; TOOLS.forEach(function (t) { all[t[0]] = true; });
+    var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
-    try { var d = await DB.sharedGet('werkzeuge'); return (d && me && d[me.id]) || {}; } catch (e) { return {}; }
+    var acc = {}; BASE_TOOLS.forEach(function (t) { acc[t[0]] = true; });
+    try { var d = await DB.sharedGet('werkzeuge'); var mine = (d && me && d[me.id]) || {}; TOOLS.forEach(function (t) { if (mine[t[0]]) acc[t[0]] = true; }); } catch (e) {}
+    return acc;
+  }
+  // Lizenz (Version 22): profiles.valid_until = letzter gültiger Tag (leer = unbefristet, Admin immer frei)
+  function licLeft(me) {
+    if (!me || me.is_admin || !me.valid_until) return null;
+    return Math.round((new Date(me.valid_until + 'T12:00:00') - new Date(isoDay(new Date()) + 'T12:00:00')) / 864e5);
+  }
+  function licExpired(me) { var d = licLeft(me); return d !== null && d < 0; }
+  function dateCH(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? (+p[2]) + '.' + (+p[1]) + '.' + p[0] : ''; }
+  function renewBtn(cls) {
+    return C.SHOP_URL ? '<a class="btn ' + (cls || 'primary') + '" href="' + h(C.SHOP_URL) + '" target="_blank" rel="noopener">✦ Jetzt verlängern</a>'
+      : '<a class="btn ' + (cls || 'primary') + '" href="mailto:' + h(C.CONTACT) + '?subject=' + encodeURIComponent(C.PORTAL_NAME + ' verlängern') + '">✦ Jetzt verlängern</a>';
+  }
+  function licPage(me) {
+    document.body.classList.add('lp');
+    paint('<div class="main"><div class="card stack" style="max-width:600px;margin:40px auto;text-align:center;align-items:center;gap:16px">' +
+      '<img src="bilder/eule.webp" alt="" width="96" height="96"><h2>Ihre ' + h(C.PORTAL_NAME) + ' ist abgelaufen</h2>' +
+      '<p>Ihre Lizenz war gültig bis am <b>' + h(dateCH(me.valid_until)) + '</b>. Ihre Klassen und alles, was Sie gespeichert haben, bleiben erhalten. Sobald Sie verlängern, geht es genau dort weiter.</p>' +
+      '<div class="row" style="justify-content:center">' + renewBtn() + '<button class="btn" data-a="logout">Abmelden</button></div>' +
+      '<p class="muted small">Fragen? ' + h(C.CONTACT) + '</p></div></div>');
+  }
+  // Für Werkzeug-Seiten ohne toolGate (Wandtafel, Sprint): false = abgelaufen, Hinweis gezeigt
+  async function licGate() {
+    var me = null; try { me = await DB.me(); } catch (e) {}
+    if (licExpired(me)) { licPage(me); return false; }
+    return true;
   }
   async function toolGate(key, name) {
     var me = null; try { me = await DB.me(); } catch (e) {}
+    if (licExpired(me)) { licPage(me); return false; }
     var acc = await toolAccess(me);
     if (acc[key]) return true;
     paint('<div class="main"><div class="card stack"><h2>' + h(name) + ' ist noch nicht freigegeben</h2><p>Die Administratorin oder der Administrator kann es Ihnen unter «Verwaltung» freigeben.</p><a class="btn" href="#/">Zum Portal</a></div></div>');
@@ -617,14 +665,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('38') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('39') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '5';
+  var HEFT_VER = '6';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -686,7 +734,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '14';
+  var PIN_VER = '16';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -769,7 +817,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '5';
+  var ATELIER_VER = '6';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -931,9 +979,9 @@
     }
   };
   function egHead(sub) {
-    return '<header class="top"><div class="top-in"><a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
+    return '<header class="top"><div class="top-in">' + (sub === 'Elterngespräche' ? '<div class="row">' + backBtn('href="#/"') : '') + '<a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
       '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>' + h(sub) + '</small></span></a>' +
-      (sub === 'Elterngespräche' ? '<a class="btn sm" href="#/">← Klassenkiste</a>' : '') + '</div></header>';
+      (sub === 'Elterngespräche' ? '</div>' : '') + '</div></header>';
   }
   function egDot(v) { var d = EG_DIFF[v || 0]; return '<span class="eg-dot" style="background:' + d[1] + '" title="' + d[0] + '"></span>'; }
   E.render = function () {
@@ -1221,7 +1269,682 @@
     } catch (e) { EP.err = errMsg(e); }
     EP.busy = false; EP.render(); window.scrollTo(0, 0);
   };
-  var OTTER_VER = '7';
+  // Umfrage (ähnlich wie Mentimeter): Die Lehrperson stellt Fragen an der Wandtafel, die Kinder antworten am iPad.
+  // Umfragen der Lehrperson (für alle Klassen): teacher_store «umfragen» = { list: [ { id, title, set, qs: [Frage] } ] }
+  // Live-Stand pro Klasse: teacher_store «umfrage-<Klasse>» = { live: {...}, ans: { Frage-ID: { Kind-ID: Antwort } } }
+  //   live (schreibt nur die Lehrperson, umfrage_put) = { on, sid, title, mode, cur, open, show, auto, kids, rev, hid, hidw, until, qs }
+  //   Antworten schreiben die Kinder mit kid_umfrage_send, lesen mit kid_umfrage (ohne Namen, Lösung erst nach dem Aufdecken).
+  // ===================================================================
+  var UMF_TYPES = [
+    ['wahl', 'Auswahl', '📊', 'Eine oder mehrere Antworten wählen'],
+    ['quiz', 'Quizfrage', '🏆', 'Eine Antwort ist richtig, mit Auflösung'],
+    ['stimmung', 'Stimmung', '😊', 'Gesichter, Ampel, Daumen oder Wetter'],
+    ['wort', 'Wortwolke', '☁️', 'Kurze Wörter werden zur Wolke'],
+    ['text', 'Offene Frage', '💬', 'Sätze und Ideen als Kärtchen'],
+    ['skala', 'Skala', '🎚️', 'Aussagen von 1 bis 5 bewerten'],
+    ['rang', 'Rangliste', '🥇', 'In die wichtigste Reihenfolge bringen'],
+    ['punkte', 'Sterne verteilen', '⭐', 'Sterne auf die Ideen verteilen'],
+    ['zahl', 'Schätzfrage', '🔢', 'Eine Zahl schätzen, mit Lösung'],
+    ['feld', 'Punkt setzen', '🎯', 'Einen Punkt ins Feld setzen'],
+    ['info', 'Infofolie', '📝', 'Nur Text, ohne Antwort']
+  ];
+  function umfType(t) { return UMF_TYPES.filter(function (x) { return x[0] === t; })[0] || UMF_TYPES[0]; }
+  var UMF_COL = ['#5f97c8', '#e8a33d', '#7ea56a', '#d9736a', '#9b7fc4', '#4fb0a8', '#d6ad45', '#c77ca6'];
+  var UMF_INK = ['#2f5f8f', '#a8650c', '#4a7536', '#a8443b', '#674c98', '#2a7a73', '#93701a', '#93456f'];
+  var UMF_TINT = ['#fbf3dc', '#dcf0fd', '#e9f1e3', '#fcefed', '#efe7f8', '#e0f4f1'];
+  var UMF_STIL = {
+    gesichter: ['😄 Super', '🙂 Gut', '😐 Geht so', '🙁 Nicht so gut', '😢 Schlecht'],
+    ampel: ['🟢 Alles klar', '🟡 Fast', '🔴 Noch nicht'],
+    daumen: ['👍 Ja', '🤷 Weiss nicht', '👎 Nein'],
+    wetter: ['☀️ Sonnig', '⛅ Wolkig', '🌧️ Regnerisch', '⛈️ Gewitter']
+  };
+  var UMF_STIL_NAME = { gesichter: 'Gesichter', ampel: 'Ampel', daumen: 'Daumen', wetter: 'Wetter' };
+  function umfId(p) { return p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 6); }
+  function umfNewQ(type) {
+    var q = { id: umfId('q'), type: type, text: '' };
+    if (type === 'wahl') { q.opts = ['', '', '']; q.multi = false; }
+    else if (type === 'quiz') { q.opts = ['', '', '', '']; q.ok = [0]; q.multi = false; }
+    else if (type === 'stimmung') { q.stil = 'gesichter'; q.opts = UMF_STIL.gesichter.slice(); q.text = 'Wie geht es dir heute?'; }
+    else if (type === 'wort') q.max = 3;
+    else if (type === 'text') q.max = 1;
+    else if (type === 'skala') { q.opts = ['']; q.max = 5; q.lo = 'stimmt gar nicht'; q.hi = 'stimmt genau'; }
+    else if (type === 'rang') q.opts = ['', '', ''];
+    else if (type === 'punkte') { q.opts = ['', '', '']; q.pts = 10; }
+    else if (type === 'zahl') { q.min = ''; q.max = ''; q.ok = ''; q.unit = ''; }
+    else if (type === 'feld') q.ax = ['müde', 'wach', 'traurig', 'fröhlich']; // links, rechts, unten, oben
+    else if (type === 'info') q.sub = '';
+    return q;
+  }
+  function umfNum(v) { var s = String(v == null ? '' : v).trim().replace(/[’']/g, '').replace(',', '.'); return s !== '' && /^-?\d+(\.\d+)?$/.test(s) ? +s : null; }
+  function umfFmtNum(x) { return x == null || !isFinite(x) ? '' : (Math.round(x * 100) / 100).toLocaleString('de-CH'); }
+  function umfHasOk(q) { return q.type === 'quiz' ? Array.isArray(q.ok) && q.ok.length > 0 : q.type === 'zahl' ? umfNum(q.ok) !== null : false; }
+  function umfSkMax(q) { return Math.min(10, Math.max(3, +q.max || 5)); }
+  // Emoji vorne abtrennen («😄 Super» -> ['😄', 'Super'])
+  function umfEmo(o) {
+    var m = /^(\S+)\s*(.*)$/.exec(String(o || '').trim());
+    try { if (m && /\p{Extended_Pictographic}/u.test(m[1])) return [m[1], m[2]]; } catch (e) {}
+    return ['', String(o || '')];
+  }
+  // Für den Start: leere Antworten weglassen, nur bekannte Felder (Lösung bei Quiz entsprechend umrechnen)
+  function umfClean(q) {
+    var c = { id: q.id, type: q.type, text: String(q.text || '').trim().slice(0, 200) };
+    if (q.opts) {
+      var map = {}, o = [];
+      q.opts.forEach(function (x, i) { x = String(x || '').trim().slice(0, 80); if (x) { map[i] = o.length; o.push(x); } });
+      c.opts = o;
+      if (q.type === 'quiz') c.ok = (q.ok || []).filter(function (i) { return map[i] != null; }).map(function (i) { return map[i]; });
+    }
+    if (q.type === 'wahl' || q.type === 'quiz') c.multi = !!q.multi;
+    if (q.type === 'wort' || q.type === 'text') c.max = +q.max || 1;
+    if (q.type === 'skala') { c.max = umfSkMax(q); c.lo = String(q.lo || '').slice(0, 40); c.hi = String(q.hi || '').slice(0, 40); }
+    if (q.type === 'punkte') c.pts = Math.min(100, Math.max(1, +q.pts || 10));
+    if (q.type === 'stimmung') c.stil = q.stil;
+    if (q.type === 'zahl') { c.min = umfNum(q.min); c.max = umfNum(q.max); c.ok = umfNum(q.ok); c.unit = String(q.unit || '').slice(0, 20); }
+    if (q.type === 'feld') c.ax = (q.ax || []).slice(0, 4).map(function (x) { return String(x || '').slice(0, 30); });
+    if (q.type === 'info') c.sub = String(q.sub || '').slice(0, 600);
+    return c;
+  }
+  function umfCheck(sv) {
+    if (!sv.qs.length) return 'Bitte zuerst eine Frage hinzufügen.';
+    for (var i = 0; i < sv.qs.length; i++) {
+      var q = umfClean(sv.qs[i]), nr = 'Frage ' + (i + 1) + ': ';
+      if (!q.text) return nr + 'Bitte die Frage eintippen.';
+      if (q.opts && q.opts.length < (q.type === 'skala' ? 1 : 2)) return nr + (q.type === 'skala' ? 'Bitte mindestens eine Aussage eintippen.' : 'Bitte mindestens zwei Antworten eintippen.');
+      if (q.type === 'quiz' && !q.ok.length) return nr + 'Bitte die richtige Antwort mit ✓ markieren.';
+      if (q.type === 'zahl' && q.min != null && q.max != null && q.min >= q.max) return nr + 'Die kleinste Zahl muss kleiner als die grösste sein.';
+    }
+    return '';
+  }
+  // Antwort als Text (Tabelle und Kinderansicht)
+  function umfFmt(q, v) {
+    if (v == null) return '';
+    var o = q.opts || [];
+    switch (q.type) {
+      case 'wahl': case 'quiz': case 'stimmung': return (v || []).map(function (i) { return o[i]; }).join(', ');
+      case 'wort': case 'text': return (v || []).join(' / ');
+      case 'skala': return (v || []).map(function (x, i) { return (o.length > 1 ? o[i] + ': ' : '') + x; }).join(', ');
+      case 'rang': return (v || []).map(function (i, p) { return (p + 1) + '. ' + o[i]; }).join(', ');
+      case 'punkte': return (v || []).map(function (x, i) { return x ? o[i] + ': ' + x : ''; }).filter(Boolean).join(', ');
+      case 'zahl': return umfFmtNum(+v) + (q.unit ? ' ' + q.unit : '');
+      case 'feld': return Math.round(v.x) + ' / ' + Math.round(v.y);
+    }
+    return '';
+  }
+  function umfQuizOk(q, v) { if (!Array.isArray(v) || !Array.isArray(q.ok)) return false; return v.slice().sort().join(',') === q.ok.slice().sort().join(','); }
+
+  // Ergebnisse einer Frage zeichnen. E = [{ v: Antwort, k: Kind-ID, n: Name }] (Kinder bekommen nur v)
+  // o = { rev: Lösung zeigen, names: Namen zeigen, mod: Lehrperson darf ausblenden, small: schmale Ansicht, hidw: ausgeblendete Wörter }
+  function umfRes(q, E, o) {
+    o = o || {}; var t = q.type, opts = q.opts || [], n = opts.length, N = E.length;
+    if (t === 'info') return '';
+    if (!N) return '<div class="ur-leer">Noch keine Antworten</div>';
+    var col = function (i) { return UMF_COL[i % UMF_COL.length]; };
+    var label = function (x) { var e = umfEmo(x); return e[0] ? '<span class="ur-emo">' + e[0] + '</span><span>' + h(e[1]) + '</span>' : '<span>' + h(x) + '</span>'; };
+    if (t === 'wahl' || t === 'quiz' || t === 'stimmung') {
+      var cnt = opts.map(function () { return 0; }), who = opts.map(function () { return []; });
+      E.forEach(function (e) { (e.v || []).forEach(function (i) { if (cnt[i] != null) { cnt[i]++; if (e.n) who[i].push(e.n); } }); });
+      var mx = Math.max.apply(null, cnt.concat([1])), okA = o.rev && Array.isArray(q.ok) ? q.ok : null;
+      var cls = function (i) { return okA ? (okA.indexOf(i) >= 0 ? ' ok' : ' no') : ''; };
+      var pc = function (i) { return Math.round(cnt[i] / N * 100) + '%'; };
+      if (o.small || n > 6) return '<div class="ur-hbars">' + opts.map(function (x, i) {
+        return '<div class="ur-h' + cls(i) + '"><span class="ur-l">' + (okA && okA.indexOf(i) >= 0 ? '✓ ' : '') + label(x) + '</span><span class="ur-t"><i style="width:' + Math.max(cnt[i] ? 3 : 0, Math.round(cnt[i] / mx * 100)) + '%;background:' + col(i) + '"></i></span><b>' + cnt[i] + '</b>' +
+          (o.names && who[i].length ? '<small class="ur-who">' + h(who[i].join(', ')) + '</small>' : '') + '</div>'; }).join('') + '</div>';
+      return '<div class="ur-cols" style="--n:' + n + '">' + opts.map(function (x, i) {
+        return '<div class="ur-col' + cls(i) + '"><b class="ur-c">' + cnt[i] + '<small>' + pc(i) + '</small></b><span class="ur-box"><span class="ur-bar" style="height:' + Math.max(cnt[i] ? 2 : 0, Math.round(cnt[i] / mx * 100)) + '%;background:' + col(i) + '"></span></span>' +
+          '<span class="ur-l' + (t === 'stimmung' ? ' emo' : '') + '">' + (okA && okA.indexOf(i) >= 0 ? '<span class="ur-ok">✓</span>' : '') + label(x) + '</span>' +
+          (o.names && who[i].length ? '<small class="ur-who">' + h(who[i].join(', ')) + '</small>' : '') + '</div>'; }).join('') + '</div>';
+    }
+    if (t === 'wort') {
+      var f = {}, show = {}, hw = o.hidw || [];
+      E.forEach(function (e) { (e.v || []).forEach(function (w) { w = String(w).trim(); var k = w.toLowerCase(); if (!k || hw.indexOf(k) >= 0) return; f[k] = (f[k] || 0) + 1; if (!show[k]) show[k] = w; }); });
+      var keys = Object.keys(f).sort(function (a, b) { return f[b] - f[a] || a.localeCompare(b); }); if (!keys.length) return '<div class="ur-leer">Noch keine Wörter</div>';
+      var top = f[keys[0]], arr = []; keys.forEach(function (k, i) { if (i % 2) arr.push(k); else arr.unshift(k); });
+      return '<div class="ur-cloud' + (o.small ? ' sm' : '') + '">' + arr.map(function (k) {
+        var s = o.small ? 15 + 22 * Math.pow(f[k] / top, .8) : 22 + 64 * Math.pow(f[k] / top, .8), r = (hash(k) % 3 - 1) * 3;
+        return '<span class="ur-w" style="font-size:' + Math.round(s) + 'px;color:' + UMF_INK[hash(k) % UMF_INK.length] + ';transform:rotate(' + r + 'deg)"' + (o.mod ? ' data-a="uHideW" data-w="' + h(k) + '" title="Wort ausblenden"' : '') + '>' + h(show[k]) + (f[k] > 1 ? '<sup>' + f[k] + '</sup>' : '') + '</span>';
+      }).join('') + '</div>';
+    }
+    if (t === 'text') {
+      var cards = []; E.forEach(function (e) { (e.v || []).forEach(function (s) { cards.push({ s: s, k: e.k, n: e.n }); }); });
+      return '<div class="ur-cards' + (o.small ? ' sm' : '') + '">' + cards.map(function (c, i) {
+        return '<div class="ur-card" style="background:' + UMF_TINT[(c.k ? hash(c.k) : i) % UMF_TINT.length] + '"><p>' + h(c.s) + '</p>' + (o.names && c.n ? '<small>' + h(c.n) + '</small>' : '') +
+          (o.mod && c.k ? '<button class="ur-x" data-a="uHide" data-k="' + h(c.k) + '" title="Ausblenden" aria-label="Antwort ausblenden">✕</button>' : '') + '</div>'; }).join('') + '</div>';
+    }
+    if (t === 'skala') {
+      var m = umfSkMax(q);
+      return '<div class="ur-skala' + (o.small ? ' sm' : '') + '"><div class="ur-skends"><span></span><span>1 = ' + h(q.lo || '') + '</span><span>' + m + ' = ' + h(q.hi || '') + '</span></div>' + opts.map(function (st, i) {
+        var c = []; for (var j = 0; j < m; j++) c.push(0); var s = 0, z = 0;
+        E.forEach(function (e) { var x = (e.v || [])[i]; if (x >= 1 && x <= m) { c[x - 1]++; s += x; z++; } });
+        var cm = Math.max.apply(null, c.concat([1])), avg = z ? s / z : 0;
+        return '<div class="ur-sk"><span class="ur-l">' + h(st) + '</span><div class="ur-skbar" style="--m:' + m + '">' + c.map(function (v, j) {
+          return '<span class="ur-skc"><i style="height:' + Math.round(v / cm * 100) + '%;background:' + col(i) + '"></i><small>' + (j + 1) + '</small></span>'; }).join('') +
+          (z ? '<span class="ur-avg" style="left:' + ((avg - .5) / m * 100) + '%"><b>Ø ' + avg.toFixed(1).replace('.', ',') + '</b></span>' : '') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'rang' || t === 'punkte') {
+      var sc = opts.map(function () { return 0; }), tot = 0;
+      E.forEach(function (e) { (e.v || []).forEach(function (x, p) { if (t === 'rang') { if (sc[x] != null) sc[x] += n - p; } else if (sc[p] != null) { sc[p] += +x || 0; } }); });
+      sc.forEach(function (x) { tot = Math.max(tot, x); });
+      var ord = opts.map(function (x, i) { return i; }).sort(function (a, b) { return sc[b] - sc[a] || a - b; });
+      return '<ol class="ur-rang' + (o.small ? ' sm' : '') + '">' + ord.map(function (i, p) {
+        var side = t === 'rang' ? 'Ø Platz ' + (n - sc[i] / N + 1).toFixed(1).replace('.', ',') : sc[i] + ' ⭐';
+        return '<li><span class="ur-p">' + (p < 3 ? medal(p + 1) : (p + 1) + '.') + '</span><span class="ur-l">' + h(opts[i]) + '</span><span class="ur-t"><i style="width:' + Math.round(sc[i] / Math.max(1, tot) * 100) + '%;background:' + col(i) + '"></i></span><b>' + side + '</b></li>';
+      }).join('') + '</ol>';
+    }
+    if (t === 'zahl') {
+      var xs = E.map(function (e) { return { x: +e.v, n: e.n }; }).filter(function (e) { return isFinite(e.x); }).sort(function (a, b) { return a.x - b.x; });
+      if (!xs.length) return '<div class="ur-leer">Noch keine Antworten</div>';
+      var okv = o.rev ? umfNum(q.ok) : null, lo = xs[0].x, hi = xs[xs.length - 1].x;
+      if (okv !== null) { lo = Math.min(lo, okv); hi = Math.max(hi, okv); }
+      if (lo === hi) { lo -= 1; hi += 1; }
+      var B = o.small ? 12 : 20, bins = []; for (var b = 0; b < B; b++) bins.push(0);
+      xs.forEach(function (e) { bins[Math.min(B - 1, Math.floor((e.x - lo) / (hi - lo) * B))]++; });
+      var bm = Math.max.apply(null, bins), sum = 0; xs.forEach(function (e) { sum += e.x; });
+      var med = xs.length % 2 ? xs[(xs.length - 1) / 2].x : (xs[xs.length / 2 - 1].x + xs[xs.length / 2].x) / 2, u = q.unit ? ' ' + h(q.unit) : '';
+      var near = okv !== null && o.names ? xs.filter(function (e) { return e.n; }).slice().sort(function (a, b) { return Math.abs(a.x - okv) - Math.abs(b.x - okv); }).slice(0, 3) : [];
+      return '<div class="ur-zahl' + (o.small ? ' sm' : '') + '"><div class="ur-zl">' + bins.map(function (c, j) {
+        return c ? '<span class="ur-zb" style="left:' + (j / B * 100) + '%;width:' + (100 / B) + '%"><i style="height:' + Math.round(c / bm * 100) + '%"></i><b>' + c + '</b></span>' : ''; }).join('') +
+        (okv !== null ? '<span class="ur-zok" style="left:' + ((okv - lo) / (hi - lo) * 100) + '%"><b>Lösung: ' + umfFmtNum(okv) + u + '</b></span>' : '') + '</div>' +
+        '<div class="ur-zax"><span>' + umfFmtNum(lo) + '</span><span>' + umfFmtNum(hi) + '</span></div>' +
+        '<div class="ur-stats"><span>Durchschnitt <b>' + umfFmtNum(sum / xs.length) + u + '</b></span><span>Mitte <b>' + umfFmtNum(med) + u + '</b></span><span>Kleinste <b>' + umfFmtNum(xs[0].x) + '</b></span><span>Grösste <b>' + umfFmtNum(xs[xs.length - 1].x) + '</b></span></div>' +
+        (near.length ? '<p class="ur-near">Am nächsten dran: ' + near.map(function (e) { return '<b>' + h(e.n) + '</b> (' + umfFmtNum(e.x) + ')'; }).join(', ') + '</p>' : '') + '</div>';
+    }
+    if (t === 'feld') {
+      var ax = q.ax || [], ux = 0, uy = 0;
+      E.forEach(function (e) { ux += +e.v.x || 0; uy += +e.v.y || 0; });
+      return umfFeld(ax, E.map(function (e, i) { return '<span class="ur-dot" style="left:' + e.v.x + '%;top:' + (100 - e.v.y) + '%;background:' + (e.n ? kidColor(e.n) : UMF_COL[i % UMF_COL.length]) + '">' + (o.names && e.n ? h(e.n.charAt(0)) : '') + '</span>'; }).join('') +
+        '<span class="ur-mitte" style="left:' + (ux / N) + '%;top:' + (100 - uy / N) + '%" title="Mitte der Klasse">✦</span>', o.small);
+    }
+    return '';
+  }
+  function umfFeld(ax, inner, small, act) {
+    return '<div class="ur-feld' + (small ? ' sm' : '') + '"><span class="ur-ax o">' + h(ax[3] || '') + ' ↑</span><span class="ur-ax l">← ' + h(ax[0] || '') + '</span>' +
+      '<div class="ur-fq"' + (act ? ' data-a="' + act + '"' : '') + '><i></i><i></i><i></i><i></i>' + inner + '</div><span class="ur-ax r">' + h(ax[1] || '') + ' →</span><span class="ur-ax u">↓ ' + h(ax[2] || '') + '</span></div>';
+  }
+  // Quiz-Rangliste: richtige Quizantworten pro Kind
+  function umfRank(qs, ans, kids) {
+    var quiz = qs.filter(function (q) { return q.type === 'quiz' && (q.ok || []).length; }), pts = {}, seen = {};
+    quiz.forEach(function (q) { var a = ans[q.id] || {}; Object.keys(a).forEach(function (id) { seen[id] = 1; pts[id] = (pts[id] || 0) + (umfQuizOk(q, a[id]) ? 1 : 0); }); });
+    return { n: quiz.length, list: kids.filter(function (k) { return seen[k.id]; }).map(function (k) { return { name: k.name, p: pts[k.id] || 0 }; }).sort(function (a, b) { return b.p - a.p || a.name.localeCompare(b.name); }) };
+  }
+
+  // Vorlagen (eigene Kopie beim Übernehmen)
+  function umfQ(type, text, x) { var q = umfNewQ(type); q.text = text; if (x) Object.keys(x).forEach(function (k) { q[k] = x[k]; }); return q; }
+  var UMF_VORLAGEN = [
+    ['🌈', 'Wie war die Woche?', 'Wochenrückblick am Freitag', function () { return [
+      umfQ('stimmung', 'Wie war deine Woche?'),
+      umfQ('wort', 'Ein Wort für diese Woche', { max: 1 }),
+      umfQ('wahl', 'Was hat dir am besten gefallen?', { opts: ['Mathe', 'Deutsch', 'NMG', 'Sport', 'Gestalten', 'Pause'], multi: true }),
+      umfQ('text', 'Das wünsche ich mir für nächste Woche')]; }],
+    ['🚦', 'Verstanden?', 'Kurze Lernkontrolle nach einer Lektion', function () { return [
+      umfQ('stimmung', 'Wie gut hast du es verstanden?', { stil: 'ampel', opts: UMF_STIL.ampel.slice() }),
+      umfQ('skala', 'Wie sicher bist du?', { opts: ['Ich kann es erklären.', 'Ich kann es allein lösen.'] }),
+      umfQ('text', 'Das ist mir noch unklar')]; }],
+    ['🇨🇭', 'Quiz: Schweiz', 'Vier Fragen mit Auflösung und Rangliste', function () { return [
+      umfQ('quiz', 'Wie heisst die Bundesstadt der Schweiz?', { opts: ['Zürich', 'Bern', 'Genf', 'Basel'], ok: [1] }),
+      umfQ('zahl', 'Wie viele Kantone hat die Schweiz? Schätze!', { min: '0', max: '100', ok: '26' }),
+      umfQ('quiz', 'Welche Sprache ist eine Landessprache?', { opts: ['Englisch', 'Spanisch', 'Rätoromanisch', 'Holländisch'], ok: [2] }),
+      umfQ('quiz', 'Wie heisst der höchste Berg der Schweiz?', { opts: ['Matterhorn', 'Eiger', 'Dufourspitze', 'Säntis'], ok: [2] })]; }],
+    ['🗣️', 'Klassenrat', 'Anliegen sammeln und gewichten', function () { return [
+      umfQ('info', 'Klassenrat', { sub: 'Heute sammeln wir eure Anliegen. Jede Stimme zählt!' }),
+      umfQ('text', 'Was möchtest du im Klassenrat besprechen?', { max: 2 }),
+      umfQ('punkte', 'Was ist dir am wichtigsten? Verteile deine Sterne.', { opts: ['Pausenplatz', 'Ämtli', 'Lautstärke', 'Klassenausflug'] })]; }],
+    ['🎒', 'Ausflug planen', 'Gemeinsam entscheiden', function () { return [
+      umfQ('wahl', 'Wohin soll der Ausflug gehen?', { opts: ['Zoo', 'Wald', 'Museum', 'See'] }),
+      umfQ('rang', 'Was ist beim Ausflug am wichtigsten?', { opts: ['Spielen', 'Feuer und Bräteln', 'Tiere sehen', 'Wandern'] }),
+      umfQ('wort', 'Was darf im Rucksack nicht fehlen?')]; }],
+    ['☀️', 'Morgen-Check', 'Wie fühlt ihr euch am Morgen?', function () { return [
+      umfQ('feld', 'Wie fühlst du dich gerade?'),
+      umfQ('stimmung', 'Wie hast du geschlafen?', { stil: 'wetter', opts: UMF_STIL.wetter.slice() })]; }]
+  ];
+
+  var U = { list: [], view: 'list', eid: null, qi: 0, doc: null, add: false, names: null, fehlt: false, rank: false, more: false };
+  U.start = async function (cid) {
+    UI.view = 'umfrage';
+    var s = await DB.session(); if (!s) { location.hash = '#/'; return; }
+    if (!(await toolGate('umfrage', 'Die Umfrage'))) return;
+    document.body.classList.add('lp');
+    app.innerHTML = '<p class="boot">Umfrage wird geladen …</p>';
+    try {
+      var r = await Promise.all([DB.listClasses(), DB.listKids(cid), DB.storeGet('umfragen'), DB.storeGet('umfrage-' + cid)]);
+      U.cls = r[0].filter(function (c) { return c.id === cid; })[0]; U.ckids = (r[1] || []).slice().sort(kidSort);
+      U.list = r[2] && Array.isArray(r[2].list) ? r[2].list : [];
+      U.docs = { klasse: r[3] && typeof r[3] === 'object' ? r[3] : { live: null, ans: {} }, offen: null };
+      U.docs.klasse.ans = U.docs.klasse.ans || {};
+    } catch (e) { U.cls = null; }
+    // Version 27: offene Runde (QR-Code) der Lehrperson; ohne neues SQL einfach keine
+    try { U.docs && (U.docs.offen = umfOffenDoc(await DB.umfOffenHost(null))); } catch (e) {}
+    if (!U.cls) { paint('<div class="main"><div class="card stack"><h2>Umfrage nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+    U.cid = cid; U.add = false; U.fehlt = false; U.rank = false; U.more = false; U.off = 0;
+    U.use(U.docs.offen && U.docs.offen.live && U.docs.offen.live.on ? 'offen' : 'klasse');
+    var l = U.doc.live; U.view = l && l.on ? 'show' : 'list';
+    U.names = l && l.on ? U.namesDefault(l.sid) : null;
+    U.render();
+    every(1500, function () { if (!document.hidden && (U.view === 'show' || U.view === 'res')) U.poll(); });
+    every(500, U.tick);
+  };
+  // Zwei Orte für den Live-Stand: «klasse» (Kinder der Klasse) und «offen» (Gäste per QR-Code, umf_runden)
+  function umfOffenDoc(r) { return r ? { id: r.id, nr: r.nr, live: (r.data && r.data.live) || null, ans: (r.data && r.data.ans) || {}, gaeste: r.gaeste || [] } : null; }
+  function umfGastUrl(nr) { return location.origin + location.pathname + '#/u' + (nr ? '/' + nr : ''); }
+  function umfNr(nr) { return String(nr || '').replace(/^(\d{3})(\d{3})$/, '$1 $2'); }
+  U.use = function (src) {
+    U.src = src === 'offen' && U.docs.offen ? 'offen' : 'klasse'; U.doc = U.docs[U.src];
+    U.kids = U.src === 'offen' ? U.doc.gaeste.map(function (g) { return { id: g.id, name: g.name }; }) : U.ckids;
+  };
+  U.find = function (id) { return U.list.filter(function (x) { return x.id === id; })[0] || null; };
+  U.namesDefault = function (sid) { var sv = U.find(sid); return !!(sv && sv.set && sv.set.anon === false); };
+  U.saveSoon = function () { clearTimeout(U.st); U.st = setTimeout(U.save, 700); var m = document.getElementById('ueSaved'); if (m) m.textContent = 'Wird gespeichert …'; };
+  U.save = function () {
+    clearTimeout(U.st); U.st = null;
+    return DB.storeSet('umfragen', { list: U.list }).then(function () { var m = document.getElementById('ueSaved'); if (m) m.textContent = '✓ Gespeichert'; })
+      .catch(function (e) { toast('Nicht gespeichert: ' + errMsg(e)); });
+  };
+  window.addEventListener('pagehide', function () { if (U.st) U.save(); });
+  U.poll = async function () {
+    if (U.busy) return; U.busy = true;
+    try {
+      if (U.src === 'offen') {
+        var o = umfOffenDoc(await DB.umfOffenHost(U.doc.id));
+        if (o && o.id === U.doc.id && (JSON.stringify(o.ans) !== JSON.stringify(U.doc.ans) || o.gaeste.length !== U.doc.gaeste.length)) { U.doc.ans = o.ans; U.doc.gaeste = o.gaeste; U.use('offen'); if (UI.view === 'umfrage') U.render(); }
+      } else { var d = await DB.storeGet('umfrage-' + U.cid), a = (d && d.ans) || {}; if (JSON.stringify(a) !== JSON.stringify(U.doc.ans)) { U.doc.ans = a; if (UI.view === 'umfrage') U.render(); } }
+    } catch (e) {}
+    U.busy = false;
+  };
+  function umfSec(s) { s = Math.max(0, s); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  U.left = function () { var l = U.doc && U.doc.live; return l && l.until ? Math.ceil((l.until - (Date.now() + U.off)) / 1000) : null; };
+  U.tick = function () {
+    var l = U.doc && U.doc.live; if (UI.view !== 'umfrage' || U.view !== 'show' || !l || !l.until) return;
+    var left = U.left(), el = document.getElementById('umfTimer');
+    if (left <= 0 && !U.closing) { U.closing = true; toast('Die Zeit ist um.'); U.setLive({ open: false, until: null, show: true }).catch(function (e) { toast(errMsg(e)); }).then(function () { U.closing = false; }); return; }
+    if (el) el.textContent = umfSec(left);
+  };
+  // Live-Stand ändern (nur die Lehrperson schreibt ihn). sec = Timer starten, clear = Antworten dieser Fragen löschen
+  U.setLive = async function (patch, clear, sec, replace) {
+    var l = replace ? patch : Object.assign({}, U.doc.live || {}, patch); U.doc.live = l;
+    (clear || []).forEach(function (q) { if (q === '*') U.doc.ans = {}; else delete U.doc.ans[q]; });
+    var send = JSON.parse(JSON.stringify(l)); if (sec != null) send.sec = sec;
+    U.render();
+    var r = U.src === 'offen' ? await DB.umfOffenPut(U.doc.id, send, clear || null) : await DB.umfragePut(U.cid, send, clear || null);
+    if (r && r.now) { U.off = r.now - Date.now(); if (sec != null) { U.doc.live.until = r.until || null; U.render(); } }
+  };
+  U.render = function () {
+    if (UI.view !== 'umfrage') return;
+    document.body.classList.add('lp');
+    var l = U.doc.live;
+    if (U.view === 'show' && !(l && l.on)) U.view = 'list';
+    if (U.view === 'edit' && !U.find(U.eid)) U.view = 'list';
+    paint(U.view === 'show' ? U.viewShow() : U.view === 'edit' ? U.viewEdit() : U.view === 'res' ? U.viewRes() : U.viewList());
+    if (U.view === 'show') { U.tick(); U.qrMini(); }
+  };
+  // QR-Code der offenen Runde (einmal erzeugen, dann merken)
+  U.qr = function () {
+    var o = U.docs.offen; if (!o) return Promise.reject(new Error('keine Runde'));
+    if (U.qrFor !== o.nr) { U.qrFor = o.nr; U.qrSvg = qrSvg(umfGastUrl(o.nr)); }
+    return U.qrSvg;
+  };
+  U.qrMini = function () { var b = document.getElementById('usQr'); if (b && U.src === 'offen') U.qr().then(function (svg) { var x = document.getElementById('usQr'); if (x) x.innerHTML = svg; }).catch(function () {}); };
+  ACT.uQr = function () {
+    var o = U.docs.offen; if (!o) return;
+    var ov = overlay('<div class="bigcode umf-qrbig"><p>Mitmachen ohne Login: QR-Code scannen oder <span style="color:#1f2421">' + h(shortUrl(umfGastUrl())) + '</span> öffnen und die Nummer eingeben</p>' +
+      '<div class="bigcode-row"><div class="qrbox" id="uQrBig" role="img" aria-label="QR-Code zum Mitmachen">QR-Code wird geladen …</div><b>' + h(umfNr(o.nr)) + '</b></div>' +
+      '<button class="btn" style="align-self:center" data-a="closeOverlay">Schliessen</button></div>');
+    U.qr().then(function (svg) { var b = ov.querySelector('#uQrBig'); if (b) b.innerHTML = svg; })
+      .catch(function () { var b = ov.querySelector('#uQrBig'); if (b) b.textContent = 'QR-Code nicht verfügbar. Bitte die Adresse eintippen.'; });
+  };
+  U.top = function (left, right) {
+    return '<div class="umf-top"><div class="row">' + left + '</div><span class="umf-kick"><img src="' + h(klassBild(U.cls.bild)) + '" alt="" width="40" height="40">Umfrage · Klasse ' + h(U.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><div class="row">' + (right || '') + '</div></div>';
+  };
+  U.answers = function (sv, src) { var d = U.docs[src || 'klasse'], n = 0; if (!d) return 0; sv.qs.forEach(function (q) { n = Math.max(n, Object.keys(d.ans[q.id] || {}).length); }); return n; };
+
+  // ---------- Liste der Umfragen ----------
+  U.viewList = function () {
+    var out = '<div class="umf-page">' + U.top(backBtn('href="#/"')) +
+      '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
+      '<p>Stellen Sie der Klasse Fragen: Abstimmungen, Wortwolken, Quiz, Schätzfragen und mehr. Die Kinder antworten am iPad, die Ergebnisse erscheinen live an der Wandtafel.</p>' +
+      '<p class="muted small">Ihre Umfragen gelten für alle Ihre Klassen. Die Antworten werden pro Klasse gespeichert.</p></div>' +
+      '<button class="btn primary big" data-a="uNew">+ Neue Umfrage</button></section>';
+    ['klasse', 'offen'].forEach(function (src) { var d = U.docs[src], l = d && d.live;
+      if (l && l.on) out += '<div class="note row" style="justify-content:space-between"><span>✦ Gerade läuft' + (src === 'offen' ? ' (offen per QR-Code, Nummer ' + h(umfNr(d.nr)) + ')' : ' in der Klasse') + ': <b>' + h(l.title || 'Umfrage') + '</b></span><button class="btn sm primary" data-a="uToShow" data-s="' + src + '">Zur Anzeige</button></div>'; });
+    out += '<section class="stack"><h2>Meine Umfragen</h2>' + (U.list.length ? '<div class="umf-grid">' + U.list.map(function (sv) {
+      var a = U.answers(sv), ao = U.docs.offen && U.docs.offen.live && U.docs.offen.live.sid === sv.id ? U.answers(sv, 'offen') : 0, del = UI.confirm === 'uDel' + sv.id;
+      return '<div class="umf-card card"><button class="umf-card-open" data-a="uEdit" data-id="' + sv.id + '"><b>' + h(sv.title || 'Ohne Titel') + '</b><span class="umf-icons">' + sv.qs.map(function (q) { return '<span title="' + h(umfType(q.type)[1]) + '">' + umfType(q.type)[2] + '</span>'; }).join('') + '</span>' +
+        '<small>' + plural(sv.qs.length, 'Frage', 'Fragen') + ' · ' + (sv.set && sv.set.mode === 'selbst' ? 'Selbsttempo' : 'Live') + (a ? ' · ' + plural(a, 'Kind hat', 'Kinder haben') + ' geantwortet' : '') + (ao ? ' · offen: ' + plural(ao, 'Antwort', 'Antworten') : '') + '</small></button>' +
+        '<div class="row umf-card-btns"><button class="btn sm primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button><button class="btn sm" data-a="uEdit" data-id="' + sv.id + '">✎ Bearbeiten</button>' +
+        (a || ao ? '<button class="btn sm" data-a="uRes" data-id="' + sv.id + '" data-s="' + (a ? 'klasse' : 'offen') + '">📊 Ergebnisse</button>' : '') +
+        '<button class="btn sm icon" data-a="uCopy" data-id="' + sv.id + '" title="Kopieren" aria-label="Kopieren">⧉</button>' +
+        '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uDel" data-id="' + sv.id + '">' + (del ? 'Wirklich löschen?' : '🗑') + '</button></div></div>';
+    }).join('') + '</div>' : '<div class="empty">Noch keine Umfrage. Beginnen Sie mit «+ Neue Umfrage» oder übernehmen Sie eine Vorlage.</div>') + '</section>';
+    out += '<section class="stack"><h2>Vorlagen</h2><div class="umf-grid tpl">' + UMF_VORLAGEN.map(function (v, i) {
+      var qs = v[3]();
+      return '<button class="umf-tpl" data-a="uTpl" data-i="' + i + '"><span class="umf-tpl-emo">' + v[0] + '</span><span><b>' + h(v[1]) + '</b><small>' + h(v[2]) + '</small><span class="umf-icons">' + qs.map(function (q) { return umfType(q.type)[2]; }).join('') + '</span></span></button>';
+    }).join('') + '</div></section></div>';
+    return out;
+  };
+  U.blank = function (title, qs) { return { id: umfId('u'), title: title || '', at: Date.now(), set: { mode: 'live', auto: 'live', kids: true, anon: true }, qs: qs || [] }; };
+  ACT.uNew = function () { var sv = U.blank('', []); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = true; U.view = 'edit'; U.save(); U.render(); var t = document.getElementById('ueTitle'); if (t) t.focus(); };
+  ACT.uTpl = function (el) { var v = UMF_VORLAGEN[+el.dataset.i]; var sv = U.blank(v[1], v[3]()); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.save(); U.render(); toast('Vorlage übernommen. Sie können alles anpassen.'); };
+  ACT.uEdit = function (el) { U.eid = el.dataset.id; U.qi = 0; U.add = !U.find(U.eid).qs.length; U.view = 'edit'; U.render(); window.scrollTo(0, 0); };
+  ACT.uCopy = function (el) {
+    var sv = JSON.parse(JSON.stringify(U.find(el.dataset.id))); sv.id = umfId('u'); sv.title = (sv.title || 'Umfrage') + ' (Kopie)'; sv.at = Date.now();
+    sv.qs.forEach(function (q) { q.id = umfId('q'); }); U.list.unshift(sv); U.save(); U.render(); toast('Kopie erstellt');
+  };
+  ACT.uDel = function (el) {
+    var id = el.dataset.id; if (!armed('uDel' + id)) return U.render();
+    U.list = U.list.filter(function (x) { return x.id !== id; }); U.save(); U.render(); toast('Umfrage gelöscht');
+  };
+  ACT.uList = function () { if (U.st) U.save(); U.view = 'list'; U.add = false; U.render(); window.scrollTo(0, 0); };
+  ACT.uToShow = function (el) { U.use(el.dataset.s || 'klasse'); U.view = 'show'; U.names = U.namesDefault(U.doc.live.sid); U.render(); };
+
+  // ---------- Bearbeiten ----------
+  U.sv = function () { return U.find(U.eid); };
+  U.q = function () { var sv = U.sv(); return sv && sv.qs[U.qi] || null; };
+  U.viewEdit = function () {
+    var sv = U.sv(), set = sv.set || (sv.set = { mode: 'live', auto: 'live', kids: true, anon: true }), q = U.q();
+    var chip = function (k, v, txt) { return '<button class="chip" aria-pressed="' + (set[k] === v) + '" data-a="uSet" data-k="' + k + '" data-v="' + v + '">' + txt + '</button>'; };
+    var sw = function (k, on, txt) { return '<button class="switch" role="switch" aria-checked="' + on + '" data-a="uSetT" data-k="' + k + '"><span>' + txt + '</span><span class="track"></span></button>'; };
+    var list = sv.qs.map(function (x, i) {
+      var tp = umfType(x.type);
+      return '<div class="ue-q' + (!U.add && i === U.qi ? ' sel' : '') + '"><button class="ue-qsel" data-a="uQ" data-i="' + i + '"><span class="ue-n">' + (i + 1) + '</span><span class="ue-ic" title="' + h(tp[1]) + '">' + tp[2] + '</span><span class="ue-qt">' + (x.text ? h(x.text) : '<i>' + h(tp[1]) + ' ohne Text</i>') + '</span></button>' +
+        '<span class="ue-qb"><button data-a="uQMove" data-i="' + i + '" data-d="-1" aria-label="Nach oben"' + (i ? '' : ' disabled') + '>↑</button><button data-a="uQMove" data-i="' + i + '" data-d="1" aria-label="Nach unten"' + (i < sv.qs.length - 1 ? '' : ' disabled') + '>↓</button>' +
+        '<button data-a="uQCopy" data-i="' + i + '" aria-label="Kopieren" title="Kopieren">⧉</button><button data-a="uQDel" data-i="' + i + '" aria-label="Löschen" title="Löschen"' + (UI.confirm === 'uQDel' + x.id ? ' class="armed"' : '') + '>' + (UI.confirm === 'uQDel' + x.id ? '?' : '✕') + '</button></span></div>';
+    }).join('');
+    var aside = '<aside class="ue-side stack"><div class="card stack"><div class="field"><label for="ueTitle">Titel der Umfrage</label><input class="input" id="ueTitle" data-input="uTitle" maxlength="80" placeholder="z. B. Wie war die Woche?" value="' + h(sv.title) + '"></div>' +
+      '<div class="stack" style="gap:8px"><span class="lbl">Fragen</span>' + (list || '<p class="muted small">Noch keine Fragen.</p>') +
+      '<button class="btn' + (U.add ? ' primary' : '') + '" data-a="uAddOpen">+ Frage hinzufügen</button></div></div>' +
+      '<div class="card stack ue-set"><h3>Einstellungen</h3>' +
+      '<div><span class="lbl">Ablauf</span><div class="chips">' + chip('mode', 'live', '🎬 Live: Frage für Frage') + chip('mode', 'selbst', '🚶 Selbsttempo') + '</div><p class="muted small">' +
+        (set.mode === 'selbst' ? 'Die Kinder gehen alle Fragen selbst durch, z. B. als Rückmeldung während dem Tag.' : 'Sie zeigen eine Frage nach der anderen. Die Kinder sehen immer die aktuelle Frage.') + '</p></div>' +
+      '<div><span class="lbl">Ergebnis an der Wandtafel</span><div class="chips">' + chip('auto', 'live', 'Sofort zeigen') + chip('auto', 'aufdecken', 'Erst aufdecken') + '</div></div>' +
+      sw('kids', set.kids !== false, 'Kinder sehen das Ergebnis auch am iPad') + sw('anon', set.anon === false, 'Namen an der Wandtafel zeigen') +
+      '<p class="muted small">Die Kinder sehen die Antworten der anderen nie mit Namen.</p></div></aside>';
+    var main;
+    if (U.add || !q) main = '<div class="card stack"><h2>Was für eine Frage?</h2><div class="ue-types">' + UMF_TYPES.map(function (t) {
+      return '<button class="ue-type" data-a="uAdd" data-t="' + t[0] + '"><span class="ue-emo">' + t[2] + '</span><b>' + t[1] + '</b><small>' + t[3] + '</small></button>'; }).join('') + '</div>' +
+      (sv.qs.length ? '<button class="btn" style="align-self:flex-start" data-a="uAddClose">Abbrechen</button>' : '') + '</div>';
+    else main = '<div class="card stack ue-edit">' + U.qForm(q) + '</div><div class="card stack ue-prevcard"><span class="lbl">So sieht es am iPad aus</span><div class="ue-phone"><div class="ku ku-prev" id="uePrev">' + umfPreview(q) + '</div></div></div>';
+    return '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button><span class="muted small" id="ueSaved">' + (U.st ? 'Wird gespeichert …' : '✓ Gespeichert') + '</span>',
+      '<button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button>') + '<div class="umf-ed">' + aside + '<section class="ue-main stack">' + main + '</section></div></div>';
+  };
+  function umfPreview(q) {
+    var t = umfType(q.type);
+    return '<span class="ku-nr">' + t[2] + ' ' + h(t[1]) + '</span><h2 class="ku-q">' + (q.text ? h(q.text) : '…') + '</h2>' + umfInput(umfClean(q), null, true);
+  }
+  U.prev = function () { var p = document.getElementById('uePrev'), q = U.q(); if (p && q) p.innerHTML = umfPreview(q); };
+  U.qForm = function (q) {
+    var t = umfType(q.type), o = '';
+    var chips = function (f, vals, txt) { return '<div class="chips">' + vals.map(function (v) { return '<button class="chip" aria-pressed="' + (String(q[f]) === String(v)) + '" data-a="uqSet" data-f="' + f + '" data-v="' + v + '">' + txt(v) + '</button>'; }).join('') + '</div>'; };
+    var inp = function (id, f, lbl, ph, extra) { return '<div class="field"><label for="' + id + '">' + lbl + '</label><input class="input" id="' + id + '" data-input="uqF" data-f="' + f + '" value="' + h(q[f] == null ? '' : q[f]) + '" placeholder="' + h(ph || '') + '"' + (extra || '') + '></div>'; };
+    o += '<div class="row" style="justify-content:space-between"><span class="ue-badge">' + t[2] + ' ' + t[1] + '</span><span class="muted small">Frage ' + (U.qi + 1) + ' von ' + U.sv().qs.length + '</span></div>';
+    o += '<div class="field"><label for="uqText">' + (q.type === 'info' ? 'Titel' : 'Frage') + '</label><textarea class="input" id="uqText" rows="2" maxlength="200" data-input="uqF" data-f="text" placeholder="' + (q.type === 'info' ? 'z. B. Willkommen!' : 'Was möchten Sie die Klasse fragen?') + '">' + h(q.text) + '</textarea></div>';
+    if (q.type === 'info') o += '<div class="field"><label for="uqSub">Text</label><textarea class="input" id="uqSub" rows="4" maxlength="600" data-input="uqF" data-f="sub" placeholder="Was die Kinder lesen sollen">' + h(q.sub || '') + '</textarea></div>';
+    if (q.opts) {
+      var isSk = q.type === 'skala', isSt = q.type === 'stimmung', maxO = isSk ? 6 : 8;
+      if (isSt) o += '<div><span class="lbl">Aussehen</span><div class="chips">' + Object.keys(UMF_STIL).map(function (k) {
+        return '<button class="chip" aria-pressed="' + (q.stil === k) + '" data-a="uqStil" data-s="' + k + '">' + UMF_STIL[k].map(function (x) { return umfEmo(x)[0]; }).join('') + ' ' + UMF_STIL_NAME[k] + '</button>'; }).join('') + '</div></div>';
+      o += '<div class="stack" style="gap:8px"><span class="lbl">' + (isSk ? 'Aussagen' : 'Antworten') + (q.type === 'quiz' ? ' <span class="muted small">(richtige mit ✓ markieren)</span>' : '') + '</span>' + q.opts.map(function (x, i) {
+        var okOn = q.type === 'quiz' && (q.ok || []).indexOf(i) >= 0;
+        return '<div class="ue-opt"><span class="ue-dot" style="background:' + UMF_COL[i % UMF_COL.length] + '"></span><input class="input" id="uqO' + i + '" data-input="uqO" data-i="' + i + '" maxlength="80" value="' + h(x) + '" placeholder="' + (isSk ? 'Aussage ' : 'Antwort ') + (i + 1) + '">' +
+          (q.type === 'quiz' ? '<button class="ue-ok' + (okOn ? ' on' : '') + '" data-a="uqOk" data-i="' + i + '" aria-pressed="' + okOn + '">✓ richtig</button>' : '') +
+          (isSt ? '' : '<button class="btn sm icon" data-a="uqODel" data-i="' + i + '" aria-label="Entfernen"' + (q.opts.length > 1 ? '' : ' disabled') + '>✕</button>') + '</div>';
+      }).join('') + (isSt || q.opts.length >= maxO ? '' : '<button class="btn sm" style="align-self:flex-start" data-a="uqOAdd">+ ' + (isSk ? 'Aussage' : 'Antwort') + '</button>') + '</div>';
+      if (q.type === 'wahl' || q.type === 'quiz') o += '<button class="switch" role="switch" aria-checked="' + !!q.multi + '" data-a="uqTog" data-f="multi"><span>' + (q.type === 'quiz' ? 'Mehrere richtige Antworten' : 'Kinder dürfen mehrere Antworten wählen') + '</span><span class="track"></span></button>';
+    }
+    if (q.type === 'wort') o += '<div><span class="lbl">Wörter pro Kind</span>' + chips('max', [1, 2, 3, 5], function (v) { return v; }) + '</div>';
+    if (q.type === 'text') o += '<div><span class="lbl">Antworten pro Kind</span>' + chips('max', [1, 2, 3], function (v) { return v; }) + '</div>';
+    if (q.type === 'skala') o += '<div><span class="lbl">Skala</span>' + chips('max', [3, 5, 10], function (v) { return '1 bis ' + v; }) + '</div><div class="ue-two">' + inp('uqLo', 'lo', 'Text bei 1', 'stimmt gar nicht', ' maxlength="40"') + inp('uqHi', 'hi', 'Text bei ' + umfSkMax(q), 'stimmt genau', ' maxlength="40"') + '</div>';
+    if (q.type === 'punkte') o += '<div><span class="lbl">Sterne pro Kind</span>' + chips('pts', [3, 5, 10, 20], function (v) { return v + ' ⭐'; }) + '</div>';
+    if (q.type === 'zahl') o += '<div class="ue-two">' + inp('uqOk', 'ok', 'Lösung (freiwillig)', 'z. B. 26', ' inputmode="decimal"') + inp('uqUnit', 'unit', 'Einheit (freiwillig)', 'z. B. kg', ' maxlength="20"') + '</div>' +
+      '<div class="ue-two">' + inp('uqMin', 'min', 'Kleinste erlaubte Zahl', 'keine Grenze', ' inputmode="decimal"') + inp('uqMax', 'max', 'Grösste erlaubte Zahl', 'keine Grenze', ' inputmode="decimal"') + '</div>';
+    if (q.type === 'feld') o += '<div class="ue-four">' + ['links', 'rechts', 'unten', 'oben'].map(function (w, i) {
+      return '<div class="field"><label for="uqAx' + i + '">Text ' + w + '</label><input class="input" id="uqAx' + i + '" data-input="uqAx" data-i="' + i + '" maxlength="30" value="' + h((q.ax || [])[i] || '') + '"></div>'; }).join('') + '</div>';
+    return o;
+  };
+  ACT.uTitle = function (el) { U.sv().title = el.value; U.saveSoon(); };
+  ACT.uSet = function (el) { var s = U.sv().set; s[el.dataset.k] = el.dataset.v; U.saveSoon(); U.render(); };
+  ACT.uSetT = function (el) { var s = U.sv().set, k = el.dataset.k; if (k === 'kids') s.kids = s.kids === false; else s.anon = s.anon === false; U.saveSoon(); U.render(); };
+  ACT.uQ = function (el) { U.qi = +el.dataset.i; U.add = false; U.render(); };
+  ACT.uAddOpen = function () { U.add = true; U.render(); };
+  ACT.uAddClose = function () { U.add = false; U.render(); };
+  ACT.uAdd = function (el) { var sv = U.sv(), q = umfNewQ(el.dataset.t), at = sv.qs.length ? Math.min(sv.qs.length, U.qi + 1) : 0; sv.qs.splice(at, 0, q); U.qi = at; U.add = false; U.saveSoon(); U.render(); var t = document.getElementById('uqText'); if (t) t.focus(); };
+  ACT.uQMove = function (el) { var sv = U.sv(), i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= sv.qs.length) return; var x = sv.qs.splice(i, 1)[0]; sv.qs.splice(j, 0, x); U.qi = j; U.saveSoon(); U.render(); };
+  ACT.uQCopy = function (el) { var sv = U.sv(), i = +el.dataset.i, c = JSON.parse(JSON.stringify(sv.qs[i])); c.id = umfId('q'); sv.qs.splice(i + 1, 0, c); U.qi = i + 1; U.add = false; U.saveSoon(); U.render(); };
+  ACT.uQDel = function (el) { var sv = U.sv(), i = +el.dataset.i; if (!armed('uQDel' + sv.qs[i].id)) return U.render(); sv.qs.splice(i, 1); U.qi = Math.max(0, Math.min(U.qi, sv.qs.length - 1)); U.saveSoon(); U.render(); };
+  // Eingaben ohne neu zeichnen (Fokus bleibt), nur Liste links und Vorschau nachführen
+  ACT.uqF = function (el) {
+    var q = U.q(); q[el.dataset.f] = el.value; U.saveSoon(); U.prev();
+    if (el.dataset.f === 'text') { var t = document.querySelector('.ue-q.sel .ue-qt'); if (t) t.textContent = el.value || umfType(q.type)[1] + ' ohne Text'; }
+  };
+  ACT.uqO = function (el) { U.q().opts[+el.dataset.i] = el.value; U.saveSoon(); U.prev(); };
+  ACT.uqAx = function (el) { var q = U.q(); q.ax = q.ax || []; q.ax[+el.dataset.i] = el.value; U.saveSoon(); U.prev(); };
+  ACT.uqOAdd = function () { var q = U.q(); q.opts.push(''); U.saveSoon(); U.render(); var i = document.getElementById('uqO' + (q.opts.length - 1)); if (i) i.focus(); };
+  ACT.uqODel = function (el) {
+    var q = U.q(), i = +el.dataset.i; if (q.opts.length <= 1) return; q.opts.splice(i, 1);
+    if (q.type === 'quiz') q.ok = (q.ok || []).filter(function (x) { return x !== i; }).map(function (x) { return x > i ? x - 1 : x; });
+    U.saveSoon(); U.render();
+  };
+  ACT.uqOk = function (el) {
+    var q = U.q(), i = +el.dataset.i, ok = q.ok || [];
+    if (q.multi) { if (ok.indexOf(i) >= 0) ok = ok.filter(function (x) { return x !== i; }); else ok = ok.concat([i]); } else ok = [i];
+    q.ok = ok; U.saveSoon(); U.render();
+  };
+  ACT.uqTog = function (el) { var q = U.q(), f = el.dataset.f; q[f] = !q[f]; if (f === 'multi' && !q.multi && q.type === 'quiz' && (q.ok || []).length > 1) q.ok = [q.ok[0]]; U.saveSoon(); U.render(); };
+  ACT.uqSet = function (el) { var q = U.q(); q[el.dataset.f] = +el.dataset.v; U.saveSoon(); U.render(); };
+  ACT.uqStil = function (el) { var q = U.q(); q.stil = el.dataset.s; q.opts = UMF_STIL[q.stil].slice(); U.saveSoon(); U.render(); };
+
+  // ---------- Starten und Anzeige an der Wandtafel ----------
+  ACT.uStart = async function (el) {
+    var sv = U.find(el.dataset.id); if (!sv) return;
+    var bad = umfCheck(sv); if (bad) { if (U.view !== 'edit') { U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.render(); } return toast(bad); }
+    if (U.st) await U.save();
+    var o = U.docs.offen, ol = o && o.live;
+    return overlay('<div class="card stack" style="width:min(620px,100%)"><h2>Wer macht mit?</h2><div class="umf-wer">' +
+      '<button class="umf-wer-btn" data-a="uStartK" data-id="' + sv.id + '"><span class="umf-wer-emo">🏫</span><b>Klasse ' + h(U.cls.name) + '</b><small>Die Kinder machen mit ihrem Klassen-Login mit (Kachel «Umfrage!»).</small></button>' +
+      '<button class="umf-wer-btn" data-a="uGoO" data-id="' + sv.id + '"><span class="umf-wer-emo">🌍</span><b>Offen per QR-Code</b><small>Alle können ohne Login mitmachen, z. B. Eltern, andere Klassen oder das Team.</small></button></div>' +
+      (ol && ol.on ? '<p class="note">Ihre laufende offene Umfrage «' + h(ol.title || '') + '» wird beendet, wenn Sie eine neue offene starten.</p>' : '') +
+      '<button class="btn" style="align-self:flex-end" data-a="closeOverlay">Abbrechen</button></div>');
+  };
+  ACT.uStartK = function (el) {
+    closeOverlays(); var sv = U.find(el.dataset.id); if (!sv) return;
+    U.use('klasse');
+    var has = sv.qs.some(function (q) { return Object.keys(U.doc.ans[q.id] || {}).length; }), l = U.doc.live;
+    var other = l && l.on && l.sid !== sv.id ? '<p class="note">Die laufende Umfrage «' + h(l.title || '') + '» wird dabei beendet.</p>' : '';
+    if (has) return overlay('<div class="card stack" style="width:min(560px,100%)"><h2>Diese Umfrage hat schon Antworten</h2>' +
+      '<p>Möchten Sie dort weitermachen oder neu beginnen? Beim Neubeginn werden die bisherigen Antworten dieser Klasse gelöscht.</p>' + other +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn" data-a="uGo" data-id="' + sv.id + '" data-neu="0">Weitermachen</button><button class="btn primary" data-a="uGo" data-id="' + sv.id + '" data-neu="1">Neu beginnen</button></div></div>');
+    if (other) return overlay('<div class="card stack" style="width:min(560px,100%)"><h2>Umfrage starten?</h2>' + other +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn primary" data-a="uGo" data-id="' + sv.id + '" data-neu="0">Starten</button></div></div>');
+    return ACT.uGo({ dataset: { id: sv.id, neu: '0' } });
+  };
+  ACT.uGo = async function (el) {
+    closeOverlays();
+    var sv = U.find(el.dataset.id), set = sv.set || {}, qs = sv.qs.map(umfClean);
+    var live = { on: true, sid: sv.id, title: sv.title || 'Umfrage', mode: set.mode === 'selbst' ? 'selbst' : 'live', cur: qs[0].id, open: true,
+      show: set.auto !== 'aufdecken', auto: set.auto === 'aufdecken' ? 'aufdecken' : 'live', kids: set.kids !== false, rev: [], hid: {}, hidw: {}, until: null, qs: qs };
+    U.use('klasse'); U.view = 'show'; U.names = set.anon === false; U.fehlt = false; U.rank = false; U.more = false;
+    await U.setLive(live, el.dataset.neu === '1' ? qs.map(function (q) { return q.id; }) : null, null, true);
+    toast('Die Umfrage läuft. Die Kinder tippen auf «Umfrage».');
+  };
+  function umfLive(sv) {
+    var set = sv.set || {}, qs = sv.qs.map(umfClean);
+    return { on: true, sid: sv.id, title: sv.title || 'Umfrage', mode: set.mode === 'selbst' ? 'selbst' : 'live', cur: qs[0].id, open: true,
+      show: set.auto !== 'aufdecken', auto: set.auto === 'aufdecken' ? 'aufdecken' : 'live', kids: set.kids !== false, rev: [], hid: {}, hidw: {}, until: null, qs: qs };
+  }
+  // Offen per QR-Code: neue Runde mit 6-stelliger Nummer (die alte offene Runde wird gelöscht)
+  ACT.uGoO = async function (el) {
+    closeOverlays(); var sv = U.find(el.dataset.id); if (!sv) return;
+    var live = umfLive(sv), r;
+    try { r = await DB.umfOffenOpen(JSON.parse(JSON.stringify(live))); }
+    catch (e) { return toast(/umf_offen|function|schema cache/i.test(errMsg(e)) ? 'Dafür zuerst das neue SQL (Version 27) in Supabase ausführen.' : errMsg(e)); }
+    U.docs.offen = { id: r.id, nr: r.nr, live: live, ans: {}, gaeste: [] }; U.off = r.now ? r.now - Date.now() : 0;
+    U.use('offen'); U.view = 'show'; U.names = !!(sv.set && sv.set.anon === false); U.fehlt = false; U.rank = false; U.more = false;
+    U.render(); ACT.uQr();
+  };
+  U.idx = function () { var l = U.doc.live, qs = l.qs || []; for (var i = 0; i < qs.length; i++) if (qs[i].id === l.cur) return i; return 0; };
+  U.viewShow = function () {
+    var l = U.doc.live, qs = l.qs || [], i = U.idx(), q = qs[i] || qs[0], ans = U.doc.ans[q.id] || {}, kidName = {};
+    U.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var hid = (l.hid || {})[q.id] || [], hidw = (l.hidw || {})[q.id] || [];
+    var E = Object.keys(ans).filter(function (k) { return hid.indexOf(k) < 0; }).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; });
+    var answered = Object.keys(ans).filter(function (k) { return kidName[k]; }).length, total = U.kids.length, rev = (l.rev || []).indexOf(q.id) >= 0, selbst = l.mode === 'selbst';
+    var hasQuiz = qs.some(function (x) { return x.type === 'quiz' && (x.ok || []).length; });
+    var head = '<div class="us-head"><img class="board-bild" src="' + h(U.src === 'offen' ? 'bilder/kacheln/umfrage.webp' : klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · ' + (U.src === 'offen' ? 'offen für alle' : 'Klasse ' + h(U.cls.name)) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
+      (U.src === 'offen' ? '<button class="us-join us-offen" data-a="uQr" title="QR-Code gross zeigen"><span class="us-qrmini" id="usQr"></span><span>Mitmachen ohne Login:<br><b>' + h(shortUrl(umfGastUrl())) + '</b> · Nummer <b class="us-nr6">' + h(umfNr(U.doc.nr)) + '</b></span></button>'
+        : '<div class="us-join">Mitmachen: ' + h(C.PORTAL_NAME) + ' öffnen und auf <b>«Umfrage»</b> tippen · Code <b>' + h(U.cls.code || '') + '</b></div>') +
+      '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button><button class="board-btn" data-a="uBack">Zur Liste</button><button class="board-btn' + (UI.confirm === 'uEnd' ? ' armed' : '') + '" data-a="uEnd">' + (UI.confirm === 'uEnd' ? 'Wirklich beenden?' : '■ Beenden') + '</button></div></div>';
+    var body;
+    if (U.rank) {
+      var R = umfRank(qs, U.doc.ans, U.kids), L = R.list;
+      body = '<div class="us-q"><span class="us-nr">🏆 Quiz-Rangliste</span><h1>Wer hatte am meisten richtig?</h1></div><div class="us-res spr-result"><div class="podium">' + [1, 0, 2].map(function (j) {
+        var x = L[j]; if (!x) return '<div class="pod p' + (j + 1) + ' empty"></div>';
+        return '<div class="pod p' + (j + 1) + '"><span class="m">' + medal(j + 1) + '</span><b>' + h(x.name) + '</b><span>' + x.p + ' von ' + R.n + '</span></div>'; }).join('') + '</div>' +
+        '<ol class="ranking" start="4">' + L.slice(3).map(function (x) { return '<li><b>' + h(x.name) + '</b> · ' + x.p + ' von ' + R.n + '</li>'; }).join('') + '</ol></div>';
+    } else {
+      var t = umfType(q.type);
+      body = '<div class="us-q"><span class="us-nr">' + t[2] + ' ' + (selbst ? 'Ergebnis ' : 'Frage ') + (i + 1) + ' von ' + qs.length + (selbst ? ' · Selbsttempo' : '') + '</span><h1>' + h(q.text) + '</h1></div>';
+      if (q.type === 'info') body += '<div class="us-res us-info"><p>' + h(q.sub || '') + '</p></div>';
+      else if (!l.show) body += '<div class="us-res us-hidden"><div class="us-bubbles">' + E.map(function (e, j) { return '<i style="background:' + UMF_COL[j % UMF_COL.length] + ';animation-delay:' + (j % 7) * .15 + 's"></i>'; }).join('') + '</div>' +
+        '<span class="us-big">' + E.length + '</span><span>' + (E.length === 1 ? 'Antwort' : 'Antworten') + '</span><small>Das Ergebnis ist noch verdeckt.</small></div>';
+      else body += '<div class="us-res">' + umfRes(q, E, { rev: rev, names: U.names, mod: true, hidw: hidw }) + '</div>';
+      if (U.fehlt && q.type !== 'info') {
+        var miss = U.kids.filter(function (k) { return ans[k.id] === undefined; });
+        body += '<div class="board-fehlt">' + (U.src === 'offen' && !U.kids.length ? '<b>Noch niemand macht mit.</b>' : miss.length ? '<b>Noch keine Antwort:</b>' + miss.map(function (k) { return '<span class="tag"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span>'; }).join('') : (U.src === 'offen' ? '<b>✓ Alle haben geantwortet.</b>' : '<b>✓ Alle Kinder haben geantwortet.</b>')) + '</div>';
+      }
+    }
+    var left = U.left(), b = function (a, txt, extra) { return '<button class="board-btn' + (extra || '') + '" data-a="' + a + '">' + txt + '</button>'; };
+    var nHid = hid.length + hidw.length;
+    var more = U.more ? '<div class="us-more">' + b('uFehlt', U.fehlt ? '👤 Fehlende ausblenden' : '👤 Wer fehlt noch?') + b('uNames', U.names ? '🙈 Namen verbergen' : '🏷️ Namen zeigen') +
+      (nHid ? b('uUnhide', '↺ ' + nHid + ' Ausgeblendete wieder zeigen') : '') + (hasQuiz ? b('uRank', U.rank ? '← Zurück zur Frage' : '🏆 Quiz-Rangliste') : '') +
+      (q.type !== 'info' ? b('uClearQ', UI.confirm === 'uClearQ' ? 'Wirklich alle Antworten löschen?' : '🗑 Antworten dieser Frage löschen', UI.confirm === 'uClearQ' ? ' armed' : '') : '') + '</div>' : '';
+    var foot = '<div class="us-foot">' + more + '<div class="us-bar"><button class="board-btn" data-a="uNav" data-d="-1"' + (i ? '' : ' disabled') + ' aria-label="Vorherige Frage">◀</button>' +
+      (q.type !== 'info' ? '<span class="us-count"><b>' + answered + '</b> von ' + total + ' <span class="us-prog"><i style="width:' + (total ? Math.round(answered / total * 100) : 0) + '%"></i></span></span>' : '<span class="us-count">Infofolie</span>') +
+      '<span class="us-main-btns">' + (q.type !== 'info' ? b('uShow', l.show ? '🙈 Verdecken' : '👁 Ergebnis zeigen', l.show ? '' : ' hot') +
+        b('uOpen', l.open ? '🔒 Schliessen' : '🔓 Öffnen', l.open ? '' : ' warn') +
+        (!selbst ? (l.until ? '<button class="board-btn hot" data-a="uTimer">⏱ <span id="umfTimer">' + umfSec(left || 0) + '</span> ✕</button>' : b('uTimer', '⏱ Timer')) : '') +
+        (umfHasOk(q) ? b('uRev', rev ? '✓ Lösung verbergen' : '✓ Lösung zeigen', rev ? ' on' : '') : '') : '') +
+        b('uMore', '⋯ Mehr', U.more ? ' on' : '') + '</span>' +
+      '<button class="board-btn us-next" data-a="uNav" data-d="1"' + (i < qs.length - 1 ? '' : ' disabled') + '>Weiter ▶</button></div></div>';
+    return '<div class="umf-show' + (l.open ? '' : ' zu') + '">' + head + '<div class="us-mainarea">' + body + '</div>' + foot + '</div>';
+  };
+  ACT.uBack = function () { U.view = 'list'; U.render(); };
+  ACT.uEnd = async function () {
+    if (!armed('uEnd')) return U.render();
+    var sid = U.doc.live.sid; await U.setLive({ on: false, open: false, until: null }); // Quelle (Klasse/offen) bleibt für die Ergebnisse
+    U.rid = sid; U.view = U.find(sid) ? 'res' : 'list'; U.render(); toast('Umfrage beendet. Die Antworten bleiben gespeichert.');
+  };
+  ACT.uNav = function (el) {
+    var l = U.doc.live, qs = l.qs || [], j = U.idx() + +el.dataset.d; if (j < 0 || j >= qs.length) return;
+    U.rank = false; U.fehlt = false; UI.confirm = null;
+    U.setLive({ cur: qs[j].id, open: true, show: l.auto !== 'aufdecken', until: null }).catch(function (e) { toast(errMsg(e)); });
+  };
+  ACT.uShow = function () { U.setLive({ show: !U.doc.live.show }); };
+  ACT.uOpen = function () { U.setLive({ open: !U.doc.live.open, until: null }); };
+  ACT.uRev = function () {
+    var l = U.doc.live, rev = (l.rev || []).slice(), i = rev.indexOf(l.cur);
+    if (i >= 0) rev.splice(i, 1); else rev.push(l.cur);
+    U.setLive(i >= 0 ? { rev: rev } : { rev: rev, show: true });
+  };
+  ACT.uTimer = function () {
+    if (U.doc.live.until) return U.setLive({ until: null });
+    overlay('<div class="card stack" style="width:min(520px,100%)"><h2>⏱ Wie lange dürfen die Kinder antworten?</h2><p class="muted">Danach wird die Abstimmung geschlossen und das Ergebnis gezeigt.</p><div class="chips">' +
+      [[20, '20 Sekunden'], [30, '30 Sekunden'], [60, '1 Minute'], [120, '2 Minuten'], [180, '3 Minuten'], [300, '5 Minuten']].map(function (x) {
+        return '<button class="chip" data-a="uTimerGo" data-s="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div><button class="btn" style="align-self:flex-end" data-a="closeOverlay">Abbrechen</button></div>');
+  };
+  ACT.uTimerGo = function (el) { closeOverlays(); U.setLive({ open: true }, null, +el.dataset.s); };
+  ACT.uMore = function () { U.more = !U.more; U.render(); };
+  ACT.uFehlt = function () { U.fehlt = !U.fehlt; U.render(); };
+  ACT.uNames = function () { U.names = !U.names; U.render(); };
+  ACT.uRank = function () { U.rank = !U.rank; U.render(); };
+  ACT.uHide = function (el) { var l = U.doc.live, hid = JSON.parse(JSON.stringify(l.hid || {})); hid[l.cur] = (hid[l.cur] || []).concat([el.dataset.k]); U.setLive({ hid: hid }); };
+  ACT.uHideW = function (el) { var l = U.doc.live, hw = JSON.parse(JSON.stringify(l.hidw || {})); hw[l.cur] = (hw[l.cur] || []).concat([el.dataset.w]); U.setLive({ hidw: hw }); toast('Wort ausgeblendet'); };
+  ACT.uUnhide = function () { var l = U.doc.live, hid = Object.assign({}, l.hid), hw = Object.assign({}, l.hidw); delete hid[l.cur]; delete hw[l.cur]; U.setLive({ hid: hid, hidw: hw }); };
+  ACT.uClearQ = function () { if (!armed('uClearQ')) return U.render(); U.setLive({}, [U.doc.live.cur]); toast('Antworten gelöscht'); };
+  document.addEventListener('keydown', function (e) {
+    if (UI.view !== 'umfrage' || U.view !== 'show' || document.querySelector('.overlay') || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return;
+    var d = e.key === 'ArrowRight' || e.key === 'PageDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'PageUp' ? -1 : 0;
+    if (d) { e.preventDefault(); ACT.uNav({ dataset: { d: d } }); }
+  });
+
+  // ---------- Ergebnisse (nach der Umfrage) ----------
+  ACT.uRes = function (el) { U.rid = el.dataset.id; U.use(el.dataset.s || 'klasse'); U.view = 'res'; U.render(); window.scrollTo(0, 0); };
+  ACT.uResSrc = function (el) { U.use(el.dataset.s); U.render(); };
+  U.viewRes = function () {
+    var sv = U.find(U.rid); if (!sv) { U.view = 'list'; return U.viewList(); }
+    var kidName = {}; U.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var qs = sv.qs.map(umfClean), del = UI.confirm === 'uResDel';
+    var hasQuiz = qs.some(function (q) { return q.type === 'quiz' && (q.ok || []).length; });
+    var out = '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button>',
+      '<button class="btn sm" data-a="uResNames">' + (U.resNames ? '🙈 Namen verbergen' : '🏷️ Namen zeigen') + '</button><button class="btn sm" data-a="uCsv">⬇ Tabelle</button>' +
+      '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uResDel">' + (del ? 'Wirklich alle Antworten löschen?' : '🗑 Antworten löschen') + '</button><button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Nochmals starten</button>') +
+      '<section class="stack"><h2>' + h(sv.title || 'Umfrage') + ' · Ergebnisse</h2>' +
+      (U.docs.offen && U.docs.offen.live && U.docs.offen.live.sid === sv.id ? '<div class="chips"><button class="chip" aria-pressed="' + (U.src === 'klasse') + '" data-a="uResSrc" data-s="klasse">🏫 Klasse ' + h(U.cls.name) + '</button><button class="chip" aria-pressed="' + (U.src === 'offen') + '" data-a="uResSrc" data-s="offen">🌍 Offen per QR-Code (' + plural(U.docs.offen.gaeste.length, 'Person', 'Personen') + ')</button></div>' : '') +
+      '<p class="muted">' + (U.src === 'offen' ? 'Offene Runde (Nummer ' + h(umfNr(U.doc.nr)) + '). Sie bleibt bis zur nächsten offenen Umfrage gespeichert, höchstens 30 Tage.' : 'Klasse ' + h(U.cls.name) + '.') + ' Alle Antworten, auch ausgeblendete. Die Tabelle können Sie in Excel öffnen.</p>';
+    if (hasQuiz) {
+      var R = umfRank(qs, U.doc.ans, U.kids);
+      out += '<div class="card stack"><h3>🏆 Quiz-Rangliste</h3><ol class="ur-rangkids">' + R.list.map(function (x) { return '<li><b>' + h(x.name) + '</b> ' + x.p + ' von ' + R.n + ' richtig</li>'; }).join('') + '</ol></div>';
+    }
+    out += qs.map(function (q, i) {
+      var ans = U.doc.ans[q.id] || {}, E = Object.keys(ans).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; }), t = umfType(q.type);
+      return '<div class="card stack umf-rescard"><div class="row" style="justify-content:space-between"><span class="ue-badge">' + t[2] + ' ' + (i + 1) + '. ' + t[1] + '</span>' + (q.type !== 'info' ? '<span class="muted small">' + plural(E.length, 'Antwort', 'Antworten') + '</span>' : '') + '</div>' +
+        '<h3>' + h(q.text) + '</h3>' + (q.type === 'info' ? '<p>' + h(q.sub || '') + '</p>' : umfRes(q, E, { rev: true, names: U.resNames, small: true })) + '</div>';
+    }).join('') + '</section></div>';
+    return out;
+  };
+  ACT.uResNames = function () { U.resNames = !U.resNames; U.render(); };
+  ACT.uResDel = function () {
+    if (!armed('uResDel')) return U.render();
+    var sv = U.find(U.rid);
+    if (U.src === 'offen') return DB.umfOffenClose(U.doc.id).then(function () { U.docs.offen = null; U.use('klasse'); toast('Offene Runde gelöscht'); U.view = 'list'; U.render(); });
+    U.setLive(null, sv.qs.map(function (q) { return q.id; })).then(function () { toast('Antworten gelöscht'); U.view = 'list'; U.render(); });
+  };
+  ACT.uCsv = function () {
+    var sv = U.find(U.rid), qs = sv.qs.map(umfClean).filter(function (q) { return q.type !== 'info'; });
+    var cell = function (s) { s = String(s == null ? '' : s); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    var rows = [[U.src === 'offen' ? 'Name' : 'Kind'].concat(qs.map(function (q) { return q.text; }))];
+    U.kids.forEach(function (k) { rows.push([k.name].concat(qs.map(function (q) { var v = (U.doc.ans[q.id] || {})[k.id]; return v === undefined ? '' : umfFmt(q, v); }))); });
+    var blob = new Blob(['﻿' + rows.map(function (r) { return r.map(cell).join(';'); }).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Umfrage ' + (sv.title || '').replace(/[\\/:*?"<>|]/g, '') + ' ' + (U.src === 'offen' ? 'offen' : U.cls.name) + '.csv';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  };
+
+  // ===================================================================
+  // Gedächtniskiste: Vorschau aller Gedächtnisspiele für Lehrpersonen (gedaechtnis/index.html).
+  // Die Spiele selbst liegen in gedaechtnis/<spiel>.html; in der Tabelle «games» steht nur ein Verweis (knobelnest-url).
+  // ===================================================================
+  var GD = {
+    start: async function (cid) {
+      UI.view = 'gedaechtnis';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      if (!(await toolGate('gd', 'Die Gedächtniskiste'))) return;
+      var me = null, cls = null;
+      try { me = await DB.me(); cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0] || null; } catch (e) {}
+      window.knGd = {
+        className: cls ? cls.name : '', admin: !!(me && me.is_admin),
+        back: function () { location.hash = '#/'; },
+        games: async function () {
+          var r = await Promise.all([DB.listGames(), cls ? DB.listReleases(cid) : Promise.resolve([])]), rel = new Set(r[1]);
+          return r[0].filter(function (g) { return g.fach === 'Gedächtnis'; }).map(function (g) { return { id: g.id, title: g.title, on: rel.has(g.id) }; });
+        },
+        rel: function (id, on) { if (!cls) return Promise.reject(new Error('Keine Klasse')); return DB.setRelease(cid, id, !!on); },
+        // Nur Admin: fehlende Spiele anlegen, vorhandene (gleicher Titel) auf den Verweis umstellen. Fortschritt bleibt (gleiche Spiel-ID).
+        install: async function (list) {
+          if (!me || !me.is_admin) throw new Error('Nur für Admin');
+          var have = {}, neu = 0, upd = 0;
+          (await DB.listGames()).forEach(function (g) { have[g.title.toLowerCase()] = g; });
+          for (var i = 0; i < list.length; i++) {
+            var g = list[i], old = have[String(g.title).toLowerCase()];
+            if (!g || !/^<!doctype html>/i.test(g.html || '') || !/knobelnest-url" content="gedaechtnis\//.test(g.html)) continue;
+            if (old) { await DB.saveGame({ id: old.id, title: old.title, description: old.description, fach: old.fach, thema: old.thema, stufe: old.stufe, for_all: old.for_all, sort: old.sort, html: g.html }); upd++; }
+            else { await DB.saveGame({ title: String(g.title).slice(0, 80), description: String(g.description || '').slice(0, 160), fach: 'Gedächtnis', thema: String(g.thema || 'Allgemein').slice(0, 60), stufe: String(g.stufe || '').slice(0, 30), for_all: false, sort: +g.sort || 0, html: g.html }); neu++; }
+          }
+          try { T.games = await DB.listGames(); } catch (e) {}
+          return { neu: neu, aktualisiert: upd };
+        }
+      };
+      paint('<div class="folie"><iframe src="gedaechtnis/index.html?v=' + GD_VER + '" title="Gedächtniskiste" allow="fullscreen"></iframe></div>');
+    }
+  };
+  var OTTER_VER = '8';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
@@ -1262,6 +1985,67 @@
       paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen; autoplay; screen-wake-lock"></iframe></div>');
     }
   };
+  // ===================================================================
+  // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
+  // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
+  // ===================================================================
+  var QUIZ_VER = '3';
+  function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
+  var QZ = {
+    start: async function () {
+      UI.view = 'quiz';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      if (!(await toolGate('quiz', 'Das Live-Quiz'))) return;
+      window.knQuiz = {
+        mode: 'teacher',
+        back: function () { location.hash = '#/'; },
+        // «quiz» = { list: [{id, titel, n, at, ordner}], ordner: [{id, name}] }
+        list: async function () { var d = await DB.storeGet('quiz'); return { list: (d && Array.isArray(d.list)) ? d.list : [], ordner: (d && Array.isArray(d.ordner)) ? d.ordner : [] }; },
+        saveList: function (doc) { return DB.storeSet('quiz', JSON.parse(JSON.stringify(doc))); },
+        // Kinder-Quiz (Version 24): pro Klasse einschalten, Gruppen festlegen, mitbearbeiten
+        kidClasses: async function () {
+          var cl = await DB.listClasses(), out = [];
+          for (var i = 0; i < cl.length; i++) { var ks = await DB.listKids(cl[i].id);
+            out.push({ id: cl[i].id, name: cl[i].name, on: !!(cl[i].kid_tools && cl[i].kid_tools.quiz === true), kids: ks.slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; }) }); }
+          return out;
+        },
+        kidToggle: async function (cid, on) {
+          var c = (await DB.listClasses()).filter(function (x) { return x.id === cid; })[0]; if (!c) throw new Error('Klasse nicht gefunden');
+          var kt = Object.assign({}, c.kid_tools || {}); kt.quiz = !!on; await DB.updateClass(cid, { kid_tools: kt });
+        },
+        kidList: function () { return DB.kqList(); },
+        kidGet: function (id, ver) { return DB.kqGet(id, ver); },
+        kidSave: function (id, ver, title, data) { return DB.kqSave(id, ver, title, JSON.parse(JSON.stringify(data))); },
+        kidNew: function (cid, members, title) { return DB.kqNew(cid, members, title); },
+        kidMembers: function (id, members) { return DB.kqMembers(id, members); },
+        kidDelete: function (id) { return DB.kqDelete(id); },
+        load: function (id) { return DB.storeGet('quiz-' + id); },
+        save: function (id, q) { return DB.storeSet('quiz-' + id, JSON.parse(JSON.stringify(q))); },
+        remove: function (id) { return DB.storeDel('quiz-' + id); },
+        open: function (title, qs) { return DB.quizOpen(String(title || ''), JSON.parse(JSON.stringify(qs))); },
+        step: function (id, phase, q) { return DB.quizStep(id, phase, q); },
+        host: function (id) { return DB.quizHost(id); },
+        kick: function (id, pid) { return DB.quizKick(id, pid); },
+        close: function (id) { return DB.quizClose(id); },
+        joinUrl: quizJoinUrl,
+        qr: qrSvg
+      };
+      paint('<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Live-Quiz" allow="fullscreen"></iframe></div>');
+    },
+    play: function (pin) {
+      UI.view = 'quizplay';
+      var k = LS.get('kn_kid');
+      window.knQuiz = {
+        mode: 'player', pin: pin, name: (k && k.exp > Date.now() && k.name) || '',
+        home: function () { location.hash = '#/klasse'; },
+        join: function (p, n, av) { return DB.quizJoin(p, n, av); },
+        state: function (t) { return DB.quizState(t); },
+        answer: function (t, q, a) { return DB.quizAnswer(t, q, a); }
+      };
+      paint('<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Quiz mitspielen" allow="fullscreen"></iframe></div>');
+    }
+  };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
 
   // ===================================================================
@@ -1281,6 +2065,7 @@
     if (!s) return T.renderLogin();
     app.innerHTML = '<p class="boot">Wird geladen …</p>';
     T.me = await DB.me();
+    if (licExpired(T.me)) return licPage(T.me);
     T.tools = await toolAccess(T.me);
     T.classes = await DB.listClasses();
     var saved = LS.get('kn_cls');
@@ -1324,6 +2109,7 @@
     ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen und kontrollieren, Berichte drucken. Die Kinder sehen alles am iPad.'],
     ['arbeitsstand', 'Arbeitsstand', 'Wer kann helfen, wer hat eine Frage? Live an der Wandtafel.'],
     ['pinnwand', 'Pinnwand', 'Ideen sammeln und gemeinsam abstimmen.'],
+    ['umfrage', 'Umfrage', 'Abstimmen, Wortwolken, Quiz und Schätzfragen. Die Kinder antworten am iPad, das Ergebnis erscheint live.'],
     ['otterteich', 'Lautstärkeregler', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.']];
   ACT.shopSoon = function () { toast('Der Shop kommt bald. Melden Sie sich bis dahin bei ' + C.CONTACT + '.'); };
   ACT.login = async function (f) {
@@ -1340,16 +2126,22 @@
 
   T.render = function () {
     if (!T.me) return;
+    if (licExpired(T.me)) return licPage(T.me);
     document.body.classList.add('lp');
     if (!T.me.name) return paint(T.onboardName());
     if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
+    if (T.tab === 'tafel' && !(T.tools && T.tools.tafel)) T.tab = 'uebersicht';
     var body;
     if (!T.classes.length && T.tab !== 'verwaltung') body = T.onboardClass();
     else body = ({ uebersicht: T.tabSpiele, spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
+    var left = licLeft(T.me);
+    if (left !== null && left <= 30) body = '<div class="note row" style="justify-content:space-between;gap:12px"><span>✦ Ihre ' + h(C.PORTAL_NAME) + ' ist noch ' +
+      (left === 0 ? 'bis heute' : 'bis am <b>' + h(dateCH(T.me.valid_until)) + '</b>') + ' gültig. Verlängern Sie rechtzeitig, damit Sie ohne Unterbruch weiterarbeiten können.</span>' + renewBtn('sm') + '</div>' + body;
     paint(T.shell(body));
   };
   T.shell = function (body) {
-    var tabs = [['uebersicht', 'Übersicht'], ['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
+    var tabs = [['uebersicht', 'Übersicht'], ['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt']];
+    if (T.tools && T.tools.tafel) tabs.push(['tafel', 'Arbeitsstand-Tafel']);
     if (T.me.is_admin) tabs.push(['verwaltung', 'Verwaltung']);
     return '<header class="top"><div class="top-in"><a class="marke" href="#/" data-a="tab" data-t="uebersicht" aria-label="' + h(C.PORTAL_NAME) + ' – Start"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
       '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a><div class="row">' +
@@ -1531,18 +2323,18 @@
       '</div></div>' + (function () {
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
-          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'],
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live'],
           ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null]]
           .filter(function (x) { return T.tools[x[0]]; });
-        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; var on = toolOn(c, k);
+        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
         var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel">' + ttIcon('tafel', '🙋') + '<span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
         var tiles = {};
-        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
-        tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
-        if (vt) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
+        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + (x[0] === 'quiz' ? '<span class="tt-only">Mitspielen per QR-Code</span>' : foot(x[5])) + '</div>'; });
+        if (T.tools.tafel) tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
+        if (vt && T.tools.vk) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
         return '<div class="tooltiles">' + keys.map(function (k) { return tiles[k].replace(/<a class="tt-open"/, '<a draggable="false" class="tt-open"').replace(/<img /g, '<img draggable="false" '); }).join('') + '</div>' +
           '<p class="muted small tt-tipp">Tipp: Kacheln mit der Maus ziehen (am iPad kurz gedrückt halten), um die Reihenfolge zu ändern.</p>';
@@ -1558,8 +2350,8 @@
       [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3ECF5' }].concat(fachs.map(function (f) {
         return { id: f, label: f, n: games.filter(function (g) { return g.fach === f; }).length, col: fachColor(f) };
       })).map(function (t) {
-        return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw" style="background:' + t.col + '">' +
-          h(t.id === 'alle' ? '★' : t.label.charAt(0)) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
+        return '<button class="tile" aria-pressed="' + (T.fach === t.id) + '" data-a="fach" data-f="' + h(t.id) + '"><span class="sw' + (t.id !== 'alle' && fachBild(t.id) ? ' sw-bild' : '') + '" style="background:' + t.col + '">' +
+          (t.id === 'alle' ? '★' : fachBild(t.id) || h(t.label.charAt(0))) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
       (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
@@ -1819,10 +2611,16 @@
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste' };
+  // Bilder für die Fächer (bilder/faecher/), sonst der Anfangsbuchstabe
+  function fachBild(f) {
+    var k = String(f || '').toLowerCase().replace(/[^a-zäöü]/g, '');
+    var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
+    return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
+  }
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz', umfrage: 'umfrage' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
-  var TILE_DEF = ['folie', 'otter', 'heft', 'pin', 'atelier', 'tafel', 'vk', 'eltern'];
+  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;
@@ -2290,6 +3088,35 @@
         return '<div class="bildopt"><img src="' + h(b.src) + '" alt=""><input class="input" value="' + h(b.name || '') + '" maxlength="30" aria-label="Name" data-change="kbName" data-id="' + h(b.id) + '"><button class="btn sm danger" data-a="kbDel" data-id="' + h(b.id) + '">Entfernen</button></div>'; }).join('') + '</div>' : '<p class="muted small">Noch keine Vorlagen.</p>') +
       '<div class="field"><label for="kbFile">Bilder hinzufügen (mehrere möglich)</label><input class="input" id="kbFile" type="file" accept="image/*" multiple data-change="kbAdd"></div></section>';
   }
+  // Verwaltung: Lizenz «gültig bis» pro Lehrperson (Version 22)
+  function licRow(t) {
+    if (DB.noLicense) return '<div class="row" style="padding:8px 0 2px 52px"><span class="muted small"><b>Gültig bis:</b> Bitte zuerst das SQL (Version 22) in Supabase ausführen.</span></div>';
+    var d = licLeft(t), pill = d === null ? '<span class="pill">unbefristet</span>'
+      : d < 0 ? '<span class="pill" style="background:#F6C9BC;color:#7A2E12">abgelaufen</span>'
+      : d <= 30 ? '<span class="pill" style="background:#FCE8B2">' + (d === 0 ? 'läuft heute ab' : 'noch ' + plural(d, 'Tag', 'Tage')) + '</span>' : '';
+    var mail = d !== null && d <= 30 ? '<a class="btn sm" href="mailto:' + h(t.email) + '?subject=' + encodeURIComponent('Deine ' + C.PORTAL_NAME + ' verlängern') +
+      '&body=' + encodeURIComponent('Hallo' + (t.name ? ' ' + t.name : '') + '\n\nDeine ' + C.PORTAL_NAME + ' ' + (d < 0 ? 'war' : 'ist noch') + ' bis am ' + dateCH(t.valid_until) +
+        ' gültig. Wenn du sie ein weiteres Jahr nutzen möchtest, kannst du sie ' + (C.SHOP_URL ? 'hier verlängern:\n' + C.SHOP_URL : 'bei mir verlängern. Antworte einfach auf diese E-Mail.') +
+        '\n\nDeine Klassen und alles, was du gespeichert hast, bleiben erhalten.\n\nHerzliche Grüsse') + '">✉ Erinnerung schreiben</a>' : '';
+    return '<div class="row" style="gap:8px;padding:8px 0 2px 52px"><label class="muted small" style="font-weight:700" for="lic-' + t.id + '">Gültig bis:</label>' +
+      '<input class="input" style="width:auto;min-height:38px;padding:4px 10px" type="date" id="lic-' + t.id + '" value="' + h(t.valid_until || '') + '" data-change="licSet" data-t="' + t.id + '">' +
+      pill + '<button class="btn sm" data-a="licPlus" data-t="' + t.id + '">+ 1 Jahr</button>' +
+      (t.valid_until ? '<button class="btn sm" data-a="licNone" data-t="' + t.id + '">Unbefristet</button>' : '') + mail + '</div>';
+  }
+  async function licSave(tid, day) {
+    var t = (T.admin.teachers || []).filter(function (x) { return x.id === tid; })[0]; if (!t) return;
+    try { await DB.setValidUntil(tid, day || null); t.valid_until = day || null; toast(day ? 'Gültig bis ' + dateCH(day) + ' gespeichert.' : 'Unbefristet gespeichert.'); }
+    catch (e) { toast(errMsg(e)); }
+    T.render();
+  }
+  ACT.licSet = function (el) { if (!el.value || /^\d{4}-\d{2}-\d{2}$/.test(el.value)) licSave(el.dataset.t, el.value); };
+  ACT.licNone = function (el) { licSave(el.dataset.t, null); };
+  ACT.licPlus = function (el) {
+    var t = (T.admin.teachers || []).filter(function (x) { return x.id === el.dataset.t; })[0]; if (!t) return;
+    var base = t.valid_until && t.valid_until > isoDay(new Date()) ? new Date(t.valid_until + 'T12:00:00') : new Date();
+    base.setFullYear(base.getFullYear() + 1);
+    licSave(t.id, isoDay(base));
+  };
   T.tabAdmin = function () {
     var A = T.admin; if (!A.form) A.form = blankForm();
     if (A.teachers === null && !A.busy) {
@@ -2351,9 +3178,10 @@
         (t.is_admin ? ' <span class="pill" style="background:#A8E6CF">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
         '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
         (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
-        (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span>' + TOOLS.map(function (x) {
+        (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span><span class="muted small">Immer dabei: ' + BASE_TOOLS.map(function (x) { return x[1].replace(/^\S+\s/, ''); }).join(', ') + ' ·</span>' + TOOLS.map(function (x) {
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
+        (t.is_admin ? '' : licRow(t)) +
         (t.is_admin ? '' : vzRow(t)) +
         (open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
@@ -2382,7 +3210,7 @@
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
       '<div class="cols2"><div class="wide">' + pack + form + kbCard() + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
-      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
+      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier, und Sie können ihr Spiele zuteilen. Ihre Lizenz gilt automatisch 1 Jahr ab heute («Gültig bis», mit «+ 1 Jahr» verlängern). Sie kann ihr Passwort oben rechts unter ihrem Namen ändern.</div></aside></div>' +
       '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
       '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur die hier gewählten Spiele gezeigt:</p>' + fchips : '') + teachers + '</section>';
   };
@@ -2485,7 +3313,17 @@
     A.tools = A.tools || {}; var cur = Object.assign({}, A.tools[t] || {});
     if (cur[k]) delete cur[k]; else cur[k] = true;
     A.tools[t] = cur; T.render();
-    try { await DB.sharedSet('werkzeuge', JSON.parse(JSON.stringify(A.tools))); toast((cur[k] ? 'Freigegeben: ' : 'Gesperrt: ') + TOOLS.filter(function (x) { return x[0] === k; })[0][1].replace(/^\S+\s/, '')); }
+    try {
+      await DB.sharedSet('werkzeuge', JSON.parse(JSON.stringify(A.tools)));
+      // Vokabelkiste: das Spiel gleich mit zuteilen bzw. wegnehmen
+      var vk = k === 'vk' ? T.games.filter(isVok)[0] : null;
+      if (vk && !vk.for_all) {
+        await DB.setTeacherGame(t, vk.id, !!cur[k]);
+        A.tg = (A.tg || []).filter(function (x) { return !(x.teacher_id === t && x.game_id === vk.id); });
+        if (cur[k]) A.tg.push({ teacher_id: t, game_id: vk.id });
+        T.render();
+      }
+      toast((cur[k] ? 'Freigegeben: ' : 'Gesperrt: ') + TOOLS.filter(function (x) { return x[0] === k; })[0][1].replace(/^\S+\s/, '')); }
     catch (e) { toast(errMsg(e)); }
   };
   // ---------- Vokabelkiste: Vorlagen einzelnen Lehrpersonen zuteilen (shared_store «vokabelkiste-zuweisung» = { Lehrperson-ID: [Portion-IDs] }) ----------
@@ -2556,7 +3394,7 @@
     LS.del('kn_kid'); K.sess = null;
     var code = LS.get('kn_code');
     if (code) {
-      try { var c = await DB.kidClass(code); if (c) { K.code = code; K.cls = c; K.step = 'names';
+      try { var c = await DB.kidClass(code); if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; c = null; } if (c) { K.code = code; K.cls = c; K.step = 'names';
         var wk = K.wantKid && c.kids.filter(function (k) { return k.id === K.wantKid; })[0];
         if (wk) { K.kid = wk; K.pw = []; K.err = ''; K.step = 'pw'; } K.wantKid = null;
         return K.render(); } } catch (e) {}
@@ -2580,6 +3418,9 @@
     catch (e) {}
   };
   K.sessionLost = function (e) {
+    if (/pausiert/i.test((e && e.message) || '')) {
+      LS.del('kn_kid'); K.sess = null; K.home = null; K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; K.step = 'code'; return K.render();
+    }
     if (/Anmeldung|session/i.test((e && e.message) || '')) {
       LS.del('kn_kid'); K.sess = null; K.home = null; toast('Bitte melde dich nochmals an.'); return K.start();
     }
@@ -2587,9 +3428,11 @@
   };
   K.shell = function (body, back) {
     if (back === null) return '<div class="kid"><div class="kid-in">' + body + '</div></div>';
-    return '<div class="kid"><div class="kid-in"><div class="kid-top"><span class="kid-marke"><img src="bilder/eule.webp" alt="" width="52" height="52"><small>' + h(C.PORTAL_NAME) + '</small></span>' +
-      (back ? '<button class="kid-btn" data-a="kBack">' + back + '</button>' : '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>') +
-      '</div>' + body + '</div></div>';
+    var marke = '<span class="kid-marke"><img src="bilder/eule.webp" alt="" width="52" height="52"><small>' + h(C.PORTAL_NAME) + '</small></span>';
+    var top = back === 'Abmelden' ? marke + '<button class="kid-btn" data-a="kBack">Abmelden</button>'
+      : back ? backBtn('data-a="kBack"', back)
+      : marke + '<a class="kid-btn" href="#/" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);border-width:1.5px;font-size:15px">Für Lehrpersonen</a>';
+    return '<div class="kid"><div class="kid-in"><div class="kid-top">' + top + '</div>' + body + '</div></div>';
   };
   K.render = function () {
     document.body.classList.add('kidv');
@@ -2651,11 +3494,12 @@
       var gs = games.filter(function (g) { return g.fach === f; }), n = gs.length;
       // Ein Fach, das nur aus der Vokabelkiste besteht: Kachel mit dem Kisten-Symbol, öffnet die Vokabelkiste direkt
       if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic ic-bild"><img src="bilder/kacheln/vokabelkiste.webp" alt="" draggable="false"></span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
-      return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
+      return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '">' + (fachBild(f) ? '<span class="ic ic-bild">' + fachBild(f) + '</span>' : '<span class="ic">' + h(f.charAt(0)) + '</span>') + '<b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
+      (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
       '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic ic-bild"><img src="bilder/kacheln/hausaufgaben.webp" alt="" draggable="false"></span>' +
@@ -2665,6 +3509,8 @@
       '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>') +
       (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic ic-bild"><img src="bilder/kacheln/pinnwand.webp" alt="" draggable="false"></span>' +
       '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
+      (kt.kid_tools.quiz === true ? '<button class="tafel-tile quiz-tile" data-a="kQuiz"><span class="ic ic-bild"><img src="bilder/kacheln/quiz.webp" alt="" draggable="false"></span>' +
+      '<span><b>Quiz erstellen</b><span>Bau dein eigenes Quiz für die Klasse.</span></span></button>' : '') +
       (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic ic-bild"><img src="bilder/kacheln/atelier.webp" alt="" draggable="false"></span>' +
       '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
   };
@@ -2725,7 +3571,7 @@
       load: async function () { var d = await DB.kidPin(K.sess.token); if (!d) return null; var v = {}; if (d.my) v[me] = d.my;
         return { boards: d.boards || {}, ideas: d.ideas || {}, settings: { main: { labels: d.labels || {} } }, votes: v }; },
       put: function () { var e = new Error('Nicht erlaubt'); e.code = 'forbidden'; return Promise.reject(e); },
-      add: async function (coll, obj) { if (coll !== 'ideas') throw new Error('Nicht erlaubt'); return DB.kidPinIdea(K.sess.token, obj.boardId, obj.text); },
+      add: async function (coll, obj) { if (coll !== 'ideas') throw new Error('Nicht erlaubt'); return DB.kidPinPost(K.sess.token, obj.boardId, obj.text, obj.cat, obj.img); },
       vote: async function (body) { await DB.kidPinVote(K.sess.token, { r: body.r || {} }); },
       voteDoc: function (id, v) { return { name: kid.name, r: JSON.parse(JSON.stringify((v && v.r) || {})), at: v && v.at }; }
     });
@@ -2754,6 +3600,21 @@
     return '<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>';
   };
   ACT.kAtelier = function () { K.step = 'atelier'; K.render(); };
+  // Kinder-Quiz: dieselbe Seite quiz.html, nur die eigenen Quiz (bzw. die der eigenen Gruppe)
+  K.view_quiz = function () {
+    if (!K.sess) { K.step = 'home'; return K.view_home(); }
+    var tok = K.sess.token;
+    window.knQuiz = {
+      mode: 'kid', name: (K.home && K.home.kid && K.home.kid.name) || '',
+      back: function () { ACT.kBack(); },
+      kidList: function () { return DB.kidQuizList(tok); },
+      kidGet: function (id, ver) { return DB.kidQuizGet(tok, id, ver); },
+      kidSave: function (id, ver, title, data) { return DB.kidQuizSave(tok, id, ver, title, JSON.parse(JSON.stringify(data))); },
+      kidDelete: function (id) { return DB.kidQuizDelete(tok, id); }
+    };
+    return '<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Quiz erstellen" allow="fullscreen"></iframe></div>';
+  };
+  ACT.kQuiz = function () { K.step = 'quiz'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
@@ -2763,6 +3624,7 @@
   ACT.kCode = async function (f) {
     var code = f.elements.code.value.trim(); if (!code) return;
     var c = await DB.kidClass(code);
+    if (c && c.pausiert) { K.err = 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.'; return K.render(); }
     if (!c) { K.err = 'Diesen Code kennen wir nicht. Schau nochmals an der Wandtafel.'; return K.render(); }
     K.err = ''; K.code = code; K.cls = c; LS.set('kn_code', code); K.step = 'names'; K.render();
   };
@@ -2780,8 +3642,9 @@
       if (!r.ok) {
         K.pw = [];
         K.err = r.error === 'gesperrt' ? 'Kurze Pause! Versuch es in ' + Math.max(1, Math.ceil((r.seconds || 60) / 60)) + ' Minuten wieder.' :
-          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
-        if (r.error === 'unbekannt') { LS.del('kn_code'); K.step = 'code'; }
+          r.error === 'unbekannt' ? 'Das hat nicht geklappt. Gib den Code nochmals ein.' :
+          r.error === 'pausiert' ? 'Eure ' + C.PORTAL_NAME + ' ist gerade pausiert. Sag es deiner Lehrperson.' : 'Das waren nicht deine Bilder. Versuch es nochmals.';
+        if (r.error === 'unbekannt' || r.error === 'pausiert') { if (r.error === 'unbekannt') LS.del('kn_code'); K.step = 'code'; }
         return K.render();
       }
       K.sess = { token: r.token, name: r.name, code: K.code, kid: K.kid && K.kid.id, exp: Date.now() + 11.5 * 3600 * 1000 };
@@ -2806,6 +3669,8 @@
       case 'heft': K.step = 'home'; K.render(); break;
       case 'pin': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'atelier': K.step = 'home'; K.render(); K.checkHeft(); break;
+      case 'umfrage': clearInterval(K.umfIv); K.U = null; K.step = 'home'; K.render(); K.checkRace(); break;
+      case 'quiz': K.step = 'home'; K.loadHome(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }
@@ -3046,6 +3911,8 @@
       var r = await DB.kidRace(K.sess.token), open = r.race && r.race.status !== 'done' ? r.race.id : null;
       if (open !== (K.raceOpen || null)) { K.raceOpen = open; if (K.step === 'home') K.render(); }
     } catch (e) {}
+    try { var u = await DB.kidUmfrage(K.sess.token), uo = u ? String(u.sid || '1') : null; if (uo !== (K.umfOpen || null)) { K.umfOpen = uo; if (K.step === 'home') K.render(); } }
+    catch (e) {}
   };
   ACT.kRace = async function () {
     var r = await DB.kidRaceJoin(K.sess.token, K.raceOpen);
@@ -3115,6 +3982,203 @@
       if (res && res.ok) { R.pos = res.pos; if (res.finished) { R.finished = true; R.place = res.place; } K.render(); }
     }).catch(function () {});
     setTimeout(function () { R.lock = false; R.state = ''; R.input = ''; R.task = sprTask(rows, t.key, race.settings.mode); if (R.pos >= goal) R.finished = true; K.render(); }, ok ? 350 : 1300);
+  };
+
+  // ---------- Kinder: Umfrage beantworten ----------
+  // Eingabe für eine Frage. dr = Entwurf des Kindes (null = Vorschau in der Bearbeitung)
+  function umfDraft0(q) {
+    var n = (q.opts || []).length, z = []; for (var i = 0; i < n; i++) z.push(0);
+    if (q.type === 'rang') return z.map(function (x, i) { return i; });
+    if (q.type === 'skala') return z.map(function () { return null; });
+    if (q.type === 'punkte') return z;
+    if (q.type === 'wort' || q.type === 'text') return [];
+    if (q.type === 'zahl') return '';
+    if (q.type === 'feld') return null;
+    return [];
+  }
+  function umfInput(q, dr, prev) {
+    var t = q.type, opts = q.opts || [];
+    if (dr == null) dr = umfDraft0(q);
+    if (t === 'info') return '<p class="ku-info">' + h(q.sub || '') + '</p>';
+    if (t === 'wahl' || t === 'quiz') return '<div class="ku-opts">' + opts.map(function (x, i) {
+      var on = dr.indexOf(i) >= 0;
+      return '<button class="ku-opt' + (on ? ' on' : '') + '" style="--c:' + UMF_COL[i % UMF_COL.length] + '" data-a="kuPick" data-i="' + i + '" aria-pressed="' + on + '"><span class="ku-mark">' + (q.multi ? (on ? '✓' : '') : String.fromCharCode(65 + i)) + '</span><span>' + h(x) + '</span></button>';
+    }).join('') + '</div>' + (q.multi ? '<p class="ku-hint">Du darfst mehrere wählen.</p>' : '');
+    if (t === 'stimmung') return '<div class="ku-emos" style="--n:' + opts.length + '">' + opts.map(function (x, i) {
+      var e = umfEmo(x), on = dr.indexOf(i) >= 0;
+      return '<button class="ku-emo' + (on ? ' on' : '') + '" data-a="kuPick" data-i="' + i + '" aria-pressed="' + on + '"><span class="e">' + (e[0] || '•') + '</span><small>' + h(e[1]) + '</small></button>'; }).join('') + '</div>';
+    if (t === 'wort' || t === 'text') {
+      var m = Math.max(1, +q.max || 1), o = '<div class="ku-ins">';
+      for (var i = 0; i < m; i++) o += t === 'wort' ? '<input class="kid-input ku-in" id="kuW' + i + '" data-input="kuW" data-i="' + i + '" maxlength="30" autocomplete="off" placeholder="' + (m > 1 ? (i + 1) + '. Wort' : 'Dein Wort') + '" value="' + h(dr[i] || '') + '">'
+        : '<textarea class="kid-input ku-in ku-ta" id="kuW' + i + '" data-input="kuW" data-i="' + i + '" maxlength="300" rows="3" placeholder="' + (m > 1 ? (i + 1) + '. Antwort' : 'Schreib hier deine Antwort') + '">' + h(dr[i] || '') + '</textarea>';
+      return o + '</div>' + (t === 'wort' ? '<p class="ku-hint">' + (m > 1 ? 'Bis zu ' + m + ' Wörter, ' : '') + 'kurz und knapp.</p>' : '');
+    }
+    if (t === 'skala') {
+      var mx = umfSkMax(q);
+      return '<div class="ku-skala">' + opts.map(function (st, i) {
+        var o = ''; for (var v = 1; v <= mx; v++) o += '<button class="ku-skb' + (dr[i] === v ? ' on' : '') + '" data-a="kuSk" data-i="' + i + '" data-v="' + v + '">' + v + '</button>';
+        return '<div class="ku-sk">' + (opts.length > 1 || st ? '<p>' + h(st) + '</p>' : '') + '<div class="ku-skr" style="--m:' + mx + '">' + o + '</div><div class="ku-ends"><span>' + h(q.lo || '') + '</span><span>' + h(q.hi || '') + '</span></div></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'rang') return '<p class="ku-hint">Das Wichtigste ganz nach oben.</p><ol class="ku-rang">' + dr.map(function (oi, p) {
+      return '<li><span class="ku-p">' + (p + 1) + '</span><span class="ku-l">' + h(opts[oi]) + '</span><button data-a="kuRang" data-p="' + p + '" data-d="-1" aria-label="Nach oben"' + (p ? '' : ' disabled') + '>▲</button><button data-a="kuRang" data-p="' + p + '" data-d="1" aria-label="Nach unten"' + (p < dr.length - 1 ? '' : ' disabled') + '>▼</button></li>';
+    }).join('') + '</ol>';
+    if (t === 'punkte') {
+      var P = Math.min(100, Math.max(1, +q.pts || 10)), used = 0; dr.forEach(function (x) { used += x; });
+      return '<p class="ku-left">Noch <b>' + (P - used) + '</b> ⭐ übrig</p><div class="ku-pts">' + opts.map(function (x, i) {
+        return '<div class="ku-pt"><span class="ku-l">' + h(x) + '</span><button data-a="kuPts" data-i="' + i + '" data-d="-1" aria-label="Weniger"' + (dr[i] ? '' : ' disabled') + '>−</button><b>' + (dr[i] || 0) + ' ⭐</b><button data-a="kuPts" data-i="' + i + '" data-d="1" aria-label="Mehr"' + (used < P ? '' : ' disabled') + '>+</button></div>';
+      }).join('') + '</div>';
+    }
+    if (t === 'zahl') return '<div class="ku-zahl"><input class="kid-input" id="kuZ" data-input="kuZ" inputmode="decimal" autocomplete="off" placeholder="Deine Zahl" value="' + h(dr) + '">' + (q.unit ? '<span>' + h(q.unit) + '</span>' : '') + '</div>' +
+      (q.min != null && q.max != null ? '<p class="ku-hint">Eine Zahl von ' + umfFmtNum(q.min) + ' bis ' + umfFmtNum(q.max) + '.</p>' : '');
+    if (t === 'feld') return '<p class="ku-hint">Tippe ins Feld, wo du gerade bist.</p>' + umfFeld(q.ax || [], dr ? '<span class="ur-dot me" style="left:' + dr.x + '%;top:' + (100 - dr.y) + '%"></span>' : '', true, prev ? null : 'kuFeld');
+    return '';
+  }
+  // Fertige Antwort aus dem Entwurf (null = noch nicht fertig)
+  function umfVal(q, dr) {
+    var t = q.type;
+    if (dr == null) return null;
+    if (t === 'wahl' || t === 'quiz' || t === 'stimmung') return dr.length ? dr.slice() : null;
+    if (t === 'wort' || t === 'text') { var a = dr.map(function (x) { return String(x || '').trim(); }).filter(Boolean); return a.length ? a : null; }
+    if (t === 'skala') return dr.every(function (x) { return x >= 1; }) ? dr.slice() : null;
+    if (t === 'rang') return dr.slice();
+    if (t === 'punkte') { var s = 0; dr.forEach(function (x) { s += x; }); return s ? dr.slice() : null; }
+    if (t === 'zahl') { var x = umfNum(dr); if (x === null || (q.min != null && x < q.min) || (q.max != null && x > q.max)) return null; return x; }
+    if (t === 'feld') return dr;
+    return null;
+  }
+  K.umfQ = function () {
+    var d = K.U && K.U.d; if (!d || !d.qs.length) return null;
+    if (d.mode !== 'selbst') return d.qs[0];
+    K.U.i = Math.max(0, Math.min(K.U.i || 0, d.qs.length - 1)); return d.qs[K.U.i];
+  };
+  K.umfDr = function (q) {
+    var U2 = K.U; if (U2.dr[q.id] !== undefined) return U2.dr[q.id];
+    var m = U2.d.mine[q.id], d;
+    if (m === undefined) d = umfDraft0(q);
+    else if (q.type === 'zahl') d = String(m).replace('.', ',');
+    else d = JSON.parse(JSON.stringify(m));
+    U2.dr[q.id] = d; return d;
+  };
+  K.umfLoad = async function () {
+    var U2 = K.U; if (!U2) return; var gt = U2.guest, d;
+    try { d = gt ? await DB.umfGast(gt) : await DB.kidUmfrage(K.sess.token); } catch (e) { return gt ? null : K.sessionLost(e); }
+    U2 = K.U; if (!U2 || K.step !== 'umfrage') return;
+    if (gt && d && d.gone) { LS.del('kn_umf_gast'); clearInterval(K.umfIv); K.U = null; K.step = 'gast'; K.err = 'Diese Umfrage gibt es nicht mehr.'; return K.render(); }
+    var sig = JSON.stringify(d ? Object.assign({}, d, { now: 0 }) : null);
+    if (d) U2.off = d.now - Date.now();
+    if (sig === U2.sig) return; U2.sig = sig;
+    // Neue Frage oder neue Umfrage: alte Entwürfe weg
+    if (!d || !U2.d || d.sid !== U2.d.sid) { U2.dr = {}; U2.edit = {}; U2.i = 0; }
+    else if (d.mode !== 'selbst' && d.cur !== U2.d.cur) { U2.edit = {}; }
+    U2.d = d; K.render();
+  };
+  ACT.kUmf = function () { K.umfBegin(null); };
+  K.umfBegin = function (guest, gname) {
+    K.step = 'umfrage'; K.U = { d: null, dr: {}, edit: {}, i: 0, sig: '', off: 0, first: true, guest: guest || null, gname: gname || '' }; K.render();
+    K.umfLoad(); clearInterval(K.umfIv); var n = 0;
+    K.umfIv = setInterval(function () {
+      if (UI.view !== 'kid' || K.step !== 'umfrage' || !K.U) { clearInterval(K.umfIv); return; }
+      var d = K.U.d, el = document.getElementById('kuTimer');
+      if (el && d && d.until) { var s = Math.ceil((d.until - (Date.now() + K.U.off)) / 1000); el.textContent = s > 0 ? '⏱ Noch ' + umfSec(s) : '⏱ Die Zeit ist um'; }
+      if (++n % 4 === 0 && !document.hidden) K.umfLoad();
+    }, 500);
+  };
+  K.view_umfrage = function () {
+    var U2 = K.U, d = U2 && U2.d, g = U2 && U2.guest, back = g ? null : 'Zurück';
+    var brand = g ? '<div class="ku-brand"><img src="bilder/eule.webp" alt="" width="40" height="40"><span>' + h(C.PORTAL_NAME) + (U2.gname ? ' · ' + h(U2.gname) : '') + '</span></div>' : '';
+    if (!U2 || (!d && U2.sig === '')) return K.shell(brand + '<div class="kid-card"><p class="lead">Umfrage wird geladen …</p></div>', back);
+    if (!d) return K.shell(brand + '<div class="kid-card"><div class="ku-big">🎉</div><h1>Die Umfrage ist fertig</h1><p class="lead">Danke fürs Mitmachen!</p>' + (g ? '' : '<button class="kid-go" data-a="kBack">Zurück</button>') + '</div>', back);
+    var q = K.umfQ(), selbst = d.mode === 'selbst';
+    if (!q) return K.shell(brand + '<div class="kid-card"><div class="ku-big">👀</div><h1>Schau nach vorne</h1><p class="lead">Gleich kommt die nächste Frage.</p></div>', back);
+    var mine = d.mine[q.id], t = umfType(q.type), rev = (d.rev || []).indexOf(q.id) >= 0, editing = U2.edit[q.id] || mine === undefined;
+    var o = brand + '<div class="kid-card ku">';
+    if (selbst) o += '<div class="ku-dots">' + d.qs.map(function (x, j) { return '<button class="ku-d' + (j === U2.i ? ' cur' : '') + (d.mine[x.id] !== undefined || x.type === 'info' ? ' ok' : '') + '" data-a="kuGo" data-i="' + j + '" aria-label="Frage ' + (j + 1) + '">' + (j + 1) + '</button>'; }).join('') + '</div>';
+    o += '<span class="ku-nr">' + t[2] + ' ' + h(d.title || 'Umfrage') + '</span><h1 class="ku-q">' + h(q.text) + '</h1>';
+    if (d.until && d.open) o += '<p class="ku-timer" id="kuTimer"></p>';
+    if (q.type === 'info') o += umfInput(q, null) + (selbst ? '' : '<p class="lead">Schau nach vorne an die Wandtafel.</p>');
+    else if (!editing) {
+      o += '<div class="ku-done"><span class="ku-big">✓</span><b>Danke! Deine Antwort ist angekommen.</b><span>' + h(umfFmt(q, mine)) + '</span></div>';
+      if (rev && umfHasOk(q)) o += q.type === 'quiz' ? (umfQuizOk(q, mine) ? '<p class="ku-rich ok">🎉 Richtig!</p>' : '<p class="ku-rich no">Die richtige Antwort ist: <b>' + h((q.ok || []).map(function (i) { return q.opts[i]; }).join(', ')) + '</b></p>')
+        : '<p class="ku-rich">Die Lösung ist <b>' + umfFmtNum(q.ok) + (q.unit ? ' ' + h(q.unit) : '') + '</b>. Du hast ' + umfFmtNum(+mine) + ' geschätzt.</p>';
+      if (d.open) o += '<button class="kid-btn" data-a="kuEdit">Antwort ändern</button>';
+    } else if (!d.open) o += '<p class="lead">Die Abstimmung ist geschlossen.</p>';
+    else {
+      var dr = K.umfDr(q);
+      o += umfInput(q, dr) + '<button class="kid-go" data-a="kuSend"' + (umfVal(q, dr) == null ? ' disabled' : '') + '>Abschicken</button>';
+      if (mine !== undefined) o += '<button class="kid-btn" data-a="kuCancel">Nicht ändern</button>';
+    }
+    if (d.show && d.res[q.id] && q.type !== 'info' && (mine !== undefined || !d.open)) o += '<div class="ku-res"><span class="ku-nr">' + (g ? 'So haben alle geantwortet' : 'So hat die Klasse geantwortet') + '</span>' + umfRes(q, d.res[q.id].map(function (v) { return { v: v }; }), { small: true, rev: rev }) + '</div>';
+    if (selbst) {
+      var last = U2.i >= d.qs.length - 1, all = d.qs.every(function (x) { return x.type === 'info' || d.mine[x.id] !== undefined; });
+      o += '<div class="ku-nav"><button class="kid-btn" data-a="kuStep" data-d="-1"' + (U2.i ? '' : ' disabled') + '>◀ Zurück</button>' +
+        (last ? (all ? '<span class="ku-fertig">🎉 Fertig! Danke.</span>' : '') : '<button class="kid-btn" data-a="kuStep" data-d="1">Weiter ▶</button>') + '</div>';
+    }
+    return K.shell(o + '</div>', back);
+  };
+  // Gäste: #/u/<Nummer> → Name (freiwillig) → Umfrage (Token in localStorage «kn_umf_gast»)
+  var G = {
+    start: function (nr) {
+      UI.view = 'kid'; K.err = '';
+      var s = LS.get('kn_umf_gast');
+      if (s && s.token && (!nr || s.nr === nr)) return K.umfBegin(s.token, s.name);
+      K.gnr = nr || ''; K.step = 'gast'; K.render();
+    }
+  };
+  K.view_gast = function () {
+    return K.shell('<div class="ku-brand"><img src="bilder/eule.webp" alt="" width="40" height="40"><span>' + h(C.PORTAL_NAME) + '</span></div>' +
+      '<form class="kid-card" data-a="gJoin"><div class="ku-big">📊</div><h1>Bei der Umfrage mitmachen</h1>' +
+      (K.gnr ? '<p class="lead">Nummer <b>' + h(umfNr(K.gnr)) + '</b></p><input type="hidden" name="nr" value="' + h(K.gnr) + '">'
+        : '<label class="sr" for="gNr">Nummer</label><input class="kid-input ku-in" id="gNr" name="nr" inputmode="numeric" autocomplete="off" placeholder="Nummer (6 Ziffern)" required>') +
+      '<label class="sr" for="gName">Dein Name</label><input class="kid-input ku-in" id="gName" name="name" maxlength="20" autocomplete="off" placeholder="Dein Name (freiwillig)">' +
+      '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go">Mitmachen</button></form>', null);
+  };
+  ACT.gJoin = async function (f) {
+    var nr = String(f.elements.nr.value || '').replace(/\D/g, ''), name = f.elements.name.value.trim();
+    if (nr.length !== 6) { K.err = 'Die Nummer hat 6 Ziffern.'; return K.render(); }
+    var r = await DB.umfGastJoin(nr, name);
+    if (!r || !r.ok) {
+      K.err = { nummer: 'Diese Nummer gibt es nicht. Schau nochmals genau.', vorbei: 'Diese Umfrage ist schon fertig.', name: 'Bitte einen anderen Namen wählen (ohne < und >).', voll: 'Es machen schon sehr viele mit.' }[r && r.error] || 'Das hat nicht geklappt.';
+      if (r && r.error === 'nummer') K.gnr = '';
+      return K.render();
+    }
+    LS.set('kn_umf_gast', { nr: nr, token: r.token, name: r.name });
+    K.umfBegin(r.token, r.name);
+  };
+  ACT.kuGo = function (el) { K.U.i = +el.dataset.i; K.render(); window.scrollTo(0, 0); };
+  ACT.kuStep = function (el) { K.U.i += +el.dataset.d; K.render(); window.scrollTo(0, 0); };
+  ACT.kuEdit = function () { var q = K.umfQ(); K.U.edit[q.id] = true; delete K.U.dr[q.id]; K.render(); };
+  ACT.kuCancel = function () { var q = K.umfQ(); delete K.U.edit[q.id]; delete K.U.dr[q.id]; K.render(); };
+  function kuSendState() { var q = K.umfQ(), b = document.querySelector('[data-a="kuSend"]'); if (q && b) b.disabled = umfVal(q, K.umfDr(q)) == null; }
+  ACT.kuPick = function (el) {
+    var q = K.umfQ(), dr = K.umfDr(q), i = +el.dataset.i;
+    if (q.multi) { var j = dr.indexOf(i); if (j >= 0) dr.splice(j, 1); else dr.push(i); } else { dr.length = 0; dr.push(i); }
+    K.render();
+  };
+  ACT.kuW = function (el) { var q = K.umfQ(), dr = K.umfDr(q); dr[+el.dataset.i] = el.value; kuSendState(); };
+  ACT.kuZ = function (el) { var q = K.umfQ(); K.U.dr[q.id] = el.value; kuSendState(); };
+  ACT.kuSk = function (el) { var q = K.umfQ(), dr = K.umfDr(q); dr[+el.dataset.i] = +el.dataset.v; K.render(); };
+  ACT.kuRang = function (el) { var q = K.umfQ(), dr = K.umfDr(q), p = +el.dataset.p, j = p + +el.dataset.d; if (j < 0 || j >= dr.length) return; var x = dr[p]; dr[p] = dr[j]; dr[j] = x; K.render(); };
+  ACT.kuPts = function (el) {
+    var q = K.umfQ(), dr = K.umfDr(q), i = +el.dataset.i, P = Math.min(100, Math.max(1, +q.pts || 10)), used = 0; dr.forEach(function (x) { used += x; });
+    if (+el.dataset.d > 0 && used < P) dr[i]++; else if (+el.dataset.d < 0 && dr[i] > 0) dr[i]--; K.render();
+  };
+  ACT.kuFeld = function (el, ev) {
+    var q = K.umfQ(), r = el.getBoundingClientRect(); if (!ev || !r.width) return;
+    K.U.dr[q.id] = { x: Math.round(Math.max(0, Math.min(100, (ev.clientX - r.left) / r.width * 100)) * 10) / 10, y: Math.round(Math.max(0, Math.min(100, 100 - (ev.clientY - r.top) / r.height * 100)) * 10) / 10 };
+    K.render();
+  };
+  ACT.kuSend = async function () {
+    var U2 = K.U, q = K.umfQ(); if (!q || U2.busy) return;
+    var v = umfVal(q, K.umfDr(q)); if (v == null) return;
+    U2.busy = true;
+    try {
+      var ok = U2.guest ? await DB.umfGastSend(U2.guest, q.id, v) : await DB.kidUmfrageSend(K.sess.token, q.id, v);
+      if (!ok) { toast('Das hat nicht geklappt. Vielleicht ist die Abstimmung schon geschlossen.'); U2.sig = ''; return K.umfLoad(); }
+      U2.d.mine[q.id] = v; delete U2.edit[q.id]; delete U2.dr[q.id]; U2.sig = '';
+      K.render(); K.umfLoad();
+    } catch (e) { if (U2.guest) toast(errMsg(e)); else K.sessionLost(e); }
+    finally { U2.busy = false; }
   };
 
   // ===================================================================

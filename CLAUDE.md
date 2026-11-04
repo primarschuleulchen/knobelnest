@@ -5,11 +5,18 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Klassencode: Die Lehrperson wählt ihn selbst (z. B. «Otter 123», `ACT.codeEdit`/`codeSave`, beim Anlegen freiwillig). Kinder müssen Gross/klein und Leerzeichen nicht beachten (`_norm_code`).
 - Klasse (Version 20): `classes.bild` = Klassenbild/Maskottchen (data:image, `ACT.bildEdit`, Vorlagen der Admin-Lehrperson in `shared_store` «klassenbilder», Verwaltung `kbCard()`), `classes.kid_tools` = Werkzeuge für die Kinder freigegeben `{heft,pin,atelier,tafel}` (fehlt = frei, neue Klassen alles gesperrt; Knöpfe unter den Werkzeug-Kacheln, `ACT.toolRel`), `classes.tafel_cols` = eigene Namen der drei Tafel-Spalten (`setTafelCols()`). Kinder lesen das mit `kid_klasse`; `kid_class` gibt auch das Bild. `DB.listClasses` fällt ohne diese Spalten auf die alten zurück.
 - Tafel-Spalten (Version 21): `classes.tafel_cols = {list:[{id,label,color}]}` (höchstens 6, `colList()`/`setTafelCols()`, Editor `colEditor()`); ohne `list` die drei Standardspalten. `tafel_set` prüft mit `_tafel_col_ok`. «helfen»/«frage» behalten ihre Sonderrolle (Hilfe-Hinweis).
+- Lizenz (Version 22): `profiles.valid_until` = letzter gültiger Tag (leer = unbefristet, Admin nie gesperrt). Neue Konten bekommen per Trigger heute + 1 Jahr. Nur der Admin ändert es (`admin_set_valid`, Verwaltung `licRow()`, «+ 1 Jahr», «✉ Erinnerung schreiben»). Abgelaufen → `licPage()` statt Portal/Werkzeugen (`licExpired()` in `T.start`, `T.render`, `toolGate`, `licGate`); 30 Tage vorher Hinweis mit `C.SHOP_URL`. Kinder: `_lic_ok()` in `_kid`, `kid_class` (`pausiert`), `kid_login` → Hinweis «pausiert».
 - Lehrperson: Reihenfolge der Werkzeug-Kacheln pro Lehrperson in `teacher_store` «kacheln» (`tileOrder()`; Kacheln direkt ziehen, Pointer-Events `tdStart`/`tdMove`, Finger nach 380 ms Halten). Tier-Vorlagen fürs Klassenbild in `bilder/maskottchen/` (`TIERE`).
 - Lehrperson: Reiter «Übersicht» (`T.tab = 'uebersicht'`, Start und Klick aufs Logo) = Klassen-Banner mit Werkzeug-Kacheln; Reiter «Spiele» = Fächer und Spiele (beides `T.tabSpiele`). Kachel-Bilder in `bilder/kacheln/` (`KACHEL_BILD`, `ttIcon()`).
 - Anmeldeseite: Werkzeug-Galerie mit Vorschau beim Darüberfahren (`LOGIN_TOOLS`), Knopf «Noch kein Login?» → `C.SHOP_URL` in `config.js` (leer = Hinweis «kommt bald»). Kreisbilder in `bilder/kacheln/` und `bilder/maskottchen/` sind rund zugeschnitten (durchsichtige Ecken), den Goldrand macht das CSS.
 - Kinderansicht: `body.kidv` (in `K.render`), heller Stil wie die Lehrpersonen-Seite, Schriften Fredoka/Andika bleiben. Startseite ohne Kopfleiste, «Abmelden» neben der Begrüssung (`K.shell(body, null)`).
-- Elterngespräche (Version 22): Modul `E` (Lehrperson, `#/gespraeche/<Klasse>`, Kachel «eltern», Freigabe `eltern` in `TOOLS`) und `EP` (Eltern ohne Anmeldung, `#/eltern/<token>`). Tabelle `talks` (pro Klasse `cfg` = Termine/Schwierigkeit `diff`/Fixierungen `fixed`, `answers` pro Kind). Eltern nur über `eltern_get`/`eltern_set` (Schlüssel pro Gerät in `localStorage`), Lehrperson trägt mit `talk_answer_put` ein. Plan: `egPlan()` (grösste Zuteilung + Tauschen gegen anspruchsvolle Gespräche hintereinander); `egReserved()` = Termine, ohne die nicht alle Eingetragenen Platz hätten → für neue Eltern ausgeblendet.
+- Live-Quiz (Version 23): eigene Seite `quiz.html` (Bridge `window.knQuiz`, Modul `QZ` in `app.js`, `QUIZ_VER`). Lehrperson: Route `#/quiz`, Quiz in `teacher_store` «quiz» (Liste) und «quiz-<id>» (Fragen; Typen `quiz`, `rf`, `text`, `reihe`). Live-Runde: Tabellen `quiz_live`/`quiz_players`, Funktionen `quiz_open`/`quiz_step`/`quiz_host`/`quiz_kick`/`quiz_close` (Lehrperson) und `quiz_join`/`quiz_state`/`quiz_answer` (Mitspielen ohne Konto, Token). Mitspielen: `#/q/<6-stellige Nummer>` per QR-Code. Punkte rechnet die Datenbank (bis 1000 × Faktor, schneller = mehr). Runden verschwinden nach einem Tag. Freigabe pro Lehrperson wie die anderen Werkzeuge (`TOOLS` «quiz»).
+- Quiz-Ordner und Kinder-Quiz (Version 25): Ordner der Lehrperson in `teacher_store` «quiz» = `{list:[{…, ordner}], ordner:[{id,name}]}`. Kinder erstellen eigene Quiz, wenn die Lehrperson es pro Klasse einschaltet (`classes.kid_tools.quiz === true`, fehlt = aus; Schalter im Ordner «Von den Kindern»). Tabelle `kid_quizzes` (`members` = Kinder, die es sehen und bearbeiten; `ver` für gemeinsames Bearbeiten). Kinder: `kid_quiz_list/get/save/delete` (Kachel «Quiz erstellen», `K.view_quiz`, `mode: 'kid'`). Lehrperson: `kq_list/get/save/new/members/delete`. Bei altem Stand gibt `…_save` `conflict` zurück, `quiz.html` führt mit `merge()` zusammen (geänderte Fragen gewinnen) und holt alle 4 s neue Stände (`kidPull`).
+- Umfrage (Version 26, wie Mentimeter): Modul `U` in `app.js`, Route `#/umfrage/<Klasse>`, Freigabe-Schlüssel `umfrage` in `TOOLS`. Umfragen der Lehrperson (für alle Klassen) in `teacher_store` «umfragen» = `{list:[{id,title,set:{mode,auto,kids,anon},qs}]}`; Live-Stand und Antworten pro Klasse in «umfrage-<Klasse>» = `{live, ans:{Frage:{Kind:Antwort}}}`. «live» schreibt nur die Lehrperson (`umfrage_put`, Timer über `sec`), Kinder lesen mit `kid_umfrage` (Lösung `ok` erst nach Aufdecken `rev`, Antworten anderer ohne Namen und nur bei `show`) und antworten mit `kid_umfrage_send` (Prüfung pro Fragetyp). Fragetypen `UMF_TYPES` (wahl, quiz, stimmung, wort, text, skala, rang, punkte, zahl, feld, info), Ergebnisse `umfRes()`, Eingabe der Kinder `umfInput()`, Vorlagen `UMF_VORLAGEN`. Kinder: Kachel «Umfrage!» (`K.umfOpen`, geprüft in `K.checkRace`), Ansicht `K.view_umfrage`.
+- Umfrage offen per QR-Code (Version 27): Beim Starten «Wer macht mit?» → Klasse (`uStartK`) oder offen (`uGoO`). Offene Runde in Tabelle `umf_runden` (eine pro Lehrperson, 6-stellige Nummer `nr`, `data` = `{live, ans}`, nach 30 Tagen gelöscht) mit Gästen `umf_gaeste` (Token, freiwilliger Name, sonst «Gast N»). Lehrperson: `umf_offen_open/put/host/close`; Gäste: `umf_gast_join`, `umf_gast`, `umf_gast_send` (dieselben Regeln über `_umf_apply`, `_umf_view`, `_umf_val`). Im Portal `U.docs = {klasse, offen}`, umschalten mit `U.use()`. Mitmachen: Route `#/u/<Nummer>` (`G.start`, `K.view_gast`, Token in localStorage «kn_umf_gast», dann `K.umfBegin(token)`).
+- Zurück-Knöpfe: überall gleich wie in der Eulenkiste (weisse Pille «←» + Eule, oben links). Im Portal `backBtn(attr, label)` + CSS `.kn-back` in `style.css`; in den eingebauten Werkzeugen setzt `werkstatt/einbau/zurueck.py` (aufgerufen von `alle_neu_bauen.py`) den Knopf `#knBack`; `quiz.html` und `gedaechtnis/` (in `bauen.py`) haben ihn direkt.
+- Fächer-Bilder: `bilder/faecher/{deutsch,mathematik,englisch,nmg}.webp` (rund, Goldrand per CSS), Zuordnung über den Fachnamen in `fachBild()`; andere Fächer zeigen den Anfangsbuchstaben.
+- Elterngespräche (Version 28): Modul `E` (Lehrperson, `#/gespraeche/<Klasse>`, Kachel «eltern», Freigabe `eltern` in `TOOLS`) und `EP` (Eltern ohne Anmeldung, `#/eltern/<token>`). Tabelle `talks` (pro Klasse `cfg` = Termine/Schwierigkeit `diff`/Fixierungen `fixed`, `answers` pro Kind). Eltern nur über `eltern_get`/`eltern_set` (Schlüssel pro Gerät in `localStorage`), Lehrperson trägt mit `talk_answer_put` ein. Plan: `egPlan()` (grösste Zuteilung + Tauschen gegen anspruchsvolle Gespräche hintereinander); `egReserved()` = Termine, ohne die nicht alle Eingetragenen Platz hätten → für neue Eltern ausgeblendet.
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -39,11 +46,12 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `app.js` | Die ganze Portal-App (Hash-Routen in `route()`) |
 | `style.css` | Gestaltung des Portals. Lehrpersonen-Seiten (`body.lp`, gesetzt in `T.render`/`T.renderLogin`, entfernt in `route()`) im Stil der Eulenkiste (Repo `lernkompass`): Schrift Patrick Hand (`schriften/`), Eulen-Marke (`bilder/eule.webp`), Gold-Akzente, ✦ ✧ ✦. Die Kinderansicht ist noch im alten Stil. |
 | `bilder/`, `schriften/` | Bilder und Schriften aus der Eulenkiste (lokal, nichts von Google) |
-| `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
+| `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html`, `quiz.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
+| `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 22) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 28) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -56,6 +64,8 @@ Module in `app.js` (jeweils `var X = {…}`):
 - `H`: Hausaufgabenheft
 - `P`: Pinnwand
 - `AT`: Atelier
+- `QZ`: Live-Quiz
+- `U`: Umfrage
 - `O`: Otterteich
 - `ACT`: Klick-Aktionen (`data-a="…"`)
 
@@ -72,12 +82,14 @@ So läuft ein Werkzeug im Portal:
 |---|---|---|---|
 | Tagesfolie | `window.knTagesfolie` (inkl. `claude.use`-Nachbau) | eigene Dokumente der Tagesfolie; Vorlage in `shared_store` «tagesfolie-vorlage» | – |
 | Hausaufgabenheft | `window.knHeft` | `hat-<Klasse>` | `kid_heft`, `kid_heft_tick`, `kid_heft_own` |
-| Pinnwand | `window.knPin` (`pinBridge` baut die `claude.use('db')`-Sammlungen nach) | `pin-<Klasse>` | `kid_pin`, `kid_pin_idea`, `kid_pin_vote`; Lehrperson schreibt mit `pin_put` |
+| Pinnwand | `window.knPin` (`pinBridge` baut die `claude.use('db')`-Sammlungen nach) | `pin-<Klasse>` | `kid_pin`, `kid_pin_post` (Version 24: Kategorie, Bild, direkt), `kid_pin_vote`; Lehrperson schreibt mit `pin_put` |
 | Otterteich | `window.knOtter` (`otterBridge`) | `otter-<Klasse>` (Einstellungen und `run` = Stand des Teichs) | – |
+| Umfrage | – (direkt im Portal, Modul `U`) | «umfragen», `umfrage-<Klasse>` | `kid_umfrage`, `kid_umfrage_send`; Lehrperson schreibt mit `umfrage_put` |
 | Atelier | `window.knAtelier` | `atelier-<Klasse>` = `{open, arten, kids:{id:{thema,umsetzung,stufe,farbe,x,y}}}` | `kid_atelier`, `kid_atelier_set`; Lehrperson schreibt mit `atelier_put` |
+| Live-Quiz | `window.knQuiz` (`mode` teacher/player) | `quiz`, `quiz-<id>` (nicht pro Klasse) | `quiz_join`, `quiz_state`, `quiz_answer` (ohne Kinder-Anmeldung); eigene Quiz: `kid_quiz_list/get/save/delete` |
 
 - **Otterteich in der Tagesfolie:** Die Tagesfolie zeigt den Otterteich als Baustein. Dafür liegt das Fenster `otterteich.html?embed` dauerhaft über dem Baustein, damit Mikrofon und Otter weiterlaufen. Es findet `knOtter` über `window.parent.parent`.
-- **Werkzeuge freigeben:** Der Admin gibt Werkzeuge pro Lehrperson frei. Die Freigaben stehen in `shared_store` «werkzeuge» = `{Lehrperson-ID: {folie, heft, pin, otter, atelier: true}}`. Die Liste dazu ist `TOOLS` in `app.js`, die Prüfung `toolGate()`. Für Admins ist immer alles frei.
+- **Werkzeuge freigeben:** Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (`BASE_TOOLS`). Die übrigen gibt der Admin pro Lehrperson frei: `shared_store` «werkzeuge» = `{Lehrperson-ID: {heft, tafel, vk, atelier, quiz, gd, umfrage: true}}`, Liste `TOOLS` in `app.js`, Prüfung `toolGate()`/`toolAccess()`. Ohne `tafel` keine Arbeitsstand-Kachel, kein Reiter, keine Wandtafel; ohne `vk` keine Vokabelkiste-Kachel (beim Freigeben wird das Spiel Vokabelkiste mit zugeteilt). Für Admins ist immer alles frei.
 - **Neues Werkzeug:**
   - eine Zeile in `TOOLS`
   - eine Route in `route()`
@@ -93,6 +105,7 @@ So läuft ein Werkzeug im Portal:
   - Du bearbeitest ihre HTML-Datei.
   - Sie lädt die neue Datei in der Verwaltung wieder hoch: beim Spiel unter «Spiel-Datei» oder als Paket mit «Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen».
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
+- **Gedächtniskiste:** Fach «Gedächtnis», 12 Spiele mit je 5 Stufen (Bereiche Bilder, Orte, Reihenfolgen, Namen merken), Stil der Eulenkiste. Alles gebaut mit `python3 werkstatt/spiele/gedaechtnis/bauen.py` → `gedaechtnis/<spiel>.html` (Spiele), `gedaechtnis/index.html` (Werkzeug für Lehrpersonen: Vorschau, Ausprobieren mit `?vorschau&stufe=N`, Freigeben, Admin «Spiele in die Klassenkiste aufnehmen» = `knGd.install`). In `games` steht pro Spiel nur ein Verweis (`knobelnest-url`), Änderungen kommen also über GitHub (dann `GD_VER` erhöhen). Sterne-Level «Stufe 1» … «Stufe 5», Spielstand-Eintrag `gd`. Werkzeug-Freigabe `gd` in `TOOLS`, Route `#/gedaechtnis/<Klasse>`, Modul `GD`.
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
@@ -106,7 +119,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 22).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 28).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -116,10 +129,12 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=89`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=99`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
+
+- **Klassenkiste und Eulenkiste zusammen:** Die Lehrerin will, dass Änderungen an einem Werkzeug, das es in beiden gibt (Tagesfolie, Glücksrad, Lautstärkeregler, Pinnwand), immer in beiden gemacht werden. Die Eulenkiste ist das Repo `primarschuleulchen/lernkompass` (ohne Daten, eigenes `werkstatt/bauen.py`); dort direkt online stellen. Pinnwand: Original `werkstatt/originale/klassen-pinnwand.html` (Version 6), Einbau `werkstatt/einbau/pinnwand/pin6_patch.py`, gemeinsame Korrekturen in `pin_fixes.py` (dieselben Abschnitte stehen in der Eulenkiste).
 
 Die Lehrerin entwickelt ihre Werkzeuge oft in anderen Chats weiter und schickt dann die neue HTML-Datei. So baust du sie ein:
 
