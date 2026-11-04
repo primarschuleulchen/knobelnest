@@ -60,14 +60,30 @@ def lies(name):
     with open(os.path.join(HIER, name), encoding='utf-8') as f: return f.read()
 
 
+def randfarbe(im):
+    # Durchsichtige Pixel bekommen die Farbe der nächsten sichtbaren (sonst helle Säume am Rand der 3D-Figur)
+    import numpy as np
+    from PIL import Image, ImageFilter
+    a = np.asarray(im).astype(np.float32); rgb, al = a[..., :3], a[..., 3:] / 255.0
+    acc = rgb * al; w = al * 255; res = rgb.copy(); done = al[..., 0] > .6
+    for r in (1, 2, 4, 8, 16):
+        k = ImageFilter.GaussianBlur(r)
+        def bl(x): return np.stack([np.asarray(Image.fromarray(np.clip(x[..., i], 0, 255).astype(np.uint8)).filter(k)).astype(np.float32) for i in range(x.shape[-1])], -1)
+        A2 = bl(acc); W2 = bl(w); m = (~done) & (W2[..., 0] > 2)
+        res[m] = A2[m] / (W2[m] / 255); done = done | m
+    out = np.concatenate([np.clip(res, 0, 255), a[..., 3:]], -1).astype(np.uint8)
+    return Image.fromarray(out, 'RGBA')
+
+
 def leute():
     # Gezeichnete Figuren: leute/<Beruf>.webp (Beruf wie in JOBS, Leerzeichen als «-», z. B. police-officer.webp)
     from PIL import Image
     out, ordner = {}, os.path.join(HIER, 'leute')
     for n in sorted(os.listdir(ordner)) if os.path.isdir(ordner) else []:
         if not n.endswith('.webp'): continue
-        p = os.path.join(ordner, n); w, h = Image.open(p).size
-        with open(p, 'rb') as f: out[n[:-5].replace('-', ' ')] = {'url': 'data:image/webp;base64,' + base64.b64encode(f.read()).decode(), 'w': w, 'h': h}
+        im = randfarbe(Image.open(os.path.join(ordner, n)).convert('RGBA')); w, h = im.size
+        import io; buf = io.BytesIO(); im.save(buf, 'WEBP', quality=90)
+        out[n[:-5].replace('-', ' ')] = {'url': 'data:image/webp;base64,' + base64.b64encode(buf.getvalue()).decode(), 'w': w, 'h': h}
     return out
 
 
