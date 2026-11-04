@@ -11,8 +11,17 @@
 #   5 Listen and draw*  Beschreibung nur anhören (Text kann man aufdecken) und malen, mit allen Zusätzen
 
 
+import base64, os
+
+
+def logo():
+    # Logo des Spiels (rund, durchsichtige Ecken) direkt in die Datei eingebettet, damit es auch als Artefakt läuft
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logos', 'im-museum.webp'), 'rb') as f:
+        return '<img class="logo" alt="" src="data:image/webp;base64,' + base64.b64encode(f.read()).decode() + '">'
+
+
 def alle(spiel):
-    spiel(id='im-museum', titel='Im Museum', icon='🏛️', fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=4,
+    spiel(id='im-museum', titel='Im Museum', icon=logo(), fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=4,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Bilder 1 Stern, pro Stufe bis 10
           kurz='Bilder im Museum auf Englisch beschreiben, lesen und malen.',
           intro='Willkommen im Museum! Hier hängen bunte Bilder. Beschreibe sie auf Englisch: <b>There is a</b> + Farbe + Form + Ort.',
@@ -25,6 +34,8 @@ def alle(spiel):
 
 
 CSS = r"""
+/* Logo statt Emoji im Kreis oben */
+.ring{width:150px;height:150px;background:none;border:none;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
 /* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
 .lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
 .mu{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start;width:100%;max-width:1040px}
