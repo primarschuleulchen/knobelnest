@@ -1,0 +1,113 @@
+{
+ "format": "knobelnest-spielpaket",
+ "games": [
+  {
+   "title": "Paare finden",
+   "description": "Karten aufdecken und gleiche Bilder finden.",
+   "fach": "Gedächtnis",
+   "thema": "Bilder merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/paare-finden.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: &quot;runde&quot;, &quot;max&quot;: 3, &quot;proLevel&quot;: true}\"><title>Paare finden</title></head><body><p>Paare finden: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Was fehlt?",
+   "description": "Bilder anschauen. Dann ist eines weg: Welches fehlt?",
+   "fach": "Gedächtnis",
+   "thema": "Bilder merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/was-fehlt.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Was fehlt?</title></head><body><p>Was fehlt?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Was ist anders?",
+   "description": "Ein Bild ist neu oder zwei haben getauscht. Was hat sich verändert?",
+   "fach": "Gedächtnis",
+   "thema": "Bilder merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/was-ist-anders.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Was ist anders?</title></head><body><p>Was ist anders?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Wie viele?",
+   "description": "Ein Bild blitzt kurz auf. Wie viele Äpfel waren es?",
+   "fach": "Gedächtnis",
+   "thema": "Bilder merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 4,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/wie-viele.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Wie viele?</title></head><body><p>Wie viele?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Wo war es?",
+   "description": "Bilder werden zugedeckt. Wo lag der Fuchs?",
+   "fach": "Gedächtnis",
+   "thema": "Orte merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 5,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/wo-war-es.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Wo war es?</title></head><body><p>Wo war es?: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Weg merken",
+   "description": "Die Eule hüpft über das Feld. Den Weg merken und nachtippen.",
+   "fach": "Gedächtnis",
+   "thema": "Orte merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 6,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/weg-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Weg merken</title></head><body><p>Weg merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Zahlen verstecken",
+   "description": "Zahlen stehen kurz auf dem Feld. Dann der Reihe nach antippen: 1, 2, 3 …",
+   "fach": "Gedächtnis",
+   "thema": "Orte merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 7,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/zahlen-verstecken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Zahlen verstecken</title></head><body><p>Zahlen verstecken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Farben-Reihe",
+   "description": "Felder leuchten nacheinander auf. Die Reihenfolge nachtippen.",
+   "fach": "Gedächtnis",
+   "thema": "Reihenfolgen merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 8,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/farben-reihe.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Farben-Reihe</title></head><body><p>Farben-Reihe: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Bilder-Reihe",
+   "description": "Bilder erscheinen nacheinander. In der richtigen Reihenfolge antippen.",
+   "fach": "Gedächtnis",
+   "thema": "Reihenfolgen merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 9,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/bilder-reihe.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Bilder-Reihe</title></head><body><p>Bilder-Reihe: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Koffer packen",
+   "description": "Ich packe in meinen Koffer … Jedes Mal kommt etwas dazu.",
+   "fach": "Gedächtnis",
+   "thema": "Reihenfolgen merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 10,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/koffer-packen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Koffer packen</title></head><body><p>Koffer packen: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Zahlen merken",
+   "description": "Ziffern erscheinen nacheinander. Merken und eintippen, auch rückwärts.",
+   "fach": "Gedächtnis",
+   "thema": "Reihenfolgen merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 11,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/zahlen-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Zahlen merken</title></head><body><p>Zahlen merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  },
+  {
+   "title": "Namen merken",
+   "description": "Tiere stellen sich mit Namen vor. Wie heisst der Hase?",
+   "fach": "Gedächtnis",
+   "thema": "Namen merken",
+   "stufe": "1.–6. Klasse",
+   "sort": 12,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"gedaechtnis/namen-merken.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Namen merken</title></head><body><p>Namen merken: Dieses Spiel liegt in der Klassenkiste im Ordner gedaechtnis/.</p></body></html>"
+  }
+ ]
+}

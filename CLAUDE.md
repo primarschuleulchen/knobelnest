@@ -42,6 +42,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `bilder/`, `schriften/` | Bilder und Schriften aus der Eulenkiste (lokal, nichts von Google) |
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html`, `quiz.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
+| `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
 | `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 24) |
@@ -80,7 +81,7 @@ So läuft ein Werkzeug im Portal:
 | Live-Quiz | `window.knQuiz` (`mode` teacher/player) | `quiz`, `quiz-<id>` (nicht pro Klasse) | `quiz_join`, `quiz_state`, `quiz_answer` (ohne Kinder-Anmeldung) |
 
 - **Otterteich in der Tagesfolie:** Die Tagesfolie zeigt den Otterteich als Baustein. Dafür liegt das Fenster `otterteich.html?embed` dauerhaft über dem Baustein, damit Mikrofon und Otter weiterlaufen. Es findet `knOtter` über `window.parent.parent`.
-- **Werkzeuge freigeben:** Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (`BASE_TOOLS`). Die übrigen gibt der Admin pro Lehrperson frei: `shared_store` «werkzeuge» = `{Lehrperson-ID: {heft, tafel, vk, atelier, quiz: true}}`, Liste `TOOLS` in `app.js`, Prüfung `toolGate()`/`toolAccess()`. Ohne `tafel` keine Arbeitsstand-Kachel, kein Reiter, keine Wandtafel; ohne `vk` keine Vokabelkiste-Kachel (beim Freigeben wird das Spiel Vokabelkiste mit zugeteilt). Für Admins ist immer alles frei.
+- **Werkzeuge freigeben:** Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (`BASE_TOOLS`). Die übrigen gibt der Admin pro Lehrperson frei: `shared_store` «werkzeuge» = `{Lehrperson-ID: {heft, tafel, vk, atelier, quiz, gd: true}}`, Liste `TOOLS` in `app.js`, Prüfung `toolGate()`/`toolAccess()`. Ohne `tafel` keine Arbeitsstand-Kachel, kein Reiter, keine Wandtafel; ohne `vk` keine Vokabelkiste-Kachel (beim Freigeben wird das Spiel Vokabelkiste mit zugeteilt). Für Admins ist immer alles frei.
 - **Neues Werkzeug:**
   - eine Zeile in `TOOLS`
   - eine Route in `route()`
@@ -96,6 +97,7 @@ So läuft ein Werkzeug im Portal:
   - Du bearbeitest ihre HTML-Datei.
   - Sie lädt die neue Datei in der Verwaltung wieder hoch: beim Spiel unter «Spiel-Datei» oder als Paket mit «Vorhandene Spiele mit gleichem Titel durch die neue Version ersetzen».
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
+- **Gedächtniskiste:** Fach «Gedächtnis», 12 Spiele mit je 5 Stufen (Bereiche Bilder, Orte, Reihenfolgen, Namen merken), Stil der Eulenkiste. Alles gebaut mit `python3 werkstatt/spiele/gedaechtnis/bauen.py` → `gedaechtnis/<spiel>.html` (Spiele), `gedaechtnis/index.html` (Werkzeug für Lehrpersonen: Vorschau, Ausprobieren mit `?vorschau&stufe=N`, Freigeben, Admin «Spiele in die Klassenkiste aufnehmen» = `knGd.install`). In `games` steht pro Spiel nur ein Verweis (`knobelnest-url`), Änderungen kommen also über GitHub (dann `GD_VER` erhöhen). Sterne-Level «Stufe 1» … «Stufe 5», Spielstand-Eintrag `gd`. Werkzeug-Freigabe `gd` in `TOOLS`, Route `#/gedaechtnis/<Klasse>`, Modul `GD`.
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
@@ -119,8 +121,8 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=93`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=94`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 
