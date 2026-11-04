@@ -87,14 +87,24 @@ def leute():
     return out
 
 
+def modelle():
+    # 3D-Figuren der Lehrerin: modelle/<Beruf>.glb (Name wie in JOBS, Leerzeichen als «-»), eingebettet als Base64
+    out, ordner = {}, os.path.join(HIER, 'modelle')
+    for n in sorted(os.listdir(ordner)) if os.path.isdir(ordner) else []:
+        if n.endswith('.glb'):
+            with open(os.path.join(ordner, n), 'rb') as f: out[n[:-4].replace('-', ' ')] = base64.b64encode(f.read()).decode()
+    return out
+
+
 def game_html(s):
     meta = json.dumps(s['sterne'], ensure_ascii=False).replace('"', '&quot;')
     g = {'title': s['titel'], 'icon': s['icon'], 'intro': s['intro'], 'n': s['n'], 'levels': s['levels']}
     return ('<!doctype html>\n<html lang="de-CH">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
             f'<meta name="knobelnest-sterne" content="{meta}">\n'
+            '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n'
             f'<title>{s["titel"]}</title>\n<style>{GD.CSS.replace("__SCHRIFT__", GD.schrift())}{lies(s["id"] + ".css")}</style>\n</head>\n<body>\n<div id="app"></div>\n'
-            f'<script>\nvar G = {json.dumps(g, ensure_ascii=False)};\nvar LEUTE = {json.dumps(leute(), ensure_ascii=False)};\n{lies(s["id"] + ".js")}\n{FRAME}\n</script>\n</body>\n</html>\n')
+            f'<script>\nvar G = {json.dumps(g, ensure_ascii=False)};\nvar LEUTE = {json.dumps(leute(), ensure_ascii=False)};\nvar MODELLE = {json.dumps(modelle(), ensure_ascii=False)};\n{lies(s["id"] + ".js")}\n{FRAME}\n</script>\n</body>\n</html>\n')
 
 
 def stub_html(s):
