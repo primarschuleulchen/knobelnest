@@ -534,6 +534,21 @@ function person(o) {
   else mesh(new THREE.SphereGeometry(.47, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.2), o.hair || '#3a2a1a', 0, 2.68, -.03, g);
   return g;
 }
+// Gezeichnete Figuren der Lehrerin (werkstatt/spiele/englisch/leute/<Beruf>.webp, von bauen.py als LEUTE eingebettet)
+function leute() { return typeof LEUTE !== 'undefined' ? LEUTE : {}; }
+var LTEX = {};
+function cutout(job) {
+  var g = new THREE.Group(), src = leute()[job];
+  var t = LTEX[job] || (LTEX[job] = new THREE.TextureLoader().load(src.url)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  var H = 4.4, W = H * src.w / src.h, geo = new THREE.PlaneGeometry(W, H); geo.translate(0, H / 2, 0);
+  var pl = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, transparent: true, alphaTest: .35, side: THREE.DoubleSide, depthTest: false }));
+  pl.renderOrder = 4;
+  pl.position.y = .05; g.add(pl); g.userData.bill = pl; g.userData.H = H;
+  var sh = new THREE.Mesh(new THREE.CircleGeometry(.75, 16), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .18, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = .03; sh.scale.set(1, .55, 1); g.add(sh);
+  return g;
+}
+function jobImg(job, cls) { var L2 = leute()[job]; return L2 ? '<img class="' + (cls || 'jb') + '" alt="" src="' + L2.url + '">' : ''; }
 function owlMesh() {
   var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   var b = mesh(new THREE.SphereGeometry(1, 20, 16), '#9a6b45', 0, 1.35, 0, body); b.scale.set(1, 1.15, .95);
@@ -857,18 +872,20 @@ function buildWorld() {
   LOTS.forEach(function (L) {
     if (!L.place || !byPlace[L.place]) return;
     byPlace[L.place].forEach(function (J, k) {
-      var p = person(J[4]); var off = byPlace[L.place].length > 1 ? (k ? 1 : -1) * 3.4 : 3.2;
+      var p = leute()[J[0]] ? cutout(J[0]) : person(J[4]); var off = byPlace[L.place].length > 1 ? (k ? 1 : -1) * 3.4 : 3.2;
       var lx = off, lz = L.d / 2 + 1.6;
       if (L.place === 'park') { lx = k ? 6 : -4; lz = L.d / 2 - 3; }
       if (L.place === 'space') lx = -6;
       if (L.place === 'farm') { lx = 4; lz = L.d / 2 - 3; }
       if (L.place === 'school') lz = L.d / 2 - 2;
       if (L.place === 'church') lz = L.d / 2 - .5;
+      if (p.userData.bill && L.place !== 'park' && L.place !== 'farm') lz = Math.max(lz, L.d / 2 + 2.45); // Bildfiguren vor Markisen und Vordächer
       p.position.set(lx, .24, lz); L.g.add(p);
       if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
-      if (J[0] === 'musician') bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
-      var lb = labelSprite(J[0]); lb.position.set(lx, 4.3, lz); L.g.add(lb);
-      w.workers.push({ job: J[0], place: L.place, p: p, lb: lb, ph: Math.random() * 6 });
+      if (J[0] === 'musician' && !p.userData.bill) bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
+      var lb = labelSprite(J[0]); lb.position.set(lx, p.userData.H ? p.userData.H + 1.4 : 4.3, lz); L.g.add(lb);
+      if (p.userData.bill) { lb.material.depthTest = false; lb.renderOrder = 6; }
+      w.workers.push({ job: J[0], place: L.place, p: p, lb: lb, ph: Math.random() * 6, box: LOTS.indexOf(L) });
     });
   });
   // Die Eule
@@ -994,14 +1011,25 @@ function loop() {
   var showP = LABELS === 'immer' || CAM.mode !== 'follow';
   var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
   placeLabels(showP, op, far);
-  WD.workers.forEach(function (w) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; });
+  WD.workers.forEach(function (w) {
+    if (!w.p.userData.bill) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; return; }
+    // Bildfigur dreht sich immer zur Kamera (nur um die senkrechte Achse)
+    // Verdeckt ein Haus die Figur? (Bild wird ohne Tiefe gezeichnet, darum selber prüfen)
+    w.p.getWorldPosition(PV2); var cp3 = WD.cam.position, vis = PV2.distanceTo(cp3) < 160;
+    for (var q = 1; vis && q < 14; q++) { var f = q / 14, x = cp3.x + (PV2.x - cp3.x) * f, y = cp3.y + (PV2.y + 2.5 - cp3.y) * f, z = cp3.z + (PV2.z - cp3.z) * f;
+      for (var bi = 0; bi < WD.boxes.length; bi++) { var b = WD.boxes[bi]; if (bi !== w.box && x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1 && y < b.h - 1) { vis = false; break; } } }
+    w.p.visible = vis; w.lb.scale.set(vis ? 6 : .001, vis ? 1.5 : .001, 1);
+    if (vis) { PV3 = PV3 || new THREE.Vector3(); PV3.set(0, 1, 0).applyQuaternion(WD.cam.quaternion).multiplyScalar(w.p.userData.H + .9).add(PV2); w.p.parent.worldToLocal(PV3); w.lb.position.copy(PV3); }
+    // Bild ganz zur Kamera drehen, die Füsse bleiben am Boden
+    w.p.parent.getWorldQuaternion(PQ); w.p.userData.bill.quaternion.copy(PQ.invert()).multiply(WD.cam.quaternion);
+  });
   WD.hl.forEach(function (m) { m.position.y = m.userData.y0 + Math.sin(t * 3) * .5; if (m.userData.spin) m.rotation.y = t * 2; });
   if (WD.grow) { var gr = WD.grow; gr.t = Math.min(1, gr.t + dt / gr.dur); gr.list.forEach(function (m) { m.geometry.setDrawRange(0, Math.floor(m.geometry.index.count * gr.t / 6) * 6); }); if (gr.t >= 1) WD.grow = null; }
   if (WD.mini.isConnected && (++LOOP.last % 3 === 0)) drawMini();
   WD.ren.render(WD.scene, WD.cam);
 }
 // Ortsnamen: Position auf dem Bildschirm, nahe zuerst; was ein anderes Schild verdecken würde, bleibt weg
-var PV = null;
+var PV = null, PV2 = null, PQ = null, PV3 = null;
 function placeLabels(show, op, far) {
   var W = WD.el.clientWidth, H = WD.el.clientHeight, cp = WD.cam.position, done = [];
   PV = PV || new THREE.Vector3();
@@ -1017,7 +1045,7 @@ function placeLabels(show, op, far) {
     if (l.on !== ok) { l.on = ok; l.el.style.visibility = ok ? 'visible' : 'hidden'; }
   });
 }
-function startLoop() { if (!LOOP.on) { LOOP.on = true; WD.clock.getDelta(); requestAnimationFrame(loop); } }
+function startLoop() { PV2 = PV2 || new THREE.Vector3(); PQ = PQ || new THREE.Quaternion(); if (!LOOP.on) { LOOP.on = true; WD.clock.getDelta(); requestAnimationFrame(loop); } }
 
 // Tastatur (Pfeile, WASD, Leertaste = Ziel)
 var KEYH = null;
@@ -1260,7 +1288,7 @@ function play(lv, api, li, run) {
       o += '<p class="de">Lauf mit den Pfeiltasten. Am Ziel: <b>📍</b> drücken (oder Leertaste).</p>';
     } else if (task.typ === 'job') {
       var J = task.job;
-      o = '<div class="hd">' + J[1] + ' Where does the <b>' + h(J[0]) + '</b> work?</div><p class="de">Finde den Ort, wo «' + h(J[0]) + '» arbeitet, und markiere ihn mit 📍.</p><div class="row"><button class="go sun" data-x="say">🔊 Anhören</button></div>';
+      o = jobImg(J[0], 'jb') + '<div class="hd">' + J[1] + ' Where does the <b>' + h(J[0]) + '</b> work?</div><p class="de">Finde den Ort, wo «' + h(J[0]) + '» arbeitet, und markiere ihn mit 📍.</p><div class="row"><button class="go sun" data-x="say">🔊 Anhören</button></div>';
     } else {
       var P = PLACES[task.place];
       o = '<div class="hd">' + P.emo + ' Walk to the <b>' + h(P.en) + '</b>.</div><p class="de">Lies die Schilder. Lauf zum Ort und markiere ihn mit 📍.</p><div class="row"><button class="go sun" data-x="say">🔊 Anhören</button><button class="go alt" data-x="tipp">💡 Tipp</button></div>';
@@ -1315,7 +1343,7 @@ function play(lv, api, li, run) {
       if (!ok && ex.node) { var n = NODES[ex.node]; floatMark(n.x, n.z, 6, '❗'); ringMark(n.x, n.z, '#f6c623'); }
     } else {
       var J = task.job;
-      if (ok) o = '<div class="hd">🎉 Yes! ' + (J ? 'The <b>' + h(J[0]) + '</b> works at the <b>' + h(P.en) + '</b>.' : 'This is the <b>' + h(P.en) + '</b>.') + '</div>';
+      if (ok) o = (J ? jobImg(J[0], 'jb') : '') + '<div class="hd">🎉 Yes! ' + (J ? 'The <b>' + h(J[0]) + '</b> works at the <b>' + h(P.en) + '</b>.' : 'This is the <b>' + h(P.en) + '</b>.') + '</div>';
       else o = '<div class="hd">🤔 This is ' + h(lotArt(L)) + '.</div><p class="de">' + (J ? 'The ' + h(J[0]) + ' (' + h(J[3]) + ') arbeitet hier: ' : 'Gesucht war ') + '<b>the ' + h(P.en) + '</b> ⭐</p>';
       o += '<p class="de">' + h(P.en) + ' = ' + h(P.de) + (J ? ' · ' + h(J[0]) + ' = ' + h(J[3]) : '') + '</p>';
       say(ok ? (J ? 'Yes! The ' + J[0] + ' works at the ' + P.en + '.' : 'Yes! This is the ' + P.en + '.') : 'This is ' + lotArt(L) + '. The ' + (J ? J[0] + ' works at the ' : '') + P.en + ' is here.');

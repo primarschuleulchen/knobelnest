@@ -60,6 +60,17 @@ def lies(name):
     with open(os.path.join(HIER, name), encoding='utf-8') as f: return f.read()
 
 
+def leute():
+    # Gezeichnete Figuren: leute/<Beruf>.webp (Beruf wie in JOBS, Leerzeichen als «-», z. B. police-officer.webp)
+    from PIL import Image
+    out, ordner = {}, os.path.join(HIER, 'leute')
+    for n in sorted(os.listdir(ordner)) if os.path.isdir(ordner) else []:
+        if not n.endswith('.webp'): continue
+        p = os.path.join(ordner, n); w, h = Image.open(p).size
+        with open(p, 'rb') as f: out[n[:-5].replace('-', ' ')] = {'url': 'data:image/webp;base64,' + base64.b64encode(f.read()).decode(), 'w': w, 'h': h}
+    return out
+
+
 def game_html(s):
     meta = json.dumps(s['sterne'], ensure_ascii=False).replace('"', '&quot;')
     g = {'title': s['titel'], 'icon': s['icon'], 'intro': s['intro'], 'n': s['n'], 'levels': s['levels']}
@@ -67,7 +78,7 @@ def game_html(s):
             '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
             f'<meta name="knobelnest-sterne" content="{meta}">\n'
             f'<title>{s["titel"]}</title>\n<style>{GD.CSS.replace("__SCHRIFT__", GD.schrift())}{lies(s["id"] + ".css")}</style>\n</head>\n<body>\n<div id="app"></div>\n'
-            f'<script>\nvar G = {json.dumps(g, ensure_ascii=False)};\n{lies(s["id"] + ".js")}\n{FRAME}\n</script>\n</body>\n</html>\n')
+            f'<script>\nvar G = {json.dumps(g, ensure_ascii=False)};\nvar LEUTE = {json.dumps(leute(), ensure_ascii=False)};\n{lies(s["id"] + ".js")}\n{FRAME}\n</script>\n</body>\n</html>\n')
 
 
 def stub_html(s):
