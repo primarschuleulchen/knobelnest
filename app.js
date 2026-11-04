@@ -210,7 +210,7 @@
     return false;
   }
   var UI = { confirm: null, view: null };
-  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); else if (UI.view === 'umfrage') U.render(); }
+  function rerender() { if (UI.view === 'teacher') T.render(); else if (UI.view === 'kid') K.render(); else if (UI.view === 'umfrage') U.render(); else if (UI.view === 'eg') E.render(); }
 
   // Overlays
   function overlay(html) {
@@ -366,6 +366,10 @@
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
+    var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})/);
+    if (mgs) return E.start(mgs[1]);
+    var mel = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
+    if (mel) return EP.start(mel[1]);
     var mg = hs.match(/^#\/u(?:\/(\d*))?\/?$/);
     if (mg) return G.start(mg[1] || '');
     var mu = hs.match(/^#\/umfrage\/([0-9a-f-]{36})/);
@@ -575,7 +579,7 @@
   // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
   var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
-  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage'], ['eltern', '🗓️ Elterngespräche']];
   async function toolAccess(me) {
     var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
@@ -844,6 +848,427 @@
     }
   };
   // ===================================================================
+  // Elterngespräche: Die Lehrperson bietet Termine an, die Eltern kreuzen über einen Link alle möglichen Termine an,
+  // die Klassenkiste rechnet laufend einen Plan aus. Tabelle «talks» (Version 22):
+  //   cfg = { title, info, open, slots:[{id,d,t,e}], diff:{Kind-ID: 0|1|2}, fixed:{Termin-ID: Kind-ID oder "_"}, dur, gap }
+  //   answers = { Kind-ID: { name, slots, note, none, key, at } }
+  // Lehrperson: #/gespraeche/<Klasse> (E), Eltern: #/eltern/<Link> (EP, ohne Anmeldung)
+  // ===================================================================
+  var EG_DIFF = [['leicht', '#7ea56a'], ['mittel', '#d6ad45'], ['anspruchsvoll', '#b5524a']];
+  function egMin(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 0; }
+  function egHM(n) { return String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0'); }
+  function egDay(d, long) {
+    var x = new Date(d + 'T12:00:00'); if (isNaN(x)) return d;
+    return x.toLocaleDateString('de-CH', long ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function egSort(sl) { return sl.slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : egMin(a.t) - egMin(b.t); }); }
+  function egDays(sl) { var out = [], by = {}; egSort(sl).forEach(function (s) { if (!by[s.d]) { by[s.d] = []; out.push({ d: s.d, list: by[s.d] }); } by[s.d].push(s); }); return out; }
+  function egLabel(s) { return s ? egDay(s.d) + ', ' + s.t + '–' + s.e : '?'; }
+  function egKey() { var a = new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  function egSid() { return 's' + Date.now().toString(36).slice(-4) + egKey().slice(0, 6); }
+  function egHint(e) { return /talks|eltern_|talk_answer|schema cache|relation|does not exist/i.test((e && e.message) || '') ? 'Dafür zuerst das neue SQL (Version 22) in Supabase ausführen.' : errMsg(e); }
+
+  // Grösstmögliche Zuteilung: jede Familie höchstens ein Termin, jeder Termin höchstens eine Familie.
+  // Familien mit wenig Möglichkeiten kommen zuerst dran, sonst der früheste mögliche Termin.
+  function egMatch(fams, avail, free) {
+    var kidOf = {}, slotOf = {};
+    function go(f, seen) {
+      var l = avail[f] || [];
+      for (var i = 0; i < l.length; i++) {
+        var s = l[i]; if (!free[s] || seen[s]) continue; seen[s] = 1;
+        if (!kidOf[s] || go(kidOf[s], seen)) { kidOf[s] = f; slotOf[f] = s; return true; }
+      }
+      return false;
+    }
+    fams.slice().sort(function (a, b) { return (avail[a] || []).length - (avail[b] || []).length; }).forEach(function (f) { go(f, {}); });
+    return { kidOf: kidOf, slotOf: slotOf, n: Object.keys(slotOf).length };
+  }
+  // Termine, ohne die nicht mehr alle eingetragenen Familien einen Platz hätten (z. B. Eltern, die nur dann können).
+  // Diese Termine sind reserviert und verschwinden für Eltern, die sich neu eintragen.
+  function egReserved(fams, avail, free) {
+    var m = egMatch(fams, avail, free), res = {};
+    Object.keys(m.kidOf).forEach(function (s) {
+      var f2 = Object.assign({}, free); delete f2[s];
+      if (egMatch(fams, avail, f2).n < m.n) res[s] = true;
+    });
+    return res;
+  }
+  // Der ganze Plan für die Lehrperson: Fixiertes bleibt, der Rest wird zugeteilt,
+  // danach so getauscht, dass anspruchsvolle Gespräche möglichst nicht direkt hintereinander kommen.
+  function egPlan(cfg, answers, kids) {
+    var slots = egSort(cfg.slots || []), byId = {}, pos = {}, fixed = {}, fixedKid = {}, isKid = {};
+    kids.forEach(function (k) { isKid[k.id] = true; });
+    slots.forEach(function (s, i) { byId[s.id] = s; pos[s.id] = i; });
+    Object.keys(cfg.fixed || {}).forEach(function (s) {
+      var k = cfg.fixed[s]; if (!byId[s] || !(k === '_' || isKid[k]) || (k !== '_' && fixedKid[k])) return;
+      fixed[s] = k; if (k !== '_') fixedKid[k] = s;
+    });
+    var free = {}; slots.forEach(function (s) { if (!fixed[s.id]) free[s.id] = 1; });
+    var fams = [], avail = {};
+    kids.forEach(function (k) {
+      var a = answers[k.id]; if (!a || fixedKid[k.id] || a.none) return;
+      avail[k.id] = (a.slots || []).filter(function (s) { return free[s]; }).sort(function (x, y) { return pos[x] - pos[y]; });
+      fams.push(k.id);
+    });
+    var m = egMatch(fams, avail, free), kidOf = m.kidOf, slotOf = m.slotOf, diff = cfg.diff || {};
+    function dv(k) { return k && k !== '_' ? Math.max(0, Math.min(2, +diff[k] || 0)) : 0; }
+    function who(s) { return fixed[s] || kidOf[s] || null; }
+    // Nachbarn: gleicher Tag, höchstens 10 Minuten Pause dazwischen
+    var pairs = [];
+    for (var i = 1; i < slots.length; i++) { var a = slots[i - 1], b = slots[i]; if (a.d === b.d && egMin(b.t) - egMin(a.e) <= 10) pairs.push([a.id, b.id]); }
+    var W = [[0, 0, 0], [0, 1, 3], [0, 3, 10]];
+    function pen() { var p = 0; pairs.forEach(function (q) { p += W[dv(who(q[0]))][dv(who(q[1]))]; }); return p; }
+    var cur = pen(), rounds = 0, better = cur > 0;
+    while (better && rounds++ < 40) {
+      better = false;
+      fams.forEach(function (f) {
+        if (!slotOf[f]) return;
+        avail[f].forEach(function (s) {
+          var mine = slotOf[f]; if (s === mine || cur === 0) return;
+          var g = kidOf[s]; if (g && avail[g].indexOf(mine) < 0) return;
+          kidOf[s] = f; slotOf[f] = s; if (g) { kidOf[mine] = g; slotOf[g] = mine; } else delete kidOf[mine];
+          var p = pen(); if (p < cur) { cur = p; better = true; return; }
+          kidOf[mine] = f; slotOf[f] = mine; if (g) { kidOf[s] = g; slotOf[g] = s; } else delete kidOf[s];
+        });
+      });
+    }
+    return { slots: slots, byId: byId, fixed: fixed, fixedKid: fixedKid, kidOf: kidOf, slotOf: slotOf, fams: fams, avail: avail,
+      reserved: egReserved(fams, avail, free),
+      warn: pairs.filter(function (q) { return W[dv(who(q[0]))][dv(who(q[1]))] >= 3; }).map(function (q) { return [who(q[0]), who(q[1]), q[0]]; }),
+      unplaced: fams.filter(function (f) { return !slotOf[f]; }) };
+  }
+
+  // ---------- Lehrperson ----------
+  var E = {
+    start: async function (cid) {
+      UI.view = 'eg';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      document.body.classList.add('lp');
+      if (!(await toolGate('eltern', 'Elterngespräche'))) return;
+      app.innerHTML = '<p class="boot">Elterngespräche werden geladen …</p>';
+      E.cid = cid; E.edit = null;
+      try {
+        E.cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0];
+        if (!E.cls) throw new Error('Diese Klasse wurde nicht gefunden.');
+        E.kids = (await DB.listKids(cid)).slice().sort(kidSort);
+        E.row = await DB.talkGet(cid);
+        if (!E.row) E.row = await DB.talkSave(cid, { title: 'Elterngespräche', info: '', open: false, slots: [], diff: {}, fixed: {}, dur: 20, gap: 5 });
+      } catch (e) {
+        paint('<main class="main"><div class="card stack"><h2>Elterngespräche nicht verfügbar</h2><p>' + h(egHint(e)) + '</p><a class="btn" href="#/">← Klassenkiste</a></div></main>');
+        return;
+      }
+      var c = E.row.cfg || (E.row.cfg = {});
+      ['slots'].forEach(function (k) { if (!Array.isArray(c[k])) c[k] = []; });
+      ['diff', 'fixed'].forEach(function (k) { if (!c[k] || typeof c[k] !== 'object') c[k] = {}; });
+      E.row.answers = E.row.answers || {};
+      E.render();
+      // neue Einträge der Eltern laufend holen
+      every(15000, async function () {
+        if (document.hidden || document.querySelector('.overlay') || E.busy) return;
+        var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+        try { var r = await DB.talkGet(cid); if (r && JSON.stringify(r.answers) !== JSON.stringify(E.row.answers)) { E.row.answers = r.answers || {}; E.render(); } } catch (e) {}
+      });
+    },
+    link: function () { return location.origin + location.pathname + '#/eltern/' + E.row.token; },
+    save: async function () {
+      E.busy = true;
+      try { await DB.talkSave(E.cid, JSON.parse(JSON.stringify(E.row.cfg))); }
+      catch (e) { toast(egHint(e)); }
+      finally { E.busy = false; }
+    }
+  };
+  function egHead(sub) {
+    return '<header class="top"><div class="top-in">' + (sub === 'Elterngespräche' ? '<div class="row">' + backBtn('href="#/"') : '') + '<a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
+      '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>' + h(sub) + '</small></span></a>' +
+      (sub === 'Elterngespräche' ? '</div>' : '') + '</div></header>';
+  }
+  function egDot(v) { var d = EG_DIFF[v || 0]; return '<span class="eg-dot" style="background:' + d[1] + '" title="' + d[0] + '"></span>'; }
+  E.render = function () {
+    var c = E.row.cfg, ans = E.row.answers || {}, kids = E.kids, P = egPlan(c, ans, kids);
+    var name = {}; kids.forEach(function (k) { name[k.id] = k.name; });
+    var nAns = kids.filter(function (k) { return ans[k.id] || P.fixedKid[k.id]; }).length;
+    var nPlan = Object.keys(P.fixedKid).length + Object.keys(P.slotOf).length;
+    var out = egHead('Elterngespräche') + '<main class="main eg">';
+    out += '<section class="banner eg-banner eg-noprint"><img class="banner-bild" src="' + h(klassBild(E.cls.bild)) + '" alt="" width="132" height="132"><div class="stack" style="gap:8px;flex:1 1 320px">' +
+      '<span class="kick">Klasse ' + h(E.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><h1 class="h1">Elterngespräche</h1>' +
+      '<p>① Termine eintragen · ② Link an die Eltern schicken · ③ Plan anschauen und fixieren</p>' +
+      '<div class="row eg-stats"><span class="pill">' + nAns + ' von ' + kids.length + ' eingetragen</span><span class="pill">' + nPlan + ' eingeplant</span>' +
+      (P.unplaced.length ? '<span class="pill eg-bad">' + P.unplaced.length + ' ohne Platz</span>' : '') + '<span class="pill">' + plural(c.slots.length, 'Termin', 'Termine') + '</span></div></div></section>';
+
+    // ① Termine
+    var dur = c.dur || 20, gap = c.gap == null ? 5 : c.gap;
+    out += '<section class="card stack eg-noprint"><h2>① Termine</h2>' +
+      '<form class="eg-add" data-a="egAdd"><div class="field"><label for="egD">Datum</label><input class="input" id="egD" name="d" type="date" required></div>' +
+      '<div class="field"><label for="egF">Von</label><input class="input" id="egF" name="from" type="time" value="' + h(c.lastFrom || '16:00') + '" required></div>' +
+      '<div class="field"><label for="egT">Bis</label><input class="input" id="egT" name="to" type="time" value="' + h(c.lastTo || '18:00') + '" required></div>' +
+      '<div class="field"><label for="egDur">Gespräch (Min.)</label><input class="input" id="egDur" name="dur" type="number" min="5" max="120" value="' + dur + '"></div>' +
+      '<div class="field"><label for="egGap">Pause (Min.)</label><input class="input" id="egGap" name="gap" type="number" min="0" max="60" value="' + gap + '"></div>' +
+      '<button class="btn primary">Termine hinzufügen</button></form>' +
+      (c.slots.length ? egDays(c.slots).map(function (day) {
+        return '<div class="eg-day"><div class="row" style="justify-content:space-between"><h3>' + h(egDay(day.d, true)) + '</h3><button class="btn sm danger' + (UI.confirm === 'egday:' + day.d ? ' armed' : '') + '" data-a="egDelDay" data-d="' + h(day.d) + '">' + (UI.confirm === 'egday:' + day.d ? 'Wirklich den ganzen Tag löschen?' : 'Tag löschen') + '</button></div>' +
+          '<div class="eg-chips">' + day.list.map(function (s) {
+            return '<span class="eg-chip' + (P.fixed[s.id] ? ' fix' : '') + '">' + h(s.t) + '–' + h(s.e) + '<button data-a="egDelSlot" data-s="' + h(s.id) + '" aria-label="Termin ' + h(s.t) + ' löschen" title="löschen">×</button></span>';
+          }).join('') + '</div></div>';
+      }).join('') : '<div class="empty">Noch keine Termine. Wählen Sie oben Datum und Zeit, die Klassenkiste teilt die Zeit in einzelne Gespräche auf.</div>') + '</section>';
+
+    // ② Link
+    var on = !!c.open;
+    out += '<section class="card stack eg-noprint"><h2>② Link für die Eltern</h2>' +
+      '<button class="switch" role="switch" aria-checked="' + on + '" data-a="egOpen"><span>' + (on ? 'Eltern können sich jetzt eintragen' : 'Anmeldung ist geschlossen · zum Öffnen tippen') + '</span><span class="track"></span></button>' +
+      '<div class="field"><label for="egTitle">Titel</label><input class="input" id="egTitle" maxlength="80" value="' + h(c.title || '') + '" data-change="egTitle" placeholder="z. B. Elterngespräche Herbst"></div>' +
+      '<div class="field"><label for="egInfo">Hinweis für die Eltern (freiwillig)</label><textarea class="input" id="egInfo" rows="3" maxlength="600" data-change="egInfo" placeholder="z. B. Die Gespräche finden im Schulzimmer statt und dauern etwa 20 Minuten.">' + h(c.info || '') + '</textarea></div>' +
+      '<div class="eg-link"><input class="input" id="egLink" readonly value="' + h(E.link()) + '" aria-label="Link für die Eltern">' +
+      '<button class="btn" data-a="egCopy">Link kopieren</button><button class="btn" data-a="egQR">QR-Code</button><a class="btn" href="' + h(E.link()) + '" target="_blank" rel="noopener">Elternansicht</a></div>' +
+      '<p class="muted small">Die Eltern wählen ihr Kind aus der Klassenliste und kreuzen alle Termine an, an denen sie können. Wer den Link hat, sieht die Vornamen der Klasse – schicken Sie ihn nur an die Eltern.</p>' +
+      '<div class="row"><button class="btn sm danger' + (UI.confirm === 'eglink' ? ' armed' : '') + '" data-a="egNewLink">' + (UI.confirm === 'eglink' ? 'Wirklich? Der alte Link geht dann nicht mehr' : 'Neuen Link erstellen') + '</button>' +
+      '<button class="btn sm danger' + (UI.confirm === 'egreset' ? ' armed' : '') + '" data-a="egReset">' + (UI.confirm === 'egreset' ? 'Wirklich alle Einträge und Fixierungen löschen?' : 'Neue Runde (alle Einträge löschen)') + '</button></div></section>';
+
+    // ③ Plan
+    var kidOpts = function (s) {
+      var chose = kids.filter(function (k) { return !P.fixedKid[k.id] && ans[k.id] && (ans[k.id].slots || []).indexOf(s) >= 0; });
+      var rest = kids.filter(function (k) { return !P.fixedKid[k.id] && chose.indexOf(k) < 0; });
+      return '<option value="">Fix eintragen …</option>' + chose.map(function (k) { return '<option value="' + k.id + '">✓ ' + h(k.name) + ' (kann dann)</option>'; }).join('') +
+        rest.map(function (k) { return '<option value="' + k.id + '">' + h(k.name) + '</option>'; }).join('') + '<option value="_">⛔ Termin sperren (Pause)</option>';
+    };
+    out += '<section class="card stack eg-plancard"><div class="row" style="justify-content:space-between"><h2>③ Plan · Klasse ' + h(E.cls.name) + '</h2><div class="row eg-noprint">' +
+      (Object.keys(P.slotOf).length ? '<button class="btn sm" data-a="egFixAll">📌 Alle Vorschläge fixieren</button>' : '') + '<button class="btn sm" data-a="egPrint">Drucken</button></div></div>' +
+      '<p class="muted small eg-noprint">Der Plan wird bei jedem neuen Eintrag neu ausgerechnet. «Vorschlag» kann sich noch ändern, 📌 fixierte Termine bleiben und verschwinden für die Eltern. ' +
+      '🔒 = nur so bekommen alle eingetragenen Familien einen Platz; diese Zeit ist für neue Eltern schon ausgeblendet.</p>';
+    if (P.unplaced.length) out += '<div class="note eg-noprint"><b>Kein Platz gefunden für:</b> ' + P.unplaced.map(function (k) {
+      return h(name[k]) + ' <span class="muted">(' + (P.avail[k].length ? P.avail[k].map(function (s) { return h(egLabel(P.byId[s])); }).join(', ') : 'keine freien Termine angekreuzt') + ')</span>';
+    }).join('; ') + '<br>Tipp: einen weiteren Termin anbieten, einen fixierten Termin lösen oder mit den Eltern sprechen.</div>';
+    if (P.warn.length) out += '<div class="note eg-noprint"><b>Hintereinander:</b> ' + P.warn.map(function (w) {
+      return h(name[w[0]] || '') + ' und ' + h(name[w[1]] || '') + ' (' + h(egDay(P.byId[w[2]].d)) + ')';
+    }).join('; ') + ' – anders ging es mit den angekreuzten Terminen nicht. Fixieren Sie einen davon von Hand an einem anderen Termin, wenn Sie möchten.</div>';
+    if (!c.slots.length) out += '<div class="empty">Sobald es Termine gibt, steht hier der Plan.</div>';
+    out += egDays(c.slots).map(function (day) {
+      return '<div class="eg-planday"><h3>' + h(egDay(day.d, true)) + '</h3><ol class="eg-rows">' + day.list.map(function (s) {
+        var fk = P.fixed[s.id], sk = P.kidOf[s.id], body;
+        if (fk === '_') body = '<span class="eg-who muted">gesperrt (Pause)</span><button class="btn sm eg-noprint" data-a="egUnfix" data-s="' + s.id + '">freigeben</button>';
+        else if (fk) body = '<span class="eg-who">' + egDot(c.diff[fk]) + '<b>' + h(name[fk]) + '</b>' + (ans[fk] && ans[fk].name ? ' <span class="muted small">· ' + h(ans[fk].name) + '</span>' : '') + '</span><span class="pill eg-fix">📌 fixiert</span><button class="btn sm eg-noprint" data-a="egUnfix" data-s="' + s.id + '">lösen</button>';
+        else if (sk) body = '<span class="eg-who">' + egDot(c.diff[sk]) + '<b>' + h(name[sk]) + '</b>' + (ans[sk] && ans[sk].name ? ' <span class="muted small">· ' + h(ans[sk].name) + '</span>' : '') + '</span><span class="pill eg-vor">Vorschlag' + (P.reserved[s.id] ? ' 🔒' : '') + '</span>' +
+          '<button class="btn sm eg-noprint" data-a="egFix" data-s="' + s.id + '" data-k="' + sk + '">📌 fixieren</button>';
+        else body = '<span class="eg-who muted">frei</span><select class="input eg-sel eg-noprint" data-change="egFixSel" data-s="' + s.id + '" aria-label="Termin ' + h(s.t) + ' fix vergeben">' + kidOpts(s.id) + '</select>';
+        return '<li class="' + (fk ? (fk === '_' ? 'blk' : 'fix') : sk ? 'vor' : 'frei') + '"><span class="eg-time">' + h(s.t) + '–' + h(s.e) + '</span>' + body + '</li>';
+      }).join('') + '</ol></div>';
+    }).join('') + '</section>';
+
+    // Kinder und Eltern
+    out += '<section class="card stack eg-noprint"><h2>Kinder und Eltern</h2><p class="muted small">Wie anspruchsvoll ist das Gespräch? Das sehen nur Sie. Die Klassenkiste plant anspruchsvolle Gespräche möglichst nicht direkt hintereinander.</p>' +
+      (kids.length ? '<ul class="list eg-kids">' + kids.map(function (k) {
+        var a = ans[k.id], fs = P.fixedKid[k.id], st;
+        if (fs) st = '<span class="eg-st ok">📌 ' + h(egLabel(P.byId[fs])) + '</span>';
+        else if (a && a.none) st = '<span class="eg-st bad">Kein Termin passt</span>';
+        else if (a) st = '<span class="eg-st ok">✓ ' + plural((a.slots || []).length, 'Termin', 'Termine') + (P.slotOf[k.id] ? ' · Vorschlag ' + h(egLabel(P.byId[P.slotOf[k.id]])) : ' · noch kein Platz') + '</span>';
+        else st = '<span class="eg-st">noch offen</span>';
+        return '<li><div class="eg-kid"><b>' + h(k.name) + '</b>' + (a && a.name ? '<span class="muted small">' + h(a.name) + (a.lp ? ' (von Ihnen eingetragen)' : '') + '</span>' : '') + st +
+          (a && a.note ? '<span class="eg-note">«' + h(a.note) + '»</span>' : '') + '</div>' +
+          '<div class="eg-diff" role="group" aria-label="Wie anspruchsvoll">' + EG_DIFF.map(function (d, i) {
+            return '<button class="chip" style="--c:' + d[1] + '" aria-pressed="' + ((+c.diff[k.id] || 0) === i) + '" data-a="egDiff" data-k="' + k.id + '" data-v="' + i + '">' + d[0] + '</button>'; }).join('') + '</div>' +
+          '<button class="btn sm" data-a="egEdit" data-k="' + k.id + '">' + (a ? 'Termine ändern' : 'Selbst eintragen') + '</button></li>';
+      }).join('') + '</ul>' : '<div class="empty">Diese Klasse hat noch keine Kinder. Tragen Sie sie im Reiter «Kinder» ein.</div>') + '</section>';
+    paint(out + '</main>');
+  };
+  async function egSaveRender() { E.render(); await E.save(); }
+  ACT.egAdd = async function (f) {
+    var c = E.row.cfg, d = f.elements.d.value, a = egMin(f.elements.from.value), b = egMin(f.elements.to.value);
+    var dur = Math.max(5, Math.min(120, +f.elements.dur.value || 20)), gap = Math.max(0, Math.min(60, +f.elements.gap.value || 0));
+    if (!d || b <= a) return toast('Bitte Datum und eine Endzeit nach der Startzeit wählen.');
+    var n = 0;
+    for (var t = a; t + dur <= b; t += dur + gap) {
+      var hm = egHM(t);
+      if (c.slots.some(function (s) { return s.d === d && s.t === hm; })) continue;
+      if (c.slots.length >= 300) { toast('Höchstens 300 Termine.'); break; }
+      c.slots.push({ id: egSid(), d: d, t: hm, e: egHM(t + dur) }); n++;
+    }
+    if (!n) return toast('In dieser Zeit hat kein Gespräch Platz (oder die Termine gibt es schon).');
+    c.dur = dur; c.gap = gap; c.lastFrom = f.elements.from.value; c.lastTo = f.elements.to.value;
+    c.slots = egSort(c.slots);
+    toast(plural(n, 'Termin', 'Termine') + ' hinzugefügt.');
+    await egSaveRender();
+  };
+  ACT.egDelSlot = async function (el) {
+    var c = E.row.cfg, id = el.dataset.s;
+    c.slots = c.slots.filter(function (s) { return s.id !== id; }); delete c.fixed[id];
+    await egSaveRender();
+  };
+  ACT.egDelDay = async function (el) {
+    var d = el.dataset.d; if (!armed('egday:' + d)) return E.render();
+    var c = E.row.cfg; c.slots = c.slots.filter(function (s) { if (s.d === d) { delete c.fixed[s.id]; return false; } return true; });
+    await egSaveRender();
+  };
+  ACT.egOpen = async function () { E.row.cfg.open = !E.row.cfg.open; toast(E.row.cfg.open ? 'Die Eltern können sich jetzt eintragen.' : 'Anmeldung geschlossen.'); await egSaveRender(); };
+  ACT.egTitle = async function (el) { E.row.cfg.title = el.value.trim().slice(0, 80); await E.save(); toast('Gespeichert.'); };
+  ACT.egInfo = async function (el) { E.row.cfg.info = el.value.trim().slice(0, 600); await E.save(); toast('Gespeichert.'); };
+  ACT.egCopy = async function () {
+    try { await navigator.clipboard.writeText(E.link()); toast('Link kopiert. Jetzt z. B. in die Eltern-Nachricht einfügen.'); }
+    catch (e) { var i = document.getElementById('egLink'); i.select(); toast('Link markiert – jetzt kopieren.'); }
+  };
+  ACT.egQR = function () {
+    var o = overlay('<div class="bigcode"><p>' + h(E.row.cfg.title || 'Elterngespräche') + ' · Klasse ' + h(E.cls.name) + '</p>' +
+      '<div class="bigcode-row"><div class="qrbox" id="qrBox" role="img" aria-label="QR-Code für die Eltern">QR-Code wird geladen …</div></div>' +
+      '<button class="btn" style="align-self:center" data-a="closeOverlay">Schliessen</button></div>');
+    qrSvg(E.link()).then(function (svg) { var b = o.querySelector('#qrBox'); if (b) b.innerHTML = svg; })
+      .catch(function () { var b = o.querySelector('#qrBox'); if (b) b.textContent = 'QR-Code nicht verfügbar.'; });
+  };
+  ACT.egNewLink = async function () {
+    if (!armed('eglink')) return E.render();
+    var t = crypto.randomUUID ? crypto.randomUUID() : null; if (!t) return toast('Dieser Browser kann keinen neuen Link erstellen.');
+    try { await DB.talkReset(E.cid, { token: t }); E.row.token = t; toast('Neuer Link erstellt.'); } catch (e) { toast(egHint(e)); }
+    E.render();
+  };
+  ACT.egReset = async function () {
+    if (!armed('egreset')) return E.render();
+    try { await DB.talkReset(E.cid, { answers: {} }); E.row.answers = {}; E.row.cfg.fixed = {}; await E.save(); toast('Alle Einträge gelöscht. Die Termine sind noch da.'); } catch (e) { toast(egHint(e)); }
+    E.render();
+  };
+  function egSetFix(s, k) {
+    var fx = E.row.cfg.fixed;
+    if (k !== '_') Object.keys(fx).forEach(function (x) { if (fx[x] === k) delete fx[x]; });
+    fx[s] = k;
+  }
+  ACT.egFix = async function (el) { egSetFix(el.dataset.s, el.dataset.k); toast('Fixiert. Dieser Termin verschwindet für die anderen Eltern.'); await egSaveRender(); };
+  ACT.egFixSel = async function (el) { if (!el.value) return; egSetFix(el.dataset.s, el.value); await egSaveRender(); };
+  ACT.egUnfix = async function (el) { delete E.row.cfg.fixed[el.dataset.s]; await egSaveRender(); };
+  ACT.egFixAll = async function () {
+    var P = egPlan(E.row.cfg, E.row.answers, E.kids), n = 0;
+    Object.keys(P.kidOf).forEach(function (s) { egSetFix(s, P.kidOf[s]); n++; });
+    toast(plural(n, 'Termin', 'Termine') + ' fixiert.'); await egSaveRender();
+  };
+  ACT.egPrint = function () { window.print(); };
+  ACT.egDiff = async function (el) { E.row.cfg.diff[el.dataset.k] = +el.dataset.v; if (!+el.dataset.v) delete E.row.cfg.diff[el.dataset.k]; await egSaveRender(); };
+  // Lehrperson trägt für eine Familie ein (z. B. nach einem Telefon)
+  ACT.egEdit = function (el) {
+    var k = el.dataset.k, kid = E.kids.filter(function (x) { return x.id === k; })[0], a = E.row.answers[k] || {}, sel = a.slots || [], fx = E.row.cfg.fixed;
+    overlay('<form class="dialog stack eg-dlg" role="dialog" aria-label="Termine eintragen" data-a="egEditSave" data-k="' + k + '"><h2 style="font-size:30px">Termine für ' + h(kid.name) + '</h2>' +
+      '<div class="field"><label for="egEName">Name der Eltern</label><input class="input" id="egEName" name="name" maxlength="80" value="' + h(a.name || '') + '"></div>' +
+      '<span class="lbl">An diesen Terminen können die Eltern:</span>' +
+      egDays(E.row.cfg.slots).map(function (day) {
+        return '<div class="eg-dday"><b>' + h(egDay(day.d)) + '</b><div class="eg-chips">' + day.list.map(function (s) {
+          var other = fx[s.id] && fx[s.id] !== k;
+          return '<label class="eg-tick' + (other ? ' off' : '') + '"><input type="checkbox" name="s" value="' + h(s.id) + '"' + (sel.indexOf(s.id) >= 0 ? ' checked' : '') + (other ? ' disabled' : '') + '>' + h(s.t) + '</label>';
+        }).join('') + '</div></div>';
+      }).join('') +
+      '<label class="row" style="gap:10px"><input type="checkbox" name="none" style="width:22px;height:22px"' + (a.none ? ' checked' : '') + '> Kein Termin passt</label>' +
+      '<div class="field"><label for="egENote">Bemerkung</label><textarea class="input" id="egENote" name="note" rows="2" maxlength="500">' + h(a.note || '') + '</textarea></div>' +
+      '<div class="row"><button class="btn primary">Speichern</button>' + (E.row.answers[k] ? '<button type="button" class="btn danger" data-a="egEditDel" data-k="' + k + '">Eintrag löschen</button>' : '') +
+      '<button type="button" class="btn" data-a="closeOverlay">Abbrechen</button></div>' +
+      (E.row.answers[k] ? '<p class="muted small">«Eintrag löschen» gibt das Kind wieder frei, damit sich die Eltern neu eintragen können.</p>' : '') + '</form>');
+  };
+  ACT.egEditSave = async function (f) {
+    var k = f.dataset.k, sl = Array.prototype.filter.call(f.querySelectorAll('input[name=s]'), function (x) { return x.checked; }).map(function (x) { return x.value; });
+    var a = { name: f.elements.name.value.trim(), slots: sl, note: f.elements.note.value.trim(), none: f.elements.none.checked };
+    try { await DB.talkAnswerPut(E.cid, k, a); } catch (e) { return toast(egHint(e)); }
+    E.row.answers[k] = Object.assign({}, E.row.answers[k] || {}, a, { lp: true });
+    closeOverlays(); toast('Gespeichert.'); E.render();
+  };
+  ACT.egEditDel = async function (el) {
+    var k = el.dataset.k;
+    try { await DB.talkAnswerPut(E.cid, k, null); } catch (e) { return toast(egHint(e)); }
+    delete E.row.answers[k]; closeOverlays(); toast('Eintrag gelöscht.'); E.render();
+  };
+
+  // ---------- Eltern (ohne Anmeldung, nur mit dem Link) ----------
+  var EP = {
+    start: async function (tok) {
+      UI.view = 'eltern'; document.body.classList.add('lp');
+      EP.tok = tok; EP.kid = null; EP.step = 'kids'; EP.err = '';
+      EP.keys = LS.get('kn_eltern_' + tok) || {};
+      app.innerHTML = '<p class="boot">Wird geladen …</p>';
+      await EP.load(null);
+      EP.render();
+    },
+    load: async function (kid) {
+      try { EP.d = await DB.elternGet(EP.tok, kid, kid ? EP.keys[kid] : null); EP.err = ''; }
+      catch (e) { EP.d = null; EP.err = errMsg(e); }
+    }
+  };
+  EP.render = function () {
+    document.body.classList.add('lp');
+    var d = EP.d, out = egHead('für Eltern') + '<main class="main eg eg-eltern">';
+    if (!d) {
+      paint(out + '<div class="card stack"><h1 class="h1">Link nicht gültig</h1><p>' + h(EP.err || 'Dieser Link gilt nicht (mehr). Bitte fragen Sie die Lehrperson nach dem aktuellen Link.') + '</p></div></main>');
+      return;
+    }
+    out += '<section class="banner eg-banner"><img class="banner-bild" src="' + h(klassBild(d.bild)) + '" alt="" width="132" height="132"><div class="stack" style="gap:6px;flex:1 1 260px">' +
+      '<span class="kick">Klasse ' + h(d.class_name || '') + (d.teacher ? ' · ' + h(d.teacher) : '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
+      '<h1 class="h1">' + h(d.title || 'Elterngespräche') + '</h1>' + (d.info ? '<p class="eg-info">' + h(d.info) + '</p>' : '') + '</div></section>';
+    if (!d.open) { paint(out + '<div class="card stack"><h2>Die Anmeldung ist geschlossen</h2><p>Zurzeit kann man sich nicht eintragen. Bei Fragen melden Sie sich bitte bei der Lehrperson.</p></div></main>'); return; }
+    var kidName = {}; d.kids.forEach(function (k) { kidName[k.id] = k.name; });
+    var byId = {}; d.slots.forEach(function (s) { byId[s.id] = s; });
+
+    if (EP.step === 'kids') {
+      out += '<section class="card stack"><h2>Für welches Kind?</h2><p class="muted">Tippen Sie auf den Namen Ihres Kindes.</p><div class="eg-kidpick">' + d.kids.map(function (k) {
+        var mine = !!EP.keys[k.id];
+        if (k.done && !mine) return '<button class="eg-kidbtn done" disabled><b>' + h(k.name) + '</b><small>✓ schon eingetragen</small></button>';
+        return '<button class="eg-kidbtn' + (mine ? ' mine' : '') + '" data-a="epKid" data-k="' + k.id + '"><b>' + h(k.name) + '</b>' + (mine ? '<small>✓ eingetragen · ändern</small>' : '') + '</button>';
+      }).join('') + '</div><p class="muted small">Steht bei Ihrem Kind schon «eingetragen», obwohl Sie noch nichts gewählt haben? Dann melden Sie sich bitte bei der Lehrperson.</p></section>';
+      paint(out + '</main>'); return;
+    }
+    var mine = d.mine;
+    if (EP.step === 'done' || (mine && mine.fixed)) {
+      var fixedS = mine && mine.fixed && byId[mine.fixed];
+      out += '<section class="card stack eg-done"><h2>' + (fixedS ? 'Ihr Termin steht fest' : 'Danke, Sie sind eingetragen!') + '</h2>';
+      if (fixedS) out += '<p class="eg-big">' + h(egDay(fixedS.d, true)) + '<br><b>' + h(fixedS.t) + '–' + h(fixedS.e) + ' Uhr</b></p><p>Gespräch für ' + h(kidName[EP.kid] || '') + '. Bitte notieren Sie sich den Termin.</p>';
+      else {
+        var ch = egSort((mine && mine.slots || []).map(function (s) { return byId[s]; }).filter(Boolean));
+        out += '<p>Für <b>' + h(kidName[EP.kid] || '') + '</b> haben Sie ' + (mine && mine.none ? 'angegeben, dass kein Termin passt. Die Lehrperson meldet sich bei Ihnen.' : plural(ch.length, 'möglichen Termin', 'mögliche Termine') + ' gewählt:') + '</p>' +
+          (ch.length ? '<ul class="eg-chosen">' + ch.map(function (s) { return '<li>' + h(egLabel(s)) + '</li>'; }).join('') + '</ul>' : '') +
+          '<p class="muted">' + h(d.teacher || 'Die Lehrperson') + ' plant die Gespräche und teilt Ihnen den genauen Termin mit. Wenn Sie diesen Link später auf diesem Gerät wieder öffnen, sehen Sie hier den festen Termin.</p>' +
+          '<div class="row"><button class="btn" data-a="epChange">Angaben ändern</button></div>';
+      }
+      out += '<button class="btn" style="align-self:flex-start" data-a="epBack">Für ein anderes Kind eintragen</button></section>';
+      paint(out + '</main>'); return;
+    }
+    // Formular: welche Termine gehen?
+    var fixedSet = {}; (d.fixed || []).forEach(function (s) { fixedSet[s] = 1; });
+    var free = {}, order = {}; egSort(d.slots).forEach(function (s, i) { order[s.id] = i; if (!fixedSet[s.id]) free[s.id] = 1; });
+    var fams = [], avail = {};
+    (d.others || []).forEach(function (l, i) { if (!Array.isArray(l)) return; fams.push('o' + i); avail['o' + i] = l.filter(function (s) { return free[s]; }).sort(function (a, b) { return order[a] - order[b]; }); });
+    var res = egReserved(fams, avail, free);
+    var show = d.slots.filter(function (s) { return free[s.id] && (!res[s.id] || EP.sel.has(s.id)); });
+    out += '<section class="card stack"><div class="row" style="justify-content:space-between"><h2>Termine für ' + h(kidName[EP.kid] || '') + '</h2><button class="btn sm" data-a="epBack">anderes Kind</button></div>' +
+      '<p>Tippen Sie <b>alle</b> Termine an, an denen Sie können. Je mehr Sie wählen, desto besser lässt sich für alle planen.</p>';
+    if (!show.length) out += '<div class="note">Leider sind alle Termine schon vergeben. Kreuzen Sie unten «Keiner dieser Termine passt» an und schreiben Sie eine kurze Bemerkung.</div>';
+    out += egDays(show).map(function (day) {
+      return '<div class="eg-pday"><h3>' + h(egDay(day.d, true)) + '</h3><div class="eg-slots">' + day.list.map(function (s) {
+        var on = EP.sel.has(s.id);
+        return '<button class="eg-slot" aria-pressed="' + on + '" data-a="epSlot" data-s="' + h(s.id) + '"><span class="eg-box">' + (on ? '✓' : '') + '</span>' + h(s.t) + '–' + h(s.e) + '</button>';
+      }).join('') + '</div></div>';
+    }).join('');
+    out += '<p class="eg-count">' + (EP.sel.size ? '✓ ' + plural(EP.sel.size, 'Termin', 'Termine') + ' gewählt' : 'Noch kein Termin gewählt') + '</p>' +
+      '<label class="eg-none"><input type="checkbox" data-change="epNone"' + (EP.none ? ' checked' : '') + '> Keiner dieser Termine passt</label>' +
+      '<form class="stack" data-a="epSend"><div class="field"><label for="epName">Ihr Name</label><input class="input" id="epName" maxlength="80" autocomplete="name" required value="' + h(EP.name || '') + '" data-input="epName" placeholder="z. B. Sandra Muster"></div>' +
+      '<div class="field"><label for="epNote">Bemerkung (freiwillig)</label><textarea class="input" id="epNote" rows="2" maxlength="500" data-input="epNote" placeholder="z. B. Wir bringen eine Übersetzerin mit.">' + h(EP.note || '') + '</textarea></div>' +
+      (EP.err ? '<p class="err">' + h(EP.err) + '</p>' : '') +
+      '<button class="btn primary eg-send"' + (EP.busy ? ' disabled' : '') + '>' + (mine ? 'Änderungen speichern' : 'Eintragen') + '</button></form></section>';
+    paint(out + '</main>');
+  };
+  ACT.epKid = async function (el) {
+    EP.kid = el.dataset.k; await EP.load(EP.kid);
+    var m = EP.d && EP.d.mine;
+    EP.sel = new Set(m ? m.slots || [] : []); EP.name = m ? m.name || '' : (EP.name || ''); EP.note = m ? m.note || '' : ''; EP.none = !!(m && m.none);
+    EP.step = m ? 'done' : 'form'; EP.render(); window.scrollTo(0, 0);
+  };
+  ACT.epBack = async function () { EP.step = 'kids'; EP.kid = null; await EP.load(null); EP.render(); window.scrollTo(0, 0); };
+  ACT.epChange = function () { EP.step = 'form'; EP.render(); };
+  ACT.epSlot = function (el) { var s = el.dataset.s; if (EP.sel.has(s)) EP.sel.delete(s); else { EP.sel.add(s); EP.none = false; } EP.render(); };
+  ACT.epNone = function (el) { EP.none = el.checked; if (EP.none) EP.sel.clear(); EP.render(); };
+  ACT.epName = function (el) { EP.name = el.value; };
+  ACT.epNote = function (el) { EP.note = el.value; };
+  ACT.epSend = async function () {
+    if (!String(EP.name || '').trim()) { EP.err = 'Bitte geben Sie Ihren Namen ein.'; return EP.render(); }
+    if (!EP.sel.size && !EP.none) { EP.err = 'Bitte wählen Sie mindestens einen Termin oder «Keiner dieser Termine passt».'; return EP.render(); }
+    var key = EP.keys[EP.kid] || egKey();
+    EP.busy = true; EP.err = ''; EP.render();
+    try {
+      await DB.elternSet(EP.tok, EP.kid, key, { name: EP.name.trim(), slots: Array.from(EP.sel), note: (EP.note || '').trim(), none: !!EP.none });
+      EP.keys[EP.kid] = key; LS.set('kn_eltern_' + EP.tok, EP.keys);
+      await EP.load(EP.kid); EP.step = 'done';
+    } catch (e) { EP.err = errMsg(e); }
+    EP.busy = false; EP.render(); window.scrollTo(0, 0);
+  };
   // Umfrage (ähnlich wie Mentimeter): Die Lehrperson stellt Fragen an der Wandtafel, die Kinder antworten am iPad.
   // Umfragen der Lehrperson (für alle Klassen): teacher_store «umfragen» = { list: [ { id, title, set, qs: [Frage] } ] }
   // Live-Stand pro Klasse: teacher_store «umfrage-<Klasse>» = { live: {...}, ans: { Frage-ID: { Kind-ID: Antwort } } }
@@ -1898,7 +2323,8 @@
       '</div></div>' + (function () {
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
-          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live']]
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live'],
+          ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null]]
           .filter(function (x) { return T.tools[x[0]]; });
         var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
@@ -2194,7 +2620,7 @@
   var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz', umfrage: 'umfrage' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
-  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd'];
+  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;

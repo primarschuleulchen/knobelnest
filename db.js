@@ -219,6 +219,13 @@
     kidRace: async function (token) { return ok(await sb.rpc('kid_race', { p_token: token })); },
     kidRaceJoin: async function (token, race) { return ok(await sb.rpc('kid_race_join', { p_token: token, p_race: race })); },
     kidRaceStep: async function (token, race, isOk) { return ok(await sb.rpc('kid_race_step', { p_token: token, p_race: race, p_ok: !!isOk })); },
+    // ---------- Elterngespräche (Version 22) ----------
+    talkGet: async function (cid) { var r = ok(await sb.from('talks').select('class_id,token,cfg,answers,updated_at').eq('class_id', cid)); return r[0] || null; },
+    talkSave: async function (cid, cfg) { return ok(await sb.from('talks').upsert({ class_id: cid, cfg: cfg, updated_at: new Date().toISOString() }, { onConflict: 'class_id' }).select('class_id,token,cfg,answers,updated_at').single()); },
+    talkReset: async function (cid, patch) { ok(await sb.from('talks').update(Object.assign({ updated_at: new Date().toISOString() }, patch)).eq('class_id', cid)); },
+    talkAnswerPut: async function (cid, kid, ans) { return ok(await sb.rpc('talk_answer_put', { p_class: cid, p_kid: kid, p_ans: ans })); },
+    elternGet: async function (token, kid, key) { return ok(await sb.rpc('eltern_get', { p_token: token, p_kid: kid || null, p_key: key || null })); },
+    elternSet: async function (token, kid, key, a) { return ok(await sb.rpc('eltern_set', { p_token: token, p_kid: kid, p_key: key, p_name: a.name || '', p_slots: a.slots || [], p_note: a.note || '', p_none: !!a.none })); },
     // Live-Quiz (Version 23)
     quizOpen: async function (title, qs) { return ok(await sb.rpc('quiz_open', { p_title: title, p_questions: qs })); },
     quizStep: async function (id, phase, q) { return ok(await sb.rpc('quiz_step', { p_id: id, p_phase: phase, p_q: q })); },
