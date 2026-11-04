@@ -4,11 +4,15 @@
 // Nach dem Markieren des Ziels: richtiger Weg (rot) und eigener Weg (blau), Fehlerstelle wird erklärt.
 // three.js kommt von jsdelivr (wie die Zeitreise). Rahmen (Stufen, Sterne, Ton) aus werkstatt/spiele/gedaechtnis/bauen.py.
 
-var THREE = null, T3P = null;
+var THREE = null, T3P = null, GLTF = null;
 function loadThree(cb) {
   if (THREE) return cb();
-  T3P = T3P || import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js');
-  T3P.then(function (m) { THREE = m; cb(); }, function () { cb('err'); });
+  // «three» und «three/addons/» stehen in der importmap im Kopf der Seite (bauen.py)
+  T3P = T3P || import('three').then(function (m) { THREE = m;
+    if (typeof MODELLE === 'undefined' || !Object.keys(MODELLE).length) return;
+    return import('three/addons/loaders/GLTFLoader.js').then(function (g) { GLTF = g.GLTFLoader; }, function () {});
+  });
+  T3P.then(function () { cb(); }, function () { cb('err'); });
 }
 
 // ---------------------------------------------------------------------- Orte und Berufe
@@ -582,6 +586,26 @@ function cutout(job) {
   img.src = src.url;
   return g;
 }
+// 3D-Modell der Lehrerin (GLB): einmal lesen, dann auf 4.4 Höhe bringen, Füsse auf den Boden, Mitte auf die Stelle
+var MCACHE = {};
+function hasModel(job) { return GLTF && typeof MODELLE !== 'undefined' && !!MODELLE[job]; }
+function model3d(job) {
+  var g = new THREE.Group(), H = 4.4; g.userData.fig = true; g.userData.H = H;
+  var sh = new THREE.Mesh(new THREE.CircleGeometry(.9, 16), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .2, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = .03; sh.scale.set(1, .7, 1); g.add(sh);
+  function put(src) {
+    var m = src.clone(true), box = new THREE.Box3().setFromObject(m), sz = box.getSize(new THREE.Vector3()), k = H / (sz.y || 1);
+    m.scale.setScalar(k); box.setFromObject(m); var c = box.getCenter(new THREE.Vector3());
+    m.position.set(-c.x, -box.min.y + .05, -c.z);
+    m.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.add(m);
+  }
+  if (MCACHE[job]) { if (MCACHE[job].scene) put(MCACHE[job].scene); else MCACHE[job].wait.push(put); return g; }
+  MCACHE[job] = { wait: [put] };
+  var bin = atob(MODELLE[job]), buf = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  new GLTF().parse(buf.buffer, '', function (gl) { var c = MCACHE[job]; c.scene = gl.scene; c.wait.forEach(function (f) { f(gl.scene); }); c.wait = []; }, function (e) { console.error('Modell', job, e); });
+  return g;
+}
 function jobImg(job, cls) { var L2 = leute()[job]; return L2 ? '<img class="' + (cls || 'jb') + '" alt="" src="' + L2.url + '">' : ''; }
 function owlMesh() {
   var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
@@ -906,7 +930,7 @@ function buildWorld() {
   LOTS.forEach(function (L) {
     if (!L.place || !byPlace[L.place]) return;
     byPlace[L.place].forEach(function (J, k) {
-      var p = leute()[J[0]] ? cutout(J[0]) : person(J[4]); var off = byPlace[L.place].length > 1 ? (k ? 1 : -1) * 3.4 : 3.2;
+      var p = hasModel(J[0]) ? model3d(J[0]) : leute()[J[0]] ? cutout(J[0]) : person(J[4]); var off = byPlace[L.place].length > 1 ? (k ? 1 : -1) * 3.4 : 3.2;
       var lx = off, lz = L.d / 2 + 1.6;
       if (L.place === 'park') { lx = k ? 6 : -4; lz = L.d / 2 - 3; }
       if (L.place === 'space') lx = -6;
