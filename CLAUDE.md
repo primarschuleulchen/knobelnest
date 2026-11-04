@@ -53,6 +53,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html`, `quiz.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
+| `englisch/` | Englisch-Spiel «Owl Town» (3D-Stadt), gebaut mit `werkstatt/spiele/englisch/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
 | `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 29) |
@@ -111,6 +112,7 @@ So läuft ein Werkzeug im Portal:
   - Achte darauf, dass gespeicherte Spielstände der Kinder kompatibel bleiben.
 - **Gedächtniskiste:** Fach «Gedächtnis», 12 Spiele mit je 5 Stufen (Bereiche Bilder, Orte, Reihenfolgen, Namen merken), Stil der Eulenkiste. Alles gebaut mit `python3 werkstatt/spiele/gedaechtnis/bauen.py` → `gedaechtnis/<spiel>.html` (Spiele), `gedaechtnis/index.html` (Werkzeug für Lehrpersonen: Vorschau, Ausprobieren mit `?vorschau&stufe=N`, Freigeben, Admin «Spiele in die Klassenkiste aufnehmen» = `knGd.install`). In `games` steht pro Spiel nur ein Verweis (`knobelnest-url`), Änderungen kommen also über GitHub (dann `GD_VER` erhöhen). Sterne-Level «Stufe 1» … «Stufe 5», Spielstand-Eintrag `gd`. Werkzeug-Freigabe `gd` in `TOOLS`, Route `#/gedaechtnis/<Klasse>`, Modul `GD`.
 - **Knobelspiele:** 10 Spiele mit je 5 Stufen: Mathematik (Rechen-Rakete, Wie spät ist es?, Kiosk mit Franken/Rappen), Deutsch (Wort-Raten, Der die das, Silben-Puzzle), Fach «Knobeln» (Bilderrätsel = Nonogramm, Eulen-Weg = Programmieren, Bilder-Sudoku, Wasser-Weg). Die zweite Lieferung steht in `werkstatt/spiele/knobelspiele/weitere.py`. Gebaut mit `python3 werkstatt/spiele/knobelspiele/bauen.py` → `knobelspiele/<spiel>.html` und `knobelspiele/knobelspiele-spielpaket.json` (Import in der Verwaltung). Rahmen und Stil kommen aus `werkstatt/spiele/gedaechtnis/bauen.py`, Spielstand-Eintrag `ks`. In `games` steht nur ein Verweis (`knobelnest-url`), Änderungen über GitHub, dann `KS_VER` erhöhen. Bilder fürs Bilderrätsel in `werkstatt/spiele/knobelspiele/bilder.py` (das Skript prüft, dass jedes ohne Raten lösbar ist). Keine fremden Spielnamen (z. B. «Wordle», «Picross») verwenden.
+- **Owl Town (Englisch):** 3D-Stadt mit three.js (von jsdelivr, wie die Zeitreise), Fach «Englisch», 6 Stufen: Places (Orte finden), Jobs (Wo arbeitet …?), Short routes, Long routes (Brücke, «walk past»), Roundabout (Kreisel, «take the second exit»), Listening (nur vorgelesen, `speechSynthesis` en-GB) und «Free walk» ohne Sterne (`G.extra`). Die Eule läuft mit Pfeiltasten/Knöpfen von Haltepunkt zu Haltepunkt (`owlCmd`, hält an jeder Kreuzung), Ziel markieren mit 📍/Leertaste (`askMark`). Stadtplan, Orte (`PLACES`, `NAMED`), Berufe (`JOBS`), Wege erfinden (`genRoute`) und Fehlererklärung (`explain`: erste Abweichung vom richtigen Weg, roter/blauer Weg) in `werkstatt/spiele/englisch/owl-town.js` und `.css`. Gebaut mit `python3 werkstatt/spiele/englisch/bauen.py` → `englisch/owl-town.html` und `englisch/englisch-spielpaket.json` (Import in der Verwaltung). Rahmen aus der Gedächtniskiste, Spielstand-Eintrag `en`. In `games` nur ein Verweis (`knobelnest-url`), Änderungen über GitHub, dann `EN_VER` erhöhen.
 - **Vokabelkiste:** ist ein Spiel in der Tabelle `games`, dessen Spiel-Datei die Vokabelkiste aus claude.ai ist (erkannt an `id="vk-content"`). Das Portal öffnet dann `vokabelkiste/index.html` (`gameUrl()`).
   - Wortlisten und Freigaben pro Klasse: `game_settings.settings.content` (Lehrperson: Knopf «📚 Wörter & Freigaben», `ACT.vkOpen`). Ohne Eintrag gelten die Listen aus `werkstatt/originale/vokabelkiste.html`.
   - Fortschritt des Kindes: `progress.save.p` (Karteikasten, Knacknüsse, `days` = Übungen pro Tag). Antworten zählen pro Sprache als Level.
@@ -134,8 +136,8 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=110`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=111`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 

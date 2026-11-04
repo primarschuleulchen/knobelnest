@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="knobelnest-sterne" content="{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 5}">
+<title>Owl Town</title>
+<style>
+@font-face{font-family:"Patrick Hand";src:url(data:font/woff2;base64,d09GMgABAAAAADeQAA4AAAAAd8AAADc1AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGjQbHhyCXgZgAIF0EQgKgdFIgaNeC4NKAAE2AiQDhxAEIAWFKAeEfBsXXjMDwcYBBND8CUVRsjcvj6JkberMf51AD7HYU3gBUtvRsqxGDoRhWtuh1fKiGacU+rv3a504NWWqvNjy8OxIj3yEOh6hsU9yh+fn9n/uijEWkWxsYyzZYMSiGL0NBi2REhKKCJgJYtYr4ylW1MOq1774vq/vKRE1rPXMR50TYClcTsJiDIX9QmP58ihUEhb5qCgUQqGSuqX/h3vanLtgJRp4hslS4P73bavZ70pCgmyHVaiJ/67Bc7wtz/tNM2k/pX4OGNbOQogWkDWj7Lp32WLe6zFJ7Z/0azvhUmDsCbQcoiWWRoG+yxH8Mw9vuz8TomLK1XC3MUVT6jshswlsipSV6P9UVSDppLO13sYKAoqZWpblfsb/1yugjhJkmWBRK/WK7by9zqfzdZWa6tNUnDoFaEs6TATL2mX5uvsk3YeT/H9f7uSQHJL8A5JKlkunM3CBYCxPASkoF+0SOilPyGM3XNZuvI/pMC+1+nslCQUIE034A0UjUNvdvH2/YGqlCCZglSoHLFyFiyXiHG3A3dYaDWCalaNNJ7D7PR0rbc7O5QIxeH1OM3Hl5IlSOrAUR+J1FwIQALAiWBgGBdJHxps4ySQn68GnnD74jCcHPfUCCj19DC4u6O79jBBAQwAAfPkCAFA826EevF3lX3vNSKB8V3S2ACo26M6tkBBgBGbAJ2AKZsBK4b/ooAkQvhvqKgD73VrVBKgFCISBStEQhJ3GsMBAYCYahH8IFQaajbqj0qm7wmjlVD+qRnghJ2fCUeGVp/XIfs/AZHoOxY/uF9USffGJ4CiYYAbKhGSSbnw2FJ5Jw4CyYKQwA4HGRQ2idk2EL4VoixA7u4QN2AEVMvERsz39kADsdQsAkB6xoef00QTKhq4njdB23pNwFrAB4i8E+HwGIBZi2QPQG1bP+LOLASBsHoHIbCo46GCEp8RI2ETqvsYZb7cvkC7BHu7ZPuzwFASHwyPhkj2qkC3kC8XCaGGi0CXcKhKLyQNDps0UWmdvd0ACsylCppB71ITfxaHxv3t5p+7kDVzHRH7uf7+fX59Lz8XnzLP16REHHbDXLusto3sy+SsAcvVCoPEFAeJLAqCzKZz2iH8mlf84Jegzgh0pHJKoYFSCJcbgAvA0LAzBPw3cjisEKwQoHUJ+4tWAMRJMQHAATwoCJiLG4DcBEawCRthKlaCickiBAB9K5oKKcNUMgbltuqFueAns4b+fHwHrj1hDKZFCUA80p8murgxY0ul02BrG1E8MxxYkqURztQUH6SmxFDKedWZt44dhONTa2ywLYuBH4ditfbzNObI5WfYJezEK0JVWZuNi1pKUqgqGRr1T6TZ8b0kzh3ogflP4JxpLxLKsOEgzZ6wMwpCoU17jNlQtQJaUo6xUjipRNfvDhvHES8FhROkB4VjC0cy4LoQ4s4ajEE09ckOjNU+Cw4jq7FUBzIgVI/asmoOLyYmD4DCi9YDI2kveGi8YGFGa24gtW0Q7kK5lJDEEhxElUxAUomQ6XDFiJz5oErYhvP+GDdeBmEE4y84ja02KmUkpCQLSJPpFTXXXty0t7K/ftLE4D0TCQS2/4qEsAAjXRDGRaEzAe+tTSnEgLECYhk6owhbWlkUvVpVVzFlpgb/XJRJJdHPV4qLo3KdgQRZ5iIvnt631FyHc2fWQSnpMwHo6oT50M0xAI5XlhBOiGcUWTHT7AbGAQkHaygc93IgghLJK2Ptlmdns6tu5MadCFWKKB+t6Y1rKSQLOmAK3Z6OzqSL+J4zMEUP6RELyEWNMcrCmIXNg8Zg0Uwgj7oF4ygryxbLJal1ElGF6AaFaInz4V3W+ou1nRpMad/9JkuEUD4QjOxJLD0VUPwDBUMeJP7mPpKPO80R7E12THcPz9Tc2rTl2oMUWXjXr+dUoWWBqUCmmqyzQKxwX/VGRpUAUIQBeCI+qHYQBaVu9KtKQ3BOO5DVq34kjPeDK2W+oDzv7a0Sz+2zy7+bZUUuUWeAG/0XelgVzGEON/kcOymaCCniOQtj86A4rvIyzRkKzILiDMInQLWaR8LgW7AvpBQbFOB/ZoftV660cU0sEb2aAjvImvt0BSsZwv3MeYa0B9GsMYRHGQKdUMCqKfIH2mmeO38XYzl4dCV+ExkA4W0e4v4bQqUM4tys1QPoqzeFxSUUB2D7WjJd5KfSFutv1SLh8G1OPMEGITsq8AVXWNB0T09uWMcUZixnAzuUuzd/tlO1MrWOo3TOF5Umpn2lxdA7IsUeS+x4iVL3lPfxDtyHP5CxwHMJStqZik3LPPkAQYeQDHZyQfWx5WpTyti42h8m0tDHOQmnEixBwkkz4G7Zaofy9LYgrq7GPiEOD7f/3K/O4rp+d3xMHF57Oz9SP8EOLhA0VxuzeMOzseYwQmSYGbo1pIYqu7qlvRAwUFogOx8E+ZG+MkVsq5D7IO1L03p01weduVvw1FmeTznFfJ1sMsdFRAzJlTsvVEsLMshIQFpI4zUeknRte4emAa8nipKX3CBYIZyG6+HebZVA8FDZ1S0RzIKB8WzvZ6Xqcr/YVClPaa7EYD3Y/XFP7uShyd9Hs64l8ycNvwGMxavXx8DIMJq8fuNysPGLxCrNSMQ/hWm+NX/psoIgbfi3kCKvb+cITWQYDTuAmjQVePiOsfw+YzILsY1aXQuivnJnyzD4jze3VUpZOMzWFVXJwyG/QlGevz32bxZ5NzpGRsGokbfYq9R4qvkNCy1Ye0bjzRgjmXEOWWQ3sz6fi/YC6UaI7FR7CY37vVrYt267HBWEbyczwjp5vkJezUbSBUDFvXtJZTKzSKIRX3TvmnOSug0BV6Izte4yMiZ2CjYpEmXm5NCUaQuSbzDBThxXWe9okNVRAn6XW8Tgr5VaMVonFEj9sO8Ii1DD8JiEgm7V4FvFF4QdYWK0UvmAiLVfSYxDCVrlj/RukRYgjdAkAGO1T7CmKcR5W0Fihuz1+jln8s45EU1lKyCGfsbLCcd4q5SYNkiKE5ZrwmSeit78MISbwy/h5aHw0HefhWbUWyj77IlMqtsRHxsSnLKbw3WTGVyisbIIRTJL0hga/l6CI9cSQ3c8CEUVXjyrPsZhBWJIkZe3SJVDVoeJTjLm7iNCRUcdPKGXffs9vthtCBJeUONrFPDYF9fKAtq241fLBTMMozf55trJpYFDk886NsiM/HNU7/8+zSfXzVT7Dlrx+HT8LFX/QBfs2OSIYRRDsIINUmWcvtOQ/gzxd7p3N2mAZHqQq5xwnrUKYX+13OPKvkSjtYqnczmXrl62hm712oyGOj71qpD7iui+YVbVYIF61nj8UD/BQ1rXqKvYoBP8AITHMyBSEOryLGYtpptRpq0G0MxL5pb8Mj8T2LqBBoQ080TPTmu+6OeHvwGkP9N2zx1Ua6U/sdBE3zT/kAOd1YGIWF3favVNSEyeDcgv/lHELQltXW6xaOaRE5M8UZrsPmQG8YY2JDlJwE/DhNRf5Ix08lPGS9RJPPaY+NqjalggPxE8obtR7bUpl1aBwVvz2T5xb+1RjE6EPHR984Os6fdFTxug8XG2+Dzo73fs81eGJLGEoQ/0fGoROe3mj2IfOAn4+Qzi9D+ajQK1rO+Zodn6kDhsFolp0zwewGKHIQ2+MG8+z9A41k1xtcAlpT19Kz6YEq+wj3KKBHDn0rkAvmtqjxhLt+oibmaqU1mKWTpWlAdvywsvjy7MJfH0PBWlZUF/BhFvxJcfEVNllzbLNNAZaQe9BzoHJvtzxkvq1Zn+woP9xtfmi2Gk+1x7OgmIrLTcmQGPomxywuBh//knSeFq20C0EgFwFhSEUHZ3OUgCkOzTRsA/Tk+Qo/6Q566YClmpUFq0JvuLNICy14MW075CvGiPvBerkfYTxLy1zwFMf9v4Sg4yLZafX4FxI5yYYnV4X+8VobCgCqBmuDlJDtkqQoUeqlx97fBftYS3fQBDWBuQ9dghzPWcgIk0f56K8ozYA8eqRMCEhfCmxL9GvzYmDaSY1DDKrsUZRNzYmvjI/SbcsyTIlZlUKqZ6EW3HBFVqndqXHG9ZVF9ewBKJ5hM00xCaTkXmKvlY62ndNXOKbNaZUBaQ7VWVBy5hqPJZRsCs+S/wfWMh7kSsr4FkdgaNBcfrb49brNQ2r2KacsaXDy97wWuqcgGIbrUyqK+FifLgn0R1xDxPg26lM6B8gXhjAR9PMQhhrru8CMbuoBPbWxSwojJ49jlYBZq5jLBY5o+6DKDGCsLZvgxkOJT8mIo2ugO60bdq1sRqcy4STDa/UoWxP6SeK994IcnYLU62zo7GnbwBMYFNskLRDjvSnrBd4FRCk6Otits02F9GoCHJAj985ggdt77ZLLTiDlFo1MsT485EYZWP6EZgQGNeWljN8PCrfgeUPyA11KAtdwIoX/gx9yLRuMxPO59lyOpS5nG14ow3R3gSWUw78pBPtaYPwedpx+gu1g06RapeKVRFXjeJfWLyit6ikp70U1QLMNtRTZkTOadvDWLJaEciQhH8SJZ7uC4JMabHhPV3l2oeFPiBOwY78PjVoAzodCBJqi/VGfEVSUeQmOXAjsLy0Dq1T2WpSZyKEcEph2jPNSHO3AeQd4/Xa/bRGNaxSn1ROOy2SfGwLfcnDvs33qZrFC6s6B77EFM3LkWmm9ou6/o1MscKeKwtn9QrR2ycAP0DD9/Rpg3YXIggfcnQ/wowK5OsCDlTs6QvQM9KymMHxonS6jIwsOAsVTzNVyR55jcL0MvY7QLUs2JyCz9eaZ/c9VYQwP0fQLKlC2Q4ipbeRL2oYMiweqIEHMucfI7Wjm2cCoYa773YuTANWirD8AGFjlXW/Dz53j/4MdbBYS2M6pDDNIb23Xo2V+Xw7QBuu5ukIvxOTW4i3xFnTi5DTE9/TnupHpcr3xhFRsHflBXVsEFM7mzxs2YpQxGppeEsOkOeDzSanh8VByg7ni72iA0JFEq6VTqQBa9dHd4HTzY58/hO1bWVuy7D9RL+dgNtHanrkjMwxy5DUCsplWR/QtnxdWV3xZHYgXJp99KAXcRRIjWMtg+5MiZIKwl6ZH++vnoHgsQstu7HAp8XDDKZhRhbiaUD/Ac2SBplmU3smr9IRqAWy/O7vgL/jG6dKvMrCZBJ4GG1i6SIm/YgFonqmHNU3oli+GgJsPuEyNW01LCYBnT9DjExZourY6+LHi8+LEA5p0/ql95hylRSVKo4Kam5arD7pR8ImvsQl8nJbgJjdPSYgeQb7qvK/5kv8hahIM+oND/9D7LTQcVbKRaI9crCc2UEXQljOsBVWIOQD3lwiI/tywPY14U9AaKaNFXDtronH/IkH/SIAZO+H2kKx/7pxoLe0jNB3UD7k0idyqkAP26Xagc/WQi4+63Isuse6StGjkw0GCMO2q/P9zQ5OrapqDlo7fAVhuWDAxLbXHQk7eYk7OvCuFYlptgnHFAFJMyL7St17KaGD3PdixX3eKe/JEIIjRSlyTGBnq6LoZnQvIbn6DJKuhd8lvGGx2LNsTk6kwrDPC8+q5oHgaSxtNv0vah6T1S4NTZ4w2ev2z09pXgOzo9bDTZRg+vxm/pmFkKlPtQWv3cyXBmcfk/gaX6FkO2sKC9hfXcnlN11kSc4szFocPMIPJeSxBpdtXi84CPtmITj4WQY9OQUN6I0tvoyWyKAQdmhGkrelcMpuoohNoFTkSFAe/gjuOKYkVkvuvibRT3NKAE/RCBOxwgry1QChkjaONbFHODIl/IE+jJ7yYadX5+qEq1nmG/XMHVEmuklbVfYLTTfCoxr7f8LSIjEL8+A+pD67IkdOY+ThuIOKCCepqzUHiAaRI6tTx9SfUxe6YjBRJn4wnoAct1GhFFDHqOQW7OCFTIQ7DaERjG5wABhoDHE8lbifcpwo/oobJGHI+8/quDm9xtOc6bKRr7egrE4b2UTN6ragG1dNBWUSXJxXUm0te36V9L1l/5t/4MadXyB7mzq/MBFI71URNusKBQ2k7pU8g3yWWIigepdlN+j33S7Hd3PsfgM9NvexrDLz2HgnkRcN3ydz//C1zFW2dK5susGzF/zrDaquYnqN6+Z5KJ/pqrdWazo+ymgKIOo8ycQzaOSOzG041drMKh/baa4LVbkEeO8wvsSjF0TYKN1XswItGCUr3kb9fuNKrjhTruflvpx+fGXWZ+kNWYkZL6HTlzRrRitYx0QdjWGbbkDKQ2qHiMJ0YBlo3/p8idsLV8rw4fvoP3KRVc+sUmy5u9+sGMq9AVvaaNaC86cpW5N1ITa+RedPy1VQYY7KpppC0IVkcDTodSQECm4mqhahLVzbZ86ddo/AdCgiFDznjTjKlWuBEttV9gIMe6QTdy1/z8pJvbjV9uT4dQObbG5gU31j9gH0fKTiFivnyC+RKF9IIkCd+VKwX3lv3N4g76kFZ5JLvg7QBfNd8frdZb/9DN64n8GjXN9g1uviSA5RlepgQAvFnz1cE/08+VgPLLoZtd94q8N0Uc0hhEgjfNuttwnJ4GQSHrLB0RlnEEdN3I030dwG87MF9wNCGQCfpUUv6snjdq3jJGc3AY+nqgiLSB2qXVXKeij29ol+3mDQP0cjyzSpi8o54EgC9VEL777VrxAS9rsANOx3ATbud6EnWKuHs7iuX+55OgbuaTzQiB5cC6U7L0uXXzZmKGcLDKsqmE/OzCtSO899iWC4M8wV1xtfHkR+gicBsKH2lsaFErOSy6DuNqdh310X90HYppNebsHakRz7jFEEkTNTjoBnMbWQZvsNslV5bFilhG+QmmaE6Yj3AOHkehajmwY3sAbDSpbVaXBU5xt+xbfCTdlbHKv+i8bdTFMs29gU06auHuksx+ySHZ13QsPxBTYoigntqkxC7QA6U5VSXP7hByNTIfbg+YbirE6gSR6/E+q18HRh1x+wBDz9TU8E9WjaJui/owENls2woad+T/QmRfEJbfl3iE05vbqrTDGfA2bFPJ9ZTDalHOq+NGXGbskJZamBdvGej8D1f6V24bPMnwhH+I0zg2tkUSRZB0rxZAr68rvdYb0jl3eknQO7a6J8Iqpf8Qv1YtmOkk1zR3YV1budI+HMuVlMGYRJWMA8BBln2wslHrzWJ+rvqY7E90rGuvOY6sR6DDAsYEpFrBdhoh1CPsD8HvYMtrDjKBDQXtuLuLsa+twl6QqkXvMb2dM2X3+LuUase5npfuQwrAmHU6KuBc30oA2clPM7Eg5KQn3xymvec1n9Go+NskzJgtOd7gbZUDIxh7L1wYlwa/rQC0MYB9UpOnfTKTc9n27cjg6ZQVIVdxr+09aZ/uzp0iNxdr5JTQclYrZeGLEoiydxkWoiQNkhTilA9JIMWJFQW6bh68EuC+bWKMzQdarbJ1+pPa1Dlf5f48fkFMOzeubOZpHxVVEQ6RmZ6SAIh47qRohwjNiOP1uSIx1CcTT1V6rBOpjYz+DHMGCYJaZhzfjohqhMaBs1Iw7s+0xbeiqE5iCvfZeyMr0r1csEeViek7t2hEdKoLAC4HPsd6nQ3Pwx6se70uRhny2Sy9diWXO5f5WnPqNHVt1Uwgo5EZsTcmJU5fxNx7TOzbGwLlhGJxqw80nxWejJ14KT1f5lhiEvFarrnf7UXrdf9UDNX026F6vxjzC6rd31o21xvrRRd8hpRcocb+oUB6eqvN2V012Y3eNOSfPYUzi5LHXFNwTpKjDldrzr9ZApreD5dV+fiBQgyjNLf/qJP5p/qGf1oes3c3NTs9KUDmeOXaYJjfN7G/3hvigjFPSPc8cEX5/xvDf+ZtpZeZXc979LZ+ukJlAyX+p/jgGsu5njdGWekeu+Yg6SiiY+Yjow1XNVW7aGiulRhyWXCgqcO0D0n9ql3krtAK8zCt60UpaO61yg3ro1XMSOvCSrLytz7AY/jEsMKlJrFGu9zMF3hqkPL/Mk3HOXxB4UI5VLZM1D2GADSIIDy7znOHvxzE//ObgMgpgkMcIgDAZcoqIhd42e0QstHn+aTuxFdKCIQAtHtGgFklrxDBGHuJ0E8uri5zhcld8RRJKomOcesPR0AMJLZF30+AEBxS4l1dPBxK4vKvpfKrr2N3AEEWNbtnzQtvIBB/sfQ9dx9K2+E0XlAL51elxNR67VlFV5kVG8N3T9TLFU6yeVLKYEV0/nyY/qQvNKXDOBVaMzRcGosP/Gw1p4qZkNPqFM+HrxmmoJKYhDYYEUWghhMFXRnFRGuGdsW1KxIfs1jaLaRKCgbNN48oYtcwqq00faM158ri4nnZxWEfFcihMnWcEDr1X8gN5Wy4qpS55f5h/Lzr7QIK8vaBi/vMOniTRH72yXVPdpXYlPj5/IJkmzkSl2Pfcz+DRsmvppkLadHVBw4lHsMGN7OjmKkvyK6hXsSnghQbZAsWoYTJZsBmO/n5/hYayX5CeMaJ0y2OJQUCb3UFAHsqxZcTO62a5IO8N5b81u340X1tg5NwOkEHtADj6mNt5xrQiH7xefOwEgmDe5EpZ7dP7LLjOtnBs16VIG7c4f59yVXEuiHQRqIhLpZ8jc9JXoyTXIHRacRFkBIsdy5tAKBhaJsSYZSjkcEhJQ9lJAjhCUyneOApJlFW5bcYV9bs/aqZjMdefepXW1F3392+/NQ39RZ1M72lZWf8i5Wour5MPhZRHIjUgEyhajjW0DXo1XItbmggAaVIlXQkfIrzn/EFALVw9kx7tb7fmNRZt+HZVVAJjjg7WU1whbVhsdVXEsG0zZQFDREUpG3BOxDr27Ci7lK79nJoApa/Fq2p8kEVhGkOV7tsSnxREiJtvpJM2Q5vwCwHogxcxu78xYxHJzxy15sKbt69bWXsYSjr5/U5sFPBj4/6ANbjoCZzJxkUNH4EYnXHIQ92a9Fc5gEf4ZKgPDOSDnRvj5hvfZJpsxIPp9JqnndnKVc6GDO4NX8MeyuowzPYGs+GtcCNASmDLj3rX7CCpldENWYiDOsSjaUdJQWyu9c4aYNhQ7LLMj6rWOlOlD27R2vklLvgUE8+AjmL7e57qe0xoayozlkmCYymvihGx1T1m8NlwXTsvW5im7hHw69Osor7ffX5Y7PdQ1xTExZec6t+HuOK10AMVChGvYBLI85RjrXgqALWRx2K6UDdZiOEEoGTXmW8b4zr3TCWqDgP9c7+L5GhaL7apQbAshbQcNSepqjpIaOabj4Aw0EfYdlO3NExQoV5VOc+C06bbCd+3/f7XU3TS56MxrqA32T6iaURybpooXd60wR0bdvTSQXYZd5RldyscaEJtA9jxnDosnQtNK45paJ/xr91DLanVaLDt+Up66nC/xSYsqgls3gO0/cr4lzz9gQazPesUVzpffeolYu2NAvao02sxBxxZpDm6nrBrTXi+TqgiTZ5/rNSBGg/jwffE2eFVreFr7FOSKMEuZi8ph2yl5EX0ptqXxhiuitq0w4gB8S6LiDewvOmEb5Qs8IVKtKR5wY0YL5Jfjx5lyd72Hr9dVeeH7L0dJsBr5KTjS4C7VgMcUpwab9Ixx6g7wL9WWxfE10Xi3hJnfvryrMHPayCRPLGvEQc0UcTLM9VPb/+fwKXPWzu1/z+/0cbkFXQenemKnN+eWgSnjM7GTiVD6XH1SMY0vrWxBTMFqmTw4+n1rMGpq1ALC9Vg6dt5spJl6k8TlgPZpCg/ogL2eF1HBR5G4vMiqRcjsZPDrtL8FuEgqbgHcSwi8iVhYPKKY8JZM92E7/JRvbyYVjuaagK8tk9wygn6dwuwjVMEPFQYqR8cXfxQQbVjhqFUpacGgtblv+UihpklsKqje0Dd6d1weC2mL45EBezbIRK/HrqZqxVH0BAFoTF/ykrogMk7MUZClqy/UQFkEAJYzKxEbJlnDPLbwuRneQWC1+me/5X4DilkoGkcECk9xSa2CfgBvSR1Z8PM08Xqm7yewY7FwBXkGagOMPob3fFfecsPZPphlZGNWvzPoJvXJxcRsKb6uEOvLxZpH7Qr0PD4QtSZfBXTLPNjyvI6Ghmovorxhknpd+sSkQGrBlMB04fiBRoqbXep+U+DOYnWntKR0AUsNqrbcmZ1JtZVNzMm2S/I3DeXLDiDOQXVi+rH4ZCaEwHPPhjXVlsQq84aBhbLjrk8dGafAL4arnqTayHTk2JKkud6ZrkZEQ/L41gRdWt30GmsR9Ns1Qba2YX1soBKZjTqRVfRctkz+XvbPLcP/3avqchO8JaqgNO0EGMP8V1YHmzIF9inDwSnwR+dLXZ5gelmrz15im7UoBrdEdi00rjPXiDyWovm6IS8Y28GDbQeRi+1FKjHhFa9cnR3USXXROfPYhYHQxIyk9aszlUoOJuLJ7J7Ta/0un8nj5vC+LiAU+pdNygeqmYuQ56n6mPQgHJEXxsLLBH/tIvOEyIyvimyB40QKbw44uly8g5jflJFflue0bUq6V5Fa0xgW2Q010+Jw21vPE+iZuK2aFmXomyx/dKq6QgT5qQxoSgkunQaiyYqx4fOupZ37Bb9En4xrrn6rbCC5acWMQuffDiyOOU/WNTXfyi/M3i0BKStofchqXGiBHJeG98WKNiFiDj1WlCydUTrVmbZlF52uYfwFSexNtEfU62R6L9vFXtFnX2UqYZGGUnaqfZh111BuKfN7xiCyTHsevBTziBPGzlyS4J1xS2pL512RravamFRW112yGCfA4uk5/t5Fh/Jm+UITuFekF87Xr3Fk9cz6BIbew9hQ32+CZazY2lPd5d8luIdJum5RT4/emJaxhLQPlk0fJdnDSwKvlsJhpMdkXIahqKThWg9VTttMrmTvkiY/t60dw7omFkQNb2xsxK2gTIHRCE2O/DluxPH+SSaTQ4I22HynCFkz4YLK6lGkHQM5lgsf7YAUgDBgDlZL93NNI5Ku1eHzYCEt+Rs9MU8a6xRNaoP5GgEYIeM80HVsu2idpaD8iqGjLFN3nLDMYfwM+j8YvpE8JK2/yRph4KfTtIdBWiuClBvpUsoLgWYkvkM7jLDZRtDxdZnHyzJAjzWGy+TgSeRF4JkfsLhRg1EjXGCLnslD583jOGsWUoRNeO0LQz5IuqlOR0dCbiDEP2MZ4IxJDeXXM+Y97C7qyVP0ncgpSjDbCxbl0GRLZRPfAflGhZ5hXaKMNAkqGiad7p1+uhVz+sJ1q4Jeh8y9gSTLm5Z+BRhqT3NzfP3bmHpKxOvIxNzQXLXLTG/Us79g09OFYmlOUV8zoN4Cx+PdyVykAPupmR/LV663ppe0bnLM9/B3xhCiOuOrhfc+/t2l8Yd1ec50sOeqqTy5ODNkQ++yYEIfV5BSgllk9H849tO9WXxxWNHKcn2d2VXgit68ZupctxIcOVcZDPt4qE60pIFfyvcM8ZRDE9mAgbtcQf1A4giLcN/BSoue5Uext1uwsA2vZwCXIqGlLWib3tAxfvO7DXVQbiLmsjE/lBM2jlTxaDX8ehXD9zPCt7nEHJxkTG/5vAf0OyN+UseTJBzc7wjUdrpxGm0fhYsphy0gsvSd/BpWMR8zkfaSzOWjttHhNemaAKjrIr+XyaJ/Y2kNkDIKuCn3SSw0NsUlJNFMjTJcCmhpH/FSTuGuRUYFbtwwbniOKKsw1m6W0+5IScpVOnEmZlr6T1EFYLY6TkVO3pHq8dtqq/nlmWSOqJQwfSXlFYmRMSQUECA7InCmqKzCwkd3pAsfJD8/oS7ZAmRbo2kqCQf9YndtVLn6+/QASWIVulJc0+f9qMlFDF8AZYCdcZGxmnpNNtWWkq1M13m/Uti/pU3r0RqFbBGs99lo2Tu8yKobIP5NopfArrb4uWmyJOSBfJDOxyymLMUJ/Yk8kye3l8NuCDdLmcKITnyoHhmtN+QbUSX11Hs0Frh7w1cy60TZjNXls/OaVTaNKztXaQrrMqzZ0S5lj3ITOAXEZ8FFdfAhiS05UIiUrRttaIurzRu80Nk5pDoYGHNBPHt+95PV0a54UMmCweGrDfHITKFtpGFH0Daptbrv8IlnZ8h2EJZFXMWbe/SfcKK1+1UxzmX2onxHMhPR4M4DXw+AWjKOyAhG4KiUrGkRIgUpwZ+MtAd1+oCSdp6S5x4J4ucH3a01chFpkLLOJUmca/ltNP1dQjDf1ZsvEsvlGCfHqbTcLyUU7AuClJtEEvEK+MCFaEc64XwJ+52IdDyG+D7SE+o4ozZTJqNeThwr0QP54SWcd3IWMrOPt47MCViJUQvqaNsoAqWXyviKQdugqqN0uX1eke5HVmBhRCOov4e/GRUZ00hxXL3C67DdkJBqBFU9nxD8LeKhr2ovpCED+h2CdAwYC8Qp6K9IJ5m/YlcZF/SIfDeUj4QeEjvoQy7F38bz2szTFfXFIsrv8sJ1D2H8z2DJ8dwF1OHVOyQhXnD8p3nJNZmNgm4CK7uFb79vKXwrcxPlc1aDwjnCb2JA9RXcpCjedwmK9tnRRUbH6cZZC7qpxG7l6VupO8XZHx878Q4TGJ44HxsXo4I93SlzflPvTX7AagnSCelvvZhIJd912f/bMiSK+2GPR5tjPtvEKga/0WgwmISDn/dnC9vWIuGU8xLzS9X8mSZUEp1SSh/OKmWQHaJYc5QYK8HafeLA5Z51D5sI7BbNbnDzcts+Aq3vcuAjkQ3a2SoQp2Yx69VZf78QD4sDybgnEszzhNgcD2RIECEppdx4+vVHfHWoxCpkFRI1HnPan/NA2lICgigYlZHWZF1GzE6VeKIEo/yS+IIkfS/4eqPArt2qrF6GMek3E68mXiPc7+C0qwijMc/iu8H4Vpbd/L7YKBWGQqW9LYHqsZnkID/FwfydgHJVRwjofTzubi0MHuhG6nVoluDL3n9hyShbtONPVj/woaUqogsy5ewpzZ+74yMPDmvhkbGLYlLBOj/Qw4xpHCFF8bqH7IzjOgXRjpRtNBFb2uhNcE47dpo5tUZAkcp4mcYyp8ymcsFgALHB7y0QbhYeSs9oHs9yuLdG8pJ87hJ4HahOcdf1bK0RXSRxPtVbyD1jR9S/+5uN+1248myi4/R2xPT8IMwPz6oon5oXWgaypfuZ4my0W3pZpsMpunACjmYFRpgoqGjIp/4ZJTldRJEeXicVERdvqv2BjmMZ0xWhlomlpkcFrGUs7Z1Bw0hpT2w2bO3ZC4wPr6q4n5lmX2Ho61/CaqD4DiLoLhBp8wBL94LEXQvJU3eR6H1AZHhL4oLxJwtMuTu8sdkqYiK+U5jEjJlrUtkUOV5bX4PDWOukM6Kj01DqQjha9rMoYJpg12jS7SmKoRtT1gRNXyzbQPsX2RgGOaYnQvJ2TTl5KqQYlq+gxQJVen7pkuWF+RGTkOgjrsKCoeWrdvbD/ZMUrY3U7BuphhPdRooLNGMGV9xcuuBF1xTv9Ak+eLmCweOxkjw0ZmphXVqXz1FlZNhZLTHLZI/HTRYqXABRBDyR+2hqJgeB+KipWZ5ny0/ifLuSKEpulKQkWCuMIoEHvN3MTi3MjK3f/PFHPglO7y0blUmVi997UrYR2jXkq1WVrOQoUXtP6zmfjSrjsUDI7/gnmmDOBOJP3w1Q6qFiL9Br5ISNQglLT6zCxojQi6twzYbixcsL85BjwZze0UXhoeUrh/oR66vKq+N6rZ5TY/V/ukFz1MDyW4vmPe+a8sFg95q19gW9Wk8ho+wrxuR6Y5Zf5cBjzJoYJg8uPp8ud1hycr+xWuTAHeyEeVwIXDIOL6mCT86GA44B9Jw3PMuh+Ywqo9+fkZpOTWZV44UuKGaRUXNJepwMpU/nEPE1YOKVBpmo0E3HDl3FyKKpY+xnBYk59qpb79cR+FZQVvKUJZZKyXKzcpXheMmYeMFyUcLMmVHRItzLb4vbH80D0wdz5HUE6r/+bIWB8zMJEEJE96FfqlDhM4Au/hGGMkeW/5pYjm6yabNGB1rD8T/gSc9VN5BfdqujFIG4T7+pQJ+bBcE5KZx+rrg6Dicilc4S/0lkKaZgeC+1zLbYdilDgGaDaZeEZrwG67a/HysP+QRSC54wlwpuDaaOmOooa3aOmPYLwWxjowI6A17fCL5k83zaKRdJTs0csW7HSLpEbvlUtfLHPJ9TOK4kWsD22faN7xgrjSpnX+wqaCIK/6c5CuuHg6X3BEHEr+L5Or6AHnQIpTo2oSuyjH5oh/dLuE1UxfQaHK0LUqpW/FdF/0tgmahkqo6SeRXN+4nCWSwO2l0tvweJAjQqzQQtwsBRv+7ZxfLQQeskmUAmOHqZGWlG8xhieZsgJ00RcAFnBO4P0XnitDvg0GBu84GPy5VDXjJz5aVHH267aoU4hKCFwHMaFT6G4fEfzphVtntUnOMpEk4ewNpGszshP4ftYaquzrWfHSzMqpcIEospiGNXjaBGcC+DPwfWEIU5ApOGhJ/5L8PM0SVmSWrI0Y1YR/f2hQpHc2FNXvRWWjWW+1N0Ku3Iz84U4DtTv5o2ULTV/+2DITMRoFATq4otKfs/FWOX8Nnt0R3wmuzYCj8D30H0plIcdm50T8773hAxBbfd9KXw/+zfOGac9Cvz3XwcqoTtm82O/fpsVMSLBj92fEyHakH6Apk82UsrtuN0OC5baGUufjlJNa0mFq7+T2LQykaeZh+CIZjUin0LL8FhZj6AQYWQFk3yYYrxDXI3t0j2WBfy9tYXeV+lM7SdElQoYpk1/ygys5Ln2s0ugmNNIECE0++lO7HDhM/BQkQRdeNIHebEbIxgAu1Zk5ICjcGH1PgXJXtOfi76+iYrXdSfiF2Kee7Ozj9nDVLuXNvpXR8bSV40FYPSRtwqidc8ctM4BUhO10xISyXznWV7Ct656Npz4RXr93UYn4WtQsySGUUEI5B+l9q9f4iIEK5w6R033Z52L/mVF9GLbYIKS2oB2oB3SnhsFkSV1HxWZBZLgzlNoBVB3iVMGH2AnMackjFsWvrOR94SRuwWcQl/SX8wxvyP8zvXPcoH2S2b+UqLErM5NxA+WtYpJEi4a665HdCIMjNTwiZaHN+vPnmuER5FsoGjrO+p6FABd7i87uzEpNzzdXENqWfuV5K+ogmSg3nb8kyrGuu9CHNbyjcelzCpPtxjKfpzd9iVxepObzaOU4CCCCGn1AiYEaSqTzn7+3nRkR2fcuT+PfzeTzmz5u0E3nmqCJEFeTs/d+ZtEJPvWjqKusTefNdeIF/3vWiYwGuH6O9vT2FPoVTixgDFJuhRXXINpA43eqoKpnLdNtJxrDPx7xGBPVLPyAZaLYI6RxLespSqiEmrSm20hjC4B0MdqvZwWPielRMVGorab6GXcOT5aYAK6TdW/4PEkm8sKSNQ4xYSK4EUBdp8Lol6l0HPOn1fMfuHB9sO0zosfcEWurY2QIUGfi7irRNp08dcnP0TTu2Sfk7ucOKUmQG9P1Fl//GTV3gGnYVZQUqumklB/4tjPfFYOqZuSVOGfAK9R5sxe20C1Ukz313dUpQTY45evsYLnzJX06X/UawOrxHr7RGt4Kcob4is/bZAaKMXldtb68Qqm334jxMPEJ9/gPlmKDL5xKAbAOGD9KTDaiTA9sw9fGV/DFT2s6E3xud8I+xDgGEmNy394owfB5Gk1B9u4+6dxcG/OOSHsSeiZRz58syZXy7ale2wdIOhsTijNscuLVeF9f4pmcpYQRGaRWCuu/ooEtrMP8DaY5X8ixNmp3P0zSXahKKQyz3VWgqK3BsE/x+oSVKgBC/iMsOcQdfDRyaf0mmDBGRuiuREpmbu4R1hIqpBOrYNJnwRZv92xF4+8EB2QHYtZvbrTX+hmqqJ4ordpt8jftCj5+hTzBGXVdQ6EP9MQidRDO42lyxN+rPPJpVkctzejEoxL1/rSlN6vv9F36aJ/fYnlzpmY4qOUHm7SrwdRH4WLvBdGowa4ixwAJz/FT3ptYoeKCjf2bovIgUe2cAmxJ14IrpmES47RgU5H1q1FQs1YLNJojkTO3pia9SZcuelzs5aFYE5f/NkNDtrEeLNrTMCUN2YA8aEDdHWgeMxAyM91OvlYmXrBnDGq0UKZYN+7NJJE6nTBqRjYTF1LFw3vA8hQu5QYI7BKEziNukJGFwhVA73GcYaBvnh6o27F97SuN6ZIqjQW+fKiMhl7LiJL//o5ZUeNhMX3OlWhQVuXTs4dTW5LKkw4LV3Yoo/RDFUeUEa+j8cZ3LNQplPn77W9HsMTyqCQ5D3scq+oEVp4TypgcXPtZxxAXuFQ7gGqkiptVrTB/gRudMQuDz+qg/yrPHX9SF0a+DT/tteuFBk4ZTfjKWg7Kd5xpfj4ej6kSvIy/MJhiwGBErlVyTPJCsZ8SsOg7WkQ4BxkyqLIdgFlBk0cJY4FhBCZFlMD/SxFyKLxF104PvAK/c9tdDjR9FiyJlLNFtB1is7p5Joltc4xHixV/Efr+KrvHpqWDkvPst7y8J5L5q+7gKBSHL6SGx4z2DF2+AJLlMojlTeSCszTea5RA6xSniLEfyFtTz3pJhXugL8Lt4l/v7uYLcjKjBAij7pOOn5+/9ymcs0L7mXjJdxhJsus+4xIHsdQb0DnftfHIUtKhjH3R4eRyKJWVFrUwtz/k7JHyYJwat6BKKFg/Ri+HEVPr53A3BKuKcX/qmEU68fsLw6XpUV/MWlZnIcGBq//XCS7nRx6rq3rFw+TMoyQgQmj4o34gROHnR80Fs0cuQZTx9o/Y3DgTUypPgnGP5WOSOaBe+LJSPKF0Yv5DtZkfAogIoXJvCYobXNbmg9g0fohy3F4bG0GDIZNIYI7A/gFYEftyiHItmk1c7reiI3Zv3z/K8rOYVfzn4HQ6umPWW8837pXIYBdaNzFlJ/xUFPA+y/ePi+6PqoZ4VoTTDuKc9XW7PnRpcxoFOoEDT6Errtf/kHZM5FQqEXCNYHKRvcP3XqFSl2kA+6zavXE7/zO0NgRUe9Qh0UtnfUGjgXj518AmtmlU0b7Z88MclX7k5N6XdADH9B+M9R1RKO0D2TYOjwy+x3AgDgfQ8Tgl1d0doA4t0FMJnwF0bcQQS/IQAAAEidzKjQsO9z9i7E2Wz7XJdSANDbLiIdmfldTnKfGhXYtvq+1N8VeKDk6aYWsNzoaljG/ducDpK198fbLpM4f7S9QXAnxxtf8HrvWNdi3V+NyS3mz/mW5zr9fbSi3WPl51+wrZ3s40uL85RQlV5RuIRdTchtjLwhwJYa/OR4g6CGhjG74lqvE3TZWdtX1SO+WDzCckLtYlIAdtIpZPfFuak6yvu4SNhRQ6a6AdK30gKpW6peshSNuMq+bjRwsmMMm+raIH0lzf1qVNACsB9djJA3jnRgwunjZAr2rZz84kEX4d1oPeMBqXOZFCqp060JhXoWS/sPisi87jIQACCnX20WuZyQ9AcdBX8LAHDl8tYfI21sv/7fs8/517JpMgDQYIDICAj0h1cC8K9pYSrIYq9HvPTSJPRs1wteP/kPMhNH3QWSPknaFKqRxdoUXDRLUk2sLcroKYmLNI5T6i5z3wC2dZygkdjdxhFLURdp4ostbgFJvyE1RF0rnres3rI0F3tJmtNP2SiSRZP0FrNPLJNS9gNpB8XUNT73lLrbzH6SkXaSRYG4OnEWZBhVzNSUPaPfArrOknWJuNsgpU9iesmrx1shXgdR+2RfxjjJbcJKQV27xFkJDOM1E6tVFE3FbDpW81GrQ+sIc5vEeErvp7GytVRhgGjfUnSaPYOEbRXTNfwm0TSJuQIR6cetH6VrmKSQb5CBCwsKstjh9VGPhE1+p+9y5lusRZNtt/xcR7VZTBOpWsTTD9SJMHrM3EuShWf/iKuf1H55r34g8RrTMIEP9P1F6jxt/aqdR09F2L+SxmCan2lM6roISOc9gJkHOAI4gQmyKDIRFL3j84b3yyRFIHz9KGkWSkcwgFB+TlISOencYG4zTgBOYCZZFJoIzN7x68ZnXaNFEMxFALWjgSOYCWL0rENMTyUPpsjKiF4RQLvtxAQu7CZzEcFyA5+3PsJRz3+/ekCOrB++TaSbSeoohWFq12myshbHmJKwEaprZU7LnFrSqul6htIwZvdJhgPI9KMNAAB9ggfNlskyEasqrploteCg6Ujn8Ok5PBfCbNNcGHyWzIVLqqgUUWkuMgAUzUWJZlTwjwVAvc535iiJ4pwdqrRrCMzs1EFDGjRtlNawUgdYNJtHhhwVsKJVZSSfm9miWqyAmoeM1mSkXb6idhVKqzqFdDS0LzGwKg0SJtlspR5qdKoSmBizIRpmzbZqVmGkmkpKbdjZpEElvSDTA7EwuEoC1BDqDKTC6EFa1avSsk0LKYxRSRIYfxS944ylU8UcIDGEVWkyZImK7YaJdiN4YfWBExprHDIGsYuI1UEMF3EWqjqV13Zt88iTLiyLlTw2GSQ0Idx4nVqN0l20tE59F5dWiTFX0UllobgYturU6BClJqx2OgqIAoqhw69uM0qoetcaaSqlYsBcT/XLHno7ewlABbDAAfyN/D920CJhRMHCwSMgIiGjoKKhY2BiYePg4uETEBIRk5CSiSanEENJRS2WRlxn95sGRibxzCwSJLJKkixFKhs7BycXNw8vnzR+6TJkypItR66AoJA8+cIKFCpSrESpMuVGqAgCbDTVNEcs8dZ0882x2nc2BQlme2iKQX/40zwznfLYe2ts9re//M8G21xwzvcqVXmJ/jBcUuO8i6657Iqr3ql1y3U3bFfndwPuuu2Oej/5xSyNGozUrEmLdVq1GTV7gSH+uRqjy4/GGqdbjz699ltvgvEmmuRnvzroXlBQBNhhKGhw3yMPEglhoCgIC+HATrvstc9pu+1xxgxbHHXM4eDBXHG/QQSICJEgcsTolgbtSsKcgTi1azFv6H+R+u4/fM+JyKhu7UQ0fWHpzfUOZ+QP7Cuv+bV305EVVaM7o7izAQORxtW3to5873iwV7BE+Jbx4KIivtGEja4tr9W8u7q862o4sElqAgAAAA==) format("woff2");font-display:swap}
+*{box-sizing:border-box}
+:root{--bg:#f4f9fd;--ink:#1f2421;--soft:#5f6963;--line:#e1edf7;--line2:#c5d8e8;--gold:#d6ad45;--gold-d:#c4952f;
+  --sky:#dcf0fd;--sky-d:#3f78a8;--leaf:#e9f1e3;--rose:#fcefed;--sun:#fbf3dc;--lila:#efe7f7;--ok:#5f9a4a;--no:#c8574e;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);--sch-k:0 4px 12px rgba(63,120,168,.14)}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 600px at 10% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 500px at 110% 110%,#fbf3dc 0%,transparent 60%),var(--bg);
+  color:var(--ink);font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;font-size:21px;line-height:1.3;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+#app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px 16px 28px}
+.top{width:100%;max-width:960px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.top .t{flex:1;text-align:center;font-size:23px}
+.top .t::after{content:" ✦";color:var(--gold);font-size:.6em;vertical-align:super}
+.pill{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:6px 14px;min-height:46px;box-shadow:var(--sch-k);transition:transform .15s}
+.pill:hover{transform:translateY(-2px)}.pill:active{transform:translateY(1px)}
+.kopf{text-align:center;margin:6px 0 4px}
+.ring{width:104px;height:104px;border-radius:50%;display:inline-grid;place-items:center;font-size:54px;background:var(--sun);border:3px solid var(--gold);
+  box-shadow:inset 0 0 0 6px #fff,0 8px 18px rgba(63,120,168,.18)}
+.kopf h1{margin:10px 0 2px;font-size:42px;font-weight:400;line-height:1}
+.kopf h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.kopf p{margin:6px auto 0;max-width:540px;color:var(--soft);font-size:20px}
+.deko{color:var(--gold);letter-spacing:.35em;font-size:13px;margin-top:8px}
+.lvs{width:100%;max-width:600px;display:grid;gap:12px;margin-top:16px}
+.lv{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:24px;
+  padding:12px 18px;text-align:left;min-height:78px;box-shadow:var(--sch);transition:transform .15s,box-shadow .15s}
+.lv:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14)}
+.lv:active{transform:translateY(1px)}
+.lv .n{flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:26px;border:3px solid var(--gold);box-shadow:inset 0 0 0 4px #fff}
+.lv .tx{flex:1}.lv .tx b{display:block;font-weight:400;font-size:25px;line-height:1.1}.lv .tx span{color:var(--soft);font-size:18px}
+.stars{color:var(--gold);font-size:24px;letter-spacing:2px;white-space:nowrap}.stars .off{color:#e6dcc2}
+.msg{min-height:60px;font-size:25px;text-align:center;margin:2px 0 10px;max-width:760px;line-height:1.35}
+.msg .em{font-size:42px;vertical-align:middle;margin:0 4px;line-height:1}
+.msg small{color:var(--soft);font-size:19px}
+.dots{display:flex;gap:6px;justify-content:center;margin:2px 0 4px}
+.dots i{width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid var(--line2);display:block}.dots i.ok{background:var(--ok);border-color:var(--ok)}.dots i.no{background:var(--no);border-color:var(--no)}
+.stage{width:100%;max-width:960px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.bar{width:min(420px,90%);height:14px;border-radius:99px;background:#fff;border:2px solid var(--line2);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#e8c56a,var(--gold));width:100%;transition:width linear}
+.go{background:var(--sky);border:2px solid var(--ink);border-radius:16px;padding:8px 22px;font-size:23px;min-height:54px;box-shadow:var(--sch);transition:transform .15s}
+.go:hover{transform:translateY(-2px)}.go:active{transform:translateY(1px)}
+.go.alt{background:#fff}.go.sun{background:var(--sun)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.card{background:#fff;border:2px solid var(--line);border-radius:18px;display:grid;place-items:center;aspect-ratio:1;font-size:clamp(28px,7vw,54px);line-height:1;
+  box-shadow:var(--sch-k);transition:background .2s,border-color .2s,transform .12s;position:relative}
+button.card:active{transform:scale(.96)}
+.grid{display:grid;gap:clamp(6px,1.6vw,12px);width:100%;margin:0 auto}
+.grid .card{font-size:inherit}
+.card.cover{background:linear-gradient(135deg,#e6f3fd,#c4e2f8);color:var(--gold);border-color:#b9d6ee}
+.card.cover::after{content:"✧";font-size:.45em;opacity:.9}
+.card.ok{border-color:var(--ok);background:#f1f7ec}
+.card.no{border-color:var(--no);background:#fbefed}
+.card.hint{border-color:var(--gold);background:var(--sun)}
+.card.zahl{color:var(--sky-d)}
+.end{background:linear-gradient(180deg,#fff 0%,#fff 70%,#fbf3dc 100%);border:1.5px solid var(--line);border-radius:30px;padding:26px 22px;text-align:center;max-width:480px;width:100%;box-shadow:var(--sch)}
+.end .big{font-size:64px}.end h2{margin:6px 0;font-weight:400;font-size:36px}.end p{color:var(--soft);margin:4px 0 18px;font-size:22px}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pop{animation:pp .3s}@keyframes pp{50%{transform:scale(1.1)}}
+.szene{position:relative;width:min(100%,600px);aspect-ratio:3/2;max-height:52vh;background:#fff;border:2px solid var(--line);border-radius:24px;box-shadow:var(--sch)}
+.szene span{position:absolute;transform:translate(-50%,-50%);font-size:clamp(26px,6vw,46px);line-height:1}
+.szene.zu{background:linear-gradient(135deg,#e6f3fd,#c4e2f8)}
+.nm{position:absolute;left:4px;right:4px;bottom:6%;font-size:clamp(15px,3.2vw,20px);text-align:center;background:var(--sun);border-radius:10px;padding:1px 2px}
+.karte{padding-bottom:22%}
+@media (max-height:640px){.ring{width:80px;height:80px;font-size:40px}.kopf h1{font-size:32px}.msg{min-height:50px;font-size:21px}}
+
+#app{padding:8px 10px 10px}
+.stage{max-width:1500px}
+.msg{min-height:0;font-size:19px;margin:0 0 6px}
+.msg .em{font-size:30px}
+.lv.frei{border:2px dashed var(--line2);background:#fff}
+.owbox{position:relative;width:100%;height:calc(100vh - 112px);min-height:380px;border-radius:22px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--sch);background:#bfe3f7;user-select:none;-webkit-user-select:none;touch-action:none}
+.ow{position:absolute;inset:0}.ow canvas{display:block;width:100%;height:100%}
+.owbox .card{position:absolute;left:12px;top:12px;width:min(410px,44%);max-height:calc(100% - 110px);overflow:auto;aspect-ratio:auto;display:block;place-items:initial;
+  background:rgba(255,255,255,.95);border:2px solid var(--line);border-radius:20px;padding:10px 16px 12px;box-shadow:var(--sch);font-size:21px;text-align:left;line-height:1.3}
+.owbox .card .hd{font-size:24px;margin-bottom:4px}.owbox .card .hd small{color:var(--soft);font-size:18px}
+.owbox .card b{font-weight:400;color:var(--sky-d)}
+.owbox .de{font-size:18px;color:var(--soft);margin:6px 0}
+.steps{margin:6px 0 8px;padding-left:28px}
+.steps li{font-size:22px;margin:3px 0;cursor:pointer;border-radius:10px;padding:1px 6px}
+.steps li:hover{background:var(--sky)}
+.steps li.q{list-style:none;margin-left:-22px;color:var(--soft);font-style:italic;cursor:default}
+.steps li.q:hover{background:none}
+.steps.rv li.ok::marker{color:var(--ok)}.steps.rv li.ok{color:#2f5a22}
+.steps.rv li.no{background:#fbe5e2;border:2px solid var(--no)}
+.why{font-size:18px;color:#8a2a22;margin-top:3px;line-height:1.3}
+.owbox .row{justify-content:flex-start;gap:8px;margin-top:6px}
+.owbox .go{font-size:20px;min-height:46px;padding:6px 14px}
+.leg{font-size:17px;color:var(--soft);margin:8px 0 2px}.leg span{display:inline-block;width:26px;height:8px;border-radius:4px;vertical-align:middle;margin-right:4px}
+.leg .r{background:#e0362c}.leg .b{background:#2f6fd0}
+.tools{position:absolute;right:12px;top:12px;display:flex;gap:8px}
+.tools .pill{font-size:19px;min-height:42px;padding:4px 12px;background:rgba(255,255,255,.95)}
+.tools .pill.on{background:var(--sun);border-color:var(--gold-d)}
+.pad{position:absolute;left:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,64px);gap:6px}
+.pad button{background:rgba(255,255,255,.92);border:2px solid var(--ink);border-radius:16px;font-size:30px;box-shadow:var(--sch-k);touch-action:none}
+.pad button:active{background:var(--sun);transform:scale(.95)}
+.mark{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--sun);border:2px solid var(--ink);border-radius:18px;font-size:24px;padding:8px 20px;min-height:58px;box-shadow:var(--sch);white-space:nowrap}
+.mark:active{transform:translateX(-50%) scale(.96)}
+.mini{position:absolute;right:12px;bottom:12px;width:216px;height:144px;border-radius:14px;border:3px solid #fff;box-shadow:var(--sch-k)}
+.mini.aus{display:none}
+.near{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(31,36,33,.78);color:#fff;border-radius:14px;padding:4px 16px;font-size:20px;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.near.on{opacity:1}
+.toast{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);background:#fff;border:2px solid var(--gold);border-radius:18px;padding:10px 18px;font-size:22px;box-shadow:var(--sch);opacity:0;transition:all .25s;pointer-events:none;text-align:center;max-width:80%}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.pop{position:absolute;inset:0;background:rgba(20,40,60,.35);display:grid;place-items:center;z-index:5}
+.pop[hidden]{display:none}
+.pp{background:#fff;border:2px solid var(--line);border-radius:24px;padding:14px 20px;max-width:min(620px,94%);max-height:92%;overflow:auto;box-shadow:var(--sch);text-align:center}
+.pp h3{font-weight:400;font-size:28px;margin:4px 0 10px}
+.pp table{border-collapse:collapse;text-align:left;font-size:19px;margin:0 auto}
+.pp td{padding:3px 8px;border-bottom:1px solid var(--line)}.pp td.ic{font-size:24px;text-align:center}
+.pp td b{font-weight:400;color:var(--sky-d);cursor:pointer}
+.pp .kl{font-size:17px;color:var(--soft)}
+.pp .row{justify-content:center}.pp .go small{font-size:18px;color:var(--soft)}
+.owbox.review .pad,.owbox.review .mark,.owbox.review .near{display:none}
+@media (max-width:760px){
+  .owbox{height:calc(100vh - 100px)}
+  .owbox .card{left:8px;right:8px;top:8px;width:auto;max-height:42%;padding:8px 12px;font-size:19px}
+  .owbox .card .hd{font-size:21px}.steps li{font-size:19px}
+  .owbox.review .card{max-height:60%}
+  .tools{top:auto;bottom:118px;right:8px;flex-direction:column}
+  .pad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);left:8px;bottom:8px}
+  .mini{width:132px;height:88px;right:8px;bottom:8px}
+  .mark{bottom:122px;font-size:20px;min-height:48px;padding:6px 14px}
+  .near{bottom:176px;font-size:17px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var G = {"title": "Owl Town", "icon": "🏙️", "intro": "Lauf mit der Eule durch die Stadt! Mit den Pfeiltasten ⬆ ⬅ ➡ ⬇ gehst und drehst du dich. Am Ziel drückst du 📍.", "n": 5, "levels": [{"name": "Places", "info": "Finde die Orte: bakery, church, library …", "typ": "ort"}, {"name": "Jobs", "info": "Wo arbeitet the vet, the baker, the pilot …?", "typ": "job"}, {"name": "Short routes", "info": "turn left · turn right · walk straight on", "typ": "weg", "ev": [1, 2], "round": "no", "bridge": "no", "straight": 0.3}, {"name": "Long routes", "info": "at the second crossing · cross the bridge · walk past", "typ": "weg", "ev": [2, 3], "round": "no", "bridge": "any", "lm": true, "straight": 0.45}, {"name": "Roundabout", "info": "take the first / second / third exit", "typ": "weg", "ev": [2, 4], "round": "need", "bridge": "any", "lm": true, "straight": 0.35}, {"name": "Listening", "info": "Nur hören – wie wenn dir jemand den Weg erklärt", "typ": "weg", "ev": [2, 3], "round": "any", "bridge": "any", "lm": true, "listen": true, "straight": 0.35}]};
+// ====================================================================== Owl Town – Englisch-Stadt in 3D
+// Die Eule läuft mit den Pfeiltasten (oder Knöpfen) durch die Stadt. Stufen: Orte finden, Berufe finden,
+// Wege nach Beschreibung laufen (turn left/right, walk straight on, cross the bridge, take the second exit …).
+// Nach dem Markieren des Ziels: richtiger Weg (rot) und eigener Weg (blau), Fehlerstelle wird erklärt.
+// three.js kommt von jsdelivr (wie die Zeitreise). Rahmen (Stufen, Sterne, Ton) aus werkstatt/spiele/gedaechtnis/bauen.py.
+
+var THREE = null, T3P = null;
+function loadThree(cb) {
+  if (THREE) return cb();
+  T3P = T3P || import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js');
+  T3P.then(function (m) { THREE = m; cb(); }, function () { cb('err'); });
+}
+
+// ---------------------------------------------------------------------- Orte und Berufe
+var PLACES = {
+  restaurant: { en: 'restaurant', de: 'das Restaurant', emo: '🍝', col: '#f08a3c', sign: '#c0392b' },
+  postoffice: { en: 'post office', de: 'die Post', emo: '✉️', col: '#5aa0dc', sign: '#2a6fb0' },
+  bakery: { en: 'bakery', de: 'die Bäckerei', emo: '🥐', col: '#f6cf4a', sign: '#e0782c' },
+  school: { en: 'school', de: 'die Schule', emo: '🏫', col: '#f1dcb3', sign: '#8a5a2b' },
+  police: { en: 'police station', de: 'der Polizeiposten', emo: '🚓', col: '#3d7fd0', sign: '#1d4f96' },
+  hospital: { en: 'hospital', de: 'das Spital', emo: '🏥', col: '#f4f7fb', sign: '#d23a3a' },
+  supermarket: { en: 'supermarket', de: 'der Supermarkt', emo: '🛒', col: '#a9c6ee', sign: '#2f7d4a' },
+  taxi: { en: 'taxi rank', de: 'der Taxistand', emo: '🚕', col: '#f3c623', sign: '#222', open: true },
+  station: { en: 'train station', de: 'der Bahnhof', emo: '🚆', col: '#e9ddc8', sign: '#2f8f7a' },
+  firestation: { en: 'fire station', de: 'die Feuerwehr', emo: '🚒', col: '#a8433a', sign: '#e8962c' },
+  vet: { en: 'veterinary', de: 'die Tierarztpraxis', emo: '🐾', col: '#ef6a3a', sign: '#e8b52c' },
+  church: { en: 'church', de: 'die Kirche', emo: '⛪', col: '#f5e6d6', sign: '#8a4a6a' },
+  farm: { en: 'farm', de: 'der Bauernhof', emo: '🐄', col: '#c8423a', sign: '#7a4a24' },
+  cinema: { en: 'cinema', de: 'das Kino', emo: '🎬', col: '#e8553a', sign: '#b8262c' },
+  court: { en: 'court', de: 'das Gericht', emo: '⚖️', col: '#d9b8a8', sign: '#7a4a3a' },
+  casino: { en: 'casino', de: 'das Casino', emo: '🎰', col: '#8a5ad0', sign: '#e0368a' },
+  pharmacy: { en: 'pharmacy', de: 'die Apotheke', emo: '💊', col: '#f7c6d8', sign: '#d0367a' },
+  airport: { en: 'airport', de: 'der Flughafen', emo: '✈️', col: '#dfeaf6', sign: '#2a6fb0' },
+  butcher: { en: 'butcher\'s', de: 'die Metzgerei', emo: '🥩', col: '#f2e3e0', sign: '#b8262c' },
+  library: { en: 'library', de: 'die Bibliothek', emo: '📚', col: '#b8734a', sign: '#5a3a8a' },
+  bank: { en: 'bank', de: 'die Bank', emo: '🏦', col: '#e8e0cc', sign: '#2a5a3a' },
+  museum: { en: 'museum', de: 'das Museum', emo: '🏛️', col: '#e6d3b0', sign: '#7a5a2a' },
+  park: { en: 'park', de: 'der Park', emo: '🌳', col: '#7cc46a', sign: '#3a7a2a', open: true },
+  space: { en: 'space centre', de: 'das Raumfahrtzentrum', emo: '🚀', col: '#eef2f7', sign: '#1d3557' },
+  site: { en: 'building site', de: 'die Baustelle', emo: '🚧', col: '#d9a441', sign: '#e0782c', open: true }
+};
+// [Beruf, Bild, Ort, Deutsch, Kleidung]
+var JOBS = [
+  ['waitress', '💁‍♀️', 'restaurant', 'die Kellnerin', { shirt: '#ffffff', pants: '#1f2a44', hair: '#2a1a10', vest: '#1f2a44' }],
+  ['chef', '🧑‍🍳', 'restaurant', 'der Koch / die Köchin', { shirt: '#ffffff', pants: '#ffffff', hat: 'chef' }],
+  ['postman', '📮', 'postoffice', 'der Pöstler', { shirt: '#9cc8ec', pants: '#2f6fb0', hat: 'cap', hatC: '#2f6fb0' }],
+  ['baker', '🥖', 'bakery', 'der Bäcker / die Bäckerin', { shirt: '#f2a7b8', pants: '#5a8ad0', hat: 'chef', apron: '#cfe8f2' }],
+  ['teacher', '🧑‍🏫', 'school', 'die Lehrerin / der Lehrer', { shirt: '#e0368a', pants: '#2a2a2a', hair: '#2a1a10' }],
+  ['police officer', '👮', 'police', 'der Polizist / die Polizistin', { shirt: '#4a90e2', pants: '#1f2a66', hat: 'cap', hatC: '#1f2a66' }],
+  ['doctor', '🧑‍⚕️', 'hospital', 'der Arzt / die Ärztin', { shirt: '#ffffff', pants: '#666666', hair: '#2a1a10' }],
+  ['nurse', '💉', 'hospital', 'die Pflegefachfrau / der Pflegefachmann', { shirt: '#8fd3c8', pants: '#8fd3c8', hat: 'nurse', hair: '#e8c34a' }],
+  ['shop assistant', '🛍️', 'supermarket', 'die Verkäuferin / der Verkäufer', { shirt: '#f6d23a', pants: '#2a4a9a', hair: '#2a1a10' }],
+  ['taxi driver', '🚕', 'taxi', 'der Taxifahrer / die Taxifahrerin', { shirt: '#ffffff', pants: '#1f2a66', hat: 'cap', hatC: '#1f2a66' }],
+  ['firefighter', '🧑‍🚒', 'firestation', 'der Feuerwehrmann / die Feuerwehrfrau', { shirt: '#f6d23a', pants: '#f6d23a', hat: 'helmet', hatC: '#d23a2a' }],
+  ['vet', '🐶', 'vet', 'der Tierarzt / die Tierärztin', { shirt: '#8ccf5a', pants: '#3a5a9a', hair: '#7a4a24' }],
+  ['priest', '✝️', 'church', 'der Pfarrer / die Pfarrerin', { shirt: '#333333', pants: '#333333', hair: '#5a3a1a' }],
+  ['farmer', '🧑‍🌾', 'farm', 'der Bauer / die Bäuerin', { shirt: '#9cc8ec', pants: '#3a5aa0', hat: 'farmer', hatC: '#8a5a2a' }],
+  ['actor', '🎬', 'cinema', 'der Schauspieler / die Schauspielerin', { shirt: '#3a7ad0', pants: '#1a1a1a', hair: '#1a1a1a' }],
+  ['lawyer', '⚖️', 'court', 'der Anwalt / die Anwältin', { shirt: '#2a3a7a', pants: '#2a3a7a', hair: '#1a1a1a' }],
+  ['train driver', '🚆', 'station', 'der Lokführer / die Lokführerin', { shirt: '#3a5aa0', pants: '#3a5aa0', hat: 'cap', hatC: '#2a4a9a' }],
+  ['pilot', '🧑‍✈️', 'airport', 'der Pilot / die Pilotin', { shirt: '#1f2a66', pants: '#1f2a66', hat: 'cap', hatC: '#1f2a66' }],
+  ['pharmacist', '💊', 'pharmacy', 'der Apotheker / die Apothekerin', { shirt: '#ffffff', pants: '#4a6ab0', hair: '#e0782c' }],
+  ['street worker', '👷', 'site', 'der Strassenarbeiter / die Strassenarbeiterin', { shirt: '#f08a2c', pants: '#3a5aa0', hat: 'helmet', hatC: '#f6d23a' }],
+  ['casino host', '🃏', 'casino', 'die Casino-Gastgeberin / der Casino-Gastgeber', { shirt: '#ffffff', pants: '#1a1a1a', vest: '#1a1a1a', hair: '#1a1a1a' }],
+  ['painter', '🧑‍🎨', 'park', 'der Maler / die Malerin', { shirt: '#4ab0e0', pants: '#2a4a9a', hat: 'beret', hatC: '#4ab0e0', apron: '#d23a2a' }],
+  ['musician', '🎻', 'park', 'der Musiker / die Musikerin', { shirt: '#3a5ad0', pants: '#d23a2a', hair: '#1a1a1a' }],
+  ['astronaut', '🧑‍🚀', 'space', 'der Astronaut / die Astronautin', { shirt: '#dfe6f2', pants: '#dfe6f2', hat: 'space' }],
+  ['butcher', '🥩', 'butcher', 'der Metzger / die Metzgerin', { shirt: '#ffffff', pants: '#2a2a2a', apron: '#e88a9a', hat: 'chef' }],
+  ['librarian', '📚', 'library', 'der Bibliothekar / die Bibliothekarin', { shirt: '#7a4ab0', pants: '#2a2a2a', hair: '#7a4a24' }],
+  ['bank clerk', '💶', 'bank', 'der Bankangestellte / die Bankangestellte', { shirt: '#ffffff', pants: '#2a3a5a', vest: '#2a3a5a', hair: '#1a1a1a' }]
+];
+
+// ---------------------------------------------------------------------- Stadtplan
+// Kreuzungen auf einem Raster (x nach Osten, z nach Süden, Norden = −z). Zwischen Spalte 3 und 4 fliesst der Fluss,
+// Brücken gibt es nur in Reihe 1 und 3. Bei (2,2) ist der Kreisel.
+var GX = [0, 54, 108, 162, 222, 276], GZ = [0, 40, 80, 120, 160];
+var RB = { i: 2, j: 2, r: 8 }, RBX = GX[2], RBZ = GZ[2];
+var RIV = [183, 201];
+var OFF = { a: 13, b: 27, c: 41, B: 27 };
+// [Ort, H/V, i, j, Seite, Platz]   H-Strassen (Ost–West) haben Plätze a, b, c oder gross B; V-Strassen nur aussen (Platz B in der Mitte)
+var NAMED = [
+  ['farm', 'H', 0, 0, 'N', 'B'], ['school', 'H', 1, 0, 'N', 'B'], ['church', 'H', 2, 0, 'N', 'B'], ['space', 'H', 4, 0, 'N', 'B'],
+  ['bakery', 'H', 0, 0, 'S', 'b'], ['postoffice', 'H', 1, 0, 'S', 'a'], ['museum', 'H', 2, 0, 'S', 'b'], ['vet', 'H', 4, 0, 'S', 'b'],
+  ['park', 'H', 0, 1, 'N', 'B'], ['butcher', 'H', 1, 1, 'N', 'a'], ['bank', 'H', 2, 1, 'N', 'b'], ['pharmacy', 'H', 4, 1, 'N', 'a'],
+  ['restaurant', 'H', 0, 1, 'S', 'b'], ['cinema', 'H', 1, 1, 'S', 'b'], ['police', 'H', 2, 1, 'S', 'B'], ['supermarket', 'H', 4, 1, 'S', 'B'],
+  ['court', 'H', 0, 2, 'N', 'b'], ['firestation', 'H', 2, 2, 'N', 'c'], ['site', 'H', 4, 2, 'N', 'b'],
+  ['casino', 'H', 0, 2, 'S', 'a'], ['library', 'H', 1, 3, 'N', 'b'],
+  ['taxi', 'H', 1, 4, 'N', 'c'], ['station', 'H', 1, 4, 'S', 'B'], ['hospital', 'H', 4, 4, 'S', 'B'],
+  ['airport', 'V', 5, 1, 'E', 'B']
+];
+
+var NODES = {}, EDGES = [], EMAP = {}, LOTS = [], SEGS = [];
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function angd(a, b) { var d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
+function isRB(i, j) { return i === RB.i && j === RB.j; }
+function jid(i, j) { return isRB(i, j) ? null : 'J' + i + '_' + j; }
+function node(id, x, z, t) { if (!NODES[id]) NODES[id] = { id: id, x: x, z: z, t: t, out: [], lots: [] }; return NODES[id]; }
+function lineEdge(a, b, seg, bridge) {
+  var A = NODES[a], B = NODES[b], dx = B.x - A.x, dz = B.z - A.z, len = Math.hypot(dx, dz), hd = Math.atan2(dz, dx);
+  var e = { a: a, b: b, k: 'L', len: len, h0: hd, h1: hd, seg: seg, bridge: !!bridge };
+  EDGES.push(e); A.out.push(e); EMAP[a + '>' + b] = e; return e;
+}
+function arcEdge(a, b, th0) {
+  var e = { a: a, b: b, k: 'A', len: RB.r * Math.PI / 2, th0: th0, th1: th0 - Math.PI / 2, seg: 'ring' };
+  e.h0 = Math.atan2(-Math.cos(th0), Math.sin(th0)); e.h1 = Math.atan2(-Math.cos(e.th1), Math.sin(e.th1));
+  EDGES.push(e); NODES[a].out.push(e); EMAP[a + '>' + b] = e; return e;
+}
+function epos(e, t) {
+  if (e.k === 'A') { var th = e.th0 + (e.th1 - e.th0) * t; return { x: RBX + RB.r * Math.cos(th), z: RBZ + RB.r * Math.sin(th), h: Math.atan2(-Math.cos(th), Math.sin(th)) }; }
+  var A = NODES[e.a], B = NODES[e.b]; return { x: A.x + (B.x - A.x) * t, z: A.z + (B.z - A.z) * t, h: e.h0 };
+}
+var RING = [['RN', -Math.PI / 2], ['RW', Math.PI], ['RS', Math.PI / 2], ['RE', 0]]; // gegen den Uhrzeigersinn (von oben, Norden oben)
+
+function buildPlan() {
+  var i, j;
+  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length; j++) if (!isRB(i, j)) node(jid(i, j), GX[i], GZ[j], 'J');
+  RING.forEach(function (r) { node(r[0], RBX + RB.r * Math.cos(r[1]), RBZ + RB.r * Math.sin(r[1]), 'R'); });
+  for (var k = 0; k < 4; k++) arcEdge(RING[k][0], RING[(k + 1) % 4][0], RING[k][1]);
+  // Strassenstücke
+  for (j = 0; j < GZ.length; j++) for (i = 0; i < GX.length - 1; i++) {
+    if (i === 3 && j !== 1 && j !== 3) continue;
+    SEGS.push({ id: 'H' + i + '_' + j, d: 'H', i: i, j: j, a: isRB(i, j) ? 'RE' : jid(i, j), b: isRB(i + 1, j) ? 'RW' : jid(i + 1, j), bridge: i === 3 });
+  }
+  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length - 1; j++)
+    SEGS.push({ id: 'V' + i + '_' + j, d: 'V', i: i, j: j, a: isRB(i, j) ? 'RS' : jid(i, j), b: isRB(i, j + 1) ? 'RN' : jid(i, j + 1) });
+  var segById = {}; SEGS.forEach(function (s) { segById[s.id] = s; s.lots = []; });
+  // Plätze: benannte zuerst, dann gewöhnliche Häuser
+  var taken = {};
+  function addLot(place, d, i, j, side, slot) {
+    var s = segById[d + i + '_' + j]; if (!s) throw new Error('Strasse fehlt ' + d + i + '_' + j);
+    var big = slot === 'B', outer = (d === 'H' && ((j === 0 && side === 'N') || (j === GZ.length - 1 && side === 'S'))) || d === 'V';
+    var w = big ? 40 : 12, dep = outer ? (big ? 22 : 14) : 13, sg = side === 'N' || side === 'W' ? -1 : 1, off = d === 'V' ? 20 : OFF[slot];
+    var L = { id: 'L' + LOTS.length, place: place, seg: s.id, side: side, slot: slot, off: off, w: w, d: dep, big: big, outer: outer };
+    if (d === 'H') { L.x = GX[i] + off; L.z = GZ[j] + sg * (5.5 + dep / 2); L.sx = L.x; L.sz = GZ[j]; L.fx = 0; L.fz = -sg; }
+    else { L.z = GZ[j] + off; L.x = GX[i] + sg * (5.5 + dep / 2); L.sx = GX[i]; L.sz = L.z; L.fx = -sg; L.fz = 0; if (big) { L.w = 26; } }
+    LOTS.push(L); s.lots.push(L); taken[s.id + side + slot] = 1; if (big) taken[s.id + side + 'all'] = 1;
+    return L;
+  }
+  NAMED.forEach(function (n) { addLot(n[0], n[1], n[2], n[3], n[4], n[5]); });
+  var R = rng(7);
+  SEGS.forEach(function (s) {
+    if (s.bridge) return;
+    if (s.d === 'H') {
+      ['N', 'S'].forEach(function (side) {
+        if (taken[s.id + side + 'all']) return;
+        ['a', 'b', 'c'].forEach(function (slot) {
+          if (taken[s.id + side + slot]) return;
+          if (s.a === 'RE' && slot === 'a') return;   // zu nah am Kreisel
+          if (s.b === 'RW' && slot === 'c') return;
+          addLot(null, 'H', s.i, s.j, side, slot);
+        });
+      });
+    } else if (s.i === 0 || s.i === GX.length - 1) {
+      var side = s.i === 0 ? 'W' : 'E';
+      if (taken[s.id + side + 'B'] || (s.i === 5 && s.j === 2)) return; // Flughafen-Gelände
+      addLot(null, 'V', s.i, s.j, side, 'B');
+    }
+  });
+  LOTS.forEach(function (L) {
+    if (L.place) return;
+    var center = L.x > 40 && L.x < 170 && L.z > 30 && L.z < 135;
+    L.h = center ? 14 + Math.round(R() * 26) : L.outer ? 6 + Math.round(R() * 4) : 8 + Math.round(R() * 12);
+    L.roof = !center && (L.h < 12 || R() < .3) ? 'dach' : 'flach';
+    L.wall = ['#f3e3c3', '#e8c9a6', '#d7e3ef', '#f1d4cf', '#dfe9d6', '#efe7f7', '#f6efe0', '#cfd8e3', '#e9d8b8'][Math.floor(R() * 9)];
+  });
+  // Haltepunkte entlang jeder Strasse (vor den Häusern), dann Kanten
+  SEGS.forEach(function (s) {
+    var A = NODES[s.a], B = NODES[s.b], offs = {};
+    s.lots.forEach(function (L) { offs[L.off] = 1; });
+    var list = Object.keys(offs).map(Number).sort(function (x, y) { return x - y; });
+    var chain = [s.a];
+    list.forEach(function (o) {
+      var id = 'S' + s.id + '_' + o, x = s.d === 'H' ? GX[s.i] + o : GX[s.i], z = s.d === 'H' ? GZ[s.j] : GZ[s.j] + o;
+      var n = node(id, x, z, 'S'); n.seg = s.id; chain.push(id);
+      s.lots.forEach(function (L) { if (L.off === o) { n.lots.push(L); L.stop = id; } });
+    });
+    chain.push(s.b); s.chain = chain;
+    for (var k = 0; k < chain.length - 1; k++) { lineEdge(chain[k], chain[k + 1], s.id, s.bridge); lineEdge(chain[k + 1], chain[k], s.id, s.bridge); }
+  });
+}
+buildPlan();
+
+function isBuilding(L) { return !L.place || !PLACES[L.place].open; }
+function lotName(L) { return L.place ? PLACES[L.place].en : L.h >= 14 ? 'flats' : 'house'; }
+function lotArt(L) { return L.place ? 'the ' + PLACES[L.place].en : L.h >= 14 ? 'flats' : 'a house'; }
+function sideOf(L, x, z, hd) { var rx = -Math.sin(hd), rz = Math.cos(hd); return ((L.x - x) * rx + (L.z - z) * rz) > 0 ? 'R' : 'L'; }
+function rel(h0, h1) { var d = angd(h1, h0); return Math.abs(d) < 0.6 ? 'S' : Math.abs(d) > 2.5 ? 'B' : d > 0 ? 'R' : 'L'; }
+function straightEdge(id, hd) { var best = null, bd = 0.6; NODES[id].out.forEach(function (e) { var d = Math.abs(angd(e.h0, hd)); if (d < bd) { bd = d; best = e; } }); return best; }
+function ringEntry(id, hd) { var n = NODES[id]; return n.t === 'R' && Math.abs(angd(Math.atan2(RBZ - n.z, RBX - n.x), hd)) < 0.7; }
+function ringArc(id) { return NODES[id].out.filter(function (e) { return e.k === 'A'; })[0]; }
+function ringArm(id) { return NODES[id].out.filter(function (e) { return e.k !== 'A'; })[0]; }
+var ORD = ['first', 'second', 'third', 'fourth', 'fifth'], ORDDE = ['1.', '2.', '3.', '4.', '5.'];
+var DIR = { L: 'left', R: 'right' }, DIRDE = { L: 'links ⬅', R: 'rechts ➡', S: 'geradeaus ⬆', B: 'zurück ⬇' };
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ---------------------------------------------------------------------- Wege erfinden
+// Ergebnis: { nodes:[…], stepOf:[…], steps:[{t, text, …}], start: Los, target: Los, face }
+function genRoute(lv) {
+  for (var k = 0; k < 900; k++) { var r = tryRoute(lv); if (r) return r; }
+  return null;
+}
+function tryRoute(lv) {
+  var R = Math.random, starts = LOTS.filter(function (L) { return L.place && isBuilding(L) && L.stop && NODES[L.stop].t === 'S'; });
+  var L0 = starts[Math.floor(R() * starts.length)], start = L0.stop, face = Math.atan2(L0.fz, L0.fx);
+  var turn = R() < .5 ? 'L' : 'R', hd = face + (turn === 'R' ? Math.PI / 2 : -Math.PI / 2);
+  if (!straightEdge(start, hd)) return null;
+  var nodes = [start], stepOf = [0], steps = [], pend = [], cross = 0, dec = 0, want = lv.ev[0] + Math.floor(R() * (lv.ev[1] - lv.ev[0] + 1));
+  var visited = {}, hadBridge = false, hadRound = false, lm = 0, crossNo = {};
+  steps.push({ t: 'start', turn: turn, text: 'Start in front of the ' + PLACES[L0.place].en + '. Turn ' + DIR[turn] + ' and walk straight on.' });
+  var cur = start, justDecided = true;
+  function emit(st) { steps.push(st); var k = steps.length - 1; pend.forEach(function (ix) { stepOf[ix] = k; }); pend = []; return k; }
+  function push(id) { nodes.push(id); stepOf.push(null); pend.push(nodes.length - 1); }
+  function finalSeg(e) {
+    // Ziel auf dem Strassenstück nach einer Entscheidung suchen
+    if (e.bridge || e.k === 'A' || dec < want) return null;
+    var walk = [], id = e.b, h = e.h1, seen = { L: [], R: [] }, cands = [];
+    var prevBlock = { L: false, R: false };
+    while (NODES[id].t === 'S') {
+      walk.push(id);
+      var n = NODES[id];
+      ['L', 'R'].forEach(function (sd) {
+        n.lots.forEach(function (L) {
+          if (sideOf(L, n.x, n.z, h) !== sd) return;
+          seen[sd].push(L);
+          if (L.place && isBuilding(L) && L.place !== L0.place && !prevBlock[sd]) cands.push({ L: L, side: sd, ord: seen[sd].length, walk: walk.slice(), prev: seen[sd].slice(0, -1) });
+          if (!isBuilding(L)) prevBlock[sd] = true;
+        });
+      });
+      var nx = straightEdge(id, h); if (!nx) break; id = nx.b; h = nx.h1;
+    }
+    if (!cands.length) return null;
+    return cands[Math.floor(R() * cands.length)];
+  }
+  function finish(c) {
+    c.walk.forEach(function (id) { push(id); });
+    var p = c.prev.length ? c.prev[c.prev.length - 1] : null, txt;
+    if (lv.lm && p && p.place && R() < .5) txt = 'Walk past the ' + PLACES[p.place].en + '. The next building on your ' + DIR[c.side] + ' is your goal.';
+    else txt = 'Stop at the ' + ORD[c.ord - 1] + ' building on your ' + DIR[c.side] + '.';
+    emit({ t: 'end', side: c.side, ord: c.ord, text: txt });
+    if (lv.round === 'need' && !hadRound) return null;
+    if (lv.bridge === 'need' && !hadBridge) return null;
+    return { nodes: nodes, stepOf: stepOf, steps: steps, start: L0, target: c.L, face: face, crossNo: crossNo };
+  }
+  // erste Bewegung nach dem Start
+  var e = straightEdge(start, hd);
+  for (var guard = 0; guard < 40; guard++) {
+    if (justDecided && e && !e.bridge && e.k !== 'A') {
+      var c = finalSeg(e); if (c) return finish(c);
+    }
+    // dem Strassenstück folgen bis zur nächsten Kreuzung / zum Kreisel
+    var passed = [];
+    while (true) {
+      if (e.bridge) { hadBridge = true; if (lv.bridge === 'no') return null; }
+      push(e.b); cur = e.b; hd = e.h1;
+      if (NODES[cur].t !== 'S') break;
+      passed.push(cur);
+      e = straightEdge(cur, hd); if (!e) return null;
+    }
+    // Sehenswürdigkeit am Weg («walk past the …»), nur direkt nach einer Entscheidung
+    if (lv.lm && justDecided && lm < 2 && passed.length && R() < .55) {
+      var named = [];
+      passed.forEach(function (id) { NODES[id].lots.forEach(function (L) { if (L.place && L.place !== L0.place) named.push({ L: L, id: id }); }); });
+      if (named.length) {
+        var pk = named[Math.floor(R() * named.length)], sd = sideOf(pk.L, NODES[pk.id].x, NODES[pk.id].z, hd);
+        var last = pend.pop(); // die Kreuzung gehört zum nächsten Satz
+        emit({ t: 'lm', text: R() < .5 ? 'Walk past the ' + PLACES[pk.L.place].en + '.' : 'On your ' + DIR[sd] + ' you can see the ' + PLACES[pk.L.place].en + '.' });
+        pend.push(last); lm++;
+      }
+    }
+    justDecided = false;
+    var N = NODES[cur];
+    if (visited[cur] || dec > want) return null; visited[cur] = 1;
+    if (N.t === 'R') {
+      if (lv.round === 'no' || hadRound) return null;
+      hadRound = true;
+      var ex = 1 + Math.floor(R() * 3), rid = cur, txt = (cross > 0 ? 'Walk straight on to the roundabout. Take the ' : 'At the roundabout take the ') + ORD[ex - 1] + ' exit.';
+      for (var q = 0; q < ex; q++) { var a = ringArc(rid); push(a.b); rid = a.b; }
+      e = ringArm(rid); hd = e.h0; cross = 0; dec++;
+      emit({ t: 'round', exit: ex, text: txt });
+      justDecided = true; continue;
+    }
+    var opts = N.out.filter(function (o) { return rel(hd, o.h0) !== 'B'; }), byRel = {};
+    opts.forEach(function (o) { byRel[rel(hd, o.h0)] = o; });
+    if (!byRel.S) {
+      var turns = Object.keys(byRel); if (!turns.length) return null;
+      var tr = turns[Math.floor(R() * turns.length)];
+      e = byRel[tr]; hd = e.h0; dec++;
+      emit({ t: 'endst', dir: tr, text: (cross > 0 ? 'Walk straight on to the end of the street. Turn ' : 'Walk to the end of the street and turn ') + DIR[tr] + '.' + (e.bridge ? ' Cross the bridge.' : '') });
+      cross = 0; justDecided = true; continue;
+    }
+    var goStraight = R() < (lv.straight || .35) && cross < 2;
+    if (goStraight) {
+      cross++; crossNo[nodes.length - 1] = cross;
+      e = byRel.S;
+      if (e.bridge) { emit({ t: 'bridge', text: 'Walk straight on and cross the bridge.' }); cross = 0; dec++; justDecided = true; }
+      continue;
+    }
+    var tl = Object.keys(byRel).filter(function (x) { return x !== 'S'; });
+    if (!tl.length) return null;
+    var td = tl[Math.floor(R() * tl.length)];
+    crossNo[nodes.length - 1] = cross + 1;
+    e = byRel[td]; hd = e.h0; dec++;
+    emit({ t: 'turn', dir: td, n: cross + 1, text: 'At the ' + ORD[cross] + ' crossing turn ' + DIR[td] + '.' + (e.bridge ? ' Cross the bridge.' : '') });
+    cross = 0; justDecided = true;
+  }
+  return null;
+}
+
+// Kürzester Weg (für «Orte» und «Berufe»)
+function shortest(from, toSet) {
+  var dist = {}, prev = {}, Q = [from]; dist[from] = 0;
+  while (Q.length) {
+    Q.sort(function (a, b) { return dist[a] - dist[b]; });
+    var u = Q.shift(); if (toSet[u]) { var p = [u]; while (prev[u]) { u = prev[u]; p.unshift(u); } return p; }
+    NODES[u].out.forEach(function (e) { var d = dist[u] + e.len; if (dist[e.b] == null || d < dist[e.b]) { dist[e.b] = d; prev[e.b] = u; Q.push(e.b); } });
+  }
+  return [from];
+}
+
+// ---------------------------------------------------------------------- Sprache (Englisch vorlesen)
+var VOICE = null;
+function pickVoice() {
+  try {
+    var v = speechSynthesis.getVoices() || [];
+    VOICE = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); })[0] || v.filter(function (x) { return /^en/i.test(x.lang); })[0] || null;
+  } catch (e) {}
+}
+try { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {}
+function canSay() { try { return !!window.speechSynthesis && !!window.SpeechSynthesisUtterance; } catch (e) { return false; } }
+function say(t, rate) {
+  if (!canSay()) return false;
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; if (VOICE) u.voice = VOICE; u.rate = rate || .85; speechSynthesis.speak(u); return true; } catch (e) { return false; }
+}
+
+// ---------------------------------------------------------------------- 3D-Welt
+var WD = null; // die Welt (wird nur einmal gebaut)
+var MATS = {};
+function M(c) { return MATS[c] || (MATS[c] = new THREE.MeshLambertMaterial({ color: c })); }
+function mesh(geo, c, x, y, z, par, sh) {
+  var m = new THREE.Mesh(geo, typeof c === 'string' ? M(c) : c); m.position.set(x || 0, y || 0, z || 0);
+  if (sh !== false) { m.castShadow = true; m.receiveShadow = true; } if (par) par.add(m); return m;
+}
+function bx(w, h, d, c, x, y, z, par, sh) { return mesh(new THREE.BoxGeometry(w, h, d), c, x, y, z, par, sh); }
+function cyl(rt, rb, h, c, x, y, z, par, seg) { return mesh(new THREE.CylinderGeometry(rt, rb, h, seg || 12), c, x, y, z, par); }
+function canvasTex(w, h, draw) {
+  var cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv.getContext('2d'), w, h);
+  var t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+var FONT = '"Patrick Hand","Comic Sans MS",cursive';
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function signTex(text, emo, bg) {
+  return canvasTex(768, 160, function (g, w, h) {
+    rr(g, 4, 4, w - 8, h - 8, 26); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 8; g.strokeStyle = bg; g.stroke();
+    g.fillStyle = bg; g.font = '92px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+    var t = (emo ? emo + ' ' : '') + text.toUpperCase(); var m = g.measureText(t).width; if (m > w - 50) g.font = Math.floor(92 * (w - 50) / m) + 'px ' + FONT;
+    g.fillText(t, w / 2, h / 2 + 6);
+  });
+}
+function sign(L, par, y, wmax) {
+  var P = PLACES[L.place], w = Math.min(wmax || L.w * .9, 11), t = signTex(P.en, P.emo, P.sign);
+  var m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 160 / 768), new THREE.MeshBasicMaterial({ map: t }));
+  m.position.set(0, y, L.d / 2 + 0.08); par.add(m); return m;
+}
+function emoSprite(emo, sz) {
+  var t = canvasTex(128, 128, function (g) { g.font = '100px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(emo, 64, 72); });
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.scale.set(sz, sz, 1); s.renderOrder = 11; return s;
+}
+function labelSprite(text, bg, fg) {
+  var t = canvasTex(512, 128, function (g, w, h) {
+    g.font = '76px ' + FONT; var m = Math.min(w - 20, g.measureText(text).width + 60);
+    rr(g, (w - m) / 2, 10, m, h - 20, 50); g.fillStyle = bg || 'rgba(255,255,255,.95)'; g.fill(); g.lineWidth = 6; g.strokeStyle = '#d6ad45'; g.stroke();
+    g.fillStyle = fg || '#1f2421'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + 4);
+  });
+  var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t })); s.scale.set(6, 1.5, 1); return s;
+}
+var WIN = {};
+function wallMat(col, kind) {
+  var k = col + kind; if (WIN[k]) return WIN[k];
+  var t = canvasTex(64, 64, function (g) {
+    g.fillStyle = col; g.fillRect(0, 0, 64, 64);
+    if (kind === 'office') { g.fillStyle = '#7fa8c8'; g.fillRect(6, 10, 52, 40); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(8, 12, 20, 18); }
+    else { g.fillStyle = '#6f93b3'; g.fillRect(16, 14, 32, 34); g.fillStyle = '#fff'; g.fillRect(30, 14, 4, 34); g.fillRect(16, 29, 32, 4); g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 3; g.strokeRect(16, 14, 32, 34); }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return (WIN[k] = new THREE.MeshLambertMaterial({ map: t }));
+}
+// Kasten mit Fenstern (Fensterraster ca. alle 3.4 m)
+function house(w, h, d, col, kind, par, x, y, z) {
+  var geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv, cell = kind === 'office' ? 3.2 : 3.6;
+  // Flächen: +x, −x, +y, −y, +z, −z (je 4 Ecken)
+  for (var f = 0; f < 6; f++) {
+    var sx = (f < 2 ? d : w) / cell, sy = (f === 2 || f === 3 ? 0 : h / cell);
+    for (var v = 0; v < 4; v++) { var ix = f * 4 + v; uv.setXY(ix, uv.getX(ix) * Math.max(1, Math.round(sx)), uv.getY(ix) * Math.max(0.001, Math.round(sy))); }
+  }
+  var wm = wallMat(col, kind || 'win'), top = M(shade(col, -0.15));
+  var m = new THREE.Mesh(geo, [wm, wm, top, top, wm, wm]); m.position.set(x || 0, (y || 0) + h / 2, z || 0); m.castShadow = m.receiveShadow = true; par.add(m); return m;
+}
+function shade(hex, f) {
+  var n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  function c(v) { return Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f))); }
+  return '#' + ((1 << 24) + (c(r) << 16) + (c(g) << 8) + c(b)).toString(16).slice(1);
+}
+function roof(w, d, hr, col, par, y) {
+  var s = new THREE.Shape(); s.moveTo(-d / 2 - .5, 0); s.lineTo(d / 2 + .5, 0); s.lineTo(0, hr); s.closePath();
+  var g = new THREE.ExtrudeGeometry(s, { depth: w + 1, bevelEnabled: false }); g.translate(0, 0, -(w + 1) / 2); g.rotateY(Math.PI / 2);
+  return mesh(g, col, 0, y, 0, par);
+}
+function door(par, L, w, h, c) { return bx(w || 2, h || 3, .3, c || '#6b4a2f', 0, (h || 3) / 2, L.d / 2 + .1, par); }
+function awning(par, L, w, c1, c2, y) {
+  var t = canvasTex(128, 32, function (g) { for (var k = 0; k < 8; k++) { g.fillStyle = k % 2 ? c2 : c1; g.fillRect(k * 16, 0, 16, 32); } });
+  var m = new THREE.Mesh(new THREE.BoxGeometry(w, .3, 2.4), new THREE.MeshLambertMaterial({ map: t }));
+  m.position.set(0, y || 3.6, L.d / 2 + 1.1); m.rotation.x = .25; m.castShadow = true; par.add(m);
+}
+function columns(par, L, n, h, w, c) { for (var k = 0; k < n; k++) cyl(.45, .5, h, c || '#fbf6ec', -w / 2 + w * k / (n - 1), h / 2 + .6, L.d / 2 + 1.4, par); bx(w + 3, .6, 3.6, '#efe6d6', 0, .3, L.d / 2 + 1.2, par); }
+var TG = null;
+function tree(par, x, z, s, c) {
+  s = s || 1; TG = TG || { st: new THREE.CylinderGeometry(.25, .35, 2, 6), co: new THREE.ConeGeometry(1.6, 3.6, 7) };
+  var a = mesh(TG.st, '#8a5a3a', x, s, z, par); a.scale.setScalar(s);
+  var k = mesh(TG.co, c || '#4f9a4a', x, 3.4 * s, z, par); k.scale.setScalar(s);
+  return k;
+}
+function car(par, x, z, rot, col, kind) {
+  var g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot || 0; par.add(g);
+  var L = kind === 'truck' ? 7.5 : kind === 'van' ? 5.2 : 4.4, H = kind === 'truck' ? 2.6 : kind === 'van' ? 2.3 : 1.2;
+  bx(2.1, H, L, col, 0, .5 + H / 2, 0, g);
+  if (kind !== 'truck') bx(1.9, 1, L * .55, kind === 'van' ? col : '#bfe0f5', 0, .5 + H + .5, kind === 'van' ? 0 : -.2, g);
+  [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(function (p) { var w = cyl(.5, .5, .4, '#222', p[0] * 1.05, .5, p[1] * L * .32, g, 10); w.rotation.z = Math.PI / 2; });
+  if (kind === 'taxi') bx(.9, .35, .5, '#222', 0, 2.95, -.2, g);
+  if (kind === 'police' || kind === 'amb') { bx(1.2, .3, .4, '#3a7ad0', -.3, kind === 'amb' ? 3.4 : 2.95, -.2, g); bx(.6, .3, .4, '#e03a3a', .35, kind === 'amb' ? 3.4 : 2.95, -.2, g); }
+  if (kind === 'truck') { bx(.5, .5, 6, '#c8c8c8', 0, 3.4, -.5, g); }
+  return g;
+}
+function person(o) {
+  var g = new THREE.Group(), skin = o.skin || '#f1c7a0';
+  bx(.36, 1.05, .42, o.pants, -.22, .55, 0, g); bx(.36, 1.05, .42, o.pants, .22, .55, 0, g);
+  bx(1.0, 1.15, .55, o.shirt, 0, 1.65, 0, g);
+  if (o.vest) bx(1.02, .9, .2, o.vest, 0, 1.6, .2, g);
+  if (o.apron) bx(.8, 1.3, .1, o.apron, 0, 1.4, .3, g);
+  bx(.28, 1.0, .3, o.shirt, -.66, 1.6, 0, g); bx(.28, 1.0, .3, o.shirt, .66, 1.6, 0, g);
+  mesh(new THREE.SphereGeometry(.44, 14, 10), skin, 0, 2.62, 0, g);
+  bx(.08, .08, .02, '#222', -.15, 2.68, .43, g); bx(.08, .08, .02, '#222', .15, 2.68, .43, g);
+  if (o.hat === 'chef') { cyl(.42, .38, .7, '#ffffff', 0, 3.25, 0, g); mesh(new THREE.SphereGeometry(.5, 10, 8), '#ffffff', 0, 3.6, 0, g); }
+  else if (o.hat === 'cap') { cyl(.47, .47, .3, o.hatC, 0, 3.0, 0, g); bx(.6, .06, .4, o.hatC, 0, 2.9, .4, g); }
+  else if (o.hat === 'helmet') { mesh(new THREE.SphereGeometry(.52, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.hatC, 0, 2.8, 0, g); }
+  else if (o.hat === 'farmer') { cyl(.8, .8, .08, o.hatC, 0, 2.95, 0, g); cyl(.4, .45, .45, o.hatC, 0, 3.15, 0, g); }
+  else if (o.hat === 'beret') { cyl(.5, .45, .2, o.hatC, 0, 3.0, 0, g); }
+  else if (o.hat === 'nurse') { bx(.6, .3, .4, '#ffffff', 0, 3.0, .05, g); }
+  else if (o.hat === 'space') { var hm = mesh(new THREE.SphereGeometry(.62, 14, 10), new THREE.MeshLambertMaterial({ color: '#cfe0ff', transparent: true, opacity: .55 }), 0, 2.62, 0, g); hm.castShadow = false; }
+  else mesh(new THREE.SphereGeometry(.47, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.2), o.hair || '#3a2a1a', 0, 2.68, -.03, g);
+  return g;
+}
+function owlMesh() {
+  var g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  var b = mesh(new THREE.SphereGeometry(1, 20, 16), '#9a6b45', 0, 1.35, 0, body); b.scale.set(1, 1.15, .95);
+  var belly = mesh(new THREE.SphereGeometry(.78, 16, 12), '#f1dcb8', 0, 1.2, .32, body); belly.scale.set(1, 1.1, .7);
+  [-1, 1].forEach(function (s) {
+    var e = mesh(new THREE.SphereGeometry(.34, 14, 10), '#ffffff', s * .36, 1.85, .72, body);
+    mesh(new THREE.SphereGeometry(.17, 10, 8), '#1f2421', s * .36, 1.86, 1.0, body);
+    mesh(new THREE.SphereGeometry(.06, 6, 6), '#ffffff', s * .32, 1.92, 1.13, body);
+    var t = mesh(new THREE.ConeGeometry(.2, .6, 6), '#7a5232', s * .55, 2.55, .1, body); t.rotation.z = -s * .5;
+    var w = mesh(new THREE.SphereGeometry(.45, 10, 8), '#7a5232', s * .95, 1.25, -.05, body); w.scale.set(.35, 1, .8);
+    var f = mesh(new THREE.ConeGeometry(.16, .35, 6), '#e8a23a', s * .35, .12, .35, g); f.rotation.x = Math.PI / 2;
+  });
+  var bk = mesh(new THREE.ConeGeometry(.14, .4, 8), '#e8a23a', 0, 1.62, 1.0, body); bk.rotation.x = Math.PI / 2 + .3;
+  var sc = cyl(.98, .98, .3, '#d6ad45', 0, 1.05, 0, body, 20); sc.scale.set(1, 1, .95);
+  g.userData.body = body;
+  g.scale.setScalar(1.05);
+  return g;
+}
+
+function placeBuild(L, g) {
+  var P = PLACES[L.place], d = L.d, w = L.w, fz = d / 2;
+  switch (L.place) {
+    case 'bakery': house(w, 6, d, P.col, 'win', g); awning(g, L, w, '#e0782c', '#fff4d6'); door(g, L); sign(L, g, 5.1); break;
+    case 'butcher': house(w, 6.5, d, P.col, 'win', g); awning(g, L, w, '#c8302c', '#ffffff'); door(g, L); sign(L, g, 5.4); break;
+    case 'pharmacy': house(w, 6, d, P.col, 'win', g); awning(g, L, w, '#3a9ad0', '#ffffff'); door(g, L, 2, 3, '#2f8f9a');
+      bx(1.6, .5, .2, '#d0367a', 0, 7, fz - .5, g); bx(.5, 1.6, .2, '#d0367a', 0, 7, fz - .5, g); sign(L, g, 5.0); break;
+    case 'vet': house(w, 6.5, d, P.col, 'win', g); bx(w + .6, .5, d + .6, '#c8302c', 0, 6.7, 0, g); door(g, L, 2, 3, '#2f8f9a'); sign(L, g, 5.2); break;
+    case 'postoffice': house(w, 7, d, P.col, 'office', g); bx(w + .6, .5, d + .6, '#2a6fb0', 0, 7.2, 0, g); door(g, L); sign(L, g, 5.6); car(g, w / 2 + 2.5, fz - 2, 0, '#f4f4f4', 'van'); break;
+    case 'restaurant': house(w, 6, d, P.col, 'win', g); roof(w, d, 3, '#c0392b', g, 6); door(g, L, 2.4, 3.2, '#b8302c'); sign(L, g, 4.8); break;
+    case 'cinema': house(w, 9, d, P.col, 'office', g); var mq = bx(w + 1, 1.2, 3, '#3a6ad0', 0, 4.4, fz + 1.2, g);
+      door(g, L, 3, 3.6, '#4a2a1a'); sign(L, g, 7.2); for (var k = 0; k < 6; k++) mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffe48a' }), -w / 2 + .8 + k * (w - 1.6) / 5, 5.15, fz + 2.6, g); break;
+    case 'casino': house(w, 8, d, P.col, 'office', g); bx(w + .4, 1, d + .4, '#e0368a', 0, 8.3, 0, g);
+      [-3, 0, 3].forEach(function (x) { var s = mesh(new THREE.OctahedronGeometry(1), new THREE.MeshBasicMaterial({ color: '#ffd23a' }), x * .9, 10.3, fz - 1, g); s.userData.spin = 1; WD.spin.push(s); });
+      door(g, L, 3, 3.4, '#e0368a'); sign(L, g, 6.4); break;
+    case 'library': house(w, 8, d, P.col, 'win', g); roof(w, d, 2.4, '#5a3a2a', g, 8); door(g, L, 2.4, 3.4, '#3a2a1a'); sign(L, g, 6.3);
+      ['#d23a3a', '#3a7ad0', '#f6c623', '#3a9a5a'].forEach(function (c, k) { bx(.6, 2.2, .3, c, -2 + k * .8, 1.5, fz + .25, g); }); break;
+    case 'bank': house(w, 9, d, P.col, 'office', g); columns(g, L, 4, 6, w - 3); bx(w, 1, 4, '#f4ecdc', 0, 7.1, fz + 1.3, g); door(g, L, 2.4, 3.6, '#3a5a3a'); sign(L, g, 8.2); break;
+    case 'museum': house(w, 9, d, P.col, 'win', g); columns(g, L, 5, 6.5, w - 2.5);
+      var pd = new THREE.Shape(); pd.moveTo(-w / 2 - .5, 0); pd.lineTo(w / 2 + .5, 0); pd.lineTo(0, 2.4); pd.closePath();
+      mesh(new THREE.ExtrudeGeometry(pd, { depth: 3.6, bevelEnabled: false }), '#efe2c4', 0, 7.1, fz - 1, g);
+      bx(w, .6, 4, '#efe2c4', 0, 7.1, fz + 1.2, g); door(g, L, 2.4, 3.6, '#5a3a1a'); sign(L, g, 8.4, 9); break;
+    case 'court': house(w, 9, d, P.col, 'win', g); columns(g, L, 4, 6.2, w - 3);
+      var cp = new THREE.Shape(); cp.moveTo(-w / 2 - .5, 0); cp.lineTo(w / 2 + .5, 0); cp.lineTo(0, 2.6); cp.closePath();
+      mesh(new THREE.ExtrudeGeometry(cp, { depth: 3.6, bevelEnabled: false }), '#c9a08e', 0, 7.0, fz - 1, g);
+      bx(w, .6, 4, '#c9a08e', 0, 7.0, fz + 1.2, g); door(g, L, 2.4, 3.6, '#5a2a1a'); sign(L, g, 8.3, 9); break;
+    case 'firestation': house(w, 7.5, d, P.col, 'win', g); bx(w - 3, 5, .3, '#5a2a24', 0, 2.5, fz + .1, g);
+      for (var k2 = 0; k2 < 5; k2++) bx(w - 3.4, .12, .32, '#7a3a34', 0, .8 + k2, fz + .2, g); sign(L, g, 6.4);
+      car(g, w / 2 + 1.5, fz - 2.5, 0, '#d8302a', 'truck'); break;
+    case 'police': house(w, 10, d, P.col, 'office', g); bx(w + .6, .6, d + .6, '#1d4f96', 0, 10.2, 0, g);
+      var hp = cyl(4, 4, .2, '#3a3a3a', 0, 10.6, 0, g, 20); var ht = canvasTex(128, 128, function (gg) { gg.fillStyle = '#3a3a3a'; gg.fillRect(0, 0, 128, 128); gg.fillStyle = '#fff'; gg.font = 'bold 90px Arial'; gg.textAlign = 'center'; gg.textBaseline = 'middle'; gg.fillText('H', 64, 68); });
+      var hm = new THREE.Mesh(new THREE.CircleGeometry(3.6, 20), new THREE.MeshBasicMaterial({ map: ht })); hm.rotation.x = -Math.PI / 2; hm.position.set(0, 10.72, 0); g.add(hm);
+      door(g, L, 3, 3.4, '#1d3f76'); sign(L, g, 7.8, 13); car(g, -w / 2 + 4, fz + 2.2, Math.PI / 2, '#f4f4f4', 'police'); break;
+    case 'hospital': house(w, 22, d, P.col, 'office', g); house(14, 10, d + 4, '#e8eef6', 'office', g, -w / 2 + 7, 0, 2);
+      bx(.9, 3.4, .3, '#d23a3a', w / 4, 18.5, fz + .2, g); bx(3.4, .9, .3, '#d23a3a', w / 4, 18.5, fz + .2, g);
+      door(g, L, 4, 3.6, '#5a7a9a'); sign(L, g, 8.0, 12); car(g, w / 2 - 4, fz + 2.2, Math.PI / 2, '#ffffff', 'amb'); break;
+    case 'supermarket': house(w, 8, d, P.col, 'office', g); bx(w + .4, .6, d + .4, '#2f7d4a', 0, 8.3, 0, g); door(g, L, 6, 3.4, '#a8d0e8'); sign(L, g, 6.4, 14);
+      [-1, 1].forEach(function (s) { bx(3, 1, 1.4, '#c8302c', s * 6, .5, fz + 1, g); bx(2.8, .4, 1.2, s > 0 ? '#e88a2a' : '#5aa04a', s * 6, 1.2, fz + 1, g); }); break;
+    case 'school': house(w - 6, 9, d - 6, P.col, 'win', g, 0, 0, -3); roof(w - 6, d - 6, 3.5, '#c0392b', g, 9).position.z = -3;
+      var ck = canvasTex(128, 128, function (gg) { gg.fillStyle = '#fff'; gg.beginPath(); gg.arc(64, 64, 60, 0, 7); gg.fill(); gg.strokeStyle = '#333'; gg.lineWidth = 6; gg.stroke(); gg.beginPath(); gg.moveTo(64, 64); gg.lineTo(64, 22); gg.moveTo(64, 64); gg.lineTo(92, 64); gg.stroke(); });
+      var cm = new THREE.Mesh(new THREE.CircleGeometry(1.2, 20), new THREE.MeshBasicMaterial({ map: ck })); cm.position.set(0, 10.6, fz - 5.9); g.add(cm);
+      door(g, L, 3, 3.6, '#7a4a24').position.z = fz - 5.9; sign(L, g, 7.6).position.z = fz - 5.85;
+      cyl(.12, .12, 9, '#cccccc', w / 2 - 4, 4.5, fz - 1, g, 6); bx(2.2, 1.4, .05, '#d23a3a', w / 2 - 2.8, 8.2, fz - 1, g);
+      bx(w, .1, 6, '#e6d6b8', 0, .05, fz - 3, g, false); break;
+    case 'church':
+      house(12, 9, d - 4, P.col, 'win', g, 0, 0, -2); roof(12, d - 4, 4.5, '#8a3a5a', g, 9).position.z = -2;
+      var tw = new THREE.Group(); tw.position.set(0, 0, fz - 4); g.add(tw);
+      house(5, 16, 5, '#f8ecdd', 'win', tw); mesh(new THREE.ConeGeometry(3.6, 8, 4), '#8a3a5a', 0, 20, 0, tw).rotation.y = Math.PI / 4;
+      bx(.35, 3, .35, '#d6ad45', 0, 25.4, 0, tw); bx(1.8, .35, .35, '#d6ad45', 0, 25.8, 0, tw);
+      door(g, L, 2.4, 3.6, '#6b3a2a').position.z = fz - 1.4; sign(L, g, 5.2, 7).position.z = fz - 1.35;
+      tree(g, -12, -2, 1.1); tree(g, 12, -4, 1.2); break;
+    case 'farm':
+      var br = new THREE.Group(); br.position.set(-8, 0, -2); g.add(br);
+      house(13, 7, 11, '#c8423a', 'win', br); roof(13, 11, 4.5, '#6b3a2a', br, 7); bx(4, 4.5, .3, '#ffffff', 0, 2.25, 5.6, br);
+      sign(L, g, 3.2, 7).position.set(7, 3.2, fz - 6.8);
+      bx(9, .3, 7, '#8a6a3a', 9, .15, -3, g, false); for (var r2 = 0; r2 < 4; r2++) bx(8.5, .4, .6, '#5aa04a', 9, .45, -6 + r2 * 2, g);
+      for (var f2 = -18; f2 <= 18; f2 += 3) bx(.25, 1.3, .25, '#f4f0e6', f2, .65, fz - 1, g);
+      bx(37, .2, .15, '#f4f0e6', 0, 1.1, fz - 1, g);
+      [[-14, -12], [-4, -14], [10, -12]].forEach(function (p) { var cw = new THREE.Group(); cw.position.set(p[0], 0, p[1]); g.add(cw); bx(1.2, 1.1, 2.2, '#ffffff', 0, 1.3, 0, cw); bx(.5, .5, .4, '#222', .3, 1.5, .4, cw); bx(.8, .8, .8, '#ffffff', 0, 1.7, 1.3, cw); [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(function (q) { bx(.25, .8, .25, '#ffffff', q[0] * .4, .4, q[1] * .8, cw); }); });
+      break;
+    case 'station':
+      house(w - 10, 7, 8, P.col, 'win', g, 0, 0, -4); bx(w, .5, 10, '#2f8f7a', 0, 7.2, 0, g);
+      for (var c3 = -2; c3 <= 2; c3++) cyl(.25, .25, 7, '#2f8f7a', c3 * 9, 3.5, 4.2, g, 6);
+      bx(w, .8, 5, '#d8d2c6', 0, .4, -8, g); door(g, L, 4, 3.4, '#5a7a8a').position.z = 0.1; sign(L, g, 5.6, 14).position.z = 0.15 + 0;
+      var tr = new THREE.Group(); tr.position.set(4, 0, -28.5); g.add(tr);
+      bx(30, 3.2, 3, '#f4f4f4', 0, 2.4, 0, tr); bx(30, .9, 3.05, '#d23a3a', 0, 1.6, 0, tr); bx(26, 1, 3.1, '#5a8ab0', 0, 3.1, 0, tr);
+      break;
+    case 'airport':
+      house(34, 9, d, P.col, 'office', g);
+      var at = new THREE.Group(); at.position.set(14, 0, -4); g.add(at); cyl(1.4, 1.8, 18, '#e8eef6', 0, 9, 0, at); cyl(3, 2.4, 3, '#5aa0b8', 0, 19.5, 0, at); cyl(3.2, 3.2, .5, '#2a6fb0', 0, 21.2, 0, at);
+      var pl = new THREE.Group(); pl.position.set(-4, 0, -26); pl.rotation.y = Math.PI / 2; g.add(pl);
+      var fu = cyl(1.4, 1.4, 18, '#f4f8fc', 0, 3, 0, pl, 14); fu.rotation.x = Math.PI / 2; var no = mesh(new THREE.SphereGeometry(1.4, 14, 10), '#f4f8fc', 0, 3, 9, pl);
+      bx(20, .4, 3.4, '#cfe0f0', 0, 3, 0, pl); bx(7, .3, 2, '#cfe0f0', 0, 3.6, -8, pl); bx(.3, 3, 2.2, '#2a6fb0', 0, 5, -8, pl);
+      [-5, 5].forEach(function (x) { cyl(.7, .7, 2.6, '#9aa8b8', x, 2.3, .6, pl, 10).rotation.x = Math.PI / 2; });
+      door(g, L, 5, 3.6, '#8ab8d8'); sign(L, g, 7.2, 10).position.z = L.d / 2 + .08;
+      break;
+    case 'space':
+      house(16, 8, d - 4, P.col, 'office', g, -10, 0, -2);
+      var rk = new THREE.Group(); rk.position.set(10, 0, -4); g.add(rk);
+      cyl(1.8, 1.8, 22, '#ffffff', 0, 13, 0, rk, 16); mesh(new THREE.ConeGeometry(1.8, 5, 16), '#d23a3a', 0, 26.5, 0, rk);
+      [0, 1, 2, 3].forEach(function (k) { var fn = bx(.3, 4, 2.6, '#d23a3a', 0, 3.5, 0, rk); fn.position.x = Math.cos(k * Math.PI / 2) * 2; fn.position.z = Math.sin(k * Math.PI / 2) * 2; fn.rotation.y = -k * Math.PI / 2; });
+      cyl(2, 2.4, 2, '#555', 0, 1, 0, rk); bx(1, 24, 1, '#9aa8b8', 4, 12, 0, rk);
+      var dr2 = door(g, L, 3, 3.4, '#5a7a9a'); dr2.position.x = -10; dr2.position.z = fz - 3.9; var sg2 = sign(L, g, 6.4, 12); sg2.position.x = -10; sg2.position.z = fz - 3.85; break;
+    case 'park':
+      bx(w, .2, d, '#8fd46a', 0, .1, 0, g, false);
+      var pond = new THREE.Mesh(new THREE.CircleGeometry(5, 24), new THREE.MeshLambertMaterial({ color: '#6ab8e8' })); pond.rotation.x = -Math.PI / 2; pond.position.set(-8, .25, -1); g.add(pond);
+      [[-17, -5], [-14, 5], [2, -6], [9, 4], [16, -4], [14, 6], [-2, 5]].forEach(function (p, k) { tree(g, p[0], p[1], 1 + (k % 3) * .2, k % 2 ? '#5aa84a' : '#3f8a3f'); });
+      bx(4, .5, 1.2, '#a06a3a', 4, .8, 3, g); bx(4, 1, .2, '#a06a3a', 4, 1.3, 2.5, g);
+      var arch = new THREE.Group(); arch.position.set(0, 0, fz - .6); g.add(arch); cyl(.25, .25, 5, '#7a5a3a', -3, 2.5, 0, arch, 6); cyl(.25, .25, 5, '#7a5a3a', 3, 2.5, 0, arch, 6);
+      sign(L, g, 4.6, 7.5).position.z = fz - .4; break;
+    case 'site':
+      bx(w, .2, d, '#c8a46a', 0, .1, 0, g, false);
+      for (var c4 = -5; c4 <= 5; c4 += 2.5) mesh(new THREE.ConeGeometry(.4, 1, 8), '#f08a2c', c4, .5, fz - .6, g);
+      var cr = new THREE.Group(); cr.position.set(-3, 0, -3); g.add(cr); bx(1, 18, 1, '#f6c623', 0, 9, 0, cr); bx(16, .8, .8, '#f6c623', 4, 18, 0, cr); bx(.1, 8, .1, '#333', 10, 14, 0, cr); bx(1.6, 1, 1.6, '#8a8a8a', 10, 9.6, 0, cr);
+      bx(4, 1.6, 3, '#9a7a4a', 3, .8, -2, g); bx(2.4, 2.4, 2.4, '#d0a040', 3, 1.2, 1.8, g);
+      sign(L, g, 2.6, 9).position.z = fz + .1; break;
+    case 'taxi':
+      bx(w, .1, d, '#bcbcbc', 0, .05, 0, g, false); car(g, -3, -1, 0, '#f3c623', 'taxi'); car(g, 1.5, -1, 0, '#f3c623', 'taxi');
+      cyl(.12, .12, 4, '#555', 4.5, 2, fz - 1, g, 6); var ts = sign(L, g, 4.2, 5); ts.position.set(4.5, 4.2, fz - .9); break;
+  }
+}
+
+function buildWorld() {
+  var w = WD = { spin: [], boxes: [], workers: [], hl: [] };
+  var R = rng(11);
+  var sc = w.scene = new THREE.Scene(); sc.background = new THREE.Color('#bfe3f7'); sc.fog = new THREE.Fog('#bfe3f7', 140, 420);
+  var ren = w.ren = new THREE.WebGLRenderer({ antialias: true }); ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  ren.shadowMap.enabled = true; ren.shadowMap.type = THREE.PCFSoftShadowMap;
+  w.cam = new THREE.PerspectiveCamera(58, 1, .5, 900);
+  sc.add(new THREE.HemisphereLight('#ffffff', '#8ab07a', 1.6));
+  var sun = new THREE.DirectionalLight('#fff6e0', 2.0); sun.position.set(-120, 200, -60); sun.target.position.set(140, 0, 80);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); var sc2 = sun.shadow.camera; sc2.left = -220; sc2.right = 220; sc2.top = 200; sc2.bottom = -200; sc2.near = 10; sc2.far = 600; sun.shadow.bias = -0.0008;
+  sc.add(sun); sc.add(sun.target);
+  var city = w.city = new THREE.Group(); sc.add(city);
+  // Boden, Fluss, Gleise, Piste
+  var gr = mesh(new THREE.PlaneGeometry(1000, 800), '#9fd47c', 140, 0, 80, city); gr.rotation.x = -Math.PI / 2; gr.castShadow = false;
+  var rv = mesh(new THREE.PlaneGeometry(RIV[1] - RIV[0], 800), '#5fb3e6', (RIV[0] + RIV[1]) / 2, .04, 80, city); rv.rotation.x = -Math.PI / 2; rv.castShadow = false; w.river = rv;
+  [RIV[0] - 1, RIV[1] + 1].forEach(function (x) { var bk = mesh(new THREE.PlaneGeometry(2, 800), '#d9c79a', x, .03, 80, city); bk.rotation.x = -Math.PI / 2; bk.castShadow = false; });
+  bx(500, .3, 1.2, '#8a7a6a', 120, .15, 203, city, false); bx(500, .3, 1.2, '#8a7a6a', 120, .15, 207, city, false);
+  for (var s = -120; s < 360; s += 3) bx(.6, .2, 6, '#6a4a2a', s, .1, 205, city, false);
+  bx(14, .1, 200, '#5a5a5a', 345, .06, 80, city, false); for (var rz = -10; rz < 180; rz += 12) bx(.6, .12, 5, '#ffffff', 345, .1, rz, city, false);
+  // Häuserblöcke als Trottoir
+  for (var i = 0; i < GX.length - 1; i++) for (var j = 0; j < GZ.length - 1; j++) {
+    if (i === 3) continue;
+    bx(GX[i + 1] - GX[i] - 8, .16, GZ[j + 1] - GZ[j] - 8, '#e4e0d6', (GX[i] + GX[i + 1]) / 2, .08, (GZ[j] + GZ[j + 1]) / 2, city, false).receiveShadow = true;
+  }
+  // Strassen
+  var roadM = M('#5d6166'), dashM = M('#ffffff');
+  SEGS.forEach(function (s) {
+    var A = { x: GX[s.i], z: GZ[s.j] }, B = s.d === 'H' ? { x: GX[s.i + 1], z: GZ[s.j] } : { x: GX[s.i], z: GZ[s.j + 1] };
+    var len = Math.hypot(B.x - A.x, B.z - A.z), cx = (A.x + B.x) / 2, cz = (A.z + B.z) / 2;
+    if (s.bridge) {
+      var bw = RIV[1] - RIV[0] + 10;
+      var deck = bx(bw, .7, 10, '#b9b2a6', (RIV[0] + RIV[1]) / 2, .35, cz, city);
+      [-5, 5].forEach(function (o) { bx(bw, 1.1, .4, '#8a7a6a', (RIV[0] + RIV[1]) / 2, 1.25, cz + o, city); for (var p = RIV[0] - 4; p <= RIV[1] + 4; p += 3) bx(.4, 1.1, .4, '#8a7a6a', p, .9, cz + o, city); });
+      var r1 = bx(len - bw, .1, 8, roadM, 0, .06, cz, city, false); r1.receiveShadow = true;
+      r1.geometry = new THREE.BoxGeometry(RIV[0] - 5 - A.x, .1, 8); r1.position.x = (A.x + RIV[0] - 5) / 2;
+      var r2 = bx(B.x - RIV[1] - 5, .1, 8, roadM, (B.x + RIV[1] + 5) / 2, .06, cz, city, false); r2.receiveShadow = true;
+      return;
+    }
+    var r = s.d === 'H' ? bx(len, .1, 8, roadM, cx, .06, cz, city, false) : bx(8, .1, len, roadM, cx, .06, cz, city, false); r.receiveShadow = true;
+    for (var t = 8; t < len - 6; t += 5) {
+      var px = s.d === 'H' ? A.x + t : A.x, pz = s.d === 'H' ? A.z : A.z + t;
+      if (Math.hypot(px - RBX, pz - RBZ) < RB.r + 5) continue;
+      s.d === 'H' ? bx(2.2, .02, .3, dashM, px, .12, pz, city, false) : bx(.3, .02, 2.2, dashM, px, .12, pz, city, false);
+    }
+  });
+  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length; j++) if (!isRB(i, j)) bx(8, .1, 8, roadM, GX[i], .061, GZ[j], city, false);
+  // Kreisel
+  var ring = mesh(new THREE.RingGeometry(RB.r - 4, RB.r + 4, 40), roadM, RBX, .13, RBZ, city); ring.rotation.x = -Math.PI / 2; ring.castShadow = false;
+  var isl = cyl(RB.r - 4, RB.r - 4, .5, '#8fd46a', RBX, .3, RBZ, city, 30); isl.castShadow = false;
+  tree(city, RBX, RBZ, 1.2, '#3f8a3f'); [0, 1, 2, 3, 4, 5].forEach(function (k) { mesh(new THREE.SphereGeometry(.4, 8, 6), ['#e0368a', '#f6c623', '#ffffff'][k % 3], RBX + Math.cos(k) * 2.6, .7, RBZ + Math.sin(k) * 2.6, city); });
+  // Häuser und Orte
+  LOTS.forEach(function (L) {
+    var g = new THREE.Group(); g.position.set(L.x, 0, L.z); g.rotation.y = Math.atan2(L.fx, L.fz); city.add(g); L.g = g;
+    if (L.place) placeBuild(L, g);
+    else {
+      var hh = L.h; house(L.w - 1, hh, L.d - 1, L.wall, hh >= 14 ? 'office' : 'win', g);
+      if (L.roof === 'dach') roof(L.w - 1, L.d - 1, 3, ['#c0392b', '#8a4a2a', '#5a6a7a'][Math.floor(R() * 3)], g, hh);
+      else { bx(2.4, 1.6, 2.4, '#c8c8c8', (R() - .5) * 4, hh + .8, (R() - .5) * 4, g); }
+      bx(1.8, 2.8, .3, '#6b4a2f', 0, 1.4, L.d / 2 - .4, g);
+    }
+    var hgt = L.place ? 12 : L.h; w.boxes.push({ x0: L.x - (L.fx ? L.d : L.w) / 2, x1: L.x + (L.fx ? L.d : L.w) / 2, z0: L.z - (L.fz ? L.d : L.w) / 2, z1: L.z + (L.fz ? L.d : L.w) / 2, h: hgt });
+  });
+  // Bäume an den Nord–Süd-Strassen und am Fluss
+  for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length - 1; j++) {
+    if (i === 0 || i === GX.length - 1) continue;
+    for (var tz = GZ[j] + 9; tz < GZ[j + 1] - 6; tz += 9) [-5.6, 5.6].forEach(function (o) {
+      var x = GX[i] + o; if (x > RIV[0] - 3 && x < RIV[1] + 3) return; if (Math.hypot(x - RBX, tz - RBZ) < 14) return;
+      if (i === 3 && o > 0) return; if (i === 4 && o < 0) return;
+      tree(city, x, tz, .75, R() < .5 ? '#4f9a4a' : '#5fae52');
+    });
+  }
+  for (var q = -40; q < 210; q += 10) { tree(city, RIV[0] - 7, q + 3, .9); tree(city, RIV[1] + 7, q, .9); }
+  for (q = 0; q < 50; q++) { var ox = -90 + R() * 500, oz = -90 + R() * 360; if ((ox > -30 && ox < 310 && oz > -40 && oz < 200)) continue; tree(city, ox, oz, .8 + R() * .8); }
+  // Leute vor ihren Arbeitsorten
+  var byPlace = {}; JOBS.forEach(function (J) { (byPlace[J[2]] = byPlace[J[2]] || []).push(J); });
+  LOTS.forEach(function (L) {
+    if (!L.place || !byPlace[L.place]) return;
+    byPlace[L.place].forEach(function (J, k) {
+      var p = person(J[4]); var off = byPlace[L.place].length > 1 ? (k ? 1 : -1) * 3.4 : 3.2;
+      var lx = off, lz = L.d / 2 + 1.6;
+      if (L.place === 'park') { lx = k ? 6 : -4; lz = L.d / 2 - 3; }
+      if (L.place === 'space') lx = -6;
+      if (L.place === 'farm') { lx = 4; lz = L.d / 2 - 3; }
+      if (L.place === 'school') lz = L.d / 2 - 2;
+      if (L.place === 'church') lz = L.d / 2 - .5;
+      p.position.set(lx, 0, lz); L.g.add(p);
+      if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
+      if (J[0] === 'musician') bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
+      var lb = labelSprite(J[0]); lb.position.set(lx, 4.3, lz); L.g.add(lb);
+      w.workers.push({ job: J[0], place: L.place, p: p, lb: lb, ph: Math.random() * 6 });
+    });
+  });
+  // Die Eule
+  w.owl = owlMesh(); sc.add(w.owl);
+  // Markierungen (Start, Ziel)
+  w.marks = new THREE.Group(); sc.add(w.marks);
+  w.paths = new THREE.Group(); sc.add(w.paths);
+  w.clock = new THREE.Clock();
+  w.el = document.createElement('div'); w.el.className = 'ow';
+  w.el.appendChild(ren.domElement);
+  w.ro = new ResizeObserver(function () { resize(); }); w.ro.observe(w.el);
+  buildMini();
+}
+function resize() {
+  if (!WD) return; var r = WD.el.getBoundingClientRect(); if (!r.width || !r.height) return;
+  WD.ren.setSize(r.width, r.height, false); WD.ren.domElement.style.width = '100%'; WD.ren.domElement.style.height = '100%';
+  WD.cam.aspect = r.width / r.height; WD.cam.updateProjectionMatrix();
+}
+
+// ---------------------------------------------------------------------- Kleiner Stadtplan
+var MINI = { x0: -40, x1: 320, z0: -40, z1: 200 };
+function buildMini() {
+  var cv = document.createElement('canvas'); cv.width = 360; cv.height = 240; cv.className = 'mini'; WD.mini = cv;
+  var bg = document.createElement('canvas'); bg.width = 360; bg.height = 240; WD.miniBg = bg;
+  var g = bg.getContext('2d'), k = 1;
+  function X(x) { return (x - MINI.x0) * k; } function Zp(z) { return (z - MINI.z0) * k; }
+  g.fillStyle = '#cfe9b8'; g.fillRect(0, 0, 360, 240);
+  g.fillStyle = '#8cc8ee'; g.fillRect(X(RIV[0]), 0, RIV[1] - RIV[0], 240);
+  g.fillStyle = '#e8e2d2'; LOTS.forEach(function (L) { var w = L.fx ? L.d : L.w, d = L.fz ? L.d : L.w; g.fillStyle = L.place ? '#f0c888' : '#ddd6c6'; g.fillRect(X(L.x - w / 2), Zp(L.z - d / 2), w, d); });
+  g.strokeStyle = '#6a6e74'; g.lineWidth = 6; g.lineCap = 'square';
+  SEGS.forEach(function (s) { var a = NODES[s.a], b = NODES[s.b]; g.beginPath(); g.moveTo(X(s.d === 'H' ? GX[s.i] : a.x), Zp(s.d === 'H' ? a.z : GZ[s.j])); g.lineTo(X(s.d === 'H' ? GX[s.i + 1] : b.x), Zp(s.d === 'H' ? b.z : GZ[s.j + 1])); g.stroke(); });
+  g.beginPath(); g.arc(X(RBX), Zp(RBZ), RB.r, 0, 7); g.stroke(); g.fillStyle = '#8fd46a'; g.beginPath(); g.arc(X(RBX), Zp(RBZ), RB.r - 3, 0, 7); g.fill();
+  g.fillStyle = '#1f2421'; g.font = 'bold 13px Arial'; g.fillText('N ⬆', 8, 18);
+  WD.miniX = X; WD.miniZ = Zp;
+}
+function drawMini() {
+  var cv = WD.mini, g = cv.getContext('2d'); g.drawImage(WD.miniBg, 0, 0);
+  function line(list, col, wd) {
+    if (!list || list.length < 2) return; g.strokeStyle = col; g.lineWidth = wd; g.lineJoin = 'round'; g.beginPath();
+    list.forEach(function (id, k) { var n = NODES[id]; if (k) { var e = EMAP[list[k - 1] + '>' + id]; if (e && e.k === 'A') { for (var t = .25; t < 1; t += .25) { var p = epos(e, t); g.lineTo(WD.miniX(p.x), WD.miniZ(p.z)); } } g.lineTo(WD.miniX(n.x), WD.miniZ(n.z)); } else g.moveTo(WD.miniX(n.x), WD.miniZ(n.z)); });
+    g.stroke();
+  }
+  if (WD.miniPaths) { line(WD.miniPaths.sol, '#e0362c', 5); line(WD.miniPaths.kid, '#2f6fd0', 3); }
+  if (WD.miniStar) { g.fillStyle = '#d6ad45'; g.font = '20px Arial'; g.textAlign = 'center'; g.fillText('⭐', WD.miniX(WD.miniStar.x), WD.miniZ(WD.miniStar.z) + 7); g.textAlign = 'left'; }
+  var o = WD.owl.position, h = OW.hd, x = WD.miniX(o.x), z = WD.miniZ(o.z);
+  g.save(); g.translate(x, z); g.rotate(h); g.fillStyle = '#e0362c'; g.strokeStyle = '#fff'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(9, 0); g.lineTo(-6, -6); g.lineTo(-3, 0); g.lineTo(-6, 6); g.closePath(); g.fill(); g.stroke(); g.restore();
+}
+
+// ---------------------------------------------------------------------- Bewegung der Eule
+var SPEED = 15, OW = { node: null, hd: 0, mv: null, tr: null, trace: [], held: false, q: null, lock: true, bump: 0, onArrive: null, onBump: null };
+function owlReset(id, hd) {
+  OW.node = id; OW.hd = hd; OW.mv = OW.tr = OW.q = null; OW.trace = [id]; OW.lock = false; OW.bump = 0;
+  var n = NODES[id]; WD.owl.position.set(n.x, 0, n.z); WD.owl.rotation.y = Math.PI / 2 - hd; CAM.snap = true;
+}
+function owlCmd(c) {
+  if (OW.lock) return;
+  if (OW.mv || OW.tr) { OW.q = c; return; }
+  if (c === 'L' || c === 'R' || c === 'B') { OW.tr = { a: OW.hd, b: OW.hd + (c === 'R' ? Math.PI / 2 : c === 'L' ? -Math.PI / 2 : Math.PI), t: 0 }; tone(c === 'B' ? 380 : 470, .05, 'sine', .08); return; }
+  if (c === 'U') {
+    var e = straightEdge(OW.node, OW.hd);
+    if (!e && ringEntry(OW.node, OW.hd)) e = ringArc(OW.node);
+    if (!e) { OW.bump = 1; if (OW.onBump) OW.onBump(); tone(180, .12, 'triangle', .1); return; }
+    OW.mv = { e: e, t: 0 };
+  }
+}
+function owlStep(dt) {
+  var o = WD.owl;
+  if (OW.tr) {
+    OW.tr.t = Math.min(1, OW.tr.t + dt * 4.5); var k = OW.tr.t, ease = k * k * (3 - 2 * k);
+    OW.hd = OW.tr.a + (OW.tr.b - OW.tr.a) * ease;
+    if (k >= 1) { OW.hd = Math.atan2(Math.sin(OW.tr.b), Math.cos(OW.tr.b)); OW.tr = null; if (OW.onArrive) OW.onArrive(OW.node); next(); }
+  } else if (OW.mv) {
+    var e = OW.mv.e; OW.mv.t = Math.min(1, OW.mv.t + dt * SPEED / e.len);
+    var p = epos(e, OW.mv.t); o.position.x = p.x; o.position.z = p.z; OW.hd = p.h;
+    o.position.y = e.bridge ? .7 : e.k === 'A' ? .1 : 0;
+    o.userData.body.rotation.z = Math.sin(performance.now() / 90) * .12; o.userData.body.position.y = Math.abs(Math.sin(performance.now() / 90)) * .15;
+    if (OW.mv.t >= 1) {
+      OW.node = e.b; OW.hd = e.h1; OW.mv = null; OW.trace.push(OW.node); o.userData.body.rotation.z = 0; o.userData.body.position.y = 0;
+      var n = NODES[OW.node];
+      if (OW.onArrive) OW.onArrive(OW.node);
+      if (OW.q) next();
+      else if (OW.held && n.t === 'S' && straightEdge(OW.node, OW.hd)) { OW.mv = { e: straightEdge(OW.node, OW.hd), t: 0 }; }
+    }
+  } else if (OW.bump) {
+    OW.bump = Math.max(0, OW.bump - dt * 3); o.userData.body.position.y = Math.sin(OW.bump * Math.PI) * .5;
+  }
+  o.rotation.y = Math.PI / 2 - OW.hd;
+  function next() { var c = OW.q; OW.q = null; if (c) owlCmd(c); else if (OW.held) owlCmd('U'); }
+}
+var CAM = { mode: 'follow', snap: true, pos: null, look: null, view: null };
+function camStep(dt) {
+  var c = WD.cam, o = WD.owl.position, fx = Math.cos(OW.hd), fz = Math.sin(OW.hd), tp, tl;
+  if (CAM.mode === 'view' && CAM.view) { tp = CAM.view.pos; tl = CAM.view.look; }
+  else if (CAM.mode === 'top') { tp = new THREE.Vector3(o.x, 95, o.z + 38); tl = new THREE.Vector3(o.x, 0, o.z); }
+  else {
+    var dist = 13, H = 7.5;
+    for (; dist > 3; dist -= .5) { var px = o.x - fx * dist, pz = o.z - fz * dist; if (!WD.boxes.some(function (b) { return px > b.x0 - .8 && px < b.x1 + .8 && pz > b.z0 - .8 && pz < b.z1 + .8 && H < b.h + 6; })) break; }
+    var ahead = 6; if (dist < 8) { H = 7.5 + (8 - dist) * 2.4; ahead = 2.5; }
+    tp = new THREE.Vector3(o.x - fx * dist, H, o.z - fz * dist); tl = new THREE.Vector3(o.x + fx * ahead, 1.2, o.z + fz * ahead);
+  }
+  if (CAM.snap || !CAM.pos) { CAM.pos = tp.clone(); CAM.look = tl.clone(); CAM.snap = false; }
+  var k = 1 - Math.exp(-dt * (CAM.mode === 'follow' ? 5 : 2.2));
+  CAM.pos.lerp(tp, k); CAM.look.lerp(tl, k); c.position.copy(CAM.pos); c.lookAt(CAM.look);
+}
+var LOOP = { on: false, last: 0 };
+function loop() {
+  if (!WD || !document.body.contains(WD.el)) { LOOP.on = false; return; }
+  requestAnimationFrame(loop);
+  var dt = Math.min(.05, WD.clock.getDelta());
+  owlStep(dt); camStep(dt);
+  var t = performance.now() / 1000;
+  WD.spin.forEach(function (s) { s.rotation.y = t * 1.5; });
+  WD.workers.forEach(function (w) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; });
+  WD.hl.forEach(function (m) { m.position.y = m.userData.y0 + Math.sin(t * 3) * .5; if (m.userData.spin) m.rotation.y = t * 2; });
+  if (WD.grow) { var gr = WD.grow; gr.t = Math.min(1, gr.t + dt / gr.dur); gr.list.forEach(function (m) { m.geometry.setDrawRange(0, Math.floor(m.geometry.index.count * gr.t / 6) * 6); }); if (gr.t >= 1) WD.grow = null; }
+  if (WD.mini.isConnected && (++LOOP.last % 3 === 0)) drawMini();
+  WD.ren.render(WD.scene, WD.cam);
+}
+function startLoop() { if (!LOOP.on) { LOOP.on = true; WD.clock.getDelta(); requestAnimationFrame(loop); } }
+
+// Tastatur (Pfeile, WASD, Leertaste = Ziel)
+var KEYH = null;
+window.addEventListener('keydown', function (e) {
+  if (!KEYH) return; var k = e.key, c = null;
+  if (k === 'ArrowUp' || k === 'w' || k === 'W') c = 'U'; else if (k === 'ArrowLeft' || k === 'a' || k === 'A') c = 'L';
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') c = 'R'; else if (k === 'ArrowDown' || k === 's' || k === 'S') c = 'B';
+  else if (k === ' ' || k === 'Enter') c = 'M';
+  if (!c) return; e.preventDefault();
+  if (c === 'U') { if (e.repeat) return; OW.held = true; }
+  if (e.repeat) return;
+  KEYH(c);
+});
+window.addEventListener('keyup', function (e) { if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') OW.held = false; });
+window.addEventListener('blur', function () { OW.held = false; });
+
+// ---------------------------------------------------------------------- Wege und Markierungen zeichnen
+function clearMarks() {
+  if (!WD) return;
+  [WD.marks, WD.paths].forEach(function (gp) { while (gp.children.length) { var m = gp.children.pop(); m.traverse(function (x) { if (x.geometry) x.geometry.dispose(); }); } });
+  WD.hl = []; WD.grow = null; WD.miniPaths = null; WD.miniStar = null;
+  WD.workers.forEach(function (w) { w.lb.visible = MODE_LABELS; });
+}
+var MODE_LABELS = true;
+function pts(list, y) {
+  var a = [];
+  list.forEach(function (id, k) {
+    var n = NODES[id];
+    if (k) { var e = EMAP[list[k - 1] + '>' + id]; if (e && e.k === 'A') for (var t = .2; t < 1; t += .2) { var p = epos(e, t); a.push(new THREE.Vector3(p.x, y, p.z)); } }
+    var yy = y + (n.t === 'R' ? .1 : 0); a.push(new THREE.Vector3(n.x, yy, n.z));
+  });
+  var out = []; a.forEach(function (p) { if (!out.length || out[out.length - 1].distanceTo(p) > .3) out.push(p); }); return out;
+}
+function tube(list, col, y, r) {
+  var p = pts(list, y); if (p.length < 2) return null;
+  var cp = new THREE.CurvePath(), L = 0;
+  for (var k = 0; k < p.length - 1; k++) { cp.add(new THREE.LineCurve3(p[k], p[k + 1])); L += p[k].distanceTo(p[k + 1]); }
+  var m = new THREE.Mesh(new THREE.TubeGeometry(cp, Math.max(8, Math.round(L / .8)), r, 7, false), new THREE.MeshBasicMaterial({ color: col, depthTest: false, transparent: true, opacity: .92 }));
+  m.renderOrder = col === '#2f6fd0' ? 9 : 8; WD.paths.add(m); return m;
+}
+function floatMark(x, z, y, emo, big) {
+  var s = emoSprite(emo, big ? 7 : 4.5); s.position.set(x, y, z); s.userData.y0 = y;
+  WD.marks.add(s); WD.hl.push(s); return s;
+}
+function ringMark(x, z, col) {
+  var m = new THREE.Mesh(new THREE.TorusGeometry(3, .35, 8, 30), new THREE.MeshBasicMaterial({ color: col })); m.rotation.x = Math.PI / 2; m.position.set(x, .6, z); m.userData.y0 = .9; WD.marks.add(m); WD.hl.push(m); return m;
+}
+function viewFit(lists) {
+  var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  lists.forEach(function (l) { (l || []).forEach(function (id) { var n = NODES[id]; x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); z0 = Math.min(z0, n.z); z1 = Math.max(z1, n.z); }); });
+  var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, asp = WD.cam.aspect || 1.5, ext = Math.max((x1 - x0 + 50) / asp, z1 - z0 + 60);
+  var H = Math.max(60, ext * .95);
+  CAM.view = { pos: new THREE.Vector3(cx - H * .06, H * 1.05, cz + H * .2), look: new THREE.Vector3(cx - H * .06, 0, cz + 2) }; CAM.mode = 'view';
+}
+
+// ---------------------------------------------------------------------- Bildschirm im Spiel
+var UI = null;
+function ui(api, lv) {
+  var box = document.createElement('div'); box.className = 'owbox';
+  box.innerHTML = '<div class="card" id="owCard"></div>' +
+    '<div class="tools"><button class="pill" data-k="top" title="Von oben schauen">🗺 Karte</button><button class="pill" data-k="help" title="Little Helper">💡 Helper</button></div>' +
+    '<div class="pad"><span></span><button data-c="U" aria-label="geradeaus">⬆</button><span></span><button data-c="L" aria-label="links drehen">⬅</button><button data-c="B" aria-label="umdrehen">⬇</button><button data-c="R" aria-label="rechts drehen">➡</button></div>' +
+    '<button class="mark" data-c="M">📍 Hier ist das Ziel!</button><div class="near" id="owNear"></div><div class="pop" id="owPop" hidden></div><div class="toast" id="owToast"></div>';
+  box.insertBefore(WD.el, box.firstChild); box.appendChild(WD.mini); WD.mini.classList.toggle('aus', lv.mini === false);
+  api.stage.appendChild(box);
+  var U = UI = { box: box, card: box.querySelector('#owCard'), near: box.querySelector('#owNear'), pop: box.querySelector('#owPop'), toast: box.querySelector('#owToast') };
+  Array.prototype.forEach.call(box.querySelectorAll('[data-c]'), function (b) {
+    var c = b.dataset.c;
+    b.addEventListener('pointerdown', function (e) { e.preventDefault(); if (c === 'U') OW.held = true; if (KEYH) KEYH(c); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, function () { if (c === 'U') OW.held = false; }); });
+  });
+  box.querySelector('[data-k=top]').onclick = function (e) { if (CAM.mode === 'view') return; CAM.mode = CAM.mode === 'top' ? 'follow' : 'top'; e.currentTarget.classList.toggle('on', CAM.mode === 'top'); };
+  box.querySelector('[data-k=help]').onclick = function () { helper(); };
+  resize(); startLoop();
+  try { window.focus(); } catch (e) {}
+  return U;
+}
+function toast(t, ms) { if (!UI) return; UI.toast.innerHTML = t; UI.toast.classList.add('on'); clearTimeout(UI.tt); UI.tt = setTimeout(function () { if (UI) UI.toast.classList.remove('on'); }, ms || 2200); }
+var HELP = [
+  ['⬅', 'turn left', 'links abbiegen'], ['➡', 'turn right', 'rechts abbiegen'], ['⬆', 'walk straight on', 'geradeaus gehen'],
+  ['✚', 'at the first / second crossing', 'bei der ersten / zweiten Kreuzung'], ['🔚', 'walk to the end of the street', 'bis zum Ende der Strasse gehen'],
+  ['🌉', 'cross the bridge', 'über die Brücke gehen'], ['⭕', 'take the first / second / third exit', 'im Kreisel die 1. / 2. / 3. Ausfahrt nehmen'],
+  ['🏠', 'walk past the …', 'am … vorbeigehen'], ['👀', 'on your left you can see the …', 'links siehst du …'],
+  ['✋', 'stop at the second building on your right', 'beim zweiten Gebäude rechts anhalten']
+];
+function helper() {
+  var o = '<div class="pp"><h3>Little Helper ✦</h3><table>';
+  HELP.forEach(function (x) { o += '<tr><td class="ic">' + x[0] + '</td><td><b data-say="' + h(x[1]) + '">' + h(x[1]) + '</b></td><td>' + x[2] + '</td></tr>'; });
+  o += '</table><p class="kl">Tasten: ⬆ gehen (gedrückt halten = weiterlaufen) · ⬅ ➡ drehen · ⬇ umdrehen · Leertaste = Ziel markieren<br>Am Anfang stehst du mit dem Rücken zum Gebäude.</p><button class="go" data-x="zu">OK</button></div>';
+  popup(o, function (b) { return b.dataset.x === 'zu'; });
+}
+function popup(html, onClick) {
+  var p = UI.pop; p.innerHTML = html; p.hidden = false; var was = OW.lock; OW.lock = true;
+  p.onclick = function (e) {
+    var s = e.target.closest('[data-say]'); if (s) { say(s.dataset.say); return; }
+    var b = e.target.closest('button'); if (!b) return;
+    if (onClick(b) !== false) { p.hidden = true; p.innerHTML = ''; OW.lock = was; }
+  };
+}
+function nearInfo(id, speak) {
+  var n = NODES[id]; if (!UI) return;
+  if (n.t !== 'S' || !n.lots.length) {
+    var tr = OW.trace, rc = 0; for (var q = tr.length - 1; q > 0 && NODES[tr[q - 1]].t === 'R' && NODES[tr[q]].t === 'R'; q--) rc++;
+    UI.near.innerHTML = n.t === 'R' ? (rc ? '⭕ ' + ORD[rc - 1] + ' exit ➡' : '⭕ roundabout') : n.t === 'J' ? '✚ crossing' : '';
+    UI.near.classList.toggle('on', !!UI.near.innerHTML); return;
+  }
+  var parts = [], words = [], AR = { L: '⬅', R: '➡', S: '⬆', B: '⬇' };
+  n.lots.forEach(function (lt) {
+    var d = angd(Math.atan2(lt.z - n.z, lt.x - n.x), OW.hd), w = Math.abs(d) < Math.PI / 4 ? 'S' : Math.abs(d) > 3 * Math.PI / 4 ? 'B' : d > 0 ? 'R' : 'L';
+    parts.push(w === 'R' ? h(lotArt(lt)) + ' ' + AR[w] : AR[w] + ' ' + h(lotArt(lt))); if (lt.place) words.push('the ' + PLACES[lt.place].en);
+  });
+  UI.near.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+  UI.near.classList.add('on');
+  if (speak && words.length) say(words.join(' and '));
+}
+
+// Ziel markieren: Welches Gebäude? (links / rechts)
+function askMark(cb) {
+  var n = NODES[OW.node];
+  if (OW.mv || OW.tr) return;
+  if (n.t !== 'S' || !n.lots.length) { toast('Stell dich vor ein Gebäude, nicht auf eine Kreuzung.'); bad(); return; }
+  // Steht die Eule mit dem Gesicht zu einem Gebäude? Dann ist es dieses.
+  var facing = n.lots.filter(function (L) { return Math.abs(angd(Math.atan2(L.z - n.z, L.x - n.x), OW.hd)) < .8; });
+  if (facing.length === 1 || n.lots.length === 1) { cb(facing[0] || n.lots[0]); return; }
+  var hd = OW.hd;
+  // Richtung entlang der Strasse für links/rechts
+  var segE = n.out[0], along = segE.h0; if (Math.abs(angd(along, hd)) > Math.PI / 2) along += Math.PI;
+  var o = '<div class="pp"><h3>Welches Gebäude ist dein Ziel?</h3><div class="row">';
+  var bySide = { L: [], R: [] }; n.lots.forEach(function (L) { bySide[sideOf(L, n.x, n.z, along)].push(L); });
+  ['L', 'R'].forEach(function (sd) { bySide[sd].forEach(function (L) { o += '<button class="go ' + (sd === 'L' ? 'alt' : 'sun') + '" data-l="' + L.id + '">' + (sd === 'L' ? '⬅ links<br>' : 'rechts ➡<br>') + '<small>' + h(lotArt(L)) + '</small></button>'; }); });
+  o += '</div><button class="pill" data-x="no" style="margin-top:12px">Doch nicht</button></div>';
+  popup(o, function (b) { if (b.dataset.l) { var L = LOTS.filter(function (x) { return x.id === b.dataset.l; })[0]; setTimeout(function () { cb(L); }, 0); } return true; });
+}
+
+// ---------------------------------------------------------------------- Das Spiel
+var GAME = { run: 0 };
+G.play = function (lv, api, li) {
+  var run = ++GAME.run;
+  api.msg('<span class="em">🦉</span> Die Stadt wird gebaut …');
+  loadThree(function (err) {
+    if (run !== GAME.run) return;
+    if (err) { api.msg('<span class="em">📡</span> Die 3D-Stadt braucht Internet. Bitte Seite neu laden.'); return; }
+    try { document.fonts && document.fonts.load('40px "Patrick Hand"'); } catch (e) {}
+    var go = function () { if (run !== GAME.run) return; if (!WD) buildWorld(); play(lv, api, li, run); };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(go, 30); }); else go();
+  });
+};
+function play(lv, api, li, run) {
+  clearMarks(); CAM.mode = 'follow'; CAM.view = null;
+  MODE_LABELS = lv.typ !== 'job'; WD.workers.forEach(function (w) { w.lb.visible = MODE_LABELS; });
+  var U = ui(api, lv), N = G.n, k = 0, task = null, used = {};
+  var alive = function () { return run === GAME.run && document.body.contains(U.box); };
+  OW.onBump = function () {
+    if (ringEntry(OW.node, OW.hd + Math.PI / 2) || NODES[OW.node].t === 'R') toast('Im Kreisel geht es rechts herum ↺ – drück ⬆.');
+    else toast('Hier geht es nicht weiter. Dreh dich mit ⬅ oder ➡.');
+  };
+  var lastSpoken = null;
+  OW.onArrive = function (id) { var sp = lv.typ === 'frei' && !OW.mv && lastSpoken !== id; if (sp) lastSpoken = id; nearInfo(id, sp); };
+  KEYH = function (c) { if (!alive()) { KEYH = null; return; } if (c === 'M') { if (lv.typ !== 'frei' && task && !task.done) askMark(check); return; } owlCmd(c); };
+
+  if (lv.typ === 'frei') {
+    var L0 = LOTS.filter(function (L) { return L.place === 'school'; })[0];
+    owlReset(L0.stop, Math.atan2(L0.fz, L0.fx)); nearInfo(L0.stop);
+    U.box.querySelector('.mark').hidden = true;
+    U.card.innerHTML = '<div class="hd">🚶 Free walk</div><p class="de">Spaziere frei durch die Stadt. Bleib vor einem Gebäude stehen: Du siehst und hörst seinen englischen Namen.</p>' +
+      '<p class="de">Wer arbeitet wo? Schau dir die Leute vor den Gebäuden an.</p>';
+    api.msg('');
+    return;
+  }
+
+  function nextTask() {
+    if (!alive()) return;
+    clearMarks(); CAM.mode = 'follow'; CAM.view = null; U.box.querySelector('[data-k=top]').classList.remove('on');
+    U.box.classList.remove('review');
+    if (lv.typ === 'weg') {
+      var r = genRoute(lv); if (!r) { api.msg('Kein Weg gefunden 🤔'); return; }
+      task = { typ: 'weg', r: r, done: false, heard: 0 };
+      owlReset(r.start.stop, r.face);
+      task.flag = [r.start.x, r.start.z];
+    } else {
+      var pool = lv.typ === 'job' ? JOBS.filter(function (J) { return !used[J[0]]; }) : Object.keys(PLACES).filter(function (p) { return !used[p]; });
+      var pick1 = pool[Math.floor(Math.random() * pool.length)], place = lv.typ === 'job' ? pick1[2] : pick1;
+      used[lv.typ === 'job' ? pick1[0] : pick1] = 1;
+      var sl = LOTS.filter(function (L) { return L.place && L.place !== place && isBuilding(L) && NODES[L.stop].t === 'S'; });
+      var s0 = sl[Math.floor(Math.random() * sl.length)];
+      task = { typ: lv.typ, place: place, job: lv.typ === 'job' ? pick1 : null, start: s0, done: false };
+      owlReset(s0.stop, Math.atan2(s0.fz, s0.fx));
+    }
+    G.task = task; // für Tests
+    nearInfo(OW.node);
+    showTask();
+    var sl0 = task.typ === 'weg' ? task.r.start : task.start;
+    setTimeout(function () { if (alive()) toast('🦉 Du stehst vor «' + h(lotArt(sl0)) + '»,<br>mit dem Rücken zum Gebäude.', 3200); }, 600);
+    api.msg('<small>Aufgabe ' + (k + 1) + ' von ' + N + '</small>');
+  }
+  function showTask() {
+    var o = '';
+    if (task.typ === 'weg') {
+      var st = task.r.steps, hide = lv.listen && !task.show;
+      o = '<div class="hd">🧭 Route ' + (k + 1) + ' <small>of ' + N + '</small></div>';
+      if (hide) o += '<p class="de">🎧 Hör gut zu und lauf den Weg. Du kannst so oft hören, wie du willst.</p>';
+      else { o += '<ol class="steps">'; st.forEach(function (s, i) { o += '<li data-i="' + i + '">' + h(s.text) + '</li>'; }); o += '<li class="q">Now you are at the …?</li></ol>'; }
+      o += '<div class="row"><button class="go sun" data-x="say">🔊 ' + (hide ? 'Anhören' : 'Vorlesen') + '</button>' + (lv.listen ? '<button class="go alt" data-x="show">' + (task.show ? 'Text verstecken' : '📄 Text zeigen') + '</button>' : '') + '</div>';
+      o += '<p class="de">Lauf mit den Pfeiltasten. Am Ziel: <b>📍</b> drücken (oder Leertaste).</p>';
+    } else if (task.typ === 'job') {
+      var J = task.job;
+      o = '<div class="hd">' + J[1] + ' Where does the <b>' + h(J[0]) + '</b> work?</div><p class="de">Finde den Ort, wo «' + h(J[0]) + '» arbeitet, und markiere ihn mit 📍.</p><div class="row"><button class="go sun" data-x="say">🔊 Anhören</button></div>';
+    } else {
+      var P = PLACES[task.place];
+      o = '<div class="hd">' + P.emo + ' Walk to the <b>' + h(P.en) + '</b>.</div><p class="de">Lies die Schilder. Lauf zum Ort und markiere ihn mit 📍.</p><div class="row"><button class="go sun" data-x="say">🔊 Anhören</button><button class="go alt" data-x="tipp">💡 Tipp</button></div>';
+    }
+    U.card.innerHTML = o;
+    U.card.onclick = function (e) {
+      var b = e.target.closest('[data-x]'), li2 = e.target.closest('li[data-i]');
+      if (li2 && task.typ === 'weg') { say(task.r.steps[+li2.dataset.i].text); return; }
+      if (!b) return;
+      if (b.dataset.x === 'say') sayTask();
+      if (b.dataset.x === 'show') { task.show = !task.show; showTask(); }
+      if (b.dataset.x === 'tipp') { var T = LOTS.filter(function (L) { return L.place === task.place; })[0]; WD.miniStar = { x: T.x, z: T.z }; WD.mini.classList.remove('aus'); toast('⭐ Schau auf den kleinen Plan unten rechts.'); }
+      if (b.dataset.x === 'next') { if (!alive()) return; var more = api.answer(task.ok, true); k++; if (more) nextTask(); else { U.card.innerHTML = '<div class="hd">🏁 Fertig!</div>'; OW.lock = true; } }
+      if (b.dataset.x === 'replay') replay();
+    };
+    if (task.typ === 'weg' && lv.listen && !task.heard) { task.heard = 1; setTimeout(function () { if (alive()) sayTask(); }, 500); }
+  }
+  function sayTask() {
+    if (task.typ === 'weg') { if (!say(task.r.steps.map(function (s) { return s.text; }).join(' ') + ' Where are you?', .8)) { task.show = true; showTask(); toast('Vorlesen geht auf diesem Gerät nicht – lies den Text.'); } }
+    else if (task.typ === 'job') say('Where does the ' + task.job[0] + ' work?');
+    else say('Walk to the ' + PLACES[task.place].en + '.');
+  }
+
+  function check(L) {
+    if (!alive() || task.done) return;
+    task.done = true; OW.lock = true; OW.held = false;
+    var ok, rv = { kid: OW.trace.slice() };
+    if (task.typ === 'weg') { ok = L === task.r.target; rv.sol = task.r.nodes; rv.T = task.r.target; }
+    else { ok = L.place === task.place; var T = LOTS.filter(function (x) { return x.place === task.place; })[0]; rv.T = T; var to = {}; to[T.stop] = 1; rv.sol = shortest(task.start.stop, to); }
+    task.ok = ok; if (ok) good(); else bad();
+    review(L, ok, rv);
+  }
+  function review(L, ok, rv) {
+    U.box.classList.add('review');
+    WD.workers.forEach(function (w) { w.lb.visible = true; });
+    var T = rv.T, P = PLACES[T.place], o = '';
+    var redM = tube(rv.sol, '#e0362c', 1, 1.1), blueM = tube(rv.kid, '#2f6fd0', 1.6, .6);
+    if (task.flag) floatMark(task.flag[0], task.flag[1], 16, '🚩');
+    WD.grow = { t: 0, dur: 2.2, list: [redM, blueM].filter(Boolean) }; WD.grow.list.forEach(function (m) { m.geometry.setDrawRange(0, 0); });
+    WD.miniPaths = { sol: rv.sol, kid: rv.kid }; WD.miniStar = { x: T.x, z: T.z };
+    floatMark(T.x, T.z, (T.place === 'hospital' ? 26 : T.place === 'space' ? 32 : 16), '⭐', true);
+    if (!ok) { ringMark(L.x + L.fx * (L.d / 2 + 2), L.z + L.fz * (L.d / 2 + 2), '#2f6fd0'); }
+    viewFit([rv.sol, rv.kid]);
+    if (task.typ === 'weg') {
+      var ex = explain(task.r, rv.kid, L);
+      o = '<div class="hd">' + (ok ? '🎉 Right! You are at the <b>' + h(P.en) + '</b>.' : '🤔 Not quite. The goal was the <b>' + h(P.en) + '</b>.') + '</div>';
+      o += '<p class="de">' + h(P.en) + ' = ' + h(P.de) + (ok ? '' : ' · Du warst bei: ' + h(lotArt(L))) + '</p>';
+      o += '<ol class="steps rv">'; task.r.steps.forEach(function (s, i) { var c = ex.step == null ? 'ok' : i < ex.step ? 'ok' : i === ex.step ? 'no' : ''; o += '<li data-i="' + i + '" class="' + c + '">' + h(s.text) + (i === ex.step ? '<div class="why">' + ex.why + '</div>' : '') + '</li>'; }); o += '</ol>';
+      if (!ok && ex.node) { var n = NODES[ex.node]; floatMark(n.x, n.z, 6, '❗'); ringMark(n.x, n.z, '#f6c623'); }
+    } else {
+      var J = task.job;
+      if (ok) o = '<div class="hd">🎉 Yes! ' + (J ? 'The <b>' + h(J[0]) + '</b> works at the <b>' + h(P.en) + '</b>.' : 'This is the <b>' + h(P.en) + '</b>.') + '</div>';
+      else o = '<div class="hd">🤔 This is ' + h(lotArt(L)) + '.</div><p class="de">' + (J ? 'The ' + h(J[0]) + ' (' + h(J[3]) + ') arbeitet hier: ' : 'Gesucht war ') + '<b>the ' + h(P.en) + '</b> ⭐</p>';
+      o += '<p class="de">' + h(P.en) + ' = ' + h(P.de) + (J ? ' · ' + h(J[0]) + ' = ' + h(J[3]) : '') + '</p>';
+      say(ok ? (J ? 'Yes! The ' + J[0] + ' works at the ' + P.en + '.' : 'Yes! This is the ' + P.en + '.') : 'This is ' + lotArt(L) + '. The ' + (J ? J[0] + ' works at the ' : '') + P.en + ' is here.');
+    }
+    o += '<p class="leg"><span class="r"></span> richtiger Weg &nbsp; <span class="b"></span> dein Weg</p>';
+    o += '<div class="row"><button class="go alt" data-x="replay">▶ Nochmal zeigen</button><button class="go sun" data-x="next">' + (k + 1 < N ? 'Weiter →' : 'Fertig ✓') + '</button></div>';
+    U.card.innerHTML = o; U.card.scrollTop = 0;
+    if (task.typ === 'weg' && ok) say('Right! You are at the ' + P.en + '.');
+  }
+  function replay() { if (!WD.paths.children.length) return; WD.grow = { t: 0, dur: 2.2, list: WD.paths.children.slice() }; WD.paths.children.forEach(function (m) { m.geometry.setDrawRange(0, 0); }); }
+  nextTask();
+}
+
+// Wo wurde der Weg falsch verstanden?  → { step: Satz-Nummer oder null, why: Erklärung, node }
+function explain(r, kid, L) {
+  var sol = r.nodes, d = 0;
+  while (d < sol.length && d < kid.length && sol[d] === kid[d]) d++;
+  if (L === r.target) return { step: null, why: '' };
+  var last = r.steps.length - 1, fin = r.steps[last];
+  if (d === sol.length && kid.length === sol.length) {
+    // richtiger Haltepunkt, aber falsches Gebäude
+    return { step: last, node: sol[sol.length - 1], why: 'Der Weg stimmt! Aber «on your ' + DIR[fin.side] + '» heisst ' + DIRDE[fin.side] + '. Du hast das Gebäude auf der anderen Seite gewählt.' };
+  }
+  if (d >= kid.length) {
+    // zu früh stehen geblieben
+    var s = r.stepOf[d] != null ? r.stepOf[d] : last;
+    return { step: s, node: kid[kid.length - 1], why: 'Hier bist du stehen geblieben – das Ziel ist noch weiter. ' + (s === last ? 'Zähle die Gebäude auf der ' + (fin.side === 'L' ? 'linken' : 'rechten') + ' Seite: «the ' + ORD[fin.ord - 1] + ' building» = das ' + ORDDE[fin.ord - 1] + ' Gebäude.' : 'Lies den Satz nochmals genau.') };
+  }
+  if (d >= sol.length) {
+    return { step: last, node: sol[sol.length - 1], why: 'Du bist zu weit gegangen. «the ' + ORD[fin.ord - 1] + ' building on your ' + DIR[fin.side] + '» = das ' + ORDDE[fin.ord - 1] + ' Gebäude ' + DIRDE[fin.side] + '.' };
+  }
+  var at = sol[d - 1], step = r.stepOf[d - 1], st = r.steps[step], n = NODES[at];
+  var inH = d - 2 >= 0 ? hdOf(sol[d - 2], at, true) : r.face;
+  var want = rel(inH, hdOf(at, sol[d])), did = rel(inH, hdOf(at, kid[d]));
+  if (d - 1 === 0) {
+    return { step: 0, node: at, why: 'Am Anfang stehst du mit dem Rücken zum Gebäude. «turn ' + DIR[st.turn] + '» heisst ' + DIRDE[st.turn] + '. Du bist ' + DIRDE[did] + ' gegangen.' };
+  }
+  if (n.t === 'R') {
+    var entry = sol.indexOf(sol.filter(function (x) { return NODES[x].t === 'R'; })[0]), kEx = 0;
+    for (var q = entry + 1; q < kid.length && NODES[kid[q]].t === 'R'; q++) kEx++;
+    return { step: step, node: at, why: '«take the ' + ORD[st.exit - 1] + ' exit» heisst: die ' + ORDDE[st.exit - 1] + ' Ausfahrt aus dem Kreisel. ' + (kEx ? 'Du hast die ' + kEx + '. Ausfahrt genommen.' : 'Zähle die Ausfahrten.') };
+  }
+  if (n.t === 'S' || did === 'B') return { step: step, node: at, why: 'Hier bist du umgekehrt. Geh weiter in dieselbe Richtung.' };
+  if (st.t === 'turn' && want === 'S') {
+    return { step: step, node: at, why: 'Hier bist du schon abgebogen. Das war erst die ' + (r.crossNo[d - 1] || 1) + '. Kreuzung. «at the ' + ORD[st.n - 1] + ' crossing» = bei der ' + ORDDE[st.n - 1] + ' Kreuzung. Zähle die Kreuzungen!' };
+  }
+  if (want === 'S') return { step: step, node: at, why: 'Hier musst du geradeaus gehen («walk straight on»). Du bist ' + DIRDE[did] + ' gegangen.' };
+  if (did === 'S') return { step: step, node: at, why: 'Hier musst du abbiegen: «turn ' + DIR[want] + '» heisst ' + DIRDE[want] + '. Du bist geradeaus gegangen.' + (st.t === 'turn' && st.n > 1 ? ' Das ist die ' + ORDDE[st.n - 1] + ' Kreuzung.' : '') };
+  return { step: step, node: at, why: '«turn ' + DIR[want] + '» heisst ' + DIRDE[want] + '. Du bist ' + DIRDE[did] + ' gegangen. Tipp: Links ist, wo der Daumen der linken Hand ein «L» macht.' };
+}
+function hdOf(a, b, end) { var e = EMAP[a + '>' + b]; if (!e) { var A = NODES[a], B = NODES[b]; return Math.atan2(B.z - A.z, B.x - A.x); } return end ? e.h1 : e.h0; }
+
+// Knopf «Frei spazieren» im Stufen-Menü
+G.extra = function () {
+  var lvs = app.querySelector('.lvs'); if (!lvs) return;
+  var b = document.createElement('button'); b.className = 'lv frei'; b.innerHTML = '<span class="n" style="background:#fff">🚶</span><span class="tx"><b>Free walk</b><span>Frei durch die Stadt spazieren und Wörter hören</span></span>';
+  b.onclick = function () { tone(520, .08); freeWalk(); };
+  lvs.appendChild(b);
+};
+function freeWalk() {
+  stopAll(); RUN++; CUR = -1; KN.level(null);
+  app.innerHTML = '<div class="top"><button class="pill" data-back>← Stufen</button><span class="t">Free walk</span>' + sndBtn() + '</div><div class="msg" id="msg"></div><div class="stage" id="stage"></div>';
+  app.querySelector('[data-back]').onclick = menu;
+  var stage = document.getElementById('stage'), msgEl = document.getElementById('msg');
+  G.play({ typ: 'frei' }, { stage: stage, msg: function (t) { msgEl.innerHTML = t; }, later: function (fn, ms) { setTimeout(fn, ms); }, answer: function () { return true; } }, -1);
+}
+
+
+var MODE = window.knobelnest ? 'srcdoc' : window.parent !== window ? (/[?&]vorschau/.test(location.search) ? 'vorschau' : 'url') : 'solo';
+var ST = {}, AW = { lv: {}, max: 0 }, booted = false;
+function loadST(s) { try { ST = JSON.parse(s || '{}') || {}; } catch (e) { ST = {}; } }
+function send(m) { if (MODE !== 'url') return; m.knobelnest = 1; try { parent.postMessage(m, '*'); } catch (e) {} }
+var KN = MODE === 'srcdoc' ? window.knobelnest : {
+  answer: function (ok) { send({ type: 'answer', ok: !!ok }); },
+  level: function (n) { send({ type: 'level', level: n == null ? null : String(n) }); },
+  round: function () { send({ type: 'round' }); },
+  sterne: function (k) { return { have: +((AW.lv || {})[k]) || 0, max: +AW.max || 3 }; }
+};
+function save() {
+  var s = JSON.stringify(ST);
+  if (MODE === 'url') send({ type: 'store', data: { en: s } }); else try { localStorage.setItem('en', s); } catch (e) {}
+}
+var app = document.getElementById('app'), TM = [], RUN = 0, AC = null, CUR = -1;
+var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#e3f4f1'];
+function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pick(a, n) { return shuffle(a).slice(0, n); }
+function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+function anyCat() { var k = Object.keys(BILD); return BILD[k[rnd(0, k.length - 1)]]; }
+function stopAll() { TM.forEach(clearTimeout); TM = []; }
+function pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+// Raster, das auf den Bildschirm passt (reserve = Platz für Kopf und Text)
+function grid(cols, rows, maxPx, reserve) {
+  var g = document.createElement('div'); g.className = 'grid'; g.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
+  var w = Math.min(window.innerWidth - 32, (window.innerHeight - (reserve || 210)) * cols / rows, cols * (maxPx || 130));
+  g.style.maxWidth = Math.max(160, w) + 'px'; g.style.fontSize = Math.max(22, Math.min(64, w / cols * 0.5)) + 'px';
+  return g;
+}
+function bigBox() { var b = document.createElement('div'); b.className = 'card'; b.style.cssText = 'width:min(46vw,200px);font-size:min(24vw,112px)'; return b; }
+function optBtn(t, wide) { var b = document.createElement('button'); b.className = 'card'; b.style.cssText = wide ? 'aspect-ratio:auto;padding:10px 18px;font-size:26px;min-height:58px' : 'width:clamp(60px,15vw,92px);font-size:clamp(32px,7.5vw,52px)'; b.innerHTML = t; return b; }
+function tone(f, d, type, vol) {
+  if (ST.mute) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + 0.05);
+  } catch (e) {}
+}
+function good() { tone(660, 0.12); setTimeout(function () { tone(990, 0.2); }, 110); }
+function bad() { tone(200, 0.3, 'triangle', 0.16); }
+function stars(have, max) { var o = ''; for (var i = 0; i < max; i++) o += i < have ? '★' : '<span class="off">★</span>'; return '<span class="stars">' + o + '</span>'; }
+function sndBtn() { return '<button class="pill" data-snd aria-label="Ton ein oder aus">' + (ST.mute ? '🔇' : '🔊') + '</button>'; }
+app.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-snd]'); if (!b) return;
+  ST.mute = !ST.mute; save(); b.textContent = ST.mute ? '🔇' : '🔊';
+});
+var showStars = MODE === 'url' || MODE === 'srcdoc';
+
+function menu() {
+  stopAll(); RUN++; CUR = -1; KN.level(null);
+  var o = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="kopf"><span class="ring">' + G.icon + '</span><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p><div class="deko">✦ ✧ ✦</div></div><div class="lvs">';
+  G.levels.forEach(function (lv, i) {
+    var s = KN.sterne('Stufe ' + (i + 1)), mx = s.max || 3;
+    o += '<button class="lv" data-lv="' + i + '"><span class="n" style="background:' + LV_COL[i] + '">' + (i + 1) + '</span><span class="tx"><b>' + h(lv.name) + '</b><span>' + h(lv.info) + '</span></span>' +
+      (showStars ? stars(Math.min(s.have, mx), mx) : '') + '</button>';
+  });
+  app.innerHTML = o + '</div>'; if (G.extra) G.extra();
+  Array.prototype.forEach.call(app.querySelectorAll('[data-lv]'), function (b) { b.onclick = function () { tone(520, 0.08); start(+b.dataset.lv); }; });
+}
+
+function start(i) {
+  stopAll(); var run = ++RUN, lv = G.levels[i], res = [], N = G.n || 0; CUR = i;
+  KN.level('Stufe ' + (i + 1));
+  app.innerHTML = '<div class="top"><button class="pill" data-back>← Stufen</button><span class="t">Stufe ' + (i + 1) + ' · ' + h(lv.name) + '</span>' + sndBtn() + '</div>' +
+    (N && MODE !== 'url' && MODE !== 'srcdoc' ? '<div class="dots" id="dots"></div>' : '') + '<div class="msg" id="msg"></div><div class="stage" id="stage"></div>';
+  app.querySelector('[data-back]').onclick = menu;
+  var stage = document.getElementById('stage'), msgEl = document.getElementById('msg');
+  function dots() { var d = document.getElementById('dots'); if (!N || !d) return; var o = ''; for (var k = 0; k < N; k++) o += '<i class="' + (k < res.length ? (res[k] ? 'ok' : 'no') : '') + '"></i>'; d.innerHTML = o; }
+  dots();
+  var api = {
+    stage: stage,
+    msg: function (t) { msgEl.innerHTML = t; },
+    later: function (fn, ms) { TM.push(setTimeout(function () { if (run === RUN) fn(); }, ms)); },
+    // Antwort melden. Gibt false zurück, wenn die Runde fertig ist.
+    answer: function (ok, quiet) {
+      KN.answer(!!ok);
+      if (!quiet) { if (ok) good(); else bad(); }
+      if (!N) return true;
+      res.push(!!ok); dots();
+      if (res.length >= N) { var c = res.filter(Boolean).length; api.later(function () { end(i, c + ' von ' + N + ' richtig', c / N); }, 1600); return false; }
+      return true;
+    },
+    // Für Spiele ohne feste Anzahl Aufgaben (Paare finden)
+    done: function (line, q) { KN.round(); end(i, line, q); },
+    best: function (key, v, lower) {
+      ST.best = ST.best || {}; var old = ST.best[key], rec = old == null || (lower ? v < old : v > old);
+      if (rec) { ST.best[key] = v; save(); } return { old: old, rec: rec };
+    },
+    // Merkzeit mit Balken und Knopf «Ich bin bereit»
+    watch: function (ms, after) {
+      var w = document.createElement('div'); w.className = 'stage'; w.style.gap = '10px';
+      w.innerHTML = '<div class="bar"><i></i></div><button class="go alt">Ich bin bereit ✓</button>';
+      stage.appendChild(w);
+      var bar = w.querySelector('i'), fired = false;
+      function fire() { if (fired || run !== RUN) return; fired = true; w.remove(); after(); }
+      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.transitionDuration = ms + 'ms'; bar.style.width = '0%'; }); });
+      w.querySelector('button').onclick = fire;
+      api.later(fire, ms);
+    }
+  };
+  G.play(lv, api, i);
+}
+
+function end(i, line, q) {
+  stopAll(); RUN++;
+  var em = q >= 0.9 ? '🏆' : q >= 0.7 ? '🌟' : q >= 0.5 ? '👍' : '💪', t = q >= 0.9 ? 'Super gemacht!' : q >= 0.7 ? 'Gut gemacht!' : q >= 0.5 ? 'Geschafft!' : 'Weiter üben!';
+  var next = i + 1 < G.levels.length;
+  app.innerHTML = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="stage" style="margin-top:30px"><div class="end"><div class="big">' + em + '</div><h2>' + t + '</h2><p>' + line + '</p><div class="row">' +
+    '<button class="go" data-again>Nochmal</button>' + (next && q >= 0.7 ? '<button class="go sun" data-next>Nächste Stufe →</button>' : '') + '<button class="go alt" data-menu>Stufen</button></div><div class="deko" style="margin-top:16px">✦ ✧ ✦</div></div></div>';
+  app.querySelector('[data-again]').onclick = function () { start(i); };
+  if (app.querySelector('[data-next]')) app.querySelector('[data-next]').onclick = function () { start(i + 1); };
+  app.querySelector('[data-menu]').onclick = menu;
+  if (q >= 0.7) { good(); setTimeout(function () { tone(1320, 0.25); }, 260); }
+}
+
+function boot() {
+  if (booted) return; booted = true;
+  var m = /[?&]stufe=(\d)/.exec(location.search), s = m ? +m[1] - 1 : -1;
+  if (s >= 0 && s < G.levels.length) start(s); else menu();
+}
+if (MODE === 'url') {
+  window.addEventListener('message', function (e) {
+    var d = e.data; if (e.source !== parent || !d) return;
+    if (d.knobelnestInit && !booted) { var x = d.knobelnestInit; loadST(x.store && x.store.en); if (x.award && typeof x.award === 'object') AW = x.award; boot(); }
+    if (d.knobelnestAward) { AW = d.knobelnestAward; if (booted && CUR < 0) menu(); }
+  });
+  send({ type: 'hello' });
+  setTimeout(boot, 2500);
+} else {
+  try { loadST(localStorage.getItem('en')); } catch (e) {}
+  if (MODE === 'srcdoc') window.addEventListener('knobelnest-sterne', function () { if (CUR < 0) menu(); });
+  boot();
+}
+
+</script>
+</body>
+</html>
