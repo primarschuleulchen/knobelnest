@@ -103,7 +103,7 @@ def alle(spiel):
                   dict(name='Sprechen', info='Das Wort laut sagen 🎤', t=3),
                   dict(name='my, your, his, her', info='Wem gehört es?', t=4),
                   dict(name='Sätze', info='This is my … / These are my …', t=5)],
-          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': kind_bild('mia'), 'noah': kind_bild('noah'), 'aehnlich': AEHNLICH},
+          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': kind_bild('mia'), 'eule': kind_bild('eule').replace('kind-bild', 'eule-bild'), 'noah': kind_bild('noah'), 'aehnlich': AEHNLICH},
           css=CSS, js=JS)
 
 
@@ -119,9 +119,11 @@ CSS = r"""
 @keyframes wk2{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
 .schrank .it.seen{filter:drop-shadow(0 0 3px rgba(240,194,75,.9))}
 .schrank .it.seen.an{filter:drop-shadow(0 0 10px #f0c24b) drop-shadow(0 0 4px #f0c24b)}
-.wortkarte{min-height:64px;display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:6px 18px;box-shadow:var(--sch-k)}
+.wortkarte{min-height:64px;display:flex;align-items:center;gap:16px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:6px 18px;box-shadow:var(--sch-k)}
 .wortkarte b{font-size:clamp(30px,6.6vw,42px);color:var(--sky-d);font-weight:400}
-.wortkarte span{color:var(--soft);font-size:20px}
+.wortkarte span{color:var(--soft);font-size:22px}
+.wortkarte .wk{display:flex;align-items:center}
+.wortkarte .de2{border-left:2px solid var(--line2);padding-left:16px;margin-left:6px}
 .laut{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--sky);border:2px solid var(--ink);font-size:24px;box-shadow:var(--sch-k);flex:none}
 .laut:active{transform:scale(.94)}
 .bild{width:min(56vw,230px);aspect-ratio:1;display:grid;place-items:center;background:#fff;border:3px solid var(--gold);border-radius:30px;box-shadow:inset 0 0 0 6px #fff,var(--sch);padding:16px;position:relative}
@@ -147,9 +149,13 @@ CSS = r"""
 .blase{position:relative;background:#fff;border:2px solid var(--ink);border-radius:18px;padding:8px 12px;font-size:clamp(19px,4.4vw,24px);box-shadow:var(--sch-k);line-height:1.2}
 .blase::after{content:"";position:absolute;bottom:-11px;left:30px;width:18px;height:18px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
 .blase.r::after{left:auto;right:30px}
-.erzaehl{grid-column:1/4;display:flex;align-items:center;gap:10px;justify-content:center}
-.erzaehl img{width:54px;height:54px;object-fit:contain}
-.erzaehl .blase::after{display:none}
+.sprech .blase{width:100%}
+.sprech .blase::after{left:calc(23% - 10px)}.sprech .blase.r{text-align:right}.sprech .blase.r::after{left:auto;right:calc(23% - 10px)}
+.rueck{min-height:44px;font-size:24px;text-align:center;margin:-6px 0 8px;max-width:760px;line-height:1.3}
+.rueck .em{font-size:32px;vertical-align:middle;margin:0 4px;line-height:1}
+.erzaehl{grid-column:1/4;display:flex;align-items:center;gap:22px;justify-content:center}
+.eule-bild{width:auto;height:78px;display:block;flex:none}
+.erzaehl .blase::after{left:-11px;top:50%;bottom:auto;transform:translateY(-50%) rotate(135deg)}
 .kind{grid-row:2;display:flex;flex-direction:column;align-items:center;position:relative}
 .kind-bild{height:min(30vh,230px);width:auto;max-width:100%;display:block;object-fit:contain}
 .ring{width:150px;height:150px;background:none;border:0;padding:0;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
@@ -208,6 +214,12 @@ function abstand(a, b) {
 }
 // Abwechslung: jedes Stück kommt, bevor eines doppelt kommt
 function reihe(n, filt) { var a = [], src = IT.filter(filt || function () { return true; }); while (a.length < n) a = a.concat(shuffle(src)); return a.slice(0, n); }
+// Rückmeldung («Richtig!») unter der Aufgabe; die Aufgabe selbst bleibt stehen
+function fb(t) {
+  var r = document.getElementById('rueck'), m = document.getElementById('msg');
+  if (!r && m) { r = document.createElement('div'); r.id = 'rueck'; r.className = 'rueck'; m.parentNode.insertBefore(r, m.nextSibling); }
+  if (r) r.innerHTML = t || '';
+}
 function neu(c, html) { var e = document.createElement('div'); if (c) e.className = c; if (html != null) e.innerHTML = html; return e; }
 
 // ---------- Stufe 1: Schrank entdecken, dann finden
@@ -223,10 +235,10 @@ function stufeSchrank(api) {
   function itEl(id) { return sv.querySelector('[data-id="' + id + '"]'); }
   function zeig(id) {
     var x = ITM[id]; karte.innerHTML = ''; karte.appendChild(lautBtn(x.en));
-    karte.appendChild(neu('', '<b>' + h(x.en) + '</b> <span>' + h(x.de) + '</span>'));
+    karte.appendChild(neu('wk', '<b>' + h(x.en) + '</b><span class="de2">' + h(x.de) + '</span>'));
   }
   function frage() {
-    ziel = liste[k]; lock = false;
+    ziel = liste[k]; lock = false; fb('');
     var t = 'Find the ' + ziel.en + '!';
     karte.innerHTML = ''; karte.appendChild(lautBtn(t)); karte.appendChild(neu('', '<b>Find the ' + h(ziel.en) + '!</b>'));
     api.msg('Hör zu und tippe auf das richtige Kleidungsstück.');
@@ -240,7 +252,7 @@ function stufeSchrank(api) {
         g.classList.add('an', 'seen'); seen[id] = 1; zeig(id); say(ITM[id].en);
         var n = Object.keys(seen).length;
         if (n >= 6) los.classList.add('pop');
-        api.msg((n >= IT.length ? 'Du hast alles angeschaut! Jetzt «Finde die Kleider!»' : n + ' von ' + IT.length + ' angeschaut.'));
+        fb((n >= IT.length ? 'Du hast alles angeschaut! Jetzt «Finde die Kleider!»' : n + ' von ' + IT.length + ' angeschaut.'));
         return;
       }
       if (lock || !ziel) return; lock = true;
@@ -249,7 +261,7 @@ function stufeSchrank(api) {
       rich.classList.add('an');
       if (!ok) { g.classList.remove('no'); void g.offsetWidth; g.classList.add('no'); }
       say(ok ? ziel.en : 'This is the ' + ziel.en + '.');
-      api.msg(ok ? '<span class="em">✨</span> Yes! <b>' + h(ziel.en) + '</b> = ' + h(ziel.de) : '<span class="em">💡</span> Das ist <b>' + h(ITM[id].en) + '</b>. Gesucht war <b>' + h(ziel.en) + '</b> (leuchtet).');
+      fb(ok ? '<span class="em">✨</span> Yes! <b>' + h(ziel.en) + '</b> = ' + h(ziel.de) : '<span class="em">💡</span> Das ist <b>' + h(ITM[id].en) + '</b>. Gesucht war <b>' + h(ziel.en) + '</b> (leuchtet).');
       k++;
       if (!api.answer(ok)) return;
       api.later(function () { rich.classList.remove('an'); g.classList.remove('no'); frage(); }, ok ? 1300 : 2400);
@@ -268,7 +280,7 @@ function stufeSchrank(api) {
 function stufeWahl(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
-    var x = liste[k], lock = false; w.innerHTML = '';
+    var x = liste[k], lock = false; w.innerHTML = ''; fb('');
     var b = neu('bild', art(x.id)); w.appendChild(b);
     var opts = [x].concat(pick(IT.filter(function (y) { return y.id !== x.id; }), 3));
     var wahl = neu('wahl'); w.appendChild(wahl);
@@ -280,7 +292,7 @@ function stufeWahl(api) {
         bt.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === x.en) c.classList.add('hint'); });
         say(x.en); b.appendChild(lautBtn(x.en));
-        api.msg(ok ? '<span class="em">' + pick(['✨', '🌟', '👏'], 1)[0] + '</span> Richtig! <b>' + h(x.en) + '</b> = ' + h(x.de) : '<span class="em">💡</span> Das ist <b>' + h(x.en) + '</b> (' + h(x.de) + ').');
+        fb(ok ? '<span class="em">' + pick(['✨', '🌟', '👏'], 1)[0] + '</span> Richtig! <b>' + h(x.en) + '</b> = ' + h(x.de) : '<span class="em">💡</span> Das ist <b>' + h(x.en) + '</b> (' + h(x.de) + ').');
         k++; if (!api.answer(ok)) return;
         api.later(frage, ok ? 1300 : 2300);
       };
@@ -299,7 +311,7 @@ function stimmt(x, s) {
 function stufeSchreiben(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
-    var x = liste[k], vers = 0, lock = false; w.innerHTML = '';
+    var x = liste[k], vers = 0, lock = false; w.innerHTML = ''; fb('');
     var b = neu('bild', art(x.id)); w.appendChild(b);
     var lu = neu('luecke', ''); w.appendChild(lu);
     var f = neu('schreib', '<input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Englisches Wort"><button class="go">Prüfen</button>');
@@ -314,7 +326,7 @@ function stufeSchreiben(api) {
         vers = 1; inp.classList.add('no'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); bad();
         lu.textContent = x.en.split('').map(function (c, i) { return i === 0 || c === '-' ? c : '_'; }).join(' ');
         b.appendChild(lautBtn(x.en)); say(x.en);
-        api.msg('<span class="em">💡</span> Noch nicht. Tipp: So viele Buchstaben hat das Wort. Hör nochmal zu!');
+        fb('<span class="em">💡</span> Noch nicht. Tipp: So viele Buchstaben hat das Wort. Hör nochmal zu!');
         api.later(function () { inp.classList.remove('no'); inp.select(); }, 600);
         return;
       }
@@ -322,7 +334,7 @@ function stufeSchreiben(api) {
       if (!ok) { lu.textContent = x.en; }
       if (vers === 0 || !ok) b.appendChild(lautBtn(x.en));
       say(x.en);
-      api.msg(ok ? '<span class="em">🌟</span> Richtig geschrieben: <b>' + h(x.en) + '</b>!' : '<span class="em">📝</span> So schreibt man es: <b>' + h(x.en) + '</b>');
+      fb(ok ? '<span class="em">🌟</span> Richtig geschrieben: <b>' + h(x.en) + '</b>!' : '<span class="em">📝</span> So schreibt man es: <b>' + h(x.en) + '</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 1400 : 2800);
     }
@@ -352,7 +364,7 @@ function gehoertOk(x, alts) {
 function stufeSprechen(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0, rec = null;
   function frage() {
-    var x = liste[k], vers = 0, lock = false; w.innerHTML = '';
+    var x = liste[k], vers = 0, lock = false; w.innerHTML = ''; fb('');
     var b = neu('bild', art(x.id)); b.appendChild(lautBtn(x.en)); w.appendChild(b);
     var mik = document.createElement('button'); mik.className = 'mik'; mik.setAttribute('aria-label', 'Sprechen'); mik.textContent = '🎤';
     var info = neu('gehoert', ''); w.appendChild(mik); w.appendChild(info);
@@ -362,7 +374,7 @@ function stufeSprechen(api) {
     function fertig(ok) {
       if (lock) return; lock = true; mik.disabled = true; mik.classList.remove('hoert');
       say(x.en);
-      api.msg(ok ? '<span class="em">🌟</span> Super ausgesprochen: <b>' + h(x.en) + '</b>!' : '<span class="em">👂</span> Hör nochmal gut zu: <b>' + h(x.en) + '</b>');
+      fb(ok ? '<span class="em">🌟</span> Super ausgesprochen: <b>' + h(x.en) + '</b>!' : '<span class="em">👂</span> Hör nochmal gut zu: <b>' + h(x.en) + '</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 1500 : 2600);
     }
@@ -398,7 +410,7 @@ function stufeSprechen(api) {
         if (gehoertOk(x, alts)) { info.textContent = 'Ich habe gehört: «' + alts[0] + '» ✓'; fertig(true); return; }
         vers++; info.textContent = 'Ich habe gehört: «' + (alts[0] || '…') + '»';
         if (vers >= 3) { fertig(false); return; }
-        bad(); api.msg('<span class="em">🔁</span> Fast! Hör mit 🔊 zu und versuch es nochmal.');
+        bad(); fb('<span class="em">🔁</span> Fast! Hör mit 🔊 zu und versuch es nochmal.');
       };
       r.onerror = function (e) {
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
@@ -444,13 +456,13 @@ function buehne(a, text) {
     var bl = neu('sprech', '<div class="blase' + (a.spr === 'noah' ? ' r' : '') + '">' + text + '</div>');
     bl.style.gridColumn = a.spr === 'mia' ? '1/3' : '2/4'; if (a.spr === 'noah') bl.style.justifyContent = 'flex-end';
     b.appendChild(bl);
-  } else b.appendChild(neu('erzaehl', '<img src="../bilder/eule.webp" alt="" onerror="this.replaceWith(\'🦉\')"><div class="blase">' + text + '</div>'));
+  } else b.appendChild(neu('erzaehl', D.eule + '<div class="blase">' + text + '</div>'));
   var m = neu('kind' + (a.own === 'mia' || a.own === 'beide' ? ' own' : ''), D.mia + '<span class="nm2">Mia</span>'); m.style.gridColumn = '1';
   var n = neu('kind' + (a.own === 'noah' || a.own === 'beide' ? ' own' : ''), D.noah + '<span class="nm2">Noah</span>'); n.style.gridColumn = '3';
   var d = neu('ding ' + (a.own === 'mia' ? 'l' : a.own === 'noah' ? 'r' : 'm'), '<div class="bild">' + art(a.x.id, a.zwei) + '</div>');
   b.appendChild(m); b.appendChild(d); b.appendChild(n);
   b.appendChild(neu('wer', a.spr ? (a.spr === 'mia' ? 'Mia' : 'Noah') + ' sagt:' : ''));
-  if (!a.spr) b.lastChild.textContent = '🦉 erzählt über ' + (a.own === 'beide' ? 'Mia und Noah' : a.own === 'mia' ? 'Mia' : 'Noah') + '.';
+  if (!a.spr) b.lastChild.textContent = 'Die Eule erzählt über ' + (a.own === 'beide' ? 'Mia und Noah' : a.own === 'mia' ? 'Mia' : 'Noah') + '.';
   else if (a.spr) b.lastChild.textContent = (a.spr === 'mia' ? 'Mia' : 'Noah') + ' spricht' + (a.p === 'your' ? ' mit ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : a.p === 'our' ? ' über sich und ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : ' über sich') + '.';
   return b;
 }
@@ -461,7 +473,7 @@ function tippPr(a) {
 function stufeBegleiter(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
-    var a = aufgabe(liste[k], false), lock = false; w.innerHTML = '';
+    var a = aufgabe(liste[k], false), lock = false; w.innerHTML = ''; fb('');
     w.appendChild(buehne(a, '<b>' + h(a.deP) + '</b>'));
     api.msg('<span class="em">🧺</span> Wem gehört es? Wie sagt man das auf Englisch?');
     var opts = [a.p, PAAR[a.p]], rest = shuffle(['my', 'your', 'his', 'her', 'our', 'their'].filter(function (q) { return opts.indexOf(q) < 0; }));
@@ -474,7 +486,7 @@ function stufeBegleiter(api) {
         bt.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === a.enP) c.classList.add('hint'); });
         say(a.enP);
-        api.msg(ok ? '<span class="em">✨</span> Richtig: <b>' + h(a.enP) + '</b>' : '<span class="em">💡</span> ' + h(tippPr(a)) + ': <b>' + h(a.enP) + '</b>');
+        fb(ok ? '<span class="em">✨</span> Richtig: <b>' + h(a.enP) + '</b>' : '<span class="em">💡</span> ' + h(tippPr(a)) + ': <b>' + h(a.enP) + '</b>');
         k++; if (!api.answer(ok)) return;
         api.later(frage, ok ? 1500 : 3000);
       };
@@ -486,7 +498,7 @@ function stufeBegleiter(api) {
 function stufeSaetze(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
-    var a = aufgabe(liste[k], true), vers = 0, lock = false; w.innerHTML = '';
+    var a = aufgabe(liste[k], true), vers = 0, lock = false; w.innerHTML = ''; fb('');
     w.appendChild(buehne(a, '<b>' + h(a.deS) + '</b>'));
     var ziel = a.enS.split(' ');
     var dazu = [a.enPl ? 'This' : 'These', a.enPl ? 'is' : 'are', PAAR[a.p]];
@@ -518,7 +530,7 @@ function stufeSaetze(api) {
         vers = 1; satz.classList.add('no', 'shake'); bad();
         var g = s.split(' '), tipp = g[0] !== ziel[0] || g[1] !== ziel[1] ? (a.enPl ? 'Mehrere Dinge (oder trousers, socks …) → These are' : 'Ein Ding → This is') : g[2] !== ziel[2] ? tippPr(a) : 'Schau das Bild genau an: eins oder zwei?';
         if (!a.x.sg && (g[0] !== ziel[0] || g[1] !== ziel[1])) tipp = '«' + a.x.pl + '» ist auf Englisch immer Mehrzahl → These are';
-        api.msg('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
+        fb('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
         api.later(function () { satz.classList.remove('no', 'shake'); gewaehlt.forEach(function (b) { b.classList.remove('weg'); }); gewaehlt = []; zeichnen(); }, 1500);
         return;
       }
@@ -526,7 +538,7 @@ function stufeSaetze(api) {
       if (!ok) { satz.innerHTML = ''; ziel.forEach(function (t) { var e = document.createElement('button'); e.textContent = t; satz.appendChild(e); }); satz.appendChild(neu('pkt', '.')); }
       satz.classList.add(ok ? 'ok' : 'no'); satz.appendChild(lautBtn(a.enS + '.'));
       say(a.enS + '.');
-      api.msg(ok ? '<span class="em">🌟</span> Super! <b>' + h(a.enS) + '.</b>' : '<span class="em">📝</span> So heisst der Satz: <b>' + h(a.enS) + '.</b>');
+      fb(ok ? '<span class="em">🌟</span> Super! <b>' + h(a.enS) + '.</b>' : '<span class="em">📝</span> So heisst der Satz: <b>' + h(a.enS) + '.</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 2000 : 3400);
     };
