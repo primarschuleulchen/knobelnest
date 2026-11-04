@@ -1583,7 +1583,10 @@
     document.body.classList.add('lp');
     app.innerHTML = '<p class="boot">Umfrage wird geladen …</p>';
     try {
-      var r = await Promise.all([DB.listClasses(), DB.listKids(cid), DB.storeGet('umfragen'), DB.storeGet('umfrage-' + cid)]);
+      var r = await Promise.all([DB.listClasses(), DB.listKids(cid), DB.storeGet('umfragen'), DB.storeGet('umfrage-' + cid),
+        DB.storeGet('umfrage-vorlagen').catch(function () { return null; }), DB.sharedGet('umfrage-vorlagen').catch(function () { return null; }), DB.me().catch(function () { return null; })]);
+      U.tv = r[4] && typeof r[4] === 'object' ? r[4] : {}; U.tv.eigene = Array.isArray(U.tv.eigene) ? U.tv.eigene : []; U.tv.weg = Array.isArray(U.tv.weg) ? U.tv.weg : [];
+      U.tshared = r[5] && Array.isArray(r[5].list) ? r[5].list : []; U.admin = !!(r[6] && r[6].is_admin); U.tvWeg = false;
       U.cls = r[0].filter(function (c) { return c.id === cid; })[0]; U.ckids = (r[1] || []).slice().sort(kidSort);
       U.list = r[2] && Array.isArray(r[2].list) ? r[2].list : [];
       U.docs = { klasse: r[3] && typeof r[3] === 'object' ? r[3] : { live: null, ans: {} }, offen: null };
@@ -1689,17 +1692,86 @@
         '<div class="row umf-card-btns"><button class="btn sm primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button><button class="btn sm" data-a="uEdit" data-id="' + sv.id + '">✎ Bearbeiten</button>' +
         (a || ao ? '<button class="btn sm" data-a="uRes" data-id="' + sv.id + '" data-s="' + (a ? 'klasse' : 'offen') + '">📊 Ergebnisse</button>' : '') +
         '<button class="btn sm icon" data-a="uCopy" data-id="' + sv.id + '" title="Kopieren" aria-label="Kopieren">⧉</button>' +
+        '<button class="btn sm" data-a="uAsTpl" data-id="' + sv.id + '" title="Als Vorlage speichern">⭐ Als Vorlage</button>' +
         '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uDel" data-id="' + sv.id + '">' + (del ? 'Wirklich löschen?' : '🗑') + '</button></div></div>';
     }).join('') + '</div>' : '<div class="empty">Noch keine Umfrage. Beginnen Sie mit «+ Neue Umfrage» oder übernehmen Sie eine Vorlage.</div>') + '</section>';
-    out += '<section class="stack"><h2>Vorlagen</h2><div class="umf-grid tpl">' + UMF_VORLAGEN.map(function (v, i) {
-      var qs = v[3]();
-      return '<button class="umf-tpl" data-a="uTpl" data-i="' + i + '"><span class="umf-tpl-emo">' + v[0] + '</span><span><b>' + h(v[1]) + '</b><small>' + h(v[2]) + '</small><span class="umf-icons">' + qs.map(function (q) { return umfType(q.type)[2]; }).join('') + '</span></span></button>';
-    }).join('') + '</div></section></div>';
+    var all = umfTpls(), shown = all.filter(function (t) { return U.tv.weg.indexOf(t.id) < 0; }), weg = all.filter(function (t) { return U.tv.weg.indexOf(t.id) >= 0; });
+    var sharedIds = U.tshared.map(function (t) { return t.id; });
+    out += '<section class="stack"><h2>Vorlagen</h2><div class="umf-grid tpl">' + shown.map(function (t) {
+      var badge = t.src === 'e' ? (sharedIds.indexOf(t.id) >= 0 ? '🌍 Meine · für alle freigegeben' : '⭐ Meine Vorlage') : t.src === 's' ? '🌍 Für alle' : '';
+      var delKey = 'uTplDel' + t.id;
+      return '<div class="umf-tpl"><button class="umf-tpl-open" data-a="uTpl" data-id="' + h(t.id) + '"><span class="umf-tpl-emo">' + h(t.emo) + '</span><span><b>' + h(t.title) + '</b>' + (t.desc ? '<small>' + h(t.desc) + '</small>' : '') +
+        '<span class="umf-icons">' + t.qs().map(function (q) { return umfType(q.type)[2]; }).join('') + '</span>' + (badge ? '<span class="umf-tpl-badge">' + badge + '</span>' : '') + '</span></button>' +
+        '<span class="umf-tpl-acts">' + (U.admin && t.src === 'e' ? '<button class="btn sm" data-a="uTplShare" data-id="' + h(t.id) + '">' + (sharedIds.indexOf(t.id) >= 0 ? 'Freigabe zurücknehmen' : '🌍 Für alle freigeben') + '</button>' : '') +
+        '<button class="btn sm icon danger' + (UI.confirm === delKey ? ' armed' : '') + '" data-a="uTplDel" data-id="' + h(t.id) + '" title="Vorlage löschen" aria-label="Vorlage löschen">' + (UI.confirm === delKey ? '?' : '🗑') + '</button></span></div>';
+    }).join('') + (shown.length ? '' : '<div class="empty">Alle Vorlagen sind gelöscht. Unten können Sie sie wieder einfügen.</div>') + '</div>' +
+    (weg.length ? '<div class="umf-weg card"><button class="umf-weg-head" data-a="uTplWeg" aria-expanded="' + !!U.tvWeg + '">🗑 Gelöschte Vorlagen (' + weg.length + ') <span>' + (U.tvWeg ? '▲' : '▼') + '</span></button>' +
+      (U.tvWeg ? '<div class="stack" style="gap:8px">' + weg.map(function (t) {
+        return '<div class="row umf-weg-row"><span class="umf-tpl-emo sm">' + h(t.emo) + '</span><span class="grow">' + h(t.title) + (t.src === 'e' ? ' <small class="muted">(meine)</small>' : '') + '</span>' +
+          '<button class="btn sm" data-a="uTplBack" data-id="' + h(t.id) + '">↺ Wieder einfügen</button>' +
+          (t.src === 'e' ? '<button class="btn sm danger' + (UI.confirm === 'uTplGone' + t.id ? ' armed' : '') + '" data-a="uTplGone" data-id="' + h(t.id) + '">' + (UI.confirm === 'uTplGone' + t.id ? 'Wirklich für immer löschen?' : 'Endgültig löschen') + '</button>' : '') + '</div>';
+      }).join('') + '</div>' : '') + '</div>' : '') + '</section></div>';
     return out;
   };
   U.blank = function (title, qs) { return { id: umfId('u'), title: title || '', at: Date.now(), set: { mode: 'live', auto: 'live', kids: true, anon: true }, qs: qs || [] }; };
   ACT.uNew = function () { var sv = U.blank('', []); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = true; U.view = 'edit'; U.save(); U.render(); var t = document.getElementById('ueTitle'); if (t) t.focus(); };
-  ACT.uTpl = function (el) { var v = UMF_VORLAGEN[+el.dataset.i]; var sv = U.blank(v[1], v[3]()); U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.save(); U.render(); toast('Vorlage übernommen. Sie können alles anpassen.'); };
+  // Vorlagen: eingebaute (UMF_VORLAGEN), für alle freigegebene (shared_store «umfrage-vorlagen», nur Admin schreibt)
+  // und eigene (teacher_store «umfrage-vorlagen» = { eigene: [Vorlage], weg: [gelöschte Vorlagen-IDs] })
+  function umfTpls() {
+    var copy = function (qs) { return function () { return JSON.parse(JSON.stringify(qs || [])).map(function (q) { q.id = umfId('q'); return q; }); }; };
+    var out = UMF_VORLAGEN.map(function (v, i) { return { id: 'b' + i, src: 'b', emo: v[0], title: v[1], desc: v[2], qs: v[3] }; });
+    var mine = U.tv.eigene.map(function (t) { return t.id; });
+    U.tshared.forEach(function (t) { if (mine.indexOf(t.id) < 0) out.push({ id: t.id, src: 's', emo: t.emo || '📊', title: t.title, desc: t.desc, set: t.set, qs: copy(t.qs) }); });
+    U.tv.eigene.forEach(function (t) { out.push({ id: t.id, src: 'e', emo: t.emo || '⭐', title: t.title, desc: t.desc, set: t.set, qs: copy(t.qs) }); });
+    return out;
+  }
+  U.tvSave = function () { return DB.storeSet('umfrage-vorlagen', { eigene: U.tv.eigene, weg: U.tv.weg }).catch(function (e) { toast('Nicht gespeichert: ' + errMsg(e)); }); };
+  ACT.uTpl = function (el) {
+    var t = umfTpls().filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return;
+    var sv = U.blank(t.title, t.qs()); if (t.set) sv.set = JSON.parse(JSON.stringify(t.set));
+    U.list.unshift(sv); U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.save(); U.render(); toast('Vorlage übernommen. Sie können alles anpassen.');
+  };
+  ACT.uTplDel = function (el) { var id = el.dataset.id; if (!armed('uTplDel' + id)) return U.render(); if (U.tv.weg.indexOf(id) < 0) U.tv.weg.push(id); U.tvSave(); U.render(); toast('Vorlage gelöscht. Unter «Gelöschte Vorlagen» können Sie sie wieder einfügen.'); };
+  ACT.uTplWeg = function () { U.tvWeg = !U.tvWeg; U.render(); };
+  ACT.uTplBack = function (el) { U.tv.weg = U.tv.weg.filter(function (x) { return x !== el.dataset.id; }); U.tvSave(); U.render(); toast('Vorlage wieder eingefügt'); };
+  ACT.uTplGone = async function (el) {
+    var id = el.dataset.id; if (!armed('uTplGone' + id)) return U.render();
+    U.tv.eigene = U.tv.eigene.filter(function (x) { return x.id !== id; }); U.tv.weg = U.tv.weg.filter(function (x) { return x !== id; });
+    await U.tvSave();
+    if (U.admin && U.tshared.some(function (x) { return x.id === id; })) await U.tsharedSet(U.tshared.filter(function (x) { return x.id !== id; }));
+    U.render(); toast('Vorlage endgültig gelöscht');
+  };
+  // Als Vorlage speichern (Kopie der Umfrage, Name, Text und Bildchen frei wählbar)
+  var UMF_TPL_EMO = ['⭐', '📊', '🌈', '💬', '🎒', '🏆', '🧠', '🌍', '🎨', '📚', '🌱', '🎵'];
+  ACT.uAsTpl = function (el) {
+    var sv = U.find(el.dataset.id); if (!sv) return;
+    if (!sv.qs.length) return toast('Die Umfrage hat noch keine Fragen.');
+    U.tplEmo = '⭐';
+    overlay('<form class="card stack" style="width:min(560px,100%)" data-a="uAsTplGo" data-id="' + sv.id + '"><h2>Als Vorlage speichern</h2>' +
+      '<p class="muted">Die Vorlage ist eine Kopie. Sie erscheint bei Ihren Vorlagen' + (U.admin ? '. Als Admin können Sie sie danach für alle freigeben.' : '.') + '</p>' +
+      '<div class="field"><label for="tplName">Name</label><input class="input" id="tplName" name="title" maxlength="60" required value="' + h(sv.title || '') + '"></div>' +
+      '<div class="field"><label for="tplDesc">Kurze Beschreibung (freiwillig)</label><input class="input" id="tplDesc" name="desc" maxlength="80" placeholder="z. B. Rückblick nach dem Projekt"></div>' +
+      '<div><span class="lbl">Bildchen</span><div class="chips umf-emo-chips">' + UMF_TPL_EMO.map(function (e) { return '<button type="button" class="chip" aria-pressed="' + (e === U.tplEmo) + '" data-a="uTplEmo" data-e="' + e + '">' + e + '</button>'; }).join('') + '</div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-a="closeOverlay">Abbrechen</button><button class="btn primary">Speichern</button></div></form>');
+  };
+  ACT.uTplEmo = function (el) { U.tplEmo = el.dataset.e; Array.prototype.forEach.call(document.querySelectorAll('.umf-emo-chips .chip'), function (c) { c.setAttribute('aria-pressed', c.dataset.e === U.tplEmo); }); };
+  ACT.uAsTplGo = async function (f) {
+    var sv = U.find(f.dataset.id), title = f.elements.title.value.trim(); if (!sv || !title) return;
+    var t = { id: umfId('v'), title: title.slice(0, 60), desc: f.elements.desc.value.trim().slice(0, 80), emo: U.tplEmo || '⭐', at: Date.now(),
+      set: JSON.parse(JSON.stringify(sv.set || {})), qs: JSON.parse(JSON.stringify(sv.qs)) };
+    U.tv.eigene.unshift(t); await U.tvSave(); closeOverlays(); if (U.view === 'list') U.render();
+    toast('Als Vorlage gespeichert. Sie finden sie unten bei den Vorlagen.');
+  };
+  // Nur Admin: eigene Vorlage für alle Lehrpersonen freigeben oder zurücknehmen
+  U.tsharedSet = async function (list) { await DB.sharedSet('umfrage-vorlagen', { list: list }); U.tshared = list; };
+  ACT.uTplShare = async function (el) {
+    if (!U.admin) return;
+    var id = el.dataset.id, t = U.tv.eigene.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    var on = U.tshared.some(function (x) { return x.id === id; });
+    try { await U.tsharedSet(on ? U.tshared.filter(function (x) { return x.id !== id; }) : U.tshared.concat([JSON.parse(JSON.stringify(t))])); }
+    catch (e) { return toast(errMsg(e)); }
+    U.render(); toast(on ? 'Freigabe zurückgenommen.' : 'Für alle Lehrpersonen freigegeben.');
+  };
   ACT.uEdit = function (el) { U.eid = el.dataset.id; U.qi = 0; U.add = !U.find(U.eid).qs.length; U.view = 'edit'; U.render(); window.scrollTo(0, 0); };
   ACT.uCopy = function (el) {
     var sv = JSON.parse(JSON.stringify(U.find(el.dataset.id))); sv.id = umfId('u'); sv.title = (sv.title || 'Umfrage') + ' (Kopie)'; sv.at = Date.now();
@@ -1740,7 +1812,7 @@
       (sv.qs.length ? '<button class="btn" style="align-self:flex-start" data-a="uAddClose">Abbrechen</button>' : '') + '</div>';
     else main = '<div class="card stack ue-edit">' + U.qForm(q) + '</div><div class="card stack ue-prevcard"><span class="lbl">So sieht es am iPad aus</span><div class="ue-phone"><div class="ku ku-prev" id="uePrev">' + umfPreview(q) + '</div></div></div>';
     return '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button><span class="muted small" id="ueSaved">' + (U.st ? 'Wird gespeichert …' : '✓ Gespeichert') + '</span>',
-      '<button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button>') + '<div class="umf-ed">' + aside + '<section class="ue-main stack">' + main + '</section></div></div>';
+      '<button class="btn" data-a="uAsTpl" data-id="' + sv.id + '">⭐ Als Vorlage speichern</button><button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button>') + '<div class="umf-ed">' + aside + '<section class="ue-main stack">' + main + '</section></div></div>';
   };
   function umfPreview(q) {
     var t = umfType(q.type);
