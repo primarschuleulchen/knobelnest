@@ -89,7 +89,7 @@ textarea.field{border-radius:16px;resize:vertical;min-height:76px;font-family:va
 .note::before{content:"";position:absolute;top:-8px;left:50%;width:74px;height:20px;margin-left:-37px;background:rgba(255,255,255,.55);border-left:1px dashed rgba(0,0,0,.08);border-right:1px dashed rgba(0,0,0,.08);transform:rotate(-2deg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .note:nth-child(3n){transform:rotate(-.6deg)} .note:nth-child(3n+1){transform:rotate(.5deg)}
 .c0{background:var(--n1)}.c1{background:var(--n2)}.c2{background:var(--n3)}.c3{background:var(--n4)}.c4{background:var(--n5)}
-.note .txt{font-family:var(--hand);font-size:1.5rem;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.note .txt{font-family:var(--hand);font-size:1.9rem;line-height:1.2;margin:0;overflow-wrap:anywhere}
 .note .by{color:var(--muted)}
 .tool{display:flex;flex-direction:column;gap:5px;border-top:1.5px dotted rgba(31,36,33,.2);padding-top:8px}
 .tool-l{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
@@ -183,7 +183,7 @@ details.settings[open]>summary h2::after{transform:rotate(90deg)}
 .pres-title{flex:1 1 auto;margin:0;white-space:nowrap;font-size:clamp(30px,4.5vw,52px)}
 body.present header.top{display:none}
 body.present .wrap{max-width:1500px}
-.present-on .note .txt{font-size:2rem}
+.present-on .note .txt{font-size:2.5rem}
 .present-on .board{columns:330px}
 .present-on .cm li{font-size:1.3rem}
 .present-on .rank .it{font-size:1.5rem}
@@ -206,12 +206,191 @@ button.bcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(40,60,4
 .overview-empty{font-family:var(--hand);font-size:1.4rem;color:var(--muted);text-align:center;padding:24px}
 @media (max-width:560px){:root{--pinw:96px}.panel,.baro{padding:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-/* Knobelnest */
-.peekrow select{min-height:44px}
-.peeknote{margin:0;color:var(--leaf-deep, #3f6b39)}
-body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
-body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
+/* Erweiterungen */
 #knBack{margin-right:4px}
+body:has(.lpwrap:not(.closed)) .wrap{max-width:1640px}
+.lpwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:22px;align-items:start}
+.lpwrap.closed{grid-template-columns:minmax(0,1fr)}
+.lpmain{grid-column:1;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:18px}
+.lpside{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:14px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;overscroll-behavior:contain;padding:2px 4px 24px}
+.lpwrap.closed .lpside{display:none}
+.side-top .btn{white-space:nowrap}
+.side-top{order:-2;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;color:var(--muted);font-size:.9rem;text-transform:uppercase;letter-spacing:.05em}
+.lpside .lp-grid{order:-1;display:flex;flex-direction:column;gap:14px}
+.lpside .panel{padding:14px 16px;border-radius:18px}
+.lpside .panel h2{font-size:1.45rem}
+.lpside .bset-row{flex-direction:column;gap:10px}
+.lpside .queue{grid-template-columns:minmax(0,1fr)}
+.lpside .settings summary .sub{display:block}
+.sidebtn .badge{margin-left:4px}
+@media (max-width:1099px){
+  .lpwrap,.lpwrap.closed{grid-template-columns:minmax(0,1fr)}
+  .lpside{position:fixed;grid-column:auto;grid-row:auto;right:0;top:0;bottom:0;width:min(430px,94vw);max-height:none;z-index:60;background:var(--paper);box-shadow:-12px 0 34px rgba(0,0,0,.22);padding:14px 14px 30px}
+}
+/* Leinwand */
+.cv-wrap{overflow-x:auto;padding:2px 0 8px}
+.cv{position:relative;width:100%;min-width:760px;aspect-ratio:16/10;container-type:inline-size;background:rgba(255,255,255,.55);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.present-on .cv{max-width:calc((100vh - 120px) * 1.6);margin:0 auto}
+.cv-bg{position:absolute;inset:0;width:100%;height:100%}
+.cv-lab{position:absolute;transform:translate(-50%,0);z-index:1;text-align:center;max-width:34%}
+.cv-lt{all:unset;font-family:var(--bubble);font-weight:700;font-size:clamp(15px,2.3cqw,40px);line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
+button.cv-lt{cursor:pointer;border-radius:10px;padding:0 6px}
+button.cv-lt:hover,button.cv-lt:focus-visible{background:rgba(255,255,255,.7)}
+.cv-note{all:unset;box-sizing:border-box;position:absolute;z-index:2;width:12.5%;min-height:8cqw;padding:.8cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;font-family:var(--hand);font-size:clamp(12px,1.35cqw,24px);line-height:1.15;border-radius:3px;box-shadow:0 2px 0 rgba(0,0,0,.04),0 8px 18px -6px rgba(40,60,45,.35);cursor:pointer;overflow-wrap:anywhere}
+.cv .cv-note.note:nth-of-type(2n){transform:translate(-50%,-50%) rotate(1.2deg)}
+.cv-note::before{display:none}
+.cv .cv-note.note{transform:translate(-50%,-50%) rotate(-1deg)}
+.cv-note small{font-family:var(--ui);font-size:.6em;color:var(--muted);font-weight:700}
+.cv-note .mm-img{max-height:6cqw;margin:0}
+.cv-note.cur{outline:3px solid var(--ink)}
+.mv{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.mv.dragging{cursor:grabbing;z-index:20;box-shadow:0 18px 36px rgba(0,0,0,.28)}
+.cv .cv-note.note.dragging{transform:translate(-50%,-50%) scale(1.06) rotate(-2deg)}
+.mm-leaf.dragging{position:relative}
+.mm-br.drop .mm-node{box-shadow:0 0 0 4px var(--mc,#9aa39c);transform:scale(1.06)}
+.mm-br.drop .mm-leaves{outline:3px dashed var(--mc,#9aa39c);outline-offset:6px;border-radius:10px}
+.cv-empty{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);margin:0;font-family:var(--hand);font-size:1.2rem;color:var(--muted);background:rgba(255,255,255,.8);border-radius:999px;padding:4px 14px;z-index:1}
+.cv-lab .mm-ed{display:inline-flex;flex-direction:column;gap:6px;background:#fff;border-radius:12px;padding:6px;box-shadow:var(--shadow)}
+.notecat{margin-top:8px}
+.notecat select{min-height:36px;padding:4px 12px;font-size:.9rem;background:rgba(255,255,255,.85)}
+.nimg{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:10px;background:#fff}
+.present-on .nimg{max-height:48vh;object-fit:contain}
+.note .txt:empty{display:none}
+.mm-img{display:block;width:100%;max-width:200px;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:4px}
+.simg{display:block;width:100%;height:64px;object-fit:cover;border-radius:6px}
+.pc-img{display:block;max-width:100%;max-height:30%;min-height:0;object-fit:contain;border-radius:8px;flex:0 1 auto;align-self:flex-start}
+.imgpick{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.imgbtn{position:relative;cursor:pointer;align-self:flex-start}
+.imgprev{display:flex;gap:12px;align-items:center}
+.imgprev img{height:76px;max-width:160px;object-fit:cover;border-radius:10px;box-shadow:var(--shadow)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.poll{display:flex;flex-direction:column;gap:6px}
+.poll button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.85);border-radius:12px;padding:8px 12px;font-weight:700;font-size:1rem;color:var(--ink)}
+.poll button i{width:18px;height:18px;border-radius:50%;border:2px solid #9aa39c;flex:none}
+.poll button[aria-pressed="true"]{border-color:var(--leaf);background:#fff}
+.poll button[aria-pressed="true"] i{border-color:var(--leaf);background:radial-gradient(circle,var(--leaf) 0 42%,transparent 48%)}
+.pollres{display:flex;flex-direction:column;gap:7px}
+.pr-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-weight:700;font-size:.95rem}
+.pr-r b{font-weight:800;color:var(--muted)}
+.pr-r.top b{color:var(--leaf-deep)}
+.pr-r .pt{grid-column:1/-1;height:10px;border-radius:99px;background:rgba(255,255,255,.85);overflow:hidden}
+.pr-r .pt i{display:block;height:100%;background:linear-gradient(90deg,var(--sky),var(--leaf));border-radius:99px}
+.present-on .pr-r{font-size:1.15rem}
+.bset-row{display:flex;flex-wrap:wrap;gap:14px 28px}
+.tl-h{border:0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.tl-h:hover{background:var(--leaf-deep, #4d7a42)}
+.tl-it.tdrag{z-index:5}
+.tl-it.tdrag .note{box-shadow:0 16px 34px rgba(0,0,0,.24)}
+.tl-it.tdrag .tl-h{cursor:grabbing}
+.tl-tip{margin:0}
+.mm-node{color:var(--ink)}
+button.mm-node{cursor:pointer}
+button.mm-node:hover,button.mm-node:focus-visible{box-shadow:0 0 0 3px rgba(31,36,33,.12)}
+.mm-ed{display:flex;flex-direction:column;gap:6px;max-width:240px}
+.mm-ed .field{font:inherit;font-weight:600;padding:4px 10px}
+.mm-add{max-width:560px;margin:0 auto;width:100%}
+#app[data-size="breit"] .board{grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr))}
+#app[data-size="breit"] .col{flex-basis:400px;max-width:600px}
+#app[data-size="breit"] .tl-it{flex-basis:420px}
+#app[data-font="klar"] .note .txt,#app[data-font="klar"] .mm-leaf,#app[data-font="klar"] .pc-t,#app[data-font="klar"] .sortcard span{font-family:var(--ui);font-weight:600}
+#app[data-font="klar"] .note .txt{font-size:1.55rem}
+.tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.tpl{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px;border:2px solid var(--line);border-radius:16px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.tpl:hover{border-color:var(--leaf)}
+.tpl:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+.tpl[aria-pressed="true"]{border-color:var(--leaf);background:var(--leaf-soft);box-shadow:0 0 0 3px rgba(126,165,106,.22)}
+.tpl-top{display:flex;align-items:center;gap:8px}
+.tpl-top b{font-weight:800;line-height:1.15;font-size:.95rem}
+.tpl-i{font-size:1.45rem;line-height:1}
+.tpl-p{width:100%;height:38px;display:block}
+.tpl-d{font-size:.8rem;color:var(--muted);line-height:1.3}
+.tpl-sel{margin:0}
+.btpl{align-self:flex-start;font-size:.78rem;font-weight:800;color:var(--muted);background:var(--paper);border-radius:999px;padding:2px 10px}
+.bprompt{margin:0;font-family:var(--hand);font-size:1.55rem;line-height:1.25;background:#fff;border-radius:16px;border-left:6px solid var(--sky);padding:10px 16px;box-shadow:var(--shadow);overflow-wrap:anywhere}
+.present-on .bprompt{font-size:2rem}
+.bset{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.bset .seg{margin-top:4px}
+.bset .sub{margin:6px 0 0}
+.bset textarea{border-radius:14px;margin-top:4px}
+.ccol{display:inline-flex;gap:4px}
+.ccol button{width:24px;height:24px;border-radius:50%;border:2px solid rgba(0,0,0,.12);padding:0}
+.ccol button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.lpcat{gap:8px;flex-wrap:nowrap}
+.lpcat select{flex:1;min-height:40px}
+.kcat{display:flex;flex-direction:column;gap:6px}
+.kcat-b{display:flex;flex-wrap:wrap;gap:8px}
+.kc{border:2px solid transparent;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1rem;color:var(--ink);box-shadow:0 2px 6px rgba(40,60,45,.12)}
+.kc:not([class*=" c"]){background:#fff;border-color:var(--line)}
+.kc[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px rgba(31,36,33,.15)}
+.heart{border:1px solid var(--line);background:rgba(255,255,255,.85);border-radius:999px;padding:5px 14px;font-weight:800;font-size:.95rem;align-self:flex-start}
+.heart[aria-pressed="true"]{border-color:#e07a70;background:#fff}
+.hearts{font-weight:800;font-size:1.05rem}
+/* Spalten */
+.cols{display:flex;gap:16px;overflow-x:auto;align-items:flex-start;padding:4px 2px 14px;scroll-snap-type:x proximity}
+.col{flex:1 0 290px;max-width:440px;background:rgba(255,255,255,.6);border-radius:18px;padding:0 0 14px;display:flex;flex-direction:column;gap:12px;scroll-snap-align:start;border-top:10px solid var(--mc,#c9cfca);box-shadow:var(--shadow)}
+.present-on .col{max-width:none;flex-basis:320px}
+.colhead{margin:0;padding:10px 14px 0;font-family:var(--bubble);font-weight:600;font-size:1.35rem;display:flex;gap:8px;align-items:baseline}
+.present-on .colhead{font-size:1.8rem}
+.colhead small{font-family:var(--ui);font-size:.8rem;color:var(--muted);font-weight:800}
+.colbody{display:flex;flex-direction:column;gap:20px;padding:8px 12px 0}
+.colbody>.note{margin:0}
+.colempty{font-family:var(--hand);font-size:1.15rem;color:#a7ada8;margin:0}
+.col .catnote{margin:0 12px}
+[data-c="c0"]{--mc:#e2bd4a;--mb:var(--n1)}[data-c="c1"]{--mc:#e0948a;--mb:var(--n2)}[data-c="c2"]{--mc:#86a9cc;--mb:var(--n3)}[data-c="c3"]{--mc:#8db27a;--mb:var(--n4)}[data-c="c4"]{--mc:#a98fcf;--mb:var(--n5)}
+/* Liste */
+#app[data-lay="liste"] .board{grid-template-columns:minmax(0,1fr)!important;max-width:760px;margin-inline:auto;width:100%}
+#app[data-lay="liste"] .note:nth-child(n){transform:none}
+/* Zeitstrahl */
+.tl{display:flex;gap:0;overflow-x:auto;padding:6px 4px 16px;align-items:flex-start;scroll-snap-type:x proximity}
+.tl-it{flex:0 0 300px;display:flex;flex-direction:column;align-items:stretch;position:relative;padding:0 10px;scroll-snap-align:start}
+.tl-it::before{content:"";position:absolute;top:19px;left:0;right:0;height:4px;background:#3f5f86;opacity:.3}
+.tl-it:first-child::before{left:50%}.tl-it:last-child::before{right:50%}.tl-it:only-child::before{display:none}
+.tl-dot{align-self:center;width:40px;height:40px;border-radius:50%;background:#3f5f86;color:#fff;display:grid;place-items:center;font-weight:700;font-family:var(--bubble);font-size:1.1rem;position:relative;z-index:1;box-shadow:0 0 0 5px #fff}
+.tl-stem{align-self:center;width:3px;height:22px;background:#3f5f86;opacity:.3}
+.tl-cat{align-self:center;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 4px;text-align:center}
+.tl .note{margin:0;transform:none!important}
+.present-on .tl-it{flex-basis:340px}
+/* Mindmap */
+.mm-wrap{overflow-x:auto;padding:4px 0 8px}
+.mm{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:0 64px;min-width:820px;padding:18px 8px}
+.mm.one{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:30px;padding:12px 4px}
+.mm.one .mm-center{align-self:center}
+.mm.one .mm-side{padding-left:18px;gap:18px}
+.mm.one .mm-br{gap:22px}
+.mm-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.mm-side{display:flex;flex-direction:column;gap:24px;position:relative;z-index:1;min-width:0}
+.mm-center{position:relative;z-index:1;background:#fff;border:4px solid #3f5f86;border-radius:40px;padding:18px 24px;max-width:250px;text-align:center;font-family:var(--bubble);font-weight:700;font-size:1.5rem;line-height:1.15;color:#3f5f86;box-shadow:0 6px 18px rgba(40,60,45,.16);overflow-wrap:anywhere}
+.present-on .mm-center{font-size:2rem;max-width:320px}
+.mm-br{display:flex;align-items:center;gap:40px;min-width:0}
+.mm-br.l{flex-direction:row-reverse}
+.mm-node{flex:none;background:var(--mb,#fff);border:3px solid var(--mc,#c9cfca);border-radius:16px;padding:7px 14px;font-weight:600;font-family:var(--bubble);font-size:1.15rem;line-height:1.15;max-width:190px;overflow-wrap:anywhere}
+.mm-leaves{display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-width:0}
+.mm-br.l .mm-leaves{align-items:flex-end}
+.mm-leaf{all:unset;box-sizing:border-box;cursor:pointer;margin:0;padding:8px 12px;max-width:250px;font-family:var(--hand);font-size:1.15rem;line-height:1.15;border-radius:6px 6px 14px 6px;box-shadow:var(--note-shadow);overflow-wrap:anywhere;display:flex;flex-direction:column;gap:2px}
+.mm-leaf::before{display:none}
+.mm-leaf small{font-family:var(--ui);font-size:.72rem;color:var(--muted);font-weight:700}
+.mm-leaf:hover,.mm-leaf:focus-visible{box-shadow:0 0 0 3px var(--mc,#c9cfca),var(--note-shadow)}
+.mm-leaf.cur{box-shadow:0 0 0 3px var(--ink),var(--note-shadow)}
+.present-on .mm-leaf{font-size:1.4rem;max-width:300px}
+.mm-empty{font-family:var(--hand);color:#a7ada8;font-size:1.05rem}
+.mm-hint{text-align:center;margin:0}
+.mm-focus{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.6);border-radius:18px;padding:12px 14px}
+.mm-focus .board{grid-template-columns:minmax(0,560px);justify-content:center}
+/* Hintergründe */
+body[data-bg="kork"]{background:radial-gradient(circle at 30% 40%,rgba(90,55,20,.18) 0 1px,transparent 1.6px) 0 0/7px 7px,radial-gradient(circle at 70% 70%,rgba(255,240,210,.22) 0 1px,transparent 1.8px) 0 0/11px 11px,linear-gradient(135deg,#cfa576,#bf925f);background-attachment:fixed}
+body[data-bg="karo"]{background:linear-gradient(#dfe8f1 1px,transparent 1px) 0 0/26px 26px,linear-gradient(90deg,#dfe8f1 1px,transparent 1px) 0 0/26px 26px,#fdfdfb;background-attachment:fixed}
+body[data-bg="linien"]{background:linear-gradient(transparent 33px,#d8e3ee 34px) 0 0/100% 34px,#fffdf6;background-attachment:fixed}
+body[data-bg="himmel"]{background:radial-gradient(ellipse 40% 18% at 20% 12%,#fff 0,transparent 70%),radial-gradient(ellipse 30% 14% at 75% 22%,#fff 0,transparent 70%),linear-gradient(180deg,#cfe5f8,#eef6fc 65%,#f6fbf1);background-attachment:fixed}
+body[data-bg="wiese"]{background:radial-gradient(ellipse 70% 30% at 50% 105%,#bcdca6,transparent 70%),linear-gradient(180deg,#fbfdf6,#e4f1d8);background-attachment:fixed}
+body[data-bg="kork"] .bhead h2{flex:0 1 auto;background:rgba(255,255,255,.88);border-radius:14px;padding:2px 14px}
+body[data-bg="kork"] .tl-cat,body[data-bg="kork"] .mm-hint,body[data-bg="kork"] .colempty{background:rgba(255,255,255,.85);border-radius:999px;padding:1px 10px}
+body[data-bg="kork"] #app>.sub{background:rgba(255,255,255,.85);border-radius:999px;padding:2px 12px;align-self:flex-start}
+@media print{
+  header.top,.tools-bar,.settings,.lp-grid,.tabs,.bhead .btn,.bhead .vis,.note .foot,.note .tools-set,.lpc .edit-btn,.mm-hint,.mm-focus,.toast{display:none!important}
+  body{background:#fff!important;padding:0}
+  .note{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .cols,.tl,.mm-wrap{overflow:visible}
+}
 .present-on .note{transform:none!important}
 html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .pcats{display:flex;flex-direction:column;gap:12px;height:calc(100vh - 150px);min-height:420px}
@@ -306,6 +485,10 @@ html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .one-mini.cur{opacity:1;transform:translateY(-4px);outline:3px solid var(--leaf, #7ea56a);outline-offset:3px}
 .one-mini:hover{opacity:1}
 @media (max-width:700px){.one-stage{grid-template-columns:1fr}.one-nav{display:none}}
+.peekrow select{min-height:44px}
+.peeknote{margin:0;color:var(--leaf-deep, #3f6b39)}
+body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
+body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
 </style>
 
 <div class="wrap">
@@ -328,7 +511,6 @@ html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 <script>
 (() => {
 const $ = (s, r = document) => r.querySelector(s);
-// Knobelnest: Speicher, Kinder und Rolle kommen aus dem Portal. Kinder sehen nie Namen.
 const KN = (() => { try { return window.parent !== window && window.parent.knPin || null; } catch { return null; } })();
 if (KN) window.claude = KN.claude;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -336,7 +518,7 @@ const ls = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const TOOL_NAMES = { rate: "Bewertung 1–10", rate2: "Bewertung 2", agree: "Zustimmung", comment: "Kommentar", baro: "Nur im Barometer" };
+const TOOL_NAMES = { rate: "Bewertung 1–10", rate2: "Bewertung 2", agree: "Zustimmung", poll: "Umfrage", like: "Herz ❤️", comment: "Kommentar", baro: "Nur im Barometer" };
 const AGREE = [["ja"], ["teils"], ["nein"]];
 const DEF_LABELS = {
   rateQ: "Wie gut findest du das? 1 bis 10", rate2Q: "Wie wichtig ist dir das? 1 bis 10", agreeQ: "Stimmst du zu?",
@@ -352,6 +534,373 @@ const LABEL_FIELDS = [
   ["baroL", "Barometer links (0)"], ["baroR", "Barometer rechts (10)"], ["baroHint", "Anleitung zum Barometer", "wide"]
 ];
 const L = () => ({ ...DEF_LABELS, ...(S.labels || {}) });
+const TPL = [
+  { id: "leer", icon: "📌", name: "Leere Pinnwand", desc: "Ideen sammeln, freigeben und abstimmen.", ph: "z. B. Ideen für die Schulreise", layout: "wand" },
+  { id: "brain", icon: "💡", name: "Brainstorming", desc: "Alle Gedanken sofort an die Wand, danach ordnen.", ph: "z. B. Was fällt dir zum Wald ein?", layout: "wand", direct: true, tools: { like: true }, prompt: "Was fällt dir dazu ein? Schreib jeden Gedanken auf einen eigenen Zettel." },
+  { id: "mind", icon: "🧠", name: "Mindmap", desc: "Ein Thema in der Mitte, Äste rundherum. Jeder Zettel hängt an einem Ast.", ph: "z. B. Der Igel", layout: "mind", kidCat: true,
+    cats: [["Aussehen", "c2"], ["Nahrung", "c3"], ["Lebensraum", "c0"], ["Fragen", "c4"]] },
+  { id: "kwl", icon: "🔍", name: "Weiss – Will wissen – Gelernt", desc: "Vor, während und nach einem Thema: Vorwissen, Fragen und Gelerntes.", ph: "z. B. Thema Wasser", layout: "spalten", kidCat: true,
+    cats: [["Das weiss ich schon", "c2"], ["Das will ich wissen", "c0"], ["Das habe ich gelernt", "c3"]] },
+  { id: "procon", icon: "⚖️", name: "Pro und Contra", desc: "Gründe dafür und dagegen sammeln und gewichten.", ph: "z. B. Sollen wir eine Klassenkasse haben?", layout: "spalten", kidCat: true, tools: { agree: true },
+    cats: [["Dafür 👍", "c3"], ["Dagegen 👎", "c1"]] },
+  { id: "pmi", icon: "➕", name: "Plus – Minus – Interessant", desc: "Eine Idee von drei Seiten anschauen.", ph: "z. B. Hausaufgaben am Wochenende", layout: "spalten", kidCat: true,
+    cats: [["Plus: Das ist gut", "c3"], ["Minus: Das ist nicht gut", "c1"], ["Interessant: Das fällt mir auf", "c4"]] },
+  { id: "rat", icon: "🗣️", name: "Klassenrat", desc: "Anliegen sammeln, besprechen und Beschlüsse festhalten.", ph: "z. B. Klassenrat im November", layout: "spalten", kidCat: true, tools: { agree: true, comment: true },
+    cats: [["Das schätze ich", "c3"], ["Das stört mich", "c1"], ["Ich schlage vor", "c2"]] },
+  { id: "exit", icon: "🎟️", name: "Exit-Ticket", desc: "Kurzer Lernrückblick am Ende der Lektion.", ph: "z. B. Mathe: Brüche", layout: "spalten", kidCat: true,
+    cats: [["Das habe ich gelernt", "c3"], ["Das ist mir noch unklar", "c0"], ["Das möchte ich noch wissen", "c2"]] },
+  { id: "ampel", icon: "🚦", name: "Ampel: Wie läuft es?", desc: "Die Kinder zeigen, wo sie stehen und wer Hilfe braucht.", ph: "z. B. Wochenplan Woche 12", layout: "spalten", kidCat: true,
+    cats: [["🟢 Läuft gut", "c3"], ["🟡 Geht so", "c0"], ["🔴 Ich brauche Hilfe", "c1"]] },
+  { id: "fragen", icon: "❓", name: "Fragen-Sammlung", desc: "Fragen untereinander, die wichtigsten bekommen Herzen.", ph: "z. B. Fragen an die Försterin", layout: "liste", tools: { like: true, comment: true }, prompt: "Was möchtest du wissen? Schreib deine Frage auf." },
+  { id: "zeit", icon: "🕰️", name: "Zeitstrahl", desc: "Ereignisse der Reihe nach: Geschichte, Tagesablauf, Lebenslauf.", ph: "z. B. Die Pfahlbauer", layout: "zeit", bg: "karo" },
+  { id: "abst", icon: "🗳️", name: "Abstimmung", desc: "Vorschläge sammeln und mit 1 bis 10 bewerten.", ph: "z. B. Wohin geht die Schulreise?", layout: "wand", tools: { rate: true, agree: true } },
+  { id: "buch", icon: "📚", name: "Buchtipps", desc: "Lieblingsbücher empfehlen, mit Namen und Herzen.", ph: "z. B. Unsere Lesetipps", layout: "wand", names: true, tools: { like: true, comment: true }, bg: "linien", prompt: "Welches Buch empfiehlst du? Schreib den Titel und warum es dir gefällt." },
+  { id: "hallo", icon: "👋", name: "Wir stellen uns vor", desc: "Steckbriefe der Klasse, mit Namen.", ph: "z. B. Das sind wir", layout: "wand", names: true, tools: { like: true }, bg: "kork", prompt: "Was machst du gern? Was kannst du gut? Was wünschst du dir für dieses Jahr?" },
+  { id: "venn", icon: "⭕", name: "Venn-Diagramm", desc: "Zwei Dinge vergleichen: Was gehört nur zum einen, was zu beiden?", ph: "z. B. Kindheit früher und heute", layout: "frei", canvas: "venn", kidCat: true,
+    cats: [["Früher", "c0"], ["Heute", "c2"], ["Beides", "c3"]] },
+  { id: "felder", icon: "🔲", name: "Vier Felder", desc: "Zettel in vier Felder ordnen, z. B. für eine Selbsteinschätzung.", ph: "z. B. Mein Lernstand in Mathe", layout: "frei", canvas: "felder", kidCat: true,
+    cats: [["Das kann ich gut", "c3"], ["Das übe ich noch", "c0"], ["Das macht mir Freude", "c4"], ["Da brauche ich Hilfe", "c1"]] },
+  { id: "ziel", icon: "🎯", name: "Zielscheibe", desc: "Was ist am wichtigsten? Je näher an der Mitte, desto wichtiger.", ph: "z. B. Was brauchen wir für das Lager?", layout: "frei", canvas: "ziel", kidCat: true,
+    cats: [["Sehr wichtig", "c1"], ["Wichtig", "c0"], ["Weniger wichtig", "c2"]] },
+  { id: "frei", icon: "🎨", name: "Freie Leinwand", desc: "Zettel überall hinschieben, wie auf einem Tisch.", ph: "z. B. Unsere Ideen-Wolke", layout: "frei" },
+  { id: "woche", icon: "🌟", name: "Wochenrückblick", desc: "Highlights, Schwieriges und Vorfreude der Woche.", ph: "z. B. Woche 45", layout: "spalten", kidCat: true,
+    cats: [["Mein Highlight", "c0"], ["Das war schwierig", "c4"], ["Darauf freue ich mich", "c3"]] }
+];
+const LAYOUTS = [["wand", "Wand"], ["spalten", "Spalten"], ["liste", "Liste"], ["zeit", "Zeitstrahl"], ["mind", "Mindmap"], ["frei", "Leinwand"]];
+const BGS = [["", "Aquarell"], ["kork", "Kork"], ["karo", "Karo"], ["linien", "Linien"], ["himmel", "Himmel"], ["wiese", "Wiese"]];
+const CCOL = [["c0", "Gelb"], ["c1", "Rosa"], ["c2", "Blau"], ["c3", "Grün"], ["c4", "Lila"]];
+const newId = p => p + Math.random().toString(36).slice(2, 9);
+const timeCmp = (x, y) => ((x.okAt || x.at || 0) - (y.okAt || y.at || 0)) * ((curBoard() || {}).newPos === "oben" ? -1 : 1);
+const layoutOf = () => { const b = curBoard(); return (b && b.layout) || "wand"; };
+const tplOf = b => TPL.find(t => t.id === (b && b.tpl)) || null;
+const curDefaults = () => (curBoard() && curBoard().tools) || S.defaults;
+const structural = () => layoutOf() === "frei" || (cats().length > 0 && (layoutOf() === "spalten" || layoutOf() === "mind"));
+const imgOk = i => !!(i && typeof i.img === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(i.img));
+const imgHTML = (i, cls) => imgOk(i) ? `<img class="${cls || "nimg"}" src="${esc(i.img)}" alt="" loading="lazy">` : "";
+const pollOpts = i => Array.isArray(i.poll) && i.poll.length >= 2 ? i.poll : ["Ja", "Ein bisschen", "Nein"];
+function shrinkImg(file) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const out = (max, q) => { const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.max(1, Math.round(im.width * k)); c.height = Math.max(1, Math.round(im.height * k)); const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); return c.toDataURL("image/jpeg", q); };
+      let d = out(900, .72); if (d.length > 200000) d = out(640, .62); if (d.length > 200000) d = out(480, .55);
+      URL.revokeObjectURL(u); res(d);
+    };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("bild")); };
+    im.src = u;
+  });
+}
+function imgPickHTML(w) {
+  if (w === "kid" && !(curBoard() || {}).imgs) return "";
+  const cur = w === "kid" ? S.kidImg : S.lpImg;
+  return `<div class="imgpick">${cur ? `<span class="imgprev"><img src="${esc(cur)}" alt="Gewähltes Bild"><button class="del" type="button" data-act="imgclear" data-w="${w}">Bild entfernen</button></span>`
+    : `<label class="btn ghost small imgbtn">📷 Bild hinzufügen<input class="vh" type="file" accept="image/*" data-imgin="${w}"></label>`}</div>`;
+}
+function pollResHTML(id, i, a, present) {
+  const o = pollOpts(i), cnt = o.map((_, k) => (a.poll && a.poll[k]) || 0), tot = cnt.reduce((s, n) => s + n, 0), max = Math.max(0, ...cnt);
+  if (!present && S.pollEdit === id) return `<div class="tool"><label class="tool-l" for="pe-${id}">Antworten der Umfrage (eine pro Zeile)</label><textarea class="field" id="pe-${id}" data-keep rows="4" maxlength="400">${esc(o.join("\n"))}</textarea>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost small" type="button" data-act="pollcancel">Abbrechen</button><button class="btn small" type="button" data-act="pollsave" data-id="${id}">Speichern</button></div></div>`;
+  return `<div class="tool"><span class="tool-l">Umfrage · ${tot} ${tot === 1 ? "Stimme" : "Stimmen"}</span><div class="pollres">${o.map((x, k) => `<div class="pr-r${tot && cnt[k] === max ? " top" : ""}"><span>${esc(x)}</span><b>${cnt[k]}${tot ? ` · ${Math.round(cnt[k] / tot * 100)}%` : ""}</b><span class="pt"><i style="width:${tot ? cnt[k] / tot * 100 : 0}%"></i></span></div>`).join("")}</div>
+    ${present ? "" : `<button class="edit-btn" type="button" data-act="polledit" data-id="${id}">Antworten ändern</button>`}</div>`;
+}
+let tdrag = null;
+function tlNumbers() { document.querySelectorAll("#tl .tl-it").forEach((it, k) => { const d = it.querySelector(".tl-dot"); if (d) d.textContent = k + 1; }); }
+async function tlSave() {
+  ownOrder();
+  const ids = [...document.querySelectorAll("#tl .tl-it")].map(it => it.dataset.tid), jobs = [];
+  ids.forEach((id, k) => { const i = S.ideas.get(id); if (i && i.order !== k) { i.order = k; jobs.push([id, k]); } });
+  if (!jobs.length) return;
+  try { await Promise.all(jobs.map(([id, k]) => patchIdea(id, { order: k }))); toast("Reihenfolge gespeichert."); } catch (err) { failed(err); }
+}
+document.addEventListener("pointerdown", e => {
+  const h = e.target.closest && e.target.closest("[data-tlh]"); if (!h || e.button > 0) return;
+  const it = h.closest(".tl-it"), tl = $("#tl"); if (!it || !tl) return;
+  e.preventDefault(); h.setPointerCapture?.(e.pointerId);
+  tdrag = { it, x: e.clientX, sl: tl.scrollLeft, moved: false }; it.classList.add("tdrag");
+});
+document.addEventListener("pointermove", e => {
+  if (!tdrag) return;
+  const { it } = tdrag, tl = $("#tl"); if (!tl) return;
+  if (!tdrag.moved && Math.abs(e.clientX - tdrag.x) < 5) return;
+  tdrag.moved = true;
+  const r = tl.getBoundingClientRect();
+  if (e.clientX < r.left + 50) tl.scrollLeft -= 14; else if (e.clientX > r.right - 50) tl.scrollLeft += 14;
+  const shift = () => `translateX(${e.clientX - tdrag.x + (tl.scrollLeft - tdrag.sl)}px)`;
+  it.style.transform = shift();
+  for (const o of tl.querySelectorAll(".tl-it")) {
+    if (o === it) continue;
+    const q = o.getBoundingClientRect(); if (e.clientX <= q.left || e.clientX >= q.right) continue;
+    const before = e.clientX < q.left + q.width / 2;
+    if (before ? o.previousElementSibling === it : o.nextElementSibling === it) break;
+    const r0 = it.getBoundingClientRect(); tl.insertBefore(it, before ? o : o.nextSibling); const r1 = it.getBoundingClientRect();
+    tdrag.x += r1.left - r0.left; it.style.transform = shift(); tlNumbers(); break;
+  }
+});
+function tlEnd() { if (!tdrag) return; const { it, moved } = tdrag; tdrag = null; it.classList.remove("tdrag"); it.style.transform = ""; if (moved) tlSave(); }
+document.addEventListener("pointerup", tlEnd);
+document.addEventListener("pointercancel", tlEnd);
+document.addEventListener("keydown", e => {
+  const h = e.target.closest && e.target.closest("[data-tlh]"); if (!h) return;
+  const it = h.closest(".tl-it"), prev = it.previousElementSibling, next = it.nextElementSibling;
+  if (e.key === "ArrowLeft" && prev) { e.preventDefault(); it.parentNode.insertBefore(it, prev); }
+  else if (e.key === "ArrowRight" && next) { e.preventDefault(); it.parentNode.insertBefore(next, it); }
+  else return;
+  h.focus(); tlNumbers(); clearTimeout(tlSave.t); tlSave.t = setTimeout(tlSave, 700);
+});
+document.addEventListener("keydown", e => {
+  const el = e.target; if (!el.id) return;
+  if (el.id.startsWith("ast-") && e.key === "Enter") { e.preventDefault(); $(`[data-act="astsave"][data-id="${el.id.slice(4)}"]`)?.click(); }
+  else if (el.id.startsWith("ast-") && e.key === "Escape") { S.astEdit = null; render(); }
+  else if (el.id === "newAst" && e.key === "Enter") { e.preventDefault(); $('[data-act="addast"]')?.click(); }
+});
+document.addEventListener("change", async e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.imgin) {
+    const f = el.files && el.files[0]; if (!f) return;
+    if (!/^image\//.test(f.type || "image/")) { toast("Das ist kein Bild."); return; }
+    try { const d = await shrinkImg(f); if (el.dataset.imgin === "kid") S.kidImg = d; else S.lpImg = d; render(); }
+    catch { toast("Dieses Bild konnte nicht geladen werden. Bitte ein anderes wählen."); }
+  }
+  else if (el.dataset && el.dataset.act === "leafcat") {
+    const i = S.ideas.get(el.dataset.id); if (!i) return; i.cat = el.value || null; render();
+    try { await patchIdea(el.dataset.id, { cat: el.value || null }); } catch (err) { failed(err); }
+  }
+});
+function sortCmp(a, b) {
+  const bd = curBoard() || {}, m = bd.sortBy || "", ord = i => typeof i.order === "number" ? i.order : 1e9;
+  if (m === "datum") return timeCmp(a[1], b[1]);
+  if (m === "abc") return String(a[1].text || "").localeCompare(String(b[1].text || ""), "de", { sensitivity: "base", numeric: true }) || timeCmp(a[1], b[1]);
+  if (m === "zufall") { const h = s => { let x = 2166136261; for (const c of s) x = Math.imul(x ^ c.charCodeAt(0), 16777619) >>> 0; return x; }; return h(a[0] + (bd.seed || "")) - h(b[0] + (bd.seed || "")); }
+  return ord(a[1]) - ord(b[1]) || timeCmp(a[1], b[1]);
+}
+async function ownOrder() {
+  const bd = curBoard(); if (!bd || !bd.sortBy) return;
+  bd.sortBy = ""; try { await patchBoard(S.board, { sortBy: "" }); } catch (err) { failed(err); }
+}
+function catPickHTML(id, i) {
+  const cs = cats(); if (!cs.length) return "";
+  const lay = layoutOf(), l = lay === "mind" ? "An den Ast" : lay === "spalten" ? "In die Spalte" : "Kategorie";
+  return `<label class="row lpcat notecat"><span class="tool-l">${l}</span><select class="field" data-act="leafcat" data-id="${id}"><option value="">${lay === "mind" ? "ohne Ast" : "ohne"}</option>${cs.map(c => `<option value="${c.id}" ${i.cat === c.id ? "selected" : ""}>${esc(c.title)}</option>`).join("")}</select></label>`;
+}
+const CANVAS = {
+  leer: { name: "Leer", defs: [] },
+  venn: { name: "Venn-Diagramm", defs: [["Links", "c0"], ["Rechts", "c2"], ["Beides", "c3"]] },
+  tabelle: { name: "Zwei Seiten", defs: [["Links", "c3"], ["Rechts", "c1"]] },
+  felder: { name: "Vier Felder", defs: [["Feld 1", "c0"], ["Feld 2", "c2"], ["Feld 3", "c3"], ["Feld 4", "c4"]] },
+  ziel: { name: "Zielscheibe", defs: [["Sehr wichtig", "c1"], ["Wichtig", "c0"], ["Weniger wichtig", "c2"]] }
+};
+const CHEX = { c0: ["#fdf1c2", "#e2bd4a"], c1: ["#fcefed", "#e0948a"], c2: ["#e3eef8", "#86a9cc"], c3: ["#e9f1e3", "#8db27a"], c4: ["#efe8f7", "#a98fcf"] };
+const canvasOf = () => { const t = (curBoard() || {}).canvas; return CANVAS[t] ? t : "leer"; };
+const canMove = () => isTeacher && !S.peek && (S.view === "lp" || S.view === "show");
+const pendN = () => { let n = 0; for (const [, i] of S.ideas) if (i.status === "pending" && inBoard(i)) n++; return n; };
+function cvRegion(t, x, y) {
+  const X = x * 1600, Y = y * 1000, d = (cx, cy) => Math.hypot(X - cx, Y - cy);
+  if (t === "venn") { const l = d(576, 500) < 464, r = d(1024, 500) < 464; return l && r ? 2 : l ? 0 : r ? 1 : -1; }
+  if (t === "tabelle") return x < .5 ? 0 : 1;
+  if (t === "felder") return (y < .5 ? 0 : 2) + (x < .5 ? 0 : 1);
+  if (t === "ziel") { const k = d(800, 500); return k < 160 ? 0 : k < 320 ? 1 : k < 480 ? 2 : -1; }
+  return -1;
+}
+const CV_ANCHOR = { venn: [[.2, .45], [.8, .45], [.5, .45]], tabelle: [[.25, .3], [.75, .3]], felder: [[.22, .25], [.72, .25], [.22, .75], [.72, .75]], ziel: [[.5, .5], [.36, .5], [.2, .5]] };
+const CV_LABEL = { venn: [[.22, .12], [.78, .12], [.5, .15]], tabelle: [[.25, .05], [.75, .05]], felder: [[.25, .05], [.75, .05], [.25, .55], [.75, .55]], ziel: [[.5, .37], [.5, .21], [.5, .05]] };
+const CV_STEP = [[0, 0], [0, .17], [0, -.17], [0, .34], [-.11, .085], [.11, .085], [-.11, -.085], [.11, -.085], [-.11, .255], [.11, .255]];
+function cvSVG(t, cs) {
+  const col = k => CHEX[(cs[k] && cs[k].color) || ["c0", "c2", "c3", "c4"][k % 4]] || CHEX.c0;
+  if (t === "venn") return `<defs><clipPath id="cvL"><circle cx="576" cy="500" r="464"/></clipPath></defs>
+    <circle cx="576" cy="500" r="464" fill="${col(0)[0]}" stroke="${col(0)[1]}" stroke-width="5"/><circle cx="1024" cy="500" r="464" fill="${col(1)[0]}" stroke="${col(1)[1]}" stroke-width="5"/>
+    <circle cx="1024" cy="500" r="464" clip-path="url(#cvL)" fill="${col(2)[0]}" stroke="${col(2)[1]}" stroke-width="5" stroke-dasharray="16 12"/><circle cx="576" cy="500" r="464" fill="none" stroke="${col(2)[1]}" stroke-width="5" stroke-dasharray="16 12" clip-path="url(#cvR)"/>
+    <defs><clipPath id="cvR"><circle cx="1024" cy="500" r="464"/></clipPath></defs>`;
+  if (t === "tabelle") return `<rect x="20" y="20" width="770" height="960" rx="28" fill="${col(0)[0]}"/><rect x="810" y="20" width="770" height="960" rx="28" fill="${col(1)[0]}"/><line x1="800" y1="40" x2="800" y2="960" stroke="#3f5f86" stroke-width="6" opacity=".4"/><line x1="60" y1="120" x2="1540" y2="120" stroke="#3f5f86" stroke-width="6" opacity=".4"/>`;
+  if (t === "felder") return [[20, 20], [810, 20], [20, 510], [810, 510]].map(([x, y], k) => `<rect x="${x}" y="${y}" width="770" height="470" rx="28" fill="${col(k)[0]}" stroke="${col(k)[1]}" stroke-width="4"/>`).join("");
+  if (t === "ziel") return `<circle cx="800" cy="500" r="480" fill="${col(2)[0]}" stroke="${col(2)[1]}" stroke-width="5"/><circle cx="800" cy="500" r="320" fill="${col(1)[0]}" stroke="${col(1)[1]}" stroke-width="5"/><circle cx="800" cy="500" r="160" fill="${col(0)[0]}" stroke="${col(0)[1]}" stroke-width="5"/>`;
+  return "";
+}
+function canvasHTML(list, fn, kid) {
+  const b = curBoard() || {}, t = canvasOf(), cs = cats(), mv = canMove(), edit = !kid && (S.view === "lp" || S.view === "show");
+  const seen = {}, place = (id, i) => {
+    if (i.pos && typeof i.pos.x === "number") return [i.pos.x, i.pos.y];
+    const k = cs.findIndex(c => c.id === i.cat), key = t !== "leer" && k >= 0 && (CV_ANCHOR[t] || [])[k] ? "r" + k : "x", n = seen[key] = (seen[key] ?? -1) + 1;
+    if (key === "x") return t === "leer" ? [.1 + (n % 6) * .16, .14 + Math.floor(n / 6) * .26] : [.07 + (n % 7) * .14, .9];
+    const [ax, ay] = CV_ANCHOR[t][k], [dx, dy] = CV_STEP[n % CV_STEP.length];
+    return [ax + dx, ay + dy + Math.floor(n / CV_STEP.length) * .05];
+  };
+  const clamp = v => Math.max(.07, Math.min(.93, v));
+  const notes = list.map(([id, i]) => { const [x, y] = place(id, i); return `<button type="button" class="cv-note note ${mv ? "mv " : ""}${noteColor(id, i)}${S.mmFocus === id ? " cur" : ""}" data-act="mmfocus" data-id="${id}" style="left:${clamp(x) * 100}%;top:${clamp(y) * 100}%">${imgHTML(i, "mm-img")}<span>${esc(i.text)}</span>${b.names && i.by && i.by !== "Lehrperson" ? `<small>${esc(i.by)}</small>` : ""}</button>`; }).join("");
+  const labels = (CV_LABEL[t] || []).map(([x, y], k) => { const c = cs[k]; if (!c) return "";
+    const inner = edit && S.astEdit === c.id
+      ? `<span class="mm-ed"><input class="field" id="ast-${c.id}" data-keep maxlength="60" value="${esc(c.title)}" aria-label="Name des Feldes"><span class="row"><button class="btn small" type="button" data-act="astsave" data-id="${c.id}">OK</button></span></span>`
+      : edit ? `<button type="button" class="cv-lt" data-act="astedit" data-id="${c.id}" title="Umbenennen">${esc(c.title)}</button>` : `<span class="cv-lt">${esc(c.title)}</span>`;
+    return `<div class="cv-lab" style="left:${x * 100}%;top:${y * 100}%">${inner}</div>`; }).join("");
+  const f = S.mmFocus && list.find(([id]) => id === S.mmFocus);
+  return `<div class="cv-wrap"><div class="cv" id="cv" data-t="${t}"><svg class="cv-bg" viewBox="0 0 1600 1000" aria-hidden="true">${cvSVG(t, cs)}</svg>${labels}${notes}
+      ${!list.length ? `<p class="cv-empty">${kid ? "Noch keine Zettel" : "Noch keine Zettel. Heften Sie rechts unter «Selbst anpinnen» einen an."}</p>` : ""}</div></div>
+    ${f ? `<div class="mm-focus"><div class="row" style="justify-content:space-between"><span class="tool-l">Zettel im Detail</span><button class="btn ghost small" type="button" data-act="mmclose">Schliessen</button></div><div class="board">${fn(f)}</div></div>`
+      : list.length ? `<p class="sub mm-hint">${mv ? "Ziehen Sie die Zettel, wohin Sie wollen. Antippen zeigt einen Zettel gross." + (t !== "leer" ? " Tippen Sie auf eine Überschrift, um sie umzubenennen." : "") : "Tippe auf einen Zettel, um ihn gross zu sehen" + (kid ? " und mitzumachen." : ".")}</p>` : ""}`;
+}
+// Ziehen: Zettel auf der Leinwand und Blätter der Mindmap
+let mvd = null, noClick = false;
+document.addEventListener("click", e => { if (noClick) { noClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener("pointerdown", e => {
+  const el = e.target.closest && e.target.closest(".mv"); if (!el || e.button > 0 || !canMove()) return;
+  const r = el.getBoundingClientRect();
+  mvd = { el, id: el.dataset.id, x0: e.clientX, y0: e.clientY, ox: e.clientX - (r.left + r.width / 2), oy: e.clientY - (r.top + r.height / 2), moved: false, cv: el.classList.contains("cv-note"), pid: e.pointerId };
+});
+document.addEventListener("pointermove", e => {
+  if (!mvd) return;
+  const { el } = mvd;
+  if (!mvd.moved) { if (Math.hypot(e.clientX - mvd.x0, e.clientY - mvd.y0) < 6) return; mvd.moved = true; el.classList.add("dragging"); el.setPointerCapture?.(mvd.pid); }
+  e.preventDefault();
+  if (mvd.cv) {
+    const cv = $("#cv"); if (!cv) return; const r = cv.getBoundingClientRect();
+    mvd.x = Math.max(.04, Math.min(.96, (e.clientX - mvd.ox - r.left) / r.width)); mvd.y = Math.max(.04, Math.min(.96, (e.clientY - mvd.oy - r.top) / r.height));
+    el.style.left = mvd.x * 100 + "%"; el.style.top = mvd.y * 100 + "%";
+  } else {
+    el.style.transform = `translate(${e.clientX - mvd.x0}px,${e.clientY - mvd.y0}px)`;
+    el.style.pointerEvents = "none"; const over = document.elementFromPoint(e.clientX, e.clientY); el.style.pointerEvents = "";
+    const br = over && over.closest && over.closest(".mm-br:not([data-bare])");
+    document.querySelectorAll(".mm-br.drop").forEach(x => x !== br && x.classList.remove("drop")); if (br) br.classList.add("drop");
+    mvd.br = br || null;
+  }
+});
+async function mvEnd() {
+  if (!mvd) return; const d = mvd; mvd = null;
+  if (!d.moved) return;
+  noClick = true; setTimeout(() => { noClick = false; }, 0);
+  d.el.classList.remove("dragging"); document.querySelectorAll(".mm-br.drop").forEach(x => x.classList.remove("drop"));
+  const i = S.ideas.get(d.id); if (!i) { render(); return; }
+  if (d.cv && typeof d.x === "number") {
+    const t = canvasOf(), k = cvRegion(t, d.x, d.y), patch = { pos: { x: +d.x.toFixed(4), y: +d.y.toFixed(4) } };
+    if (t !== "leer") patch.cat = k >= 0 && cats()[k] ? cats()[k].id : null;
+    Object.assign(i, patch); render();
+    try { await patchIdea(d.id, patch); } catch (err) { failed(err); }
+  } else if (!d.cv && d.br) {
+    const cid = d.br.dataset.cid || null; d.el.style.transform = "";
+    if ((i.cat || null) === cid) { render(); return; }
+    i.cat = cid; render();
+    try { await patchIdea(d.id, { cat: cid }); toast("Zettel verschoben."); } catch (err) { failed(err); }
+  } else { d.el.style.transform = ""; render(); }
+}
+document.addEventListener("pointerup", mvEnd);
+document.addEventListener("pointercancel", mvEnd);
+function noteColor(id, i) { const c = cats().find(c => c.id === (i && i.cat)); return (c && c.color) || colorOf(id); }
+function fromTpl(t, title) {
+  const b = { title, visible: false, at: Date.now(), tpl: t.id, layout: t.layout || "wand" };
+  for (const k of ["prompt", "bg", "kidCat", "direct", "names", "canvas"]) if (t[k]) b[k] = t[k];
+  if (t.tools) b.tools = { ...t.tools };
+  if (t.cats) b.cats = t.cats.map(([title, color]) => ({ id: newId("c"), title, color, note: "" }));
+  return b;
+}
+function tplSVG(t) {
+  const P = { c0: "#f3dc84", c1: "#f4c4bd", c2: "#b9d2ea", c3: "#c3dbb4", c4: "#d6c6ec" }, ks = Object.keys(P);
+  const cs = (t.cats || []).map(c => P[c[1]] || P.c0);
+  let g = "";
+  if (t.layout === "spalten") { const n = cs.length || 3, w = 112 / n; cs.forEach((c, k) => { const x = 4 + k * w; g += `<rect x="${x + 2}" y="3" width="${w - 4}" height="5" rx="2" fill="${c}"/><rect x="${x + 4}" y="11" width="${w - 8}" height="9" rx="2" fill="${c}" opacity=".75"/><rect x="${x + 4}" y="23" width="${w - 8}" height="9" rx="2" fill="${c}" opacity=".75"/>`; }); }
+  else if (t.layout === "mind") { const pts = [[20, 8], [20, 32], [100, 8], [100, 32]]; pts.forEach(([x, y], k) => { g += `<path d="M60,20 C${(60 + x) / 2},20 ${(60 + x) / 2},${y} ${x},${y}" stroke="${cs[k] || P[ks[k]]}" stroke-width="3" fill="none"/><rect x="${x - 12}" y="${y - 5}" width="24" height="10" rx="4" fill="${cs[k] || P[ks[k]]}"/>`; }); g += `<ellipse cx="60" cy="20" rx="16" ry="9" fill="#fff" stroke="#3f5f86" stroke-width="2"/>`; }
+  else if (t.layout === "frei" && t.canvas === "venn") g += `<circle cx="48" cy="20" r="17" fill="${P.c0}" opacity=".9"/><circle cx="72" cy="20" r="17" fill="${P.c2}" opacity=".8"/>`;
+  else if (t.layout === "frei" && t.canvas === "felder") [[8, 2], [62, 2], [8, 21], [62, 21]].forEach(([x, y], k) => { g += `<rect x="${x}" y="${y}" width="50" height="17" rx="3" fill="${P[["c3", "c0", "c4", "c1"][k]]}"/>`; });
+  else if (t.layout === "frei" && t.canvas === "ziel") g += `<circle cx="60" cy="20" r="19" fill="${P.c2}"/><circle cx="60" cy="20" r="12" fill="${P.c0}"/><circle cx="60" cy="20" r="5" fill="${P.c1}"/>`;
+  else if (t.layout === "frei") { [[14, 6], [44, 20], [78, 4], [96, 22], [30, 24]].forEach(([x, y], k) => { g += `<rect x="${x}" y="${y}" width="18" height="13" rx="2" fill="${P[ks[k]]}" transform="rotate(${k % 2 ? 6 : -5} ${x + 9} ${y + 6})"/>`; }); }
+  else if (t.layout === "liste") { for (let k = 0; k < 3; k++) g += `<rect x="30" y="${3 + k * 12}" width="60" height="9" rx="2" fill="${P[ks[k + 1]]}"/>`; }
+  else if (t.layout === "zeit") { g += `<line x1="6" y1="10" x2="114" y2="10" stroke="#3f5f86" stroke-width="2" opacity=".5"/>`; for (let k = 0; k < 4; k++) g += `<circle cx="${18 + k * 28}" cy="10" r="4" fill="#3f5f86"/><rect x="${8 + k * 28}" y="18" width="20" height="16" rx="2" fill="${P[ks[k]]}"/>`; }
+  else { for (let k = 0; k < 8; k++) g += `<rect x="${8 + (k % 4) * 27}" y="${3 + Math.floor(k / 4) * 18}" width="22" height="14" rx="2" fill="${P[ks[(k * 3 + t.id.length) % 5]]}" transform="rotate(${k % 2 ? 3 : -3} ${19 + (k % 4) * 27} ${10 + Math.floor(k / 4) * 18})"/>`; }
+  return `<svg class="tpl-p" viewBox="0 0 120 40" aria-hidden="true">${g}</svg>`;
+}
+function newBoardHTML() {
+  const t = TPL.find(x => x.id === S.tpl) || TPL[0];
+  return `<section class="panel"><div><h2>Neue Pinnwand</h2><p class="sub">Wählen Sie eine Vorlage. Spalten, Fragen und Werkzeuge sind dann schon vorbereitet und lassen sich später ändern. Eine neue Pinnwand ist zuerst versteckt.</p></div>
+    <div class="tpls" role="list">${TPL.map(x => `<button type="button" class="tpl" role="listitem" data-act="tpl" data-v="${x.id}" aria-pressed="${x.id === t.id}"><span class="tpl-top"><span class="tpl-i" aria-hidden="true">${x.icon}</span><b>${esc(x.name)}</b></span>${tplSVG(x)}<span class="tpl-d">${esc(x.desc)}</span></button>`).join("")}</div>
+    ${t.cats ? `<p class="sub tpl-sel"><b>${esc(t.name)}:</b> ${t.cats.map(c => "«" + esc(c[0]) + "»").join(" · ")}</p>` : ""}
+    <div class="row"><input class="field grow" id="newBoard" data-keep maxlength="60" placeholder="${esc(t.ph)}" aria-label="Name der Pinnwand"><button class="btn" type="button" data-act="newboard">${t.id === "leer" ? "Erstellen" : esc(t.icon) + " Erstellen"}</button></div></section>`;
+}
+function bsetHTML() {
+  const b = curBoard(); if (!b) return "";
+  const lay = layoutOf(), hasCats = cats().length > 0;
+  const seg = (act, list, cur) => `<div class="seg">${list.map(([k, l]) => `<button type="button" data-act="${act}" data-v="${k}" aria-pressed="${k === cur}">${l}</button>`).join("")}</div>`;
+  const segK = (k, list, cur) => `<div class="seg">${list.map(([v, l]) => `<button type="button" data-act="bseg" data-k="${k}" data-v="${v}" aria-pressed="${v === cur}">${l}</button>`).join("")}</div>`;
+  const opt = (k, l) => `<label class="tg"><input type="checkbox" data-act="bopt" data-k="${k}" ${b[k] ? "checked" : ""}>${l}</label>`;
+  return `<details class="panel settings" id="bsetBox" ${S.showBset ? "open" : ""}><summary><h2>Darstellung und Einstellungen</h2><span class="sub">Wand, Spalten, Liste, Zeitstrahl oder Mindmap · Auftrag · Hintergrund${tplOf(b) ? " · Vorlage «" + esc(tplOf(b).name) + "»" : ""}</span></summary>
+    <div class="bset">
+      <div><span class="tool-l">Darstellung</span>${seg("blayout", LAYOUTS, lay)}
+        <p class="sub">${{ wand: "Zettel nebeneinander, Kategorien als Übertitel.", spalten: "Jede Kategorie ist eine Spalte. Gut für Pro und Contra, Klassenrat, Exit-Ticket.", liste: "Alle Zettel untereinander, gut für Fragen.", zeit: "Zettel der Reihe nach auf einer Linie. Die Reihenfolge legen Sie unter «Sortieren» fest.", mind: "Der Auftrag (oder der Name) steht in der Mitte, die Kategorien sind die Äste. Zettel lassen sich auf einen anderen Ast ziehen.", frei: "Zettel frei hinschieben, wie auf einem Tisch. Mit einer Vorlage (z. B. Venn-Diagramm) kommt der Zettel beim Loslassen automatisch in das richtige Feld." }[lay]}
+        ${(lay === "spalten" || lay === "mind") && !hasCats ? ` <b>Legen Sie unter «Sortieren» Kategorien an, sie werden zu ${lay === "mind" ? "Ästen" : "Spalten"}.</b>` : ""}</p></div>
+      ${lay === "frei" ? `<div><span class="tool-l">Vorlage der Leinwand</span>${seg("bcanvas", Object.entries(CANVAS).map(([k, v]) => [k, v.name]), canvasOf())}</div>` : ""}
+      <div><span class="tool-l">Hintergrund</span>${seg("bbg", BGS, b.bg || "")}</div>
+      <div class="bset-row"><div><span class="tool-l">Zettelgrösse</span>${segK("size", [["", "Standard"], ["breit", "Breit"]], b.size || "")}</div>
+        <div><span class="tool-l">Schrift</span>${segK("font", [["", "Handschrift"], ["klar", "Druckschrift"]], b.font || "")}</div>
+        <div><span class="tool-l">Sortieren nach</span>${segK("sortBy", [["", "Eigene Reihenfolge"], ["datum", "Datum"], ["abc", "Alphabet"], ["zufall", "Zufällig"]], b.sortBy || "")}${b.sortBy === "zufall" ? ` <button class="btn ghost small" type="button" data-act="reshuffle">🔀 Neu mischen</button>` : ""}</div>
+        <div><span class="tool-l">Neue Zettel</span>${segK("newPos", [["", "unten anhängen"], ["oben", "oben anhängen"]], b.newPos || "")}</div></div>
+      <label><span class="tool-l">Auftrag oder Frage für die Kinder</span><textarea class="field" id="bPrompt" data-keep rows="2" maxlength="300" placeholder="z. B. Was weisst du schon über Igel?">${esc(b.prompt || "")}</textarea></label>
+      <div><span class="tool-l">Optionen</span><div class="tools-set">
+        ${hasCats ? opt("kidCat", lay === "mind" ? "Kinder wählen den Ast selbst" : "Kinder wählen die Spalte selbst") : ""}
+        ${opt("direct", "Zettel der Kinder ohne Freigabe anpinnen")}
+        ${opt("names", "Namen auf den Zetteln zeigen")}
+        ${opt("imgs", "Kinder dürfen ein Bild anhängen")}</div>
+        <p class="sub">Spalten, Äste und Kategorien benennen, färben und ordnen Sie unter «Sortieren».${b.direct ? " <b>Ohne Freigabe hängen die Zettel der Kinder sofort an der Pinnwand. Sie können sie jederzeit entfernen.</b>" : ""}</p></div>
+      <div class="row"><button class="btn ghost small" type="button" data-act="print">🖨️ Drucken</button></div>
+    </div></details>`;
+}
+function kidCatHTML() {
+  const b = curBoard(), cs = cats(); if (!b || !b.kidCat || !cs.length) return "";
+  if (S.kcat && !cs.some(c => c.id === S.kcat)) S.kcat = null;
+  return `<div class="kcat"><span class="tool-l">${layoutOf() === "mind" ? "An welchen Ast gehört dein Zettel?" : "Wohin gehört dein Zettel?"}</span>
+    <div class="kcat-b">${cs.map(c => `<button type="button" class="kc ${c.color || ""}" data-act="kcat" data-v="${c.id}" aria-pressed="${S.kcat === c.id}">${esc(c.title)}</button>`).join("")}</div></div>`;
+}
+function layoutBoard(lay, list, fn, kid) {
+  const cs = cats(), b = curBoard() || {};
+  const groups = cs.map(c => ({ c, l: list.filter(([, i]) => i.cat === c.id) }));
+  const rest = list.filter(([, i]) => catIdx(i) >= 1e6);
+  if (lay === "zeit") {
+    const ord = i => typeof i.order === "number" ? i.order : 1e9;
+    const l = list.slice().sort(sortCmp), drag = !kid && S.view === "lp";
+    return `${drag && l.length > 1 ? `<p class="sub tl-tip">Zum Verschieben die Nummer eines Zettels anfassen und nach links oder rechts ziehen.</p>` : ""}<div class="tl" id="tl" role="list">${l.map((x, k) => { const c = cs.find(c => c.id === x[1].cat); return `<div class="tl-it" role="listitem" data-tid="${x[0]}">${drag ? `<button type="button" class="tl-dot tl-h" data-tlh="${x[0]}" title="Ziehen, um den Zettel zu verschieben" aria-label="Zettel ${k + 1} verschieben (Pfeiltasten)">${k + 1}</button>` : `<span class="tl-dot">${k + 1}</span>`}<span class="tl-stem"></span>${c ? `<span class="tl-cat">${esc(c.title)}</span>` : ""}${fn(x)}</div>`; }).join("")}</div>`;
+  }
+  if (lay === "spalten") {
+    if (!cs.length) return `<div class="board">${list.map(fn).join("")}</div>`;
+    if (rest.length) groups.push({ c: null, l: rest });
+    return `<div class="cols">${groups.map(({ c, l }) => `<section class="col" data-c="${(c && c.color) || ""}"><h3 class="colhead">${c ? esc(c.title) : "Weitere"} <small>${l.length}</small></h3>
+      <div class="colbody">${l.length ? l.map(fn).join("") : `<p class="colempty">${kid ? "Noch leer" : "Noch kein Zettel"}</p>`}</div>
+      ${c && (c.note || "").trim() ? `<div class="catnote"><span class="tool-l">${kid ? "Beschluss" : "Beschluss / Kommentar"}</span><p>${esc(c.note)}</p></div>` : ""}</section>`).join("")}</div>`;
+  }
+  // Mindmap: Mitte = Auftrag oder Name, Äste = Kategorien, Blätter = Zettel (antippen zeigt den ganzen Zettel)
+  const br = cs.length ? groups : [{ c: null, l: list, bare: true }];
+  if (cs.length && rest.length) br.push({ c: null, l: rest });
+  const one = matchMedia("(max-width:760px)").matches || br.length === 1;
+  const half = one ? 0 : Math.floor(br.length / 2), left = br.slice(br.length - half), right = br.slice(0, br.length - half);
+  const leaf = ([id, i]) => `<button type="button" class="mm-leaf note ${canMove() ? "mv " : ""}${noteColor(id, i)}${S.mmFocus === id ? " cur" : ""}" data-act="mmfocus" data-id="${id}">${imgHTML(i, "mm-img")}${esc(i.text)}${b.names && i.by && (!kid || i.by !== "Lehrperson") ? `<small>${esc(i.by)}</small>` : ""}</button>`;
+  const edit = !kid && (S.view === "lp" || S.view === "show");
+  const node = c => !c ? `<div class="mm-node">Weitere</div>` : edit && S.astEdit === c.id
+    ? `<div class="mm-node mm-ed"><input class="field" id="ast-${c.id}" data-keep maxlength="60" value="${esc(c.title)}" aria-label="Name des Astes"><span class="row"><button class="btn small" type="button" data-act="astsave" data-id="${c.id}">OK</button><button class="del ${S.armed === "k:" + c.id ? "arm" : ""}" type="button" data-act="delcat" data-id="${c.id}">${S.armed === "k:" + c.id ? "Wirklich löschen?" : "Löschen"}</button></span></div>`
+    : edit ? `<button type="button" class="mm-node" data-act="astedit" data-id="${c.id}" title="Ast umbenennen oder löschen">${esc(c.title)}</button>` : `<div class="mm-node">${esc(c.title)}</div>`;
+  const branch = side => ({ c, l, bare }) => `<div class="mm-br ${side}" data-c="${(c && c.color) || ""}" data-cid="${c ? c.id : ""}"${bare ? " data-bare" : ""}>${bare ? "" : node(c)}<div class="mm-leaves">${l.length ? l.map(leaf).join("") : `<span class="mm-empty">${kid ? "noch leer" : "noch kein Zettel"}</span>`}</div></div>`;
+  const f = S.mmFocus && list.find(([id]) => id === S.mmFocus);
+  return `<div class="mm-wrap"><div class="mm${one ? " one" : ""}" id="mm"><svg class="mm-svg" id="mmSvg" aria-hidden="true"></svg>
+      ${one ? "" : `<div class="mm-side l">${left.map(branch("l")).join("")}</div>`}
+      <div class="mm-center">${esc(b.prompt || b.title || "Thema")}</div>
+      <div class="mm-side r">${right.map(branch("r")).join("")}</div></div></div>
+    ${f ? `<div class="mm-focus"><div class="row" style="justify-content:space-between"><span class="tool-l">Zettel im Detail</span><button class="btn ghost small" type="button" data-act="mmclose">Schliessen</button></div>${edit && cs.length ? `<label class="row lpcat"><span class="tool-l">An den Ast</span><select class="field" data-act="leafcat" data-id="${f[0]}"><option value="">ohne Ast</option>${cs.map(c => `<option value="${c.id}" ${f[1].cat === c.id ? "selected" : ""}>${esc(c.title)}</option>`).join("")}</select></label>` : ""}<div class="board">${fn(f)}</div></div>`
+      : list.length ? `<p class="sub mm-hint">Tippe auf einen Zettel, um ihn gross zu sehen${kid ? " und mitzumachen" : ""}.${edit ? " Ziehen Sie einen Zettel auf einen anderen Ast, um ihn zu verschieben. Tippen Sie auf einen Ast, um ihn umzubenennen." : ""}</p>` : ""}
+    ${edit && S.view === "lp" ? `<div class="row mm-add"><input class="field grow" id="newAst" data-keep maxlength="60" placeholder="Neuer Ast, z. B. «Feinde»" aria-label="Name des neuen Astes"><button class="btn" type="button" data-act="addast">+ Ast</button></div>` : ""}`;
+}
+function drawMind() {
+  const mm = document.getElementById("mm"), svg = document.getElementById("mmSvg"); if (!mm || !svg) return;
+  const R = mm.getBoundingClientRect(), W = mm.offsetWidth, H = mm.offsetHeight;
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const box = el => { const r = el.getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, cx: (r.left + r.right) / 2 - R.left, b: r.bottom - R.top, cy: (r.top + r.bottom) / 2 - R.top }; };
+  const one = mm.classList.contains("one");
+  const c = box(mm.querySelector(".mm-center"));
+  const path = (x1, y1, x2, y2, col, w) => { const mx = (x1 + x2) / 2; return `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`; };
+  let d = "";
+  mm.querySelectorAll(".mm-br").forEach(brEl => {
+    const right = brEl.classList.contains("r"), node = brEl.querySelector(".mm-node"), col = getComputedStyle(brEl).getPropertyValue("--mc").trim() || "#9aa39c";
+    const n = node ? box(node) : null;
+    if (n && one) d += `<path d="M${c.l + 30},${c.b - 6} Q8,${c.b} 8,${c.b + 24} L8,${n.cy - 12} Q8,${n.cy} 20,${n.cy} L${n.l},${n.cy}" stroke="${col}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    else if (n) d += path(right ? c.r : c.l, c.cy, right ? n.l : n.r, n.cy, col, 5);
+    const from = n || c;
+    brEl.querySelectorAll(".mm-leaf").forEach(lf => { const x = box(lf); d += path(right ? from.r : from.l, from.cy, right ? x.l : x.r, x.cy, col, 2.5); });
+  });
+  svg.innerHTML = d;
+}
+addEventListener("resize", () => { clearTimeout(drawMind.t); drawMind.t = setTimeout(() => { if (layoutOf() === "mind" && document.getElementById("mm")) render(); }, 150); });
 const fmt = n => n == null ? "–" : n.toLocaleString("de-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const colorOf = id => { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return "c" + (h % 5); };
 
@@ -397,6 +946,7 @@ async function removeIdea(id) {
 }
 let dirty = false, saving = false, timer = null;
 function touchMy(delay = 600) {
+  if (S.peek) return;
   dirty = true; clearTimeout(timer); timer = setTimeout(flush, delay);
 }
 async function flush() {
@@ -416,25 +966,40 @@ function failed(e) {
   else toast("Konnte nicht speichern. Bitte gleich nochmals versuchen.");
 }
 function myVote(id) { if (S.peek) return {}; return (S.my.r[id] ||= {}); }
+let ownMy = null;
 function peekHTML() {
-  if (!KN || !isTeacher) return "";
-  const voted = new Set([...S.votes.keys()]);
-  return `<div class="row peekrow"><label class="grow"><span class="sub">Ansicht von</span><select class="field" id="peekSel" data-act="peek">
+  if (KN) {
+    const voted = new Set([...S.votes.keys()]);
+    return `<div class="row peekrow"><label class="grow"><span class="sub">Ansicht von</span><select class="field" id="peekSel">
     <option value="">Vorschau (ohne Kind)</option>${KN.roster.map(k => `<option value="${esc(k.id)}" ${S.peek === k.id ? "selected" : ""}>${esc(k.name)}${voted.has(k.id) ? " ✓" : ""}</option>`).join("")}</select></label></div>
     ${S.peek ? `<p class="sub peeknote">So sieht ${esc((KN.roster.find(k => k.id === S.peek) || {}).name || "")} die Pinnwand: mit den eigenen Stimmen und Kommentaren. Hier kann nichts geändert werden.</p>` : ""}`;
+  }
+  const kids = [...S.votes].filter(([vid]) => vid !== myKey()).map(([vid, v]) => ({ id: vid, name: (v && v.name) || "Ohne Namen" })).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  return `<div class="row peekrow"><label class="grow"><span class="sub">Ansicht von</span><select class="field" id="peekSel">
+    <option value="">Meine eigene Ansicht</option>${kids.map(k => `<option value="${esc(k.id)}" ${S.peek === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
+    ${S.peek ? `<p class="sub peeknote">So sieht ${esc((kids.find(k => k.id === S.peek) || {}).name || "")} die Pinnwand: mit den eigenen Stimmen und Kommentaren. Hier kann nichts geändert werden.</p>` : ""}`;
 }
 function setPeek(id) {
+  if (KN) {
+    S.peek = id || "";
+    const k = KN.roster.find(x => x.id === S.peek), v = S.peek ? S.votes.get(S.peek) : null;
+    S.my = S.peek ? { name: k ? k.name : "", r: JSON.parse(JSON.stringify((v && v.r) || {})) } : { name: KN.name, r: {} };
+    document.body.classList.toggle("peeking", !!S.peek);
+    return;
+  }
+  if (!S.peek && id) ownMy = S.my;
   S.peek = id || "";
-  const k = KN.roster.find(x => x.id === S.peek), v = S.peek ? S.votes.get(S.peek) : null;
-  S.my = S.peek ? { name: k ? k.name : "", r: JSON.parse(JSON.stringify((v && v.r) || {})) } : { name: KN.name, r: {} };
+  const v = S.peek ? S.votes.get(S.peek) : null;
+  S.my = S.peek ? { name: (v && v.name) || "", r: JSON.parse(JSON.stringify((v && v.r) || {})) } : (ownMy || S.my);
+  if (!S.peek) ownMy = null;
   document.body.classList.toggle("peeking", !!S.peek);
 }
 
 /* ---------- aggregate ---------- */
 function aggregate() {
-  const all = new Map(S.votes); all.set(myKey(), S.my);
+  const all = new Map(S.votes); all.set(myKey(), S.peek ? (ownMy || { r: {} }) : S.my);
   const res = {};
-  for (const [id, i] of S.ideas) if (i.status === "ok" && inBoard(i)) res[id] = { rate: [], rate2: [], baro: [], agree: { ja: 0, teils: 0, nein: 0 }, comments: [], voters: new Set() };
+  for (const [id, i] of S.ideas) if (i.status === "ok" && inBoard(i)) res[id] = { rate: [], rate2: [], baro: [], like: 0, poll: [], agree: { ja: 0, teils: 0, nein: 0 }, comments: [], voters: new Set() };
   let kids = 0;
   for (const [uid, v] of all) {
     const r = v && v.r || {}; let any = false;
@@ -442,6 +1007,8 @@ function aggregate() {
       const a = res[id], x = r[id]; if (!a || !x) continue;
       if (typeof x.rate === "number") { a.rate.push(x.rate); any = true; a.voters.add(uid); }
       if (typeof x.rate2 === "number") { a.rate2.push(x.rate2); any = true; a.voters.add(uid); }
+      if (x.like === true) { a.like++; any = true; a.voters.add(uid); }
+      if (typeof x.poll === "number") { a.poll[x.poll] = (a.poll[x.poll] || 0) + 1; any = true; a.voters.add(uid); }
       if (typeof x.baro === "number") { a.baro.push(x.baro); any = true; a.voters.add(uid); }
       if (x.agree in a.agree) { a.agree[x.agree]++; any = true; a.voters.add(uid); }
       if (x.comment && x.comment.trim()) { const hd = (S.ideas.get(id) || {}).hide || {}; if (hd[uid] !== x.comment.trim()) a.comments.push({ name: v.name || "Ohne Namen", text: x.comment.trim(), uid }); any = true; }
@@ -456,7 +1023,7 @@ function aggregate() {
 /* ---------- render ---------- */
 function approved() {
   const ord = i => typeof i.order === "number" ? i.order : 1e9;
-  return [...S.ideas].filter(([, i]) => i.status === "ok" && inBoard(i)).sort((a, b) => catIdx(a[1]) - catIdx(b[1]) || ord(a[1]) - ord(b[1]) || (a[1].okAt || a[1].at || 0) - (b[1].okAt || b[1].at || 0));
+  return [...S.ideas].filter(([, i]) => i.status === "ok" && inBoard(i)).sort((a, b) => catIdx(a[1]) - catIdx(b[1]) || sortCmp(a, b));
 }
 function toolsOf(i) { return i.tools || {}; }
 
@@ -478,9 +1045,18 @@ function render() {
   $("#roleSeg").querySelector('[data-v="show"]').hidden = !S.board;
   document.body.classList.toggle("present", S.view === "show");
   $("#app").classList.toggle("present-on", S.view === "show");
-  $("#app").innerHTML = !S.board ? (S.view === "lp" ? overviewTeacher() : overviewKid()) : S.view === "lp" ? teacherHTML() : S.view === "show" ? presentHTML() : kidHTML();
+  if (S.side == null) S.side = innerWidth >= 1100;
+  { const bd = S.board && curBoard(); document.body.dataset.bg = (bd && bd.bg) || ""; $("#app").dataset.lay = bd ? layoutOf() : ""; $("#app").dataset.size = (bd && bd.size) || ""; $("#app").dataset.font = (bd && bd.font) || ""; }
+  const scrSame = window.__pwScr === S.board + "|" + S.view; window.__pwScr = S.board + "|" + S.view;
+  const scrPath = el => { const p = []; while (el && el.id !== "app") { p.unshift([...el.parentNode.children].indexOf(el)); el = el.parentNode; } return p; };
+  const scrKeep = [], scrY = scrollY; if (scrSame) document.querySelectorAll("#app *").forEach(el => { if (el.scrollTop > 0) scrKeep.push([scrPath(el), el.scrollTop]); });
+  $("#app").innerHTML = !S.board ? (S.view === "lp" ? overviewTeacher() : overviewKid()) : S.view === "lp" ? teacherHTML() + "</main></div>" : S.view === "show" ? presentHTML() : kidHTML();
   for (const k in keep) { const el = document.getElementById(k); if (el) el.value = keep[k]; }
-  layoutTracks();
+  if (scrSame) {
+    for (const [p, t] of scrKeep) { let el = $("#app"); for (const i of p) el = el && el.children[i]; if (el) el.scrollTop = t; }
+    if (Math.abs(scrollY - scrY) > 1) scrollTo(0, scrY);
+  }
+  layoutTracks(); drawMind();
   if (S.view === "show" && S.tab === "cats") fitCats();
 
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); if (sel && "setSelectionRange" in el) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
@@ -510,20 +1086,19 @@ const visPill = v => `<span class="vis ${v ? "on" : "off"}"><i></i>${v ? "Für K
 function boardHead() {
   const b = curBoard(); if (!b) return "";
   const teacher = S.view === "lp";
-  return `<div class="bhead"><button class="btn ghost" type="button" data-act="home">← Alle Pinnwände</button><h2>${esc(b.title)}</h2>${teacher ? `${visPill(b.visible)}<button class="btn ${b.visible ? "ghost" : ""} small" type="button" data-act="vis" data-id="${S.board}">${b.visible ? "Verstecken" : "Für Kinder sichtbar machen"}</button>` : ""}</div>`;
+  return `<div class="bhead"><button class="btn ghost" type="button" data-act="home">← Alle Pinnwände</button><h2>${esc(b.title)}</h2>${teacher ? `${visPill(b.visible)}<button class="btn ${S.side ? "ghost " : ""}small sidebtn" type="button" data-act="side" aria-expanded="${!!S.side}">${S.side ? "Seitenleiste ausblenden" : "☰ Werkzeuge und Einstellungen"}${pendN() ? ` <span class="badge">${pendN()} neu</span>` : ""}</button><button class="btn ${b.visible ? "ghost" : ""} small" type="button" data-act="vis" data-id="${S.board}">${b.visible ? "Verstecken" : "Für Kinder sichtbar machen"}</button>` : ""}</div>${(b.prompt || "").trim() && b.layout !== "mind" ? `<p class="bprompt">${esc(b.prompt)}</p>` : ""}`;
 }
 function overviewTeacher() {
   const list = boardsSorted(false);
-  return `<section class="panel"><div><h2>Neue Pinnwand</h2><p class="sub">Eine neue Pinnwand ist zuerst versteckt. So können Sie in Ruhe Zettel vorbereiten und sie dann für die Kinder sichtbar machen.</p></div>
-    <div class="row"><input class="field grow" id="newBoard" data-keep maxlength="60" placeholder="z. B. Ideen für die Schulreise"><button class="btn" type="button" data-act="newboard">Erstellen</button></div></section>
+  return `${newBoardHTML()}
   ${list.length ? `<div class="boards">${list.map(([id, b]) => {
     const c = counts(id);
     const head = S.renaming === id
       ? `<div class="edit-box"><input class="field" id="rn-${id}" data-keep maxlength="60" value="${esc(b.title)}"><div class="row"><button class="btn small" type="button" data-act="saverename" data-id="${id}">Speichern</button><button class="btn ghost small" type="button" data-act="cancelrename">Abbrechen</button></div></div>`
       : `<h3>${esc(b.title)}</h3>`;
-    return `<article class="bcard">${minis(id)}${visPill(b.visible)}${head}
+    return `<article class="bcard">${minis(id)}${visPill(b.visible)}${tplOf(b) ? `<span class="btpl">${tplOf(b).icon} ${esc(tplOf(b).name)}</span>` : ""}${head}
       <p class="sub">${c.ok} ${c.ok === 1 ? "Zettel" : "Zettel"} an der Pinnwand${c.pend ? ` · <b style="color:var(--leaf-deep)">${c.pend} ${c.pend === 1 ? "wartet" : "warten"} auf Freigabe</b>` : ""}</p>
-      <div class="row"><button class="btn" type="button" data-act="open" data-id="${id}">Öffnen</button><button class="btn ghost small" type="button" data-act="vis" data-id="${id}">${b.visible ? "Verstecken" : "Sichtbar machen"}</button></div>
+      <div class="row"><button class="btn" type="button" data-act="open" data-id="${id}">Öffnen</button><button class="btn ghost small" type="button" data-act="vis" data-id="${id}">${b.visible ? "Verstecken" : "Sichtbar machen"}</button><button class="btn ghost small" type="button" data-act="copyboard" data-id="${id}" title="Gleiche Spalten, Einstellungen und Ihre eigenen Zettel, ohne die Zettel der Kinder">Kopieren</button></div>
       <div class="foot">${S.renaming === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="rename" data-id="${id}">Umbenennen</button>`}<button class="del ${S.armed === "b:" + id ? "arm" : ""}" type="button" data-act="delboard" data-id="${id}">${S.armed === "b:" + id ? "Mit allen Zetteln löschen?" : "Löschen"}</button></div>
     </article>`;
   }).join("")}</div>` : `<div class="empty"><h3>Noch keine Pinnwand</h3><p class="sub">Geben Sie oben einen Namen ein und klicken Sie auf «Erstellen».</p></div>`}`;
@@ -539,32 +1114,34 @@ function overviewKid() {
 function kidHTML() {
   const name = S.my.name;
   const mine = [...S.ideas].filter(([, i]) => i.status === "pending" && inBoard(i) && i.uid === (S.peek || myKey()));
-  const nameBlock = KN ? peekHTML() : !name || S.editName
+  const nameBlock = KN ? (isTeacher ? peekHTML() : "") : isTeacher ? peekHTML() : !name || S.editName
     ? `<div class="row"><label class="grow"><span class="sub">Wie heisst du?</span><input class="field" id="nameIn" data-keep maxlength="30" placeholder="Dein Vorname" value="${esc(name)}"></label><button class="btn" type="button" data-act="setname">Speichern</button></div>`
     : `<p class="chip-name">Ich bin ${esc(name)} <button class="linkbtn" type="button" data-act="editname">ändern</button></p>`;
   const noSave = S.live && !myId ? `<p class="sub"><b>Hinweis:</b> Du bist nicht angemeldet. Deine Ideen und Stimmen werden nicht gespeichert.</p>` : "";
   let html = boardHead() + `<section class="panel"><h2>Meine Idee</h2>${nameBlock}${noSave}
-    <label for="ideaIn" class="sub">Schreib deine Idee auf. Die Lehrperson schaut sie an und hängt sie dann an die Pinnwand.</label>
-    <textarea class="field" id="ideaIn" maxlength="280" placeholder="Meine Idee ist …">${esc(ls.get("pw-draft", ""))}</textarea>
+    ${kidCatHTML()}<label for="ideaIn" class="sub">${curBoard()?.direct ? "Schreib deine Idee auf. Sie hängt dann gleich an der Pinnwand." : "Schreib deine Idee auf. Die Lehrperson schaut sie an und hängt sie dann an die Pinnwand."}</label>
+    <textarea class="field" id="ideaIn" maxlength="280" placeholder="Meine Idee ist …">${esc(ls.get("pw-draft", ""))}</textarea>${imgPickHTML("kid")}
     <div class="row"><button class="btn" type="button" data-act="send">Idee abschicken</button>${mine.length ? `<span class="sub">${mine.length === 1 ? "1 Idee wartet" : mine.length + " Ideen warten"} auf Freigabe: ${mine.map(([, i]) => "«" + esc(i.text.slice(0, 40)) + (i.text.length > 40 ? "…" : "") + "»").join(", ")}</span>` : ""}</div>
   </section>`;
   const items = approved();
   const boardItems = items.filter(([, i]) => !toolsOf(i).baro);
   const hasBaro = boardItems.length < items.length;
-  if (!items.length) return html + tabsHTML([["board", "Pinnwand"]]) + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3><p class="sub">Sobald die Lehrperson Ideen freigibt, erscheinen sie hier.</p></div>`;
+  if (!items.length && !structural()) return html + tabsHTML([["board", "Pinnwand"]]) + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3><p class="sub">Sobald die Lehrperson Ideen freigibt, erscheinen sie hier.</p></div>`;
   if (S.tab === "baro" && !hasBaro) S.tab = "board";
-  if (S.tab === "board" && !boardItems.length) S.tab = "baro";
-  const tabs = []; if (boardItems.length) tabs.push(["board", "Pinnwand"]); if (hasBaro) tabs.push(["baro", "Mein Barometer"]);
+  if (S.tab === "board" && !boardItems.length && hasBaro && !structural()) S.tab = "baro";
+  const tabs = []; if (boardItems.length || structural()) tabs.push(["board", "Pinnwand"]); if (hasBaro) tabs.push(["baro", "Mein Barometer"]);
   html += tabsHTML(tabs);
   if (S.tab === "baro") return html + kidBaroHTML(items);
   return html + `${groupedBoard(boardItems, ([id, i]) => kidNote(id, i), true)}`;
 }
 function kidNote(id, i) {
   const t = toolsOf(i), v = S.my.r[id] || {};
-  let h = `<article class="note ${colorOf(id)}"><p class="txt">${esc(i.text)}</p>`;
+  let h = `<article class="note ${noteColor(id, i)}"><p class="txt">${esc(i.text)}</p>${imgHTML(i)}${curBoard()?.names && i.by ? `<p class="by">– ${esc(i.by)}</p>` : ""}`;
   if (t.rate) h += `<div class="tool"><span class="tool-l">${esc(L().rateQ)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
   if (t.rate2) h += `<div class="tool"><span class="tool-l">${esc(L().rate2Q)}</span><div class="scale">${Array.from({ length: 10 }, (_, k) => `<button type="button" data-act="rate2" data-id="${id}" data-v="${k + 1}" aria-pressed="${v.rate2 === k + 1}" aria-label="${k + 1} von 10">${k + 1}</button>`).join("")}</div></div>`;
   if (t.agree) h += `<div class="tool"><span class="tool-l">${esc(L().agreeQ)}</span><div class="agree">${AGREE.map(([k]) => `<button type="button" data-act="agree" data-id="${id}" data-v="${k}" aria-pressed="${v.agree === k}">${esc(L()[k])}</button>`).join("")}</div></div>`;
+  if (t.poll) h += `<div class="tool"><div class="poll" role="group">${pollOpts(i).map((o, k) => `<button type="button" data-act="pollv" data-id="${id}" data-v="${k}" aria-pressed="${v.poll === k}"><i></i>${esc(o)}</button>`).join("")}</div></div>`;
+  if (t.like) h += `<div class="tool"><button type="button" class="heart" data-act="like" data-id="${id}" aria-pressed="${!!v.like}">${v.like ? "❤️" : "🤍"} Gefällt mir</button></div>`;
   h += lpcHTML(id, i, true, true);
   if (t.comment) h += `<div class="tool"><label class="tool-l" for="c-${id}">${esc(L().commentQ)}</label><textarea id="c-${id}" data-act="comment" data-id="${id}" maxlength="400" placeholder="${esc(L().commentPh)}">${esc(v.comment || "")}</textarea></div>`;
   return h + `</article>`;
@@ -594,12 +1171,13 @@ function toolToggles(prefix, t, id) {
 function teacherHTML() {
   const pend = [...S.ideas].filter(([, i]) => i.status === "pending" && inBoard(i)).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
   const { res, kids } = aggregate();
-  let html = boardHead() + `<section class="panel tools-bar"><div class="row"><span class="tool-l" style="margin-right:4px">Werkzeuge für neue Zettel</span>${toolToggles("def", S.defaults)}</div><p class="sub">Gilt für freigegebene Ideen und für Ihre eigenen Zettel. Pro Zettel können Sie es später noch ändern.</p></section>
+  let html = boardHead() + `<div class="lpwrap${S.side ? "" : " closed"}"><aside class="lpside" aria-label="Werkzeuge und Einstellungen"><div class="side-top"><b>Werkzeuge und Einstellungen</b><button class="btn ghost small" type="button" data-act="side">Ausblenden ✕</button></div><section class="panel tools-bar"><div class="row"><span class="tool-l" style="margin-right:4px">Werkzeuge für neue Zettel</span>${toolToggles("def", curDefaults())}</div><p class="sub">Gilt für freigegebene Ideen und für Ihre eigenen Zettel. Pro Zettel können Sie es später noch ändern.</p></section>
+  ${bsetHTML()}
   ${settingsHTML()}
   <div class="lp-grid">
   <section class="panel">
     <div><h2>Zur Freigabe ${pend.length ? `<span class="badge">${pend.length}</span>` : ""}</h2><p class="sub">Ideen der Kinder kommen hier an. Mit «Freigeben» hängt die Idee an der Pinnwand.</p></div>
-    ${pend.length ? `${qbulkHTML(pend)}<div class="queue">${pend.map(([id, i]) => `<div class="qitem${S.qsel.has(id) ? " picked" : ""}"><label class="qpick"><input type="checkbox" data-act="qsel" data-id="${id}" ${S.qsel.has(id) ? "checked" : ""}> auswählen</label>${S.editing === id ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}<p class="by">von ${esc(i.by || "Ohne Namen")}</p>
+    ${pend.length ? `${qbulkHTML(pend)}<div class="queue">${pend.map(([id, i]) => `<div class="qitem${S.qsel.has(id) ? " picked" : ""}"><label class="qpick"><input type="checkbox" data-act="qsel" data-id="${id}" ${S.qsel.has(id) ? "checked" : ""}> auswählen</label>${S.editing === id ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}${imgHTML(i)}<p class="by">von ${esc(i.by || "Ohne Namen")}</p>
       <div class="row"><button class="btn small" type="button" data-act="approve" data-id="${id}">Freigeben</button>${S.editing === id ? "" : `<button class="btn ghost small" type="button" data-act="edit" data-id="${id}">Bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich löschen?" : "Ablehnen"}</button></div></div>`).join("")}</div>`
       : `<p class="empty-line">Im Moment wartet keine Idee.</p>`}
   </section>
@@ -607,18 +1185,24 @@ function teacherHTML() {
     <div><h2>Selbst anpinnen</h2><p class="sub">Eine Frage, ein Vorschlag oder ein Thema – Ihr Zettel hängt sofort an der Pinnwand.</p></div>
     <label for="lpIdea" class="tool-l">Text auf dem Zettel</label>
     <textarea class="field" id="lpIdea" data-keep maxlength="280" rows="3" placeholder="z. B. Wohin soll die Schulreise gehen?"></textarea>
+    ${imgPickHTML("lp")}
+    ${S.lpPoll ? `<label class="tool-l" for="lpPoll">Umfrage: eine Antwort pro Zeile</label><textarea class="field" id="lpPoll" data-keep rows="3" maxlength="400" placeholder="ja, unbedingt
+ein bisschen
+nein, passt so"></textarea><button class="linkbtn" type="button" data-act="lppoll" style="align-self:flex-start">Ohne Umfrage</button>`
+      : `<button class="btn ghost small" type="button" data-act="lppoll" style="align-self:flex-start">📊 Umfrage hinzufügen</button>`}
+    ${cats().length ? `<label class="row lpcat"><span class="tool-l">${layoutOf() === "mind" ? "An den Ast" : layoutOf() === "spalten" ? "In die Spalte" : "Kategorie"}</span><select class="field" id="lpCat" data-keep><option value="">ohne</option>${cats().map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join("")}</select></label>` : ""}
     <div class="row" style="justify-content:flex-end"><span class="sub">Strg + Enter heftet auch an</span><button class="btn" type="button" data-act="lpadd">Anpinnen</button></div>
   </section>
-  </div>`;
+  </div></aside><main class="lpmain">`;
   const items = approved();
   html += tabsHTML([["board", "Pinnwand"], ["sort", "Sortieren"], ["baro", "Barometer"], ["rank", "Rangliste"]]);
-  if (!items.length) return html + `<div class="empty"><h3>Die Pinnwand ist noch leer</h3><p class="sub">Geben Sie oben eine Idee frei oder heften Sie selbst einen Zettel an. Zum Ausprobieren können Sie oben auf «Kinder-Ansicht» wechseln.</p></div>`;
+  if (!items.length && !(structural() && S.tab === "board")) return html + `<div class="empty"><h3>Die Pinnwand ist noch leer</h3><p class="sub">Geben Sie oben eine Idee frei oder heften Sie selbst einen Zettel an. Zum Ausprobieren können Sie oben auf «Kinder-Ansicht» wechseln.</p></div>`;
   if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids);
   if (S.tab === "rank") return html + rankHTML(items, res);
   if (S.tab === "sort") return html + sortHTML(items);
   const boardItems = items.filter(([, i]) => !toolsOf(i).baro), nb = items.length - boardItems.length;
   return html + `<p class="sub" style="color:var(--ink);font-weight:700;margin:0">${kids} ${kids === 1 ? "Kind hat" : "Kinder haben"} bisher mitgemacht.${nb ? ` ${nb} ${nb === 1 ? "Zettel hängt" : "Zettel hängen"} nur im Barometer.` : ""}</p>` +
-    (boardItems.length ? `${groupedBoard(boardItems, ([id, i]) => teacherNote(id, i, res[id]))}` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3><p class="sub">Sie finden sie unter «Barometer».</p></div>`);
+    (boardItems.length || structural() ? `${groupedBoard(boardItems, ([id, i]) => teacherNote(id, i, res[id]))}` : `<div class="empty"><h3>Alle Zettel hängen im Barometer</h3><p class="sub">Sie finden sie unter «Barometer».</p></div>`);
 }
 function editBox(id, i) {
   return `<div class="edit-box"><label class="tool-l" for="ed-${id}">Text verbessern</label><textarea class="field" id="ed-${id}" data-keep maxlength="280" rows="3">${esc(i.text)}</textarea>
@@ -633,7 +1217,7 @@ function settingsHTML() {
 }
 function teacherNote(id, i, a, present) {
   const t = toolsOf(i);
-  let h = `<article class="note ${colorOf(id)}">${S.editing === id && !present ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}${i.by && !present ? `<p class="by">– ${esc(i.by)}</p>` : ""}`;
+  let h = `<article class="note ${noteColor(id, i)}">${S.editing === id && !present ? editBox(id, i) : `<p class="txt">${esc(i.text)}</p>`}${imgHTML(i)}${i.by && (!present || curBoard()?.names) ? `<p class="by">– ${esc(i.by)}</p>` : ""}`;
   if (t.baro) h += `<div class="tool"><span class="tool-l">Barometer</span>${scaleBar(a.baroAvg, a.baro.length + " platziert")}</div>`;
   else {
   if (t.rate) h += `<div class="tool"><span class="tool-l">${t.rate2 ? esc(shortQ(L().rateQ)) : "Bewertung 1–10"}</span>${scaleBar(a.rateAvg, a.rate.length + (a.rate.length === 1 ? " Stimme" : " Stimmen"))}</div>`;
@@ -645,9 +1229,11 @@ function teacherNote(id, i, a, present) {
   }
   if (t.comment) h += `<div class="tool"><span class="tool-l">Kommentare (${a.comments.length})</span>${a.comments.length ? `<ul class="cm">${a.comments.map(c => `<li>${present ? "" : `<b>${esc(c.name)}:</b> `}${esc(c.text)}${present ? "" : `<button class="cmdel ${S.armed === "c:" + id + ":" + c.uid ? "arm" : ""}" type="button" data-act="cmdel" data-id="${id}" data-uid="${esc(c.uid)}" title="Kommentar entfernen">${S.armed === "c:" + id + ":" + c.uid ? "Entfernen?" : "✕"}</button>`}</li>`).join("")}</ul>` : `<span class="by">Noch keine Kommentare.</span>`}</div>`;
   }
+  if (t.poll && !t.baro) h += pollResHTML(id, i, a, present);
+  if (t.like && !t.baro) h += `<div class="tool"><span class="hearts" aria-label="${a.like} Herzen">❤️ ${a.like}</span></div>`;
   h += lpcHTML(id, i, present);
   if (present) return h + `</article>`;
-  h += `<div class="tool"><span class="tool-l">Werkzeuge auf diesem Zettel</span>${toolToggles("t-" + id, t, id)}${t.baro ? `<span class="by">Dieser Zettel ist nur im Barometer zu sehen.</span>` : ""}<div class="foot">${S.editing === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="edit" data-id="${id}">Text bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich entfernen?" : "Zettel entfernen"}</button></div></div>`;
+  h += `<div class="tool"><span class="tool-l">Werkzeuge auf diesem Zettel</span>${toolToggles("t-" + id, t, id)}${layoutOf() === "mind" ? "" : catPickHTML(id, i)}${imgOk(i) ? `<button class="edit-btn" type="button" data-act="imgdel" data-id="${id}">Bild entfernen</button>` : ""}${t.baro ? `<span class="by">Dieser Zettel ist nur im Barometer zu sehen.</span>` : ""}<div class="foot">${S.editing === id ? "<span></span>" : `<button class="edit-btn" type="button" data-act="edit" data-id="${id}">Text bearbeiten</button>`}<button class="del ${S.armed === id ? "arm" : ""}" type="button" data-act="del" data-id="${id}">${S.armed === id ? "Wirklich entfernen?" : "Zettel entfernen"}</button></div></div>`;
   return h + `</article>`;
 }
 function presentHTML() {
@@ -658,7 +1244,7 @@ function presentHTML() {
   if (S.tab === "baro" && !items.length) S.tab = "board";
   const tabs = cats().length ? [["cats", "Kategorien"], ["board", "Ergebnisse"], ["one", "Einzeln"]] : [["board", "Ergebnisse"], ["one", "Einzeln"]]; if (hasBaro) tabs.push(["baro", "Barometer"]); tabs.push(["rank", "Rangliste"]);
   if (S.tab === "baro" && !hasBaro) S.tab = "board";
-  let html = `<div class="pres-bar"><h1 class="pres-title">${esc(curBoard()?.title || "Unsere Ergebnisse")}</h1>${tabsHTML(tabs)}<button class="btn ghost" type="button" data-act="fullscreen">Vollbild</button><button class="btn" type="button" data-act="role" data-v="lp">Präsentation beenden</button></div>`;
+  let html = `<div class="pres-bar"><h1 class="pres-title">${esc(curBoard()?.title || "Unsere Ergebnisse")}</h1>${tabsHTML(tabs)}<button class="btn ghost" type="button" data-act="fullscreen">Vollbild</button><button class="btn" type="button" data-act="role" data-v="lp">Präsentation beenden</button></div>${(curBoard()?.prompt || "").trim() && layoutOf() !== "mind" && S.tab !== "cats" ? `<p class="bprompt">${esc(curBoard().prompt)}</p>` : ""}`;
   if (!items.length) return html + `<div class="empty"><h3>Noch keine Zettel an der Pinnwand</h3></div>`;
   if (S.tab === "baro") return html + teacherBaroHTML(items, res, kids, true);
   if (S.tab === "rank") return html + rankHTML(items, res);
@@ -674,13 +1260,15 @@ function oneHTML(items, res) {
       <div class="one-big">${(cats().find(c => c.id === i.cat) || {}).title ? `<p class="one-cat">${esc(cats().find(c => c.id === i.cat).title)}</p>` : ""}${teacherNote(id, i, res[id], true)}</div>
       <button class="one-nav" type="button" data-act="onenext" aria-label="Nächster Zettel" ${S.oneIdx < n - 1 ? "" : "disabled"}>›</button></div>
     <p class="one-count">${S.oneIdx + 1} / ${n}</p>
-    <div class="one-strip" id="oneStrip">${items.map(([sid, si], k) => `<button type="button" class="one-mini note ${colorOf(sid)}${k === S.oneIdx ? " cur" : ""}" data-act="onego" data-i="${k}" aria-label="Zettel ${k + 1}" ${k === S.oneIdx ? 'aria-current="true"' : ""}><span>${esc(si.text)}</span></button>`).join("")}</div>
+    <div class="one-strip" id="oneStrip">${items.map(([sid, si], k) => `<button type="button" class="one-mini note ${noteColor(sid, si)}${k === S.oneIdx ? " cur" : ""}" data-act="onego" data-i="${k}" aria-label="Zettel ${k + 1}" ${k === S.oneIdx ? 'aria-current="true"' : ""}><span>${esc(si.text)}</span></button>`).join("")}</div>
   </section>`;
 }
 function oneStep(d) { S.oneIdx = (S.oneIdx || 0) + d; render(); const c = document.querySelector(".one-mini.cur"); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }); }
 function cats() { const b = curBoard(); return b && Array.isArray(b.cats) ? b.cats : []; }
 function catIdx(i) { const k = cats().findIndex(c => c.id === i.cat); return k < 0 ? 1e6 : k; }
 function groupedBoard(list, fn, kid) {
+  const lay = layoutOf(); if (lay === "frei") return canvasHTML(list, fn, kid);
+  if (lay === "spalten" || lay === "zeit" || lay === "mind") return layoutBoard(lay, list, fn, kid);
   const cs = cats();
   if (!cs.length) return `<div class="board">${list.map(fn).join("")}</div>`;
   let h = "";
@@ -694,13 +1282,14 @@ function groupedBoard(list, fn, kid) {
 }
 function sortHTML(items) {
   const cs = cats();
-  const card = ([id, i], k) => `<div class="sortcard note ${colorOf(id)}" data-sid="${id}" tabindex="0" role="listitem" aria-label="${esc(i.text)}"><b class="snum">${k + 1}</b><span>${esc(i.text)}</span>${typeof scoreLine === "function" ? scoreLine(id, i) : ""}${toolsOf(i).baro ? `<em>Barometer</em>` : ""}</div>`;
+  const card = ([id, i], k) => `<div class="sortcard note ${noteColor(id, i)}" data-sid="${id}" tabindex="0" role="listitem" aria-label="${esc(i.text)}"><b class="snum">${k + 1}</b>${imgHTML(i, "simg")}<span>${esc(i.text)}</span>${typeof scoreLine === "function" ? scoreLine(id, i) : ""}${toolsOf(i).baro ? `<em>Barometer</em>` : ""}</div>`;
   let k = 0; const cards = l => l.length ? l.map(x => card(x, k++)).join("") : `<p class="sortempty">Zettel hierher ziehen</p>`;
   const none = items.filter(([, i]) => catIdx(i) >= 1e6);
   const grid = (cid, l) => `<div class="sortgrid" data-cat="${cid}">${cards(l)}</div>`;
   const pre = cs.length ? "" : grid("", none);
   const secs = cs.map((c, ci) => `<section class="sortsec" data-catsec="${c.id}">
       <div class="row cathead-edit"><input class="field cat-title" id="ct-${c.id}" data-keep data-cattitle="${c.id}" maxlength="60" value="${esc(c.title)}" aria-label="Name der Kategorie">
+        <span class="ccol" role="group" aria-label="Farbe">${CCOL.map(([k, l]) => `<button type="button" class="${k}" data-act="catcolor" data-id="${c.id}" data-v="${k}" aria-pressed="${c.color === k}" title="${l}" aria-label="${l}"></button>`).join("")}</span>
         <button class="btn ghost small" type="button" data-act="catmove" data-id="${c.id}" data-d="-1" ${ci ? "" : "disabled"} aria-label="Kategorie nach oben">↑</button><button class="btn ghost small" type="button" data-act="catmove" data-id="${c.id}" data-d="1" ${ci < cs.length - 1 ? "" : "disabled"} aria-label="Kategorie nach unten">↓</button>
         <button class="del ${S.armed === "k:" + c.id ? "arm" : ""}" type="button" data-act="delcat" data-id="${c.id}">${S.armed === "k:" + c.id ? "Kategorie wirklich löschen?" : "Kategorie löschen"}</button></div>
       ${grid(c.id, items.filter(([, i]) => i.cat === c.id))}
@@ -713,11 +1302,12 @@ function sortHTML(items) {
     ${secs}
     <p class="sub">Auf dem iPad: Zettel antippen, halten und ziehen, auch in eine andere Kategorie. Mit der Tastatur: Zettel anwählen, dann Pfeiltasten.</p></section>`;
 }
-const AUTOSORT = [["rate", "nach Bewertung"], ["rate2", "nach Bewertung 2"], ["agree", "nach Zustimmung"], ["baro", "nach Barometer"]];
+const AUTOSORT = [["rate", "nach Bewertung"], ["rate2", "nach Bewertung 2"], ["agree", "nach Zustimmung"], ["like", "nach Herzen"], ["baro", "nach Barometer"]];
 function scoreOf(a, by) {
   if (!a) return null;
   if (by === "rate") return a.rateAvg;
   if (by === "rate2") return a.rate2Avg;
+  if (by === "like") return a.like || null;
   if (by === "baro") return a.baroAvg;
   const t = a.agree.ja + a.agree.teils + a.agree.nein; return t ? (a.agree.ja + a.agree.teils * .5) / t * 100 : null;
 }
@@ -725,6 +1315,7 @@ function scoreLine(id, i) {
   const a = aggregate().res[id], t = toolsOf(i), p = [];
   if (a && a.rateAvg != null) p.push("Ø " + fmt(a.rateAvg));
   if (a && a.rate2Avg != null) p.push("Ø2 " + fmt(a.rate2Avg));
+  if (a && a.like) p.push("❤️ " + a.like);
   const z = scoreOf(a, "agree"); if (z != null) p.push(Math.round(z) + "% Zustimmung");
   if (a && a.baroAvg != null) p.push("Barometer " + fmt(a.baroAvg));
   return p.length ? `<em class="score">${p.join(" · ")}</em>` : "";
@@ -741,6 +1332,7 @@ async function autoSort(by) {
 let sdrag = null;
 function sortNumbers(){ document.querySelectorAll("#sortArea .sortcard").forEach((c, k) => { c.querySelector(".snum").textContent = k + 1; }); document.querySelectorAll("#sortArea .sortgrid").forEach(g => { const e = g.querySelector(".sortempty"); if (e) e.hidden = !!g.querySelector(".sortcard"); }); }
 async function sortSave(){
+  ownOrder();
   const jobs = [];
   document.querySelectorAll("#sortArea .sortcard").forEach((c, k) => {
     const id = c.dataset.sid, i = S.ideas.get(id), cat = c.closest(".sortgrid").dataset.cat || null;
@@ -840,7 +1432,7 @@ function catsHTML(items, res) {
   const cols = n <= 4 ? Math.max(1, n) : n <= 6 ? 3 : n <= 8 ? 4 : n <= 12 ? 4 : n <= 15 ? 5 : n <= 20 ? 5 : 6, rows = Math.max(1, Math.ceil(n / cols));
   const bar = (label, v, cls, n) => v == null ? "" : `<div class="pc-bar ${cls || ""}"><span class="pc-lab">${label} <b>${fmt(v)}</b>${n ? ` · ${n} ${n === 1 ? "Stimme" : "Stimmen"}` : ""}</span><div class="pc-track"><i style="width:${Math.max(0, Math.min(10, v)) * 10}%"></i></div></div>`;
   const card = ([id, i]) => { const a = res[id], t = toolsOf(i), L = (i.text || "").length, k = L > 110 ? .58 : L > 75 ? .7 : L > 45 ? .85 : 1;
-    let h = `<article class="note ${colorOf(id)} pcard" style="--k:${k}"><p class="pc-t">${esc(i.text)}</p>`;
+    let h = `<article class="note ${noteColor(id, i)} pcard" style="--k:${k}"><p class="pc-t">${esc(i.text)}</p>${imgHTML(i, "pc-img")}`;
     if (a) {
       const row = [];
       if (t.baro) row.push(bar("Barometer", a.baroAvg, "", a.baro.length));
@@ -986,18 +1578,80 @@ const app = $("#app");
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b || b.matches("input,textarea")) return;
   const act = b.dataset.act, id = b.dataset.id;
-  if (act === "role" && KN && S.peek) setPeek("");
-  if (act === "role") { if (S.view === "show" && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); S.view = b.dataset.v; S.tab = b.dataset.v === "show" && cats().length ? "cats" : "board"; S.editing = null; render(); scrollTo(0, 0); }
+  if (act === "role" && S.peek) setPeek("");
+  if (act === "role") { if (S.view === "show" && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); S.view = b.dataset.v; S.tab = b.dataset.v === "show" && cats().length && (layoutOf() === "wand" || layoutOf() === "liste") ? "cats" : "board"; S.editing = null; render(); scrollTo(0, 0); }
   else if (act === "fullscreen") { const d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); else if (d.requestFullscreen) d.requestFullscreen().catch(() => toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers.")); else toast("Vollbild geht hier nicht. Nutzen Sie die Vollbild-Taste des Browsers."); }
   else if (act === "edit") { S.editing = id; render(); const el = document.getElementById("ed-" + id); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   else if (act === "home") { S.board = null; S.editing = null; render(); scrollTo(0, 0); }
-  else if (act === "open") { S.board = id; S.tab = "board"; S.editing = null; render(); scrollTo(0, 0); }
+  else if (act === "open") { S.kcat = null; S.mmFocus = null; S.board = id; S.tab = "board"; S.editing = null; render(); scrollTo(0, 0); }
   else if (act === "newboard") {
     const inp = $("#newBoard"), title = inp.value.trim(); if (!title) { toast("Bitte geben Sie der Pinnwand einen Namen."); inp.focus(); return; }
     b.disabled = true;
-    try { const nid = await addBoard({ title, visible: false, at: Date.now() }); inp.value = ""; S.board = nid; S.tab = "board"; render(); scrollTo(0, 0); toast("Pinnwand erstellt. Sie ist noch versteckt."); }
+    try { const nid = await addBoard(fromTpl(TPL.find(x => x.id === S.tpl) || TPL[0], title)); S.showBset = true; inp.value = ""; S.board = nid; S.tab = "board"; render(); scrollTo(0, 0); toast("Pinnwand erstellt. Sie ist noch versteckt."); }
     catch (err) { failed(err); b.disabled = false; }
   }
+  else if (act === "bcanvas") {
+    const bd = curBoard(); if (!bd) return; const t = b.dataset.v, defs = (CANVAS[t] || CANVAS.leer).defs, cs = cats().slice();
+    for (let k = cs.length; k < defs.length; k++) cs.push({ id: newId("c"), title: defs[k][0], color: defs[k][1], note: "" });
+    bd.canvas = t; if (cs.length !== cats().length) await saveCats(cs); else render();
+    try { await patchBoard(S.board, { canvas: t }); } catch (err) { failed(err); }
+  }
+  else if (act === "side") { S.side = !S.side; render(); }
+  else if (act === "reshuffle") {
+    const bd = curBoard(); if (!bd) return; bd.seed = newId(""); render();
+    try { await patchBoard(S.board, { seed: bd.seed }); } catch (err) { failed(err); }
+  }
+  else if (act === "bseg") {
+    const bd = curBoard(); if (!bd) return; const k = b.dataset.k, v = b.dataset.v;
+    bd[k] = v; render(); try { await patchBoard(S.board, { [k]: v }); } catch (err) { failed(err); }
+  }
+  else if (act === "addast") {
+    const inp = $("#newAst"), t = inp ? inp.value.trim() : ""; if (!t) { inp?.focus(); return; }
+    const used = cats().map(c => c.color), col = (CCOL.find(([k]) => !used.includes(k)) || CCOL[cats().length % CCOL.length])[0];
+    inp.value = ""; await saveCats([...cats(), { id: newId("c"), title: t, color: col, note: "" }], "Ast hinzugefügt.");
+    $("#newAst")?.focus();
+  }
+  else if (act === "astedit") { S.astEdit = id; render(); const el = document.getElementById("ast-" + id); el?.focus(); el?.select(); }
+  else if (act === "astsave") {
+    const v = (document.getElementById("ast-" + id)?.value || "").trim(); S.astEdit = null;
+    if (v) await saveCats(cats().map(c => c.id === id ? { ...c, title: v } : c)); else render();
+  }
+  else if (act === "imgclear") { if (b.dataset.w === "kid") S.kidImg = null; else S.lpImg = null; render(); }
+  else if (act === "imgdel") {
+    const i = S.ideas.get(id); if (!i) return; i.img = null; render();
+    try { await patchIdea(id, { img: null }); toast("Bild entfernt."); } catch (err) { failed(err); }
+  }
+  else if (act === "lppoll") { S.lpPoll = !S.lpPoll; render(); if (S.lpPoll) $("#lpPoll")?.focus(); }
+  else if (act === "polledit") { S.pollEdit = id; render(); document.getElementById("pe-" + id)?.focus(); }
+  else if (act === "pollcancel") { S.pollEdit = null; render(); }
+  else if (act === "pollsave") {
+    const o = (document.getElementById("pe-" + id)?.value || "").split("\n").map(x => x.trim()).filter(Boolean).slice(0, 6);
+    if (o.length < 2) { toast("Eine Umfrage braucht mindestens zwei Antworten."); return; }
+    S.pollEdit = null; const i = S.ideas.get(id); if (i) i.poll = o; render();
+    try { await patchIdea(id, { poll: o, tools: { poll: true } }); toast("Umfrage gespeichert."); } catch (err) { failed(err); }
+  }
+  else if (act === "pollv") { const v = +b.dataset.v, m = myVote(id); if (S.peek) return; if (m.poll === v) delete m.poll; else m.poll = v; touchMy(400); render(); }
+  else if (act === "tpl") { S.tpl = b.dataset.v; render(); $("#newBoard")?.focus(); }
+  else if (act === "copyboard") {
+    const src = S.boards.get(id); if (!src) return;
+    const { visible, at, ...rest } = src;
+    try {
+      const nid = await addBoard(JSON.parse(JSON.stringify({ ...rest, title: (src.title + " (Kopie)").slice(0, 60), visible: false, at: Date.now() })));
+      const mine = [...S.ideas].filter(([, i]) => i.boardId === id && i.status === "ok" && i.by === "Lehrperson");
+      for (const [, i] of mine) await addIdea(JSON.parse(JSON.stringify({ text: i.text, by: "Lehrperson", uid: i.uid, boardId: nid, status: "ok", tools: i.tools || {}, cat: i.cat || null, order: i.order, lp: i.lp, img: i.img || null, poll: i.poll || null, at: Date.now(), okAt: i.okAt || Date.now() })));
+      toast("Kopie erstellt. Sie ist noch versteckt.");
+    } catch (err) { failed(err); }
+  }
+  else if (act === "blayout" || act === "bbg") {
+    const k = act === "blayout" ? "layout" : "bg", bd = curBoard(); if (!bd) return;
+    bd[k] = b.dataset.v; S.mmFocus = null; render();
+    try { await patchBoard(S.board, { [k]: b.dataset.v }); } catch (err) { failed(err); }
+  }
+  else if (act === "catcolor") { saveCats(cats().map(c => c.id === id ? { ...c, color: c.color === b.dataset.v ? "" : b.dataset.v } : c)); }
+  else if (act === "kcat") { S.kcat = S.kcat === b.dataset.v ? null : b.dataset.v; render(); }
+  else if (act === "mmfocus") { S.mmFocus = S.mmFocus === id ? null : id; render(); if (S.mmFocus) document.querySelector(".mm-focus")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  else if (act === "mmclose") { S.mmFocus = null; render(); }
+  else if (act === "print") { window.print(); }
   else if (act === "vis") {
     const bd = S.boards.get(id); if (!bd) return;
     try { await patchBoard(id, { visible: !bd.visible }); toast(bd.visible ? "Versteckt – die Kinder sehen diese Pinnwand nicht mehr." : "Sichtbar – die Kinder sehen diese Pinnwand jetzt."); } catch (err) { failed(err); }
@@ -1071,7 +1725,7 @@ document.addEventListener("click", async e => {
     const key = "c:" + id + ":" + b.dataset.uid;
     if (S.armed !== key) { S.armed = key; render(); setTimeout(() => { if (S.armed === key) { S.armed = null; render(); } }, 4000); return; }
     S.armed = null;
-    const v = S.votes.get(b.dataset.uid), txt = v && v.r && v.r[id] && (v.r[id].comment || "").trim();
+    const v = b.dataset.uid === myKey() ? (S.peek ? ownMy : S.my) : S.votes.get(b.dataset.uid), txt = v && v.r && v.r[id] && (v.r[id].comment || "").trim();
     if (!txt) return;
     const idea = S.ideas.get(id); if (idea) { idea.hide = { ...(idea.hide || {}), [b.dataset.uid]: txt }; render(); }
     try { await patchIdea(id, { hide: { [b.dataset.uid]: txt } }); toast("Kommentar entfernt."); } catch (err) { failed(err); }
@@ -1084,8 +1738,8 @@ document.addEventListener("click", async e => {
   }
   else if (act === "qok") {
     const ids = [...S.qsel]; S.qsel.clear(); const now = Date.now();
-    ids.forEach(x => { const i = S.ideas.get(x); if (i) Object.assign(i, { status: "ok", tools: { ...S.defaults }, okAt: now }); }); render();
-    try { await Promise.all(ids.map(x => patchIdea(x, { status: "ok", tools: { ...S.defaults }, okAt: now }))); toast(ids.length === 1 ? "1 Idee freigegeben." : ids.length + " Ideen freigegeben."); } catch (err) { failed(err); }
+    ids.forEach(x => { const i = S.ideas.get(x); if (i) Object.assign(i, { status: "ok", tools: { ...curDefaults() }, okAt: now }); }); render();
+    try { await Promise.all(ids.map(x => patchIdea(x, { status: "ok", tools: { ...curDefaults() }, okAt: now }))); toast(ids.length === 1 ? "1 Idee freigegeben." : ids.length + " Ideen freigegeben."); } catch (err) { failed(err); }
   }
   else if (act === "catgo") { S.catIdx = +b.dataset.i; render(); }
   else if (act === "catprev") catStep(-1);
@@ -1100,17 +1754,24 @@ document.addEventListener("click", async e => {
   else if (act === "send" && S.peek) { toast("In der Ansicht eines Kindes kann nichts abgeschickt werden."); }
   else if (act === "send") {
     const ta = $("#ideaIn"), text = ta.value.trim();
-    if (!text) { toast("Schreib zuerst deine Idee auf."); ta.focus(); return; }
+    if (!text && !S.kidImg) { toast("Schreib zuerst deine Idee auf."); ta.focus(); return; }
     if (!S.my.name) { toast("Schreib oben zuerst deinen Namen."); $("#nameIn")?.focus(); return; }
+    const bd = curBoard() || {}, wantCat = bd.kidCat && cats().length;
+    if (wantCat && !S.kcat) { toast(layoutOf() === "mind" ? "Wähle zuerst, an welchen Ast dein Zettel gehört." : "Wähle zuerst, wohin dein Zettel gehört."); return; }
+    const extra = { status: bd.direct ? "ok" : "pending" };
+    if (wantCat) extra.cat = S.kcat;
+    if (S.kidImg && bd.imgs) extra.img = S.kidImg;
+    if (bd.direct) { extra.tools = { ...(bd.tools || {}) }; extra.okAt = Date.now(); }
     b.disabled = true;
-    try { await addIdea({ text, by: S.my.name, uid: myKey(), boardId: S.board, status: "pending", at: Date.now() }); ls.set("pw-draft", ""); ta.value = ""; toast("Danke! Deine Idee ist bei der Lehrperson."); }
+    try { await addIdea({ text, by: S.my.name, uid: myKey(), boardId: S.board, ...extra, at: Date.now() }); ls.set("pw-draft", ""); ta.value = ""; b.disabled = false; S.kidImg = null; render(); toast(extra.status === "ok" ? "Danke! Dein Zettel hängt jetzt an der Pinnwand." : "Danke! Deine Idee ist bei der Lehrperson."); }
     catch (err) { failed(err); b.disabled = false; }
   }
+  else if (act === "like") { const m = myVote(id); if (S.peek) return; if (m.like) delete m.like; else m.like = true; touchMy(400); render(); }
   else if (act === "rate2") { const v = +b.dataset.v, m = myVote(id); if (m.rate2 === v) delete m.rate2; else m.rate2 = v; touchMy(400); render(); }
   else if (act === "rate") { const v = +b.dataset.v, m = myVote(id); if (m.rate === v) delete m.rate; else m.rate = v; touchMy(400); render(); }
   else if (act === "agree") { const v = b.dataset.v, m = myVote(id); if (m.agree === v) delete m.agree; else m.agree = v; touchMy(400); render(); }
   else if (act === "approve") {
-    try { await patchIdea(id, { status: "ok", tools: { ...S.defaults }, okAt: Date.now() }); toast("Freigegeben – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
+    try { await patchIdea(id, { status: "ok", tools: { ...curDefaults() }, okAt: Date.now() }); toast("Freigegeben – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
   }
   else if (act === "del") {
     if (S.armed !== id) { S.armed = id; render(); setTimeout(() => { if (S.armed === id) { S.armed = null; render(); } }, 4000); return; }
@@ -1118,8 +1779,10 @@ document.addEventListener("click", async e => {
     try { await removeIdea(id); } catch (err) { failed(err); }
   }
   else if (act === "lpadd") {
-    const inp = $("#lpIdea"), text = inp.value.trim(); if (!text) { inp.focus(); return; }
-    try { await addIdea({ text, by: "Lehrperson", uid: myKey(), boardId: S.board, status: "ok", tools: { ...S.defaults }, at: Date.now(), okAt: Date.now() }); inp.value = ""; toast("Angepinnt – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
+    const inp = $("#lpIdea"), text = inp.value.trim(), poll = S.lpPoll ? (($("#lpPoll") || {}).value || "").split("\n").map(x => x.trim()).filter(Boolean).slice(0, 6) : [];
+    if (!text && !S.lpImg) { inp.focus(); return; }
+    if (poll.length === 1) { toast("Eine Umfrage braucht mindestens zwei Antworten."); return; }
+    try { await addIdea({ text, by: "Lehrperson", uid: myKey(), boardId: S.board, cat: ($("#lpCat") && $("#lpCat").value) || null, status: "ok", tools: { ...curDefaults(), ...(poll.length ? { poll: true } : {}) }, ...(poll.length ? { poll } : {}), ...(S.lpImg ? { img: S.lpImg } : {}), at: Date.now(), okAt: Date.now() }); inp.value = ""; S.lpImg = null; S.lpPoll = false; if ($("#lpPoll")) $("#lpPoll").value = ""; render(); toast("Angepinnt – der Zettel hängt jetzt an der Pinnwand."); } catch (err) { failed(err); }
   }
 });
 document.addEventListener("change", async e => {
@@ -1127,7 +1790,12 @@ document.addEventListener("change", async e => {
   if (el.dataset.act === "qsel") { if (el.checked) S.qsel.add(el.dataset.id); else S.qsel.delete(el.dataset.id); render(); return; }
   if (el.dataset.act === "qall") { S.qsel = new Set(el.checked ? [...S.ideas].filter(([, i]) => i.status === "pending" && inBoard(i)).map(([id]) => id) : []); render(); return; }
   if (el.id === "peekSel") { setPeek(el.value); render(); return; }
-  if (el.dataset.act === "deftool") { S.defaults[el.dataset.k] = el.checked; ls.set("pw-tools2", S.defaults); }
+  if (el.dataset.act === "deftool") {
+    S.defaults[el.dataset.k] = el.checked; ls.set("pw-tools2", S.defaults);
+    const bd = curBoard(); if (bd) { const t = { ...(bd.tools || S.defaults), [el.dataset.k]: el.checked }; bd.tools = t; try { await patchBoard(S.board, { tools: t }); } catch (err) { failed(err); } }
+  }
+  else if (el.dataset.act === "bopt") { const bd = curBoard(); if (!bd) return; bd[el.dataset.k] = el.checked; render(); try { await patchBoard(S.board, { [el.dataset.k]: el.checked }); } catch (err) { failed(err); } }
+  else if (el.id === "bPrompt") { const bd = curBoard(); if (!bd) return; const v = el.value.trim(); bd.prompt = v; render(); try { await patchBoard(S.board, { prompt: v }); toast("Auftrag gespeichert."); } catch (err) { failed(err); } }
   else if (el.dataset.act === "tool") { try { await patchIdea(el.dataset.id, { tools: { [el.dataset.k]: el.checked } }); } catch (err) { failed(err); el.checked = !el.checked; } }
 });
 document.addEventListener("input", e => {
@@ -1156,7 +1824,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && e.target.id === "lpIdea") { e.preventDefault(); $('[data-act="lpadd"]').click(); }
 });
 
-document.addEventListener("toggle", e => { if (e.target.id === "settingsBox") S.showSettings = e.target.open; }, true);
+document.addEventListener("toggle", e => { if (e.target.id === "settingsBox") S.showSettings = e.target.open; if (e.target.id === "bsetBox") S.showBset = e.target.open; }, true);
 async function saveLabels(labels) {
   if (db) await db.doc("settings/main").set({ labels, at: Date.now() });
   S.labels = labels; render();
@@ -1176,12 +1844,13 @@ async function start() {
   if (!db) { isTeacher = true; S.view = "lp"; render(); return; }
   S.view = isTeacher ? "lp" : "kind"; S.live = true;
   db.collection("boards").onSnapshot(snap => { S.boards = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
-  db.collection("ideas").onSnapshot(snap => { S.ideas = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => toast("Verbindung zur Pinnwand unterbrochen. Bitte neu laden."));
+  db.collection("ideas").onSnapshot(snap => { S.ideas = new Map(snap.docs.map(d => [d.id, JSON.parse(JSON.stringify(d.data()))])); render(); }, () => toast("Verbindung zur Pinnwand unterbrochen. Bitte neu laden."));
   db.doc("settings/main").onSnapshot(d => { S.labels = d.exists ? (d.data().labels || {}) : {}; render(); }, () => {});
-  if (isTeacher) db.collection("votes").onSnapshot(snap => { S.votes = new Map(snap.docs.map(d => [d.id, d.data()])); if (KN && S.peek) setPeek(S.peek); render(); }, () => {});
+  if (isTeacher) db.collection("votes").onSnapshot(snap => { S.votes = new Map(snap.docs.map(d => [d.id, d.data()])); if (S.peek) setPeek(S.peek); render(); }, () => {});
   if (myId) db.doc("votes/" + myId).onSnapshot(d => {
     if (dirty || saving) return;
     const data = d.exists ? JSON.parse(JSON.stringify(d.data())) : null;
+    if (data && S.peek) { ownMy = { name: data.name || (ownMy && ownMy.name) || "", r: data.r || {} }; render(); return; }
     if (data) { S.my = { name: data.name || S.my.name, r: data.r || {} }; if (data.name) ls.set("pw-name", data.name); }
     render();
   }, () => {});

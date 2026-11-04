@@ -720,7 +720,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '14';
+  var PIN_VER = '15';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -2467,7 +2467,7 @@
       load: async function () { var d = await DB.kidPin(K.sess.token); if (!d) return null; var v = {}; if (d.my) v[me] = d.my;
         return { boards: d.boards || {}, ideas: d.ideas || {}, settings: { main: { labels: d.labels || {} } }, votes: v }; },
       put: function () { var e = new Error('Nicht erlaubt'); e.code = 'forbidden'; return Promise.reject(e); },
-      add: async function (coll, obj) { if (coll !== 'ideas') throw new Error('Nicht erlaubt'); return DB.kidPinIdea(K.sess.token, obj.boardId, obj.text); },
+      add: async function (coll, obj) { if (coll !== 'ideas') throw new Error('Nicht erlaubt'); return DB.kidPinPost(K.sess.token, obj.boardId, obj.text, obj.cat, obj.img); },
       vote: async function (body) { await DB.kidPinVote(K.sess.token, { r: body.r || {} }); },
       voteDoc: function (id, v) { return { name: kid.name, r: JSON.parse(JSON.stringify((v && v.r) || {})), at: v && v.at }; }
     });

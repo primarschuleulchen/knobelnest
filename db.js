@@ -125,6 +125,10 @@
     kidHeft: async function (token) { return ok(await sb.rpc('kid_heft', { p_token: token })); },
     kidPin: async function (token) { return ok(await sb.rpc('kid_pin', { p_token: token })); },
     kidPinIdea: async function (token, board, text) { return ok(await sb.rpc('kid_pin_idea', { p_token: token, p_board: String(board || ''), p_text: String(text || '') })); },
+    // Version 23: mit Kategorie und Bild (die Pinnwand entscheidet, ob direkt angepinnt wird)
+    kidPinPost: async function (token, board, text, cat, img) {
+      return ok(await sb.rpc('kid_pin_post', { p_token: token, p_board: String(board || ''), p_text: String(text || ''), p_cat: cat ? String(cat) : null, p_img: img ? String(img) : null }));
+    },
     kidPinVote: async function (token, body) { return ok(await sb.rpc('kid_pin_vote', { p_token: token, p_body: body })); },
     kidAtelier: async function (token) { return ok(await sb.rpc('kid_atelier', { p_token: token })); },
     kidAtelierSet: async function (token, patch) { return ok(await sb.rpc('kid_atelier_set', { p_token: token, p_patch: patch })); },

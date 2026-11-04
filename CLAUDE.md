@@ -4,7 +4,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 
 - Klassencode: Die Lehrperson wählt ihn selbst (z. B. «Otter 123», `ACT.codeEdit`/`codeSave`, beim Anlegen freiwillig). Kinder müssen Gross/klein und Leerzeichen nicht beachten (`_norm_code`).
 - Klasse (Version 20): `classes.bild` = Klassenbild/Maskottchen (data:image, `ACT.bildEdit`, Vorlagen der Admin-Lehrperson in `shared_store` «klassenbilder», Verwaltung `kbCard()`), `classes.kid_tools` = Werkzeuge für die Kinder freigegeben `{heft,pin,atelier,tafel}` (fehlt = frei, neue Klassen alles gesperrt; Knöpfe unter den Werkzeug-Kacheln, `ACT.toolRel`), `classes.tafel_cols` = eigene Namen der drei Tafel-Spalten (`setTafelCols()`). Kinder lesen das mit `kid_klasse`; `kid_class` gibt auch das Bild. `DB.listClasses` fällt ohne diese Spalten auf die alten zurück.
-- Tafel-Spalten (Version 22): `classes.tafel_cols = {list:[{id,label,color}]}` (höchstens 6, `colList()`/`setTafelCols()`, Editor `colEditor()`); ohne `list` die drei Standardspalten. `tafel_set` prüft mit `_tafel_col_ok`. «helfen»/«frage» behalten ihre Sonderrolle (Hilfe-Hinweis).
+- Tafel-Spalten (Version 21): `classes.tafel_cols = {list:[{id,label,color}]}` (höchstens 6, `colList()`/`setTafelCols()`, Editor `colEditor()`); ohne `list` die drei Standardspalten. `tafel_set` prüft mit `_tafel_col_ok`. «helfen»/«frage» behalten ihre Sonderrolle (Hilfe-Hinweis).
 - Lizenz (Version 22): `profiles.valid_until` = letzter gültiger Tag (leer = unbefristet, Admin nie gesperrt). Neue Konten bekommen per Trigger heute + 1 Jahr. Nur der Admin ändert es (`admin_set_valid`, Verwaltung `licRow()`, «+ 1 Jahr», «✉ Erinnerung schreiben»). Abgelaufen → `licPage()` statt Portal/Werkzeugen (`licExpired()` in `T.start`, `T.render`, `toolGate`, `licGate`); 30 Tage vorher Hinweis mit `C.SHOP_URL`. Kinder: `_lic_ok()` in `_kid`, `kid_class` (`pausiert`), `kid_login` → Hinweis «pausiert».
 - Lehrperson: Reihenfolge der Werkzeug-Kacheln pro Lehrperson in `teacher_store` «kacheln» (`tileOrder()`; Kacheln direkt ziehen, Pointer-Events `tdStart`/`tdMove`, Finger nach 380 ms Halten). Tier-Vorlagen fürs Klassenbild in `bilder/maskottchen/` (`TIERE`).
 - Lehrperson: Reiter «Übersicht» (`T.tab = 'uebersicht'`, Start und Klick aufs Logo) = Klassen-Banner mit Werkzeug-Kacheln; Reiter «Spiele» = Fächer und Spiele (beides `T.tabSpiele`). Kachel-Bilder in `bilder/kacheln/` (`KACHEL_BILD`, `ttIcon()`).
@@ -45,7 +45,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 23) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 24) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -75,7 +75,7 @@ So läuft ein Werkzeug im Portal:
 |---|---|---|---|
 | Tagesfolie | `window.knTagesfolie` (inkl. `claude.use`-Nachbau) | eigene Dokumente der Tagesfolie; Vorlage in `shared_store` «tagesfolie-vorlage» | – |
 | Hausaufgabenheft | `window.knHeft` | `hat-<Klasse>` | `kid_heft`, `kid_heft_tick`, `kid_heft_own` |
-| Pinnwand | `window.knPin` (`pinBridge` baut die `claude.use('db')`-Sammlungen nach) | `pin-<Klasse>` | `kid_pin`, `kid_pin_idea`, `kid_pin_vote`; Lehrperson schreibt mit `pin_put` |
+| Pinnwand | `window.knPin` (`pinBridge` baut die `claude.use('db')`-Sammlungen nach) | `pin-<Klasse>` | `kid_pin`, `kid_pin_post` (Version 24: Kategorie, Bild, direkt), `kid_pin_vote`; Lehrperson schreibt mit `pin_put` |
 | Otterteich | `window.knOtter` (`otterBridge`) | `otter-<Klasse>` (Einstellungen und `run` = Stand des Teichs) | – |
 | Atelier | `window.knAtelier` | `atelier-<Klasse>` = `{open, arten, kids:{id:{thema,umsetzung,stufe,farbe,x,y}}}` | `kid_atelier`, `kid_atelier_set`; Lehrperson schreibt mit `atelier_put` |
 | Live-Quiz | `window.knQuiz` (`mode` teacher/player) | `quiz`, `quiz-<id>` (nicht pro Klasse) | `quiz_join`, `quiz_state`, `quiz_answer` (ohne Kinder-Anmeldung) |
@@ -111,7 +111,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 23).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 24).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -121,10 +121,12 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=93`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=94`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
+
+- **Klassenkiste und Eulenkiste zusammen:** Die Lehrerin will, dass Änderungen an einem Werkzeug, das es in beiden gibt (Tagesfolie, Glücksrad, Lautstärkeregler, Pinnwand), immer in beiden gemacht werden. Die Eulenkiste ist das Repo `primarschuleulchen/lernkompass` (ohne Daten, eigenes `werkstatt/bauen.py`); dort direkt online stellen. Pinnwand: Original `werkstatt/originale/klassen-pinnwand.html` (Version 6), Einbau `werkstatt/einbau/pinnwand/pin6_patch.py`, gemeinsame Korrekturen in `pin_fixes.py` (dieselben Abschnitte stehen in der Eulenkiste).
 
 Die Lehrerin entwickelt ihre Werkzeuge oft in anderen Chats weiter und schickt dann die neue HTML-Datei. So baust du sie ein:
 
