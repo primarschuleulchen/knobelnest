@@ -359,6 +359,9 @@
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
+    if (/^#\/quiz(\/|$)/.test(hs)) return QZ.start();
+    var mq = hs.match(/^#\/q(?:\/(\d*))?\/?$/);
+    if (mq) return QZ.play(mq[1] || '');
     var ms = hs.match(/^#\/sprint\/([0-9a-f-]{36})/);
     if (ms) return S.start(ms[1]);
     return T.start();
@@ -562,7 +565,7 @@
   // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
   var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
-  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['gd', '🧠 Gedächtniskiste']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste']];
   async function toolAccess(me) {
     var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
@@ -909,6 +912,49 @@
       paint('<div class="folie"><iframe src="otterteich.html?v=' + OTTER_VER + '" title="Otterteich" allow="microphone; fullscreen; autoplay; screen-wake-lock"></iframe></div>');
     }
   };
+  // ===================================================================
+  // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
+  // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
+  // ===================================================================
+  var QUIZ_VER = '1';
+  function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
+  var QZ = {
+    start: async function () {
+      UI.view = 'quiz';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      if (!(await toolGate('quiz', 'Das Live-Quiz'))) return;
+      window.knQuiz = {
+        mode: 'teacher',
+        back: function () { location.hash = '#/'; },
+        list: async function () { var d = await DB.storeGet('quiz'); return (d && Array.isArray(d.list)) ? d.list : []; },
+        saveList: function (l) { return DB.storeSet('quiz', { list: JSON.parse(JSON.stringify(l)) }); },
+        load: function (id) { return DB.storeGet('quiz-' + id); },
+        save: function (id, q) { return DB.storeSet('quiz-' + id, JSON.parse(JSON.stringify(q))); },
+        remove: function (id) { return DB.storeDel('quiz-' + id); },
+        open: function (title, qs) { return DB.quizOpen(String(title || ''), JSON.parse(JSON.stringify(qs))); },
+        step: function (id, phase, q) { return DB.quizStep(id, phase, q); },
+        host: function (id) { return DB.quizHost(id); },
+        kick: function (id, pid) { return DB.quizKick(id, pid); },
+        close: function (id) { return DB.quizClose(id); },
+        joinUrl: quizJoinUrl,
+        qr: qrSvg
+      };
+      paint('<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Live-Quiz" allow="fullscreen"></iframe></div>');
+    },
+    play: function (pin) {
+      UI.view = 'quizplay';
+      var k = LS.get('kn_kid');
+      window.knQuiz = {
+        mode: 'player', pin: pin, name: (k && k.exp > Date.now() && k.name) || '',
+        home: function () { location.hash = '#/klasse'; },
+        join: function (p, n, av) { return DB.quizJoin(p, n, av); },
+        state: function (t) { return DB.quizState(t); },
+        answer: function (t, q, a) { return DB.quizAnswer(t, q, a); }
+      };
+      paint('<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Quiz mitspielen" allow="fullscreen"></iframe></div>');
+    }
+  };
   ACT.wallFull = function () { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); };
 
   // ===================================================================
@@ -1185,7 +1231,7 @@
       '</div></div>' + (function () {
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
-          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele']]
+          ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele']]
           .filter(function (x) { return T.tools[x[0]]; });
         var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
@@ -1193,7 +1239,7 @@
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
         var tiles = {};
-        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
+        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + (x[0] === 'quiz' ? '<span class="tt-only">Mitspielen per QR-Code</span>' : foot(x[5])) + '</div>'; });
         if (T.tools.tafel) tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
         if (vt && T.tools.vk) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
@@ -1472,10 +1518,10 @@
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste' };
+  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
-  var TILE_DEF = ['folie', 'otter', 'heft', 'pin', 'atelier', 'tafel', 'vk', 'gd'];
+  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'tafel', 'vk', 'gd'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;
