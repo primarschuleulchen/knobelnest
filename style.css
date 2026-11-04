@@ -1171,3 +1171,22 @@ body.kidv .kid-go[disabled]{background:#c9d6e2;color:#5f6963;box-shadow:none;cur
 .tile .sw.sw-bild{padding:0;overflow:hidden;background:#fff!important}
 .tile .sw.sw-bild img{width:100%;height:100%;display:block;border-radius:50%}
 body.lp .tile .sw.sw-bild{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--gold)}
+/* Elterngespräche Version 29: Liste, Aufklappen, «dabei» */
+.eg .umf-hero h1{font-size:clamp(32px,4.5vw,46px)}
+.eg-ttitle{font-size:24px;font-weight:400;line-height:1.2}
+.eg .pill.eg-st-eg-auf{background:var(--leaf-soft,#e9f1e3);border:1.5px solid #7ea56a;color:#3f6b2e}
+.eg .pill.eg-st-eg-alt{background:#f1f1ef;border:1.5px solid #c9c9c4;color:#6b6b66}
+.eg .pill.eg-st-{background:var(--sun-soft,#fbf3dc);border:1.5px solid var(--gold,#d6ad45);color:#6b5418}
+.eg-tcard .pill{align-self:flex-start}
+button.eg-time{white-space:nowrap;flex:none;width:auto;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;font:inherit;color:var(--ink);cursor:pointer;padding:4px 6px;margin-left:-6px;border-radius:10px;text-align:left}
+button.eg-time:hover{background:var(--sky-soft,#dcf0fd)}
+.eg-pfeil{font-size:14px;color:var(--soft);width:12px}
+.eg-n{min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--sky-soft,#dcf0fd);border:1.5px solid var(--line2);font-size:14px;display:inline-grid;place-items:center;color:var(--sky-deep,#3f78a8)}
+.eg-rows li.auf{box-shadow:var(--schatten)}
+.eg-wholist{flex:1 1 100%;background:#fff;border:1.5px dashed var(--gold,#d6ad45);border-radius:14px;padding:10px 14px;font-size:17px}
+.eg-wholist ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.eg-wholist li{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap;padding:0!important;border:0!important;background:none!important;min-height:0!important;box-shadow:none!important}
+.eg-in{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line2);background:#fff;font:inherit;font-size:16px;color:var(--soft);cursor:pointer}
+.eg-in.on{border:1.5px solid #7ea56a;background:var(--leaf-soft,#e9f1e3);color:#3f6b2e}
+.eg-in:hover{border-color:var(--ink)}
+@media print{ .eg .umf-page,.umf-page.eg{padding:0} .eg-wholist{display:none} }

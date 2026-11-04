@@ -366,8 +366,8 @@
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
-    var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})/);
-    if (mgs) return E.start(mgs[1]);
+    var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})(?:\/([0-9a-f-]{36}))?/);
+    if (mgs) return E.start(mgs[1], mgs[2]);
     var mel = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
     if (mel) return EP.start(mel[1]);
     var mg = hs.match(/^#\/u(?:\/(\d*))?\/?$/);
@@ -940,59 +940,109 @@
 
   // ---------- Lehrperson ----------
   var E = {
-    start: async function (cid) {
+    // #/gespraeche/<Klasse> = Liste der Gespräche, #/gespraeche/<Klasse>/<Gespräch> = ein Gespräch planen
+    start: async function (cid, tid) {
       UI.view = 'eg';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
       document.body.classList.add('lp');
       if (!(await toolGate('eltern', 'Elterngespräche'))) return;
       app.innerHTML = '<p class="boot">Elterngespräche werden geladen …</p>';
-      E.cid = cid; E.edit = null;
+      E.cid = cid; E.open = {}; E.row = null; E.list = null;
       try {
         E.cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0];
         if (!E.cls) throw new Error('Diese Klasse wurde nicht gefunden.');
         E.kids = (await DB.listKids(cid)).slice().sort(kidSort);
-        E.row = await DB.talkGet(cid);
-        if (!E.row) E.row = await DB.talkSave(cid, { title: 'Elterngespräche', info: '', open: false, slots: [], diff: {}, fixed: {}, dur: 20, gap: 5 });
+        if (!tid) { E.list = await DB.talkList(cid); return E.renderList(); }
+        E.row = await DB.talkGet(tid);
+        if (!E.row || E.row.class_id !== cid) { location.hash = '#/gespraeche/' + cid; return; }
       } catch (e) {
-        paint('<main class="main"><div class="card stack"><h2>Elterngespräche nicht verfügbar</h2><p>' + h(egHint(e)) + '</p><a class="btn" href="#/">← Klassenkiste</a></div></main>');
+        paint('<div class="umf-page">' + egTop(backBtn('href="#/"')) + '<div class="card stack"><h2>Elterngespräche nicht verfügbar</h2><p>' + h(egHint(e)) + '</p></div></div>');
         return;
       }
-      var c = E.row.cfg || (E.row.cfg = {});
-      ['slots'].forEach(function (k) { if (!Array.isArray(c[k])) c[k] = []; });
-      ['diff', 'fixed'].forEach(function (k) { if (!c[k] || typeof c[k] !== 'object') c[k] = {}; });
-      E.row.answers = E.row.answers || {};
+      egFill(E.row);
       E.render();
       // neue Einträge der Eltern laufend holen
       every(15000, async function () {
-        if (document.hidden || document.querySelector('.overlay') || E.busy) return;
+        if (document.hidden || document.querySelector('.overlay') || E.busy || !E.row) return;
         var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
-        try { var r = await DB.talkGet(cid); if (r && JSON.stringify(r.answers) !== JSON.stringify(E.row.answers)) { E.row.answers = r.answers || {}; E.render(); } } catch (e) {}
+        try { var r = await DB.talkGet(E.row.id); if (r && JSON.stringify(r.answers) !== JSON.stringify(E.row.answers)) { E.row.answers = r.answers || {}; E.render(); } } catch (e) {}
       });
     },
     link: function () { return location.origin + location.pathname + '#/eltern/' + E.row.token; },
     save: async function () {
       E.busy = true;
-      try { await DB.talkSave(E.cid, JSON.parse(JSON.stringify(E.row.cfg))); }
+      try { await DB.talkSave(E.row.id, JSON.parse(JSON.stringify(E.row.cfg))); }
       catch (e) { toast(egHint(e)); }
       finally { E.busy = false; }
-    }
+    },
+    // Kinder, die bei diesem Gespräch dabei sind (cfg.kids fehlt = alle)
+    inKids: function (c) { var l = c.kids; return Array.isArray(l) ? E.kids.filter(function (k) { return l.indexOf(k.id) >= 0; }) : E.kids; }
+  };
+  function egFill(row) {
+    var c = row.cfg || (row.cfg = {});
+    if (!Array.isArray(c.slots)) c.slots = [];
+    ['diff', 'fixed'].forEach(function (k) { if (!c[k] || typeof c[k] !== 'object') c[k] = {}; });
+    row.answers = row.answers || {};
+  }
+  function egTop(left) {
+    return '<div class="umf-top eg-noprint"><div class="row">' + left + '</div><span class="umf-kick"><img src="' + h(klassBild(E.cls && E.cls.bild)) + '" alt="" width="40" height="40">Elterngespräche' +
+      (E.cls ? ' · Klasse ' + h(E.cls.name) : '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><div class="row"></div></div>';
+  }
+  function egSpan(c) {
+    var d = egSort(c.slots || []); if (!d.length) return 'noch keine Termine';
+    var a = egDay(d[0].d, true), b = egDay(d[d.length - 1].d, true);
+    return a === b ? a : egDay(d[0].d) + ' bis ' + egDay(d[d.length - 1].d);
+  }
+  function egState(c) {
+    var d = egSort(c.slots || []), today = new Date().toISOString().slice(0, 10);
+    if (d.length && d[d.length - 1].d < today) return ['vorbei', 'eg-alt'];
+    return c.open ? ['Anmeldung offen', 'eg-auf'] : ['Anmeldung geschlossen', ''];
+  }
+  // ---------- Liste: alle Elterngespräche der Klasse ----------
+  E.renderList = function () {
+    var out = '<div class="umf-page eg">' + egTop(backBtn('href="#/"')) +
+      '<section class="umf-hero card"><img class="umf-hero-bild" src="' + h(klassBild(E.cls.bild)) + '" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Elterngespräche</h1>' +
+      '<p class="muted">Jedes Gespräch bleibt gespeichert. So können Sie mehrere gleichzeitig planen und später nachschauen, wann welches Gespräch war.</p></div>' +
+      '<button class="btn primary big" data-a="egNew">＋ Neues Elterngespräch</button></section>';
+    if (!E.list.length) out += '<div class="empty">Noch keine Elterngespräche. Tippen Sie auf «Neues Elterngespräch».</div>';
+    else out += '<div class="umf-grid">' + E.list.map(function (t) {
+      egFill(t);
+      var c = t.cfg, st = egState(c), kids = E.inKids(c), ans = t.answers, n = kids.filter(function (k) { return ans[k.id]; }).length, key = 'egdel:' + t.id;
+      return '<div class="card umf-card eg-tcard"><a class="umf-card-open" href="#/gespraeche/' + E.cid + '/' + t.id + '"><span class="pill eg-st-' + st[1] + '">' + st[0] + '</span>' +
+        '<b class="eg-ttitle">' + h(c.title || 'Elterngespräche') + '</b><span class="muted">' + h(egSpan(c)) + '</span>' +
+        '<span class="muted small">' + n + ' von ' + kids.length + ' eingetragen · ' + plural(c.slots.length, 'Termin', 'Termine') + '</span></a>' +
+        '<div class="row"><a class="btn sm primary" href="#/gespraeche/' + E.cid + '/' + t.id + '">Öffnen</a>' +
+        '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="egDel" data-id="' + t.id + '">' + (UI.confirm === key ? 'Wirklich löschen?' : 'Löschen') + '</button></div></div>';
+    }).join('') + '</div>';
+    paint(out + '</div>');
+  };
+  ACT.egNew = async function () {
+    var m = new Date().toLocaleDateString('de-CH', { month: 'long', year: 'numeric' }), row;
+    try { row = await DB.talkNew(E.cid, { title: 'Elterngespräche ' + m, info: '', open: false, slots: [], diff: {}, fixed: {}, dur: 20, gap: 5 }); }
+    catch (e) { return toast(egHint(e)); }
+    location.hash = '#/gespraeche/' + E.cid + '/' + row.id;
+  };
+  ACT.egDel = async function (el) {
+    if (!armed('egdel:' + el.dataset.id)) return E.list ? E.renderList() : null;
+    try { await DB.talkDelete(el.dataset.id); } catch (e) { return toast(egHint(e)); }
+    E.list = E.list.filter(function (t) { return t.id !== el.dataset.id; }); toast('Gelöscht.'); E.renderList();
   };
   function egHead(sub) {
-    return '<header class="top"><div class="top-in">' + (sub === 'Elterngespräche' ? '<div class="row">' + backBtn('href="#/"') : '') + '<a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
-      '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>' + h(sub) + '</small></span></a>' +
-      (sub === 'Elterngespräche' ? '</div>' : '') + '</div></header>';
+    return '<header class="top"><div class="top-in"><span class="marke"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
+      '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>' + h(sub) + '</small></span></span></div></header>';
   }
   function egDot(v) { var d = EG_DIFF[v || 0]; return '<span class="eg-dot" style="background:' + d[1] + '" title="' + d[0] + '"></span>'; }
   E.render = function () {
-    var c = E.row.cfg, ans = E.row.answers || {}, kids = E.kids, P = egPlan(c, ans, kids);
-    var name = {}; kids.forEach(function (k) { name[k.id] = k.name; });
+    if (!E.row) return E.list ? E.renderList() : null;
+    var c = E.row.cfg, ans = E.row.answers || {}, kids = E.inKids(c), P = egPlan(c, ans, kids);
+    var name = {}; E.kids.forEach(function (k) { name[k.id] = k.name; });
     var nAns = kids.filter(function (k) { return ans[k.id] || P.fixedKid[k.id]; }).length;
     var nPlan = Object.keys(P.fixedKid).length + Object.keys(P.slotOf).length;
-    var out = egHead('Elterngespräche') + '<main class="main eg">';
-    out += '<section class="banner eg-banner eg-noprint"><img class="banner-bild" src="' + h(klassBild(E.cls.bild)) + '" alt="" width="132" height="132"><div class="stack" style="gap:8px;flex:1 1 320px">' +
-      '<span class="kick">Klasse ' + h(E.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><h1 class="h1">Elterngespräche</h1>' +
-      '<p>① Termine eintragen · ② Link an die Eltern schicken · ③ Plan anschauen und fixieren</p>' +
+    var out = '<div class="umf-page eg">' + egTop(backBtn('href="#/gespraeche/' + E.cid + '"', 'Zurück zu allen Elterngesprächen'));
+    out += '<section class="umf-hero card eg-noprint"><img class="umf-hero-bild" src="' + h(klassBild(E.cls.bild)) + '" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px">' +
+      '<h1>' + h(c.title || 'Elterngespräche') + '</h1>' +
+      '<p class="muted">① Termine eintragen · ② Link an die Eltern schicken · ③ Plan anschauen und fixieren</p>' +
       '<div class="row eg-stats"><span class="pill">' + nAns + ' von ' + kids.length + ' eingetragen</span><span class="pill">' + nPlan + ' eingeplant</span>' +
       (P.unplaced.length ? '<span class="pill eg-bad">' + P.unplaced.length + ' ohne Platz</span>' : '') + '<span class="pill">' + plural(c.slots.length, 'Termin', 'Termine') + '</span></div></div></section>';
 
@@ -1022,7 +1072,7 @@
       '<button class="btn" data-a="egCopy">Link kopieren</button><button class="btn" data-a="egQR">QR-Code</button><a class="btn" href="' + h(E.link()) + '" target="_blank" rel="noopener">Elternansicht</a></div>' +
       '<p class="muted small">Die Eltern wählen ihr Kind aus der Klassenliste und kreuzen alle Termine an, an denen sie können. Wer den Link hat, sieht die Vornamen der Klasse – schicken Sie ihn nur an die Eltern.</p>' +
       '<div class="row"><button class="btn sm danger' + (UI.confirm === 'eglink' ? ' armed' : '') + '" data-a="egNewLink">' + (UI.confirm === 'eglink' ? 'Wirklich? Der alte Link geht dann nicht mehr' : 'Neuen Link erstellen') + '</button>' +
-      '<button class="btn sm danger' + (UI.confirm === 'egreset' ? ' armed' : '') + '" data-a="egReset">' + (UI.confirm === 'egreset' ? 'Wirklich alle Einträge und Fixierungen löschen?' : 'Neue Runde (alle Einträge löschen)') + '</button></div></section>';
+      '<button class="btn sm danger' + (UI.confirm === 'egreset' ? ' armed' : '') + '" data-a="egReset">' + (UI.confirm === 'egreset' ? 'Wirklich alle Einträge und Fixierungen löschen?' : 'Alle Einträge löschen') + '</button></div></section>';
 
     // ③ Plan
     var kidOpts = function (s) {
@@ -1034,7 +1084,7 @@
     out += '<section class="card stack eg-plancard"><div class="row" style="justify-content:space-between"><h2>③ Plan · Klasse ' + h(E.cls.name) + '</h2><div class="row eg-noprint">' +
       (Object.keys(P.slotOf).length ? '<button class="btn sm" data-a="egFixAll">📌 Alle Vorschläge fixieren</button>' : '') + '<button class="btn sm" data-a="egPrint">Drucken</button></div></div>' +
       '<p class="muted small eg-noprint">Der Plan wird bei jedem neuen Eintrag neu ausgerechnet. «Vorschlag» kann sich noch ändern, 📌 fixierte Termine bleiben und verschwinden für die Eltern. ' +
-      '🔒 = nur so bekommen alle eingetragenen Familien einen Platz; diese Zeit ist für neue Eltern schon ausgeblendet.</p>';
+      '🔒 = nur so bekommen alle eingetragenen Familien einen Platz; diese Zeit ist für neue Eltern schon ausgeblendet. Tippen Sie auf eine Zeit, um zu sehen, wer sie angekreuzt hat (die Zahl daneben).</p>';
     if (P.unplaced.length) out += '<div class="note eg-noprint"><b>Kein Platz gefunden für:</b> ' + P.unplaced.map(function (k) {
       return h(name[k]) + ' <span class="muted">(' + (P.avail[k].length ? P.avail[k].map(function (s) { return h(egLabel(P.byId[s])); }).join(', ') : 'keine freien Termine angekreuzt') + ')</span>';
     }).join('; ') + '<br>Tipp: einen weiteren Termin anbieten, einen fixierten Termin lösen oder mit den Eltern sprechen.</div>';
@@ -1050,26 +1100,48 @@
         else if (sk) body = '<span class="eg-who">' + egDot(c.diff[sk]) + '<b>' + h(name[sk]) + '</b>' + (ans[sk] && ans[sk].name ? ' <span class="muted small">· ' + h(ans[sk].name) + '</span>' : '') + '</span><span class="pill eg-vor">Vorschlag' + (P.reserved[s.id] ? ' 🔒' : '') + '</span>' +
           '<button class="btn sm eg-noprint" data-a="egFix" data-s="' + s.id + '" data-k="' + sk + '">📌 fixieren</button>';
         else body = '<span class="eg-who muted">frei</span><select class="input eg-sel eg-noprint" data-change="egFixSel" data-s="' + s.id + '" aria-label="Termin ' + h(s.t) + ' fix vergeben">' + kidOpts(s.id) + '</select>';
-        return '<li class="' + (fk ? (fk === '_' ? 'blk' : 'fix') : sk ? 'vor' : 'frei') + '"><span class="eg-time">' + h(s.t) + '–' + h(s.e) + '</span>' + body + '</li>';
+        // Aufklappen: wer hat diesen Termin angekreuzt?
+        var who = kids.filter(function (k) { return ans[k.id] && (ans[k.id].slots || []).indexOf(s.id) >= 0; }), op = !!E.open[s.id];
+        var more = op ? '<div class="eg-wholist">' + (who.length ? '<b>Diesen Termin haben angekreuzt:</b><ul>' + who.map(function (k) {
+          var a = ans[k.id], where = P.fixedKid[k.id] || P.slotOf[k.id];
+          return '<li>' + egDot(c.diff[k.id]) + '<b>' + h(k.name) + '</b>' + (a.name ? ' <span class="muted small">· ' + h(a.name) + '</span>' : '') +
+            ' <span class="muted small">(' + plural((a.slots || []).length, 'Termin', 'Termine') + ' gewählt' + (where && where !== s.id ? ', eingeplant ' + h(egLabel(P.byId[where])) : '') + ')</span></li>';
+        }).join('') + '</ul>' : '<span class="muted">Noch niemand hat diesen Termin angekreuzt.</span>') + '</div>' : '';
+        return '<li class="' + (fk ? (fk === '_' ? 'blk' : 'fix') : sk ? 'vor' : 'frei') + (op ? ' auf' : '') + '"><button class="eg-time" data-a="egSlotOpen" data-s="' + s.id + '" aria-expanded="' + op + '" title="Wer hat diesen Termin angekreuzt?">' +
+          '<span class="eg-pfeil eg-noprint" aria-hidden="true">' + (op ? '▾' : '▸') + '</span>' + h(s.t) + '–' + h(s.e) + '<span class="eg-n eg-noprint">' + who.length + '</span></button>' + body + more + '</li>';
       }).join('') + '</ol></div>';
     }).join('') + '</section>';
 
-    // Kinder und Eltern
-    out += '<section class="card stack eg-noprint"><h2>Kinder und Eltern</h2><p class="muted small">Wie anspruchsvoll ist das Gespräch? Das sehen nur Sie. Die Klassenkiste plant anspruchsvolle Gespräche möglichst nicht direkt hintereinander.</p>' +
+    // Kinder und Eltern: wer muss sich anmelden?
+    var inSet = {}; kids.forEach(function (k) { inSet[k.id] = 1; });
+    var outKids = E.kids.filter(function (k) { return !inSet[k.id]; });
+    out += '<section class="card stack eg-noprint"><div class="row" style="justify-content:space-between"><h2>Kinder und Eltern</h2><div class="row">' +
+      '<button class="btn sm" data-a="egAll" data-v="1">Alle dabei</button><button class="btn sm" data-a="egAll" data-v="0">Niemand</button></div></div>' +
+      '<p class="muted small">Nur die Kinder, die «dabei» sind, erscheinen bei den Eltern zur Auswahl. Wie anspruchsvoll ein Gespräch ist, sehen nur Sie. Die Klassenkiste plant anspruchsvolle Gespräche möglichst nicht direkt hintereinander.</p>' +
       (kids.length ? '<ul class="list eg-kids">' + kids.map(function (k) {
         var a = ans[k.id], fs = P.fixedKid[k.id], st;
         if (fs) st = '<span class="eg-st ok">📌 ' + h(egLabel(P.byId[fs])) + '</span>';
         else if (a && a.none) st = '<span class="eg-st bad">Kein Termin passt</span>';
         else if (a) st = '<span class="eg-st ok">✓ ' + plural((a.slots || []).length, 'Termin', 'Termine') + (P.slotOf[k.id] ? ' · Vorschlag ' + h(egLabel(P.byId[P.slotOf[k.id]])) : ' · noch kein Platz') + '</span>';
         else st = '<span class="eg-st">noch offen</span>';
-        return '<li><div class="eg-kid"><b>' + h(k.name) + '</b>' + (a && a.name ? '<span class="muted small">' + h(a.name) + (a.lp ? ' (von Ihnen eingetragen)' : '') + '</span>' : '') + st +
+        return '<li><button class="eg-in on" data-a="egIn" data-k="' + k.id + '" title="Nicht mehr dabei">✓ dabei</button><div class="eg-kid"><b>' + h(k.name) + '</b>' + (a && a.name ? '<span class="muted small">' + h(a.name) + (a.lp ? ' (von Ihnen eingetragen)' : '') + '</span>' : '') + st +
           (a && a.note ? '<span class="eg-note">«' + h(a.note) + '»</span>' : '') + '</div>' +
           '<div class="eg-diff" role="group" aria-label="Wie anspruchsvoll">' + EG_DIFF.map(function (d, i) {
             return '<button class="chip" style="--c:' + d[1] + '" aria-pressed="' + ((+c.diff[k.id] || 0) === i) + '" data-a="egDiff" data-k="' + k.id + '" data-v="' + i + '">' + d[0] + '</button>'; }).join('') + '</div>' +
           '<button class="btn sm" data-a="egEdit" data-k="' + k.id + '">' + (a ? 'Termine ändern' : 'Selbst eintragen') + '</button></li>';
-      }).join('') + '</ul>' : '<div class="empty">Diese Klasse hat noch keine Kinder. Tragen Sie sie im Reiter «Kinder» ein.</div>') + '</section>';
-    paint(out + '</main>');
+      }).join('') + '</ul>' : '<div class="empty">' + (E.kids.length ? 'Noch kein Kind dabei. Tippen Sie unten auf die Kinder, die sich anmelden sollen.' : 'Diese Klasse hat noch keine Kinder. Tragen Sie sie im Reiter «Kinder» ein.') + '</div>') +
+      (outKids.length ? '<div class="stack" style="gap:8px"><span class="lbl">Nicht dabei (müssen sich nicht anmelden):</span><div class="eg-chips">' + outKids.map(function (k) {
+        return '<button class="eg-in" data-a="egIn" data-k="' + k.id + '" title="Dazunehmen">＋ ' + h(k.name) + '</button>'; }).join('') + '</div></div>' : '') + '</section>';
+    paint(out + '</div>');
   };
+  ACT.egSlotOpen = function (el) { var s = el.dataset.s; if (E.open[s]) delete E.open[s]; else E.open[s] = 1; E.render(); };
+  ACT.egIn = async function (el) {
+    var c = E.row.cfg, k = el.dataset.k, l = Array.isArray(c.kids) ? c.kids.slice() : E.kids.map(function (x) { return x.id; });
+    var i = l.indexOf(k); if (i >= 0) l.splice(i, 1); else l.push(k);
+    c.kids = l.length === E.kids.length ? null : l; if (!c.kids) delete c.kids;
+    await egSaveRender();
+  };
+  ACT.egAll = async function (el) { if (+el.dataset.v) delete E.row.cfg.kids; else E.row.cfg.kids = []; await egSaveRender(); };
   async function egSaveRender() { E.render(); await E.save(); }
   ACT.egAdd = async function (f) {
     var c = E.row.cfg, d = f.elements.d.value, a = egMin(f.elements.from.value), b = egMin(f.elements.to.value);
@@ -1099,7 +1171,7 @@
     await egSaveRender();
   };
   ACT.egOpen = async function () { E.row.cfg.open = !E.row.cfg.open; toast(E.row.cfg.open ? 'Die Eltern können sich jetzt eintragen.' : 'Anmeldung geschlossen.'); await egSaveRender(); };
-  ACT.egTitle = async function (el) { E.row.cfg.title = el.value.trim().slice(0, 80); await E.save(); toast('Gespeichert.'); };
+  ACT.egTitle = async function (el) { E.row.cfg.title = el.value.trim().slice(0, 80); await egSaveRender(); toast('Gespeichert.'); };
   ACT.egInfo = async function (el) { E.row.cfg.info = el.value.trim().slice(0, 600); await E.save(); toast('Gespeichert.'); };
   ACT.egCopy = async function () {
     try { await navigator.clipboard.writeText(E.link()); toast('Link kopiert. Jetzt z. B. in die Eltern-Nachricht einfügen.'); }
@@ -1115,12 +1187,12 @@
   ACT.egNewLink = async function () {
     if (!armed('eglink')) return E.render();
     var t = crypto.randomUUID ? crypto.randomUUID() : null; if (!t) return toast('Dieser Browser kann keinen neuen Link erstellen.');
-    try { await DB.talkReset(E.cid, { token: t }); E.row.token = t; toast('Neuer Link erstellt.'); } catch (e) { toast(egHint(e)); }
+    try { await DB.talkReset(E.row.id, { token: t }); E.row.token = t; toast('Neuer Link erstellt.'); } catch (e) { toast(egHint(e)); }
     E.render();
   };
   ACT.egReset = async function () {
     if (!armed('egreset')) return E.render();
-    try { await DB.talkReset(E.cid, { answers: {} }); E.row.answers = {}; E.row.cfg.fixed = {}; await E.save(); toast('Alle Einträge gelöscht. Die Termine sind noch da.'); } catch (e) { toast(egHint(e)); }
+    try { await DB.talkReset(E.row.id, { answers: {} }); E.row.answers = {}; E.row.cfg.fixed = {}; await E.save(); toast('Alle Einträge gelöscht. Die Termine sind noch da.'); } catch (e) { toast(egHint(e)); }
     E.render();
   };
   function egSetFix(s, k) {
@@ -1132,7 +1204,7 @@
   ACT.egFixSel = async function (el) { if (!el.value) return; egSetFix(el.dataset.s, el.value); await egSaveRender(); };
   ACT.egUnfix = async function (el) { delete E.row.cfg.fixed[el.dataset.s]; await egSaveRender(); };
   ACT.egFixAll = async function () {
-    var P = egPlan(E.row.cfg, E.row.answers, E.kids), n = 0;
+    var P = egPlan(E.row.cfg, E.row.answers, E.inKids(E.row.cfg)), n = 0;
     Object.keys(P.kidOf).forEach(function (s) { egSetFix(s, P.kidOf[s]); n++; });
     toast(plural(n, 'Termin', 'Termine') + ' fixiert.'); await egSaveRender();
   };
@@ -1159,13 +1231,13 @@
   ACT.egEditSave = async function (f) {
     var k = f.dataset.k, sl = Array.prototype.filter.call(f.querySelectorAll('input[name=s]'), function (x) { return x.checked; }).map(function (x) { return x.value; });
     var a = { name: f.elements.name.value.trim(), slots: sl, note: f.elements.note.value.trim(), none: f.elements.none.checked };
-    try { await DB.talkAnswerPut(E.cid, k, a); } catch (e) { return toast(egHint(e)); }
+    try { await DB.talkAnswerPut(E.row.id, k, a); } catch (e) { return toast(egHint(e)); }
     E.row.answers[k] = Object.assign({}, E.row.answers[k] || {}, a, { lp: true });
     closeOverlays(); toast('Gespeichert.'); E.render();
   };
   ACT.egEditDel = async function (el) {
     var k = el.dataset.k;
-    try { await DB.talkAnswerPut(E.cid, k, null); } catch (e) { return toast(egHint(e)); }
+    try { await DB.talkAnswerPut(E.row.id, k, null); } catch (e) { return toast(egHint(e)); }
     delete E.row.answers[k]; closeOverlays(); toast('Eintrag gelöscht.'); E.render();
   };
 
@@ -1199,11 +1271,14 @@
     var byId = {}; d.slots.forEach(function (s) { byId[s.id] = s; });
 
     if (EP.step === 'kids') {
-      out += '<section class="card stack"><h2>Für welches Kind?</h2><p class="muted">Tippen Sie auf den Namen Ihres Kindes.</p><div class="eg-kidpick">' + d.kids.map(function (k) {
+      // Pro Gerät nur ein Kind: Wer schon eingetragen hat, kann nur noch das eigene Kind öffnen.
+      var own = d.kids.filter(function (k) { return EP.keys[k.id] && k.done; })[0];
+      out += '<section class="card stack"><h2>Für welches Kind?</h2><p class="muted">' + (own ? 'Sie haben auf diesem Gerät schon für <b>' + h(own.name) + '</b> eingetragen. Tippen Sie darauf, um Ihre Angaben anzuschauen oder zu ändern.' : 'Tippen Sie auf den Namen Ihres Kindes. Sie können nur ein Kind eintragen.') + '</p><div class="eg-kidpick">' + d.kids.map(function (k) {
         var mine = !!EP.keys[k.id];
         if (k.done && !mine) return '<button class="eg-kidbtn done" disabled><b>' + h(k.name) + '</b><small>✓ schon eingetragen</small></button>';
+        if (own && own.id !== k.id) return '<button class="eg-kidbtn done" disabled><b>' + h(k.name) + '</b><small>gesperrt</small></button>';
         return '<button class="eg-kidbtn' + (mine ? ' mine' : '') + '" data-a="epKid" data-k="' + k.id + '"><b>' + h(k.name) + '</b>' + (mine ? '<small>✓ eingetragen · ändern</small>' : '') + '</button>';
-      }).join('') + '</div><p class="muted small">Steht bei Ihrem Kind schon «eingetragen», obwohl Sie noch nichts gewählt haben? Dann melden Sie sich bitte bei der Lehrperson.</p></section>';
+      }).join('') + '</div><p class="muted small">Steht bei Ihrem Kind schon «eingetragen», obwohl Sie noch nichts gewählt haben? Oder haben Sie zwei Kinder in dieser Klasse? Dann melden Sie sich bitte bei der Lehrperson.</p></section>';
       paint(out + '</main>'); return;
     }
     var mine = d.mine;
@@ -1218,7 +1293,7 @@
           '<p class="muted">' + h(d.teacher || 'Die Lehrperson') + ' plant die Gespräche und teilt Ihnen den genauen Termin mit. Wenn Sie diesen Link später auf diesem Gerät wieder öffnen, sehen Sie hier den festen Termin.</p>' +
           '<div class="row"><button class="btn" data-a="epChange">Angaben ändern</button></div>';
       }
-      out += '<button class="btn" style="align-self:flex-start" data-a="epBack">Für ein anderes Kind eintragen</button></section>';
+      out += '<button class="btn" style="align-self:flex-start" data-a="epBack">Zurück zur Übersicht</button></section>';
       paint(out + '</main>'); return;
     }
     // Formular: welche Termine gehen?
@@ -1246,6 +1321,8 @@
     paint(out + '</main>');
   };
   ACT.epKid = async function (el) {
+    var own = Object.keys(EP.keys).filter(function (k) { return EP.d && EP.d.kids.some(function (x) { return x.id === k && x.done; }); })[0];
+    if (own && own !== el.dataset.k) return toast('Auf diesem Gerät ist schon ein Kind eingetragen.');
     EP.kid = el.dataset.k; await EP.load(EP.kid);
     var m = EP.d && EP.d.mine;
     EP.sel = new Set(m ? m.slots || [] : []); EP.name = m ? m.name || '' : (EP.name || ''); EP.note = m ? m.note || '' : ''; EP.none = !!(m && m.none);
