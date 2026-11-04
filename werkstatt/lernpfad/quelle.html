@@ -128,6 +128,10 @@ textarea.inp{min-height:150px;resize:vertical;line-height:1.3}
 .trow.z{background:#fffbef;border-color:#ecd9a4;margin-left:22px}
 .tnum{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--ink);background:#fff;font-size:19px;margin-top:4px}
 .trow.z .tnum{background:#ffd75e;border-color:var(--gold-d)}
+.trow.i{background:#eef5f1;border-color:#b9d3c6}
+.trow.i .tnum{border-radius:8px;background:#2f5d50;border-color:#8a5a2f;font-size:17px}
+.seg.art button[data-v="i"][aria-pressed="true"]{background:#d3e8dc}
+.inpbtn{background:#eef5f1}
 .tmain{display:flex;flex-direction:column;gap:6px;min-width:0}
 .opts{display:flex;flex-wrap:wrap;gap:6px}
 .opts .seg button{min-height:32px;font-size:16px;padding:0 9px}
@@ -152,6 +156,11 @@ textarea.inp{min-height:150px;resize:vertical;line-height:1.3}
 .b{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--ink);background:#fff;font-size:17px}
 .b.z{background:#ffd75e;border-color:var(--gold-d)}
 .b.s{background:var(--leaf);border-color:var(--leaf-d)}
+.b.i{border-radius:7px;background:#2f5d50;border-color:#8a5a2f;font-size:16px}
+.slist li.i{background:#eef5f1}
+.slist li.i.here{background:var(--sky)}
+.lnk{display:inline-flex;align-items:center;padding:0 10px;text-decoration:none;color:#fff;background:var(--sky-d);border-color:var(--sky-d);white-space:nowrap}
+a.btn{text-decoration:none;color:var(--ink)}
 .chk{min-width:44px;height:38px;border-radius:12px;border:1.5px solid var(--line2);background:#fff;cursor:pointer;font-size:16px;color:var(--soft)}
 .chk.on{background:#2e9e6a;border-color:#2e9e6a;color:#fff}
 .hbtn{min-height:52px;border-radius:16px;border:2px solid #b5524a;background:#fff;color:var(--rose-d);font-size:21px;cursor:pointer}
@@ -176,7 +185,7 @@ td .chk{min-width:36px;height:32px}
 (function(){
 'use strict';
 var EULE='data:image/webp;base64,%%EULE%%';
-var KEY='kn_lernpfade_v1';
+var KEY='kn_lernpfade_v2';
 var NS='http://www.w3.org/2000/svg';
 var FARBEN=['#e4572e','#3f78a8','#2e9e6a','#e0a020','#8e5cc2','#e07bb0','#1fa3b5','#a0522d','#6b8e23','#ff8c42','#5c6bc0','#c0392b','#16a085','#d35400','#7d3c98','#2c3e50'];
 var VARS=['meer','schatz','berge'];
@@ -196,7 +205,7 @@ function kidOf(p,id){return p.kids.find(function(k){return k.id===id})}
 
 /* ---------- Speicher (nur dieser Browser) ---------- */
 function load(){
-  try{var r=localStorage.getItem(KEY); if(r){var o=JSON.parse(r); if(o&&Array.isArray(o.pfade)){S=o; return;}}}catch(e){}
+  try{var r=localStorage.getItem(KEY)||localStorage.getItem('kn_lernpfade_v1'); if(r){var o=JSON.parse(r); if(o&&Array.isArray(o.pfade)){S=o; return;}}}catch(e){}
   S={pfade:demo()};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -216,10 +225,10 @@ function moveKid(p,kid,to){
   var s=p.st[kid]; if(!s) return;
   if(to==='hilfe'){s.hilfe=true; return;}
   s.hilfe=false; s.at=to;
-  if(to==='ziel'){p.tasks.forEach(function(t){if(t.art==='p') s.done[t.id]=true});}
+  if(to==='ziel'){p.tasks.forEach(function(t){if(onPath(t)) s.done[t.id]=true});}
   else if(to!=='start'){
     var i=p.tasks.findIndex(function(t){return t.id===to});
-    p.tasks.slice(0,i).forEach(function(t){if(t.art==='p') s.done[t.id]=true});
+    p.tasks.slice(0,i).forEach(function(t){if(onPath(t)) s.done[t.id]=true});
   }
 }
 function whereText(p,kid){
@@ -228,21 +237,27 @@ function whereText(p,kid){
   if(s.at==='start') return 'am Start';
   if(s.at==='ziel') return 'am Ziel';
   var t=p.tasks.find(function(x){return x.id===s.at}); if(!t) return 'am Start';
-  return t.art==='z' ? 'bei Zusatz «'+t.t+'»' : 'bei Aufgabe '+numOf(p,t.id);
+  return t.art==='z' ? 'bei Zusatz «'+t.t+'»' : t.art==='i' ? 'beim Input «'+t.t+'»' : 'bei Aufgabe '+numOf(p,t.id);
 }
-function numOf(p,id){var n=0,r='★';p.tasks.forEach(function(t){if(t.art==='p'){n++; if(t.id===id) r=String(n);}});return r;}
+function numOf(p,id){var n=0,r='★';p.tasks.forEach(function(t){if(t.art==='p'){n++; if(t.id===id) r=String(n);} else if(t.art==='i'&&t.id===id) r=INP;});return r;}
+var INP='🧑‍🏫';
+function sym(t,n){return t.art==='z'?'★':t.art==='i'?INP:n;}
+function artName(t,lang){return t.art==='z'?(lang?'Zusatzaufgabe':'Zusatz'):t.art==='i'?'Input der Lehrperson':(lang?'Pflichtaufgabe':'Pflicht');}
+function onPath(t){return t.art!=='z';}
+function safeUrl(u){u=String(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u)) u='https://'+u; try{var x=new URL(u); return /^https?:$/.test(x.protocol)?x.href:'';}catch(e){return '';}}
+function linkBtn(t,cls,txt){var u=safeUrl(t.link); return u?'<a class="'+cls+'" href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" aria-label="Aufgabe öffnen: '+esc(t.t)+'">'+txt+'</a>':'';}
 function targetName(p,to){
   if(to==='hilfe') return 'bei «Hilfe»';
   if(to==='start') return 'am Start';
   if(to==='ziel') return 'am Ziel 🎉';
   var t=p.tasks.find(function(x){return x.id===to});
-  return t ? (t.art==='z'?'bei der Zusatzaufgabe «'+t.t+'»':'bei Aufgabe '+numOf(p,to)) : '';
+  return t ? (t.art==='z'?'bei der Zusatzaufgabe «'+t.t+'»':t.art==='i'?'beim Input «'+t.t+'»':'bei Aufgabe '+numOf(p,to)) : '';
 }
 
 /* ---------- Beispiele (erfundene Namen) ---------- */
 function mk(title,ziel,variant,tasks,names,places){
   var p={id:uid(),title:title,ziel:ziel,variant:variant,
-    tasks:tasks.map(function(t){return {id:uid(),t:t[0],info:t[1]||'',art:t[2]||'p',stufe:t[3]||1}}),kids:[],st:{}};
+    tasks:tasks.map(function(t){return {id:uid(),t:t[0],info:t[1]||'',art:t[2]||'p',stufe:t[3]||1,link:t[4]||''}}),kids:[],st:{}};
   names.forEach(function(n,i){var k={id:uid(),name:n,farbe:FARBEN[i%FARBEN.length]}; p.kids.push(k); p.st[k.id]={at:'start',hilfe:false,done:{}};});
   places.forEach(function(pl){
     var k=p.kids[pl[0]].id; moveKid(p,k,typeof pl[1]==='number'?p.tasks[pl[1]].id:pl[1]); if(pl[2]) p.st[k].hilfe=true;
@@ -253,17 +268,17 @@ function demo(){
   var N=['Lena','David','Mia','Noah','Emily','Luca','Sara','Jonas','Lia','Tim'];
   return [
     mk('dass oder das?','Ich bin ein Rechtschreib-Profi!','meer',[
-      ['Regel lesen','Buch S. 9','p',1],['Arbeitsblatt 1','«das» als Begleiter','p',1],['Arbeitsblatt 2','«dass» nach dem Komma','p',2],
+      ['Input: das oder dass?','Montag, 9 Uhr','i',1],['Regel lesen','Buch S. 9','p',1],['Arbeitsblatt 1','«das» als Begleiter','p',1],['Arbeitsblatt 2','«dass» nach dem Komma','p',2],
       ['Rätselkarten','Zusatzkiste','z',2],['Lesetext','alle das/dass markieren','p',2],['Partnerdiktat','zu zweit','p',3],['Eigene Sätze','5 Sätze mit «dass»','z',3]
-    ],N,[[0,2],[1,1],[2,4],[3,3],[4,'ziel'],[5,2,true],[6,0],[7,5]]),
+    ],N,[[0,3],[1,2],[2,5],[3,4],[4,'ziel'],[5,3,true],[6,1],[7,6]]),
     mk('Einmaleins-Schatzsuche','Ich kenne das Einmaleins!','schatz',[
-      ['2er- und 5er-Reihe','Kartei','p',1],['10er-Reihe','Blitzrechnen','p',1],['Einmaleins-Domino','zu zweit','z',1],
+      ['2er- und 5er-Reihe','Kartei','p',1,'https://de.wikipedia.org/wiki/Einmaleins'],['10er-Reihe','Blitzrechnen','p',1],['Einmaleins-Domino','zu zweit','z',1],
       ['3er- und 4er-Reihe','Arbeitsheft S. 24','p',2],['Umkehraufgaben','Arbeitsblatt','p',2],['Rechenmauern','Knobelkiste','z',3],['Schnellrechnen','Test im Tandem','p',3]
     ],N.slice(0,8),[[0,3],[1,3],[2,2],[3,1],[4,4],[5,6],[6,0,true]]),
     mk('Der Wasserkreislauf','Ich kann den Wasserkreislauf erklären.','berge',[
-      ['Was weiss ich schon?','Mindmap','p',1],['Film schauen','Wasserkreislauf-Video','p',1],['Lehrtext lesen','Sachbuch S. 30','p',2],
+      ['Was weiss ich schon?','Mindmap','p',1],['Input: Wasser auf Reisen','Kreis vorne','i',1],['Film schauen','Wasserkreislauf-Video','p',1,'https://de.wikipedia.org/wiki/Wasserkreislauf'],['Lehrtext lesen','Sachbuch S. 30','p',2],
       ['Wolke im Glas','Experiment','z',2],['Kreislauf zeichnen','A3-Blatt','p',2],['Partnerpuzzle','Expertengruppen','p',3],['Quiz erfinden','5 Fragen','z',3],['Selbsttest','Lernkontrolle','p',3]
-    ],N.slice(0,9),[[0,4],[1,2],[2,3],[3,5],[4,1],[5,7],[6,4,true],[7,0]])
+    ],N.slice(0,9),[[0,5],[1,3],[2,4],[3,6],[4,1],[5,8],[6,5,true],[7,0]])
   ];
 }
 
@@ -323,7 +338,7 @@ function layout(p){
         if(!best||sc>best.sc) best={x:x,y:y,sc:sc};
       });
       o.x=best.x; o.y=best.y; o.num='★';
-    } else { num++; o.num=String(num); }
+    } else if(t.art==='i'){ o.num=''; } else { num++; o.num=String(num); }
     st.push(o);
   });
   return {d:d, sm:sm, st:st, start:{x:95,y:565}, ziel:{x:885,y:128}, hilfe:{x:120,y:115}};
@@ -411,7 +426,7 @@ var ART={
       return o;
     },
     land:function(s){
-      if(s.t.art==='z') return '<ellipse cx="'+f1(s.x)+'" cy="'+f1(s.y+12)+'" rx="22" ry="7" fill="#f1dca0" stroke="#d9bd78" stroke-width="1.5"/>';
+      if(s.t.art!=='p') return '<ellipse cx="'+f1(s.x)+'" cy="'+f1(s.y+12)+'" rx="22" ry="7" fill="#f1dca0" stroke="#d9bd78" stroke-width="1.5"/>';
       return '<ellipse cx="'+f1(s.x)+'" cy="'+f1(s.y+17)+'" rx="27" ry="8" fill="#8f8b80" stroke="#6d695f" stroke-width="1.5"/>';
     },
     path:function(d){
@@ -463,7 +478,7 @@ var ART={
     },
     land:function(s){
       var R=rng(s.t.id);
-      if(s.t.art==='z') return '<path d="'+blob(s.x,s.y+4,24,R)+'" fill="#e7cd93" stroke="#7d5a2c" stroke-width="2"/>';
+      if(s.t.art!=='p') return '<path d="'+blob(s.x,s.y+4,24,R)+'" fill="#e7cd93" stroke="#7d5a2c" stroke-width="2"/>';
       var r=[34,46,60][s.t.stufe-1]||34;
       return '<path d="'+blob(s.x,s.y+8,r,R)+'" fill="#e7cd93" stroke="#7d5a2c" stroke-width="2.4"/>'+
              '<path d="'+blob(s.x,s.y+8,r*0.72,R)+'" fill="#dcbd7f" stroke="#b08d55" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="4 5"/>'+
@@ -511,7 +526,7 @@ var ART={
     },
     land:function(s){
       var x=s.x,y=s.y;
-      if(s.t.art==='z') return '<ellipse cx="'+f1(x)+'" cy="'+f1(y+12)+'" rx="20" ry="7" fill="#9aa3ab"/>';
+      if(s.t.art!=='p') return '<ellipse cx="'+f1(x)+'" cy="'+f1(y+12)+'" rx="20" ry="7" fill="#9aa3ab"/>';
       if(s.t.stufe===3) return '<polygon points="'+f1(x-88)+','+f1(y+104)+' '+f1(x-42)+','+f1(y+40)+' '+f1(x-24)+','+f1(y+48)+' '+f1(x)+','+f1(y-4)+' '+f1(x+30)+','+f1(y+44)+' '+f1(x+48)+','+f1(y+34)+' '+f1(x+88)+','+f1(y+104)+'" fill="#a3acb5"/>'+
         '<polygon points="'+f1(x)+','+f1(y-4)+' '+f1(x+30)+','+f1(y+44)+' '+f1(x+48)+','+f1(y+34)+' '+f1(x+88)+','+f1(y+104)+' '+f1(x+10)+','+f1(y+104)+'" fill="#8d97a1"/>'+
         '<polygon points="'+f1(x)+','+f1(y-4)+' '+f1(x-17)+','+f1(y+24)+' '+f1(x-7)+','+f1(y+18)+' '+f1(x+1)+','+f1(y+28)+' '+f1(x+10)+','+f1(y+18)+' '+f1(x+19)+','+f1(y+26)+'" fill="#fff"/>';
@@ -538,6 +553,12 @@ var ART={
   }
 };
 
+function board(x,y){ // kleine Wandtafel = Input der Lehrperson
+  return '<rect class="badge" x="'+f1(x-24)+'" y="'+f1(y-16)+'" width="48" height="31" rx="4" fill="#2f5d50" stroke="#8a5a2f" stroke-width="3.5"/>'+
+    '<text x="'+f1(x)+'" y="'+f1(y+1)+'" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#fff">Input</text>'+
+    '<line x1="'+f1(x-10)+'" y1="'+f1(y+17)+'" x2="'+f1(x-14)+'" y2="'+f1(y+25)+'" stroke="#8a5a2f" stroke-width="3" stroke-linecap="round"/>'+
+    '<line x1="'+f1(x+10)+'" y1="'+f1(y+17)+'" x2="'+f1(x+14)+'" y2="'+f1(y+25)+'" stroke="#8a5a2f" stroke-width="3" stroke-linecap="round"/>';
+}
 function mapSVG(p,opt){
   opt=opt||{};
   var v=ART[p.variant]?p.variant:'meer', A=ART[v], L=layout(p), u='m'+(++UID), R=rng(p.id+v);
@@ -552,12 +573,13 @@ function mapSVG(p,opt){
   o+='<text class="zt" x="965" y="46">'+esc(p.ziel||'')+'</text>';
   L.st.forEach(function(s){
     var done=0; p.kids.forEach(function(k){if(p.st[k.id]&&p.st[k.id].done[s.t.id]) done++;});
-    o+='<g class="stn" data-st="'+s.t.id+'"'+(opt.mini?'':' tabindex="0" role="button" aria-label="'+esc((s.t.art==='z'?'Zusatz: ':'Aufgabe '+s.num+': ')+s.t.t)+'"')+'>';
+    o+='<g class="stn" data-st="'+s.t.id+'"'+(opt.mini?'':' tabindex="0" role="button" aria-label="'+esc((s.t.art==='z'?'Zusatz: ':s.t.art==='i'?'Input: ':'Aufgabe '+s.num+': ')+s.t.t)+'"')+'>';
     o+= s.t.art==='z'
       ? '<circle class="badge" cx="'+f1(s.x)+'" cy="'+f1(s.y)+'" r="14" fill="#ffd75e" stroke="#b98d24" stroke-width="2.2"/>'
-      : A.mark(s);
-    o+='<text class="num" x="'+f1(s.x)+'" y="'+f1(s.y+1)+'"'+(s.t.art==='z'?' fill="#6b4a00" style="fill:#6b4a00"':'')+'>'+s.num+'</text>';
-    o+=textLines(s.x,s.y+(s.t.art==='z'?34:42),wrap(s.t.t,15),'lbl');
+      : s.t.art==='i' ? board(s.x,s.y) : A.mark(s);
+    if(s.t.art!=='i') o+='<text class="num" x="'+f1(s.x)+'" y="'+f1(s.y+1)+'"'+(s.t.art==='z'?' fill="#6b4a00" style="fill:#6b4a00"':'')+'>'+s.num+'</text>';
+    if(safeUrl(s.t.link)&&!opt.mini) o+='<g transform="translate('+f1(s.x+(s.t.art==='i'?27:16))+' '+f1(s.y+(s.t.art==='i'?-14:-15))+')"><circle r="9" fill="#3f78a8" stroke="#fff" stroke-width="1.5"/><path d="M-3 3 L3 -3 M-1 -3.5 H3.5 V1" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>';
+    o+=textLines(s.x,s.y+(s.t.art==='p'?42:36),wrap(s.t.t,15),'lbl');
     if(done&&!opt.mini) o+='<g transform="translate('+f1(s.x-32)+' '+f1(s.y-16)+')"><rect x="-17" y="-10" width="34" height="20" rx="10" fill="#2e9e6a"/><text class="dn" y="1">✓'+done+'</text></g>';
     o+='</g>';
   });
@@ -570,9 +592,9 @@ function listHTML(){
   var o='<div class="wrap"><header class="hero"><img src="'+EULE+'" alt=""><div><h1>Lernpfade <span class="stars">✦ ✧ ✦</span></h1>'+
     '<p>Lege fest, welche Aufgaben die Kinder der Reihe nach machen, was Pflicht und was Zusatz ist. Auf der Karte zeigt jedes Kind mit seiner Figur, wo es gerade steht.</p></div></header><div class="grid">';
   S.pfade.forEach(function(p){
-    var np=p.tasks.filter(function(t){return t.art==='p'}).length, nz=p.tasks.length-np;
+    var np=p.tasks.filter(function(t){return t.art==='p'}).length, nz=p.tasks.filter(function(t){return t.art==='z'}).length, ni=p.tasks.length-np-nz;
     o+='<article class="card pcard"><button class="thumb" data-a="open" data-id="'+p.id+'" aria-label="'+esc(p.title)+' öffnen">'+mapSVG(p,{mini:true})+'</button>'+
-      '<div class="pbody"><h2>'+esc(p.title)+'</h2><p>'+VAR[p.variant].icon+' '+VAR[p.variant].name+' · '+np+' Pflicht · '+nz+' Zusatz · '+p.kids.length+' Kinder</p>'+
+      '<div class="pbody"><h2>'+esc(p.title)+'</h2><p>'+VAR[p.variant].icon+' '+VAR[p.variant].name+' · '+np+' Pflicht · '+nz+' Zusatz'+(ni?' · '+ni+' Input':'')+' · '+p.kids.length+' Kinder</p>'+
       '<div class="row"><button class="btn pri sm" data-a="open" data-id="'+p.id+'">Öffnen</button><button class="btn sm" data-a="editid" data-id="'+p.id+'">Bearbeiten</button><button class="btn sm" data-a="copy" data-id="'+p.id+'">Kopie</button></div></div></article>';
   });
   o+='<button class="newcard" data-a="new"><b>+</b>Neuer Lernpfad</button></div>'+
@@ -601,9 +623,11 @@ function mapHTML(p){
   o+='<div class="card"><h3>Legende</h3><div class="legend">'+
     '<div>'+mini('<circle cx="16" cy="16" r="13" fill="#fff" stroke="#1f2421" stroke-width="2"/><text x="16" y="17" font-size="16" text-anchor="middle" dominant-baseline="central">1</text>')+'Pflichtaufgabe, in dieser Reihenfolge</div>'+
     '<div>'+mini('<circle cx="16" cy="16" r="13" fill="#ffd75e" stroke="#b98d24" stroke-width="2"/><text x="16" y="17" font-size="16" text-anchor="middle" dominant-baseline="central" fill="#6b4a00">★</text>')+'Zusatzaufgabe, freiwillig</div>'+
+    '<div>'+mini('<rect x="2" y="7" width="28" height="19" rx="3" fill="#2f5d50" stroke="#8a5a2f" stroke-width="2.5"/><text x="16" y="17" font-size="9" fill="#fff" text-anchor="middle" dominant-baseline="central">Input</text>')+'Input: die Lehrperson erklärt etwas, alle kommen</div>'+
+    '<div>'+mini('<circle cx="16" cy="16" r="10" fill="#3f78a8"/><path d="M12 20 L20 12 M14.5 11.5 H20.5 V17.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>')+'mit Link: antippen und «Aufgabe öffnen»</div>'+
     STUFE.map(function(s,i){return '<div><span class="stars" style="width:32px;text-align:center">'+'●●●'.slice(0,i+1)+'</span>'+s+' = '+vv.stufen[i]+'</div>'}).join('')+
     '<div>'+mini('<rect x="5" y="6" width="22" height="20" rx="10" fill="#2e9e6a"/><text x="16" y="17" font-size="13" fill="#fff" text-anchor="middle" dominant-baseline="central">✓3</text>')+'so viele Kinder sind schon fertig</div>'+
-    '</div><p class="muted" style="margin:10px 0 0;font-size:16px">'+np+' Pflichtaufgaben · '+(p.tasks.length-np)+' Zusatzaufgaben</p></div></div></div>';
+    '</div><p class="muted" style="margin:10px 0 0;font-size:16px">'+np+' Pflichtaufgaben · '+p.tasks.filter(function(t){return t.art==='z'}).length+' Zusatzaufgaben · '+p.tasks.filter(function(t){return t.art==='i'}).length+' Inputs</p></div></div></div>';
   return o;
 }
 function mini(inner){return '<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">'+inner+'</svg>';}
@@ -620,16 +644,17 @@ function editHTML(p){
   o+='<h3>Aufgaben <small>der Reihe nach, wie die Kinder sie machen</small></h3><div class="tlist">';
   p.tasks.forEach(function(t,i){
     if(t.art==='p') n++;
-    o+='<div class="trow '+t.art+'"><div class="tnum">'+(t.art==='z'?'★':n)+'</div><div class="tmain">'+
+    o+='<div class="trow '+t.art+'"><div class="tnum">'+sym(t,n)+'</div><div class="tmain">'+
       '<input class="inp" id="t-'+t.id+'" data-tf="t" data-id="'+t.id+'" value="'+esc(t.t)+'" maxlength="40" placeholder="Was ist zu tun?" aria-label="Aufgabe">'+
-      '<input class="inp sm" id="i-'+t.id+'" data-tf="info" data-id="'+t.id+'" value="'+esc(t.info)+'" maxlength="60" placeholder="Material oder Hinweis (freiwillig)" aria-label="Hinweis">'+
-      '<div class="opts"><div class="seg art">'+[['p','Pflicht'],['z','Zusatz ★']].map(function(a){return '<button data-a="art" data-id="'+t.id+'" data-v="'+a[0]+'" aria-pressed="'+(t.art===a[0])+'">'+a[1]+'</button>'}).join('')+'</div>'+
-      '<div class="seg">'+[1,2,3].map(function(s){return '<button data-a="stufe" data-id="'+t.id+'" data-v="'+s+'" aria-pressed="'+(t.stufe===s)+'" title="'+esc(VAR[p.variant].stufen[s-1])+'">'+STUFE[s-1]+'</button>'}).join('')+'</div></div></div>'+
+      '<input class="inp sm" id="i-'+t.id+'" data-tf="info" data-id="'+t.id+'" value="'+esc(t.info)+'" maxlength="60" placeholder="'+(t.art==='i'?'Wann? z. B. Montag, 9 Uhr (freiwillig)':'Material oder Hinweis (freiwillig)')+'" aria-label="Hinweis">'+
+      '<input class="inp sm" id="l-'+t.id+'" data-tf="link" data-id="'+t.id+'" value="'+esc(t.link||'')+'" maxlength="500" inputmode="url" placeholder="🔗 Link zur Aufgabe (freiwillig), z. B. https://…" aria-label="Link">'+
+      '<div class="opts"><div class="seg art">'+[['p','Pflicht'],['z','Zusatz ★'],['i','Input']].map(function(a){return '<button data-a="art" data-id="'+t.id+'" data-v="'+a[0]+'" aria-pressed="'+(t.art===a[0])+'">'+a[1]+'</button>'}).join('')+'</div>'+
+      (t.art==='i'?'':'<div class="seg">')+(t.art==='i'?[]:[1,2,3]).map(function(s){return '<button data-a="stufe" data-id="'+t.id+'" data-v="'+s+'" aria-pressed="'+(t.stufe===s)+'" title="'+esc(VAR[p.variant].stufen[s-1])+'">'+STUFE[s-1]+'</button>'}).join('')+(t.art==='i'?'':'</div>')+'</div></div>'+
       '<div class="tbtns"><button class="ib" data-a="up" data-id="'+t.id+'" aria-label="nach oben"'+(i===0?' disabled':'')+'>↑</button>'+
       '<button class="ib" data-a="down" data-id="'+t.id+'" aria-label="nach unten"'+(i===p.tasks.length-1?' disabled':'')+'>↓</button>'+
       '<button class="ib" data-a="deltask" data-id="'+t.id+'" aria-label="löschen">✕</button></div></div>';
   });
-  o+='</div><div class="row"><button class="btn sm" data-a="addtask" data-v="p">+ Pflichtaufgabe</button><button class="btn sm gold" data-a="addtask" data-v="z">+ Zusatzaufgabe ★</button></div>';
+  o+='</div><div class="row"><button class="btn sm" data-a="addtask" data-v="p">+ Pflichtaufgabe</button><button class="btn sm gold" data-a="addtask" data-v="z">+ Zusatzaufgabe ★</button><button class="btn sm inpbtn" data-a="addtask" data-v="i">+ Input</button></div>';
   o+='<h3>Kinder <small>ein Name pro Zeile</small></h3><textarea class="inp" id="e-kids" rows="8" placeholder="Lena&#10;David&#10;Mia">'+esc(p.kids.map(function(k){return k.name}).join('\n'))+'</textarea>'+
     '<div class="row"><button class="btn sm" data-a="kidsok">Kinder übernehmen</button><span class="muted" style="font-size:16px">Jedes Kind bekommt '+VAR[p.variant].dein.replace('dein','ein')+' in einer eigenen Farbe.</span></div>';
   o+='<div class="row" style="margin-top:14px"><button class="btn pri" data-a="tomap">Fertig – zur Karte</button><button class="btn danger" data-a="delask">Lernpfad löschen</button></div>';
@@ -653,8 +678,9 @@ function modalHTML(){
     c+='<li class="'+(s.at==='start'?'here':'')+'"><span class="b s">S</span><div class="t">Start</div><button class="chk'+(s.at==='start'?' on':'')+'" data-a="go" data-to="start">Hier</button></li>';
     p.tasks.forEach(function(t){
       if(t.art==='p') n++;
-      c+='<li class="'+(t.art==='z'?'z ':'')+(s.at===t.id?'here':'')+'"><span class="b'+(t.art==='z'?' z':'')+'">'+(t.art==='z'?'★':n)+'</span>'+
-        '<div class="t">'+esc(t.t)+'<small>'+(t.info?esc(t.info)+' · ':'')+(t.art==='z'?'Zusatz':'Pflicht')+' · '+STUFE[t.stufe-1]+'</small></div>'+
+      c+='<li class="'+(t.art!=='p'?t.art+' ':'')+(s.at===t.id?'here':'')+'"><span class="b '+t.art+'">'+sym(t,n)+'</span>'+
+        '<div class="t">'+esc(t.t)+'<small>'+(t.info?esc(t.info)+' · ':'')+artName(t)+(t.art==='i'?'':' · '+STUFE[t.stufe-1])+'</small></div>'+
+        linkBtn(t,'chk lnk','🔗 Öffnen')+
         '<button class="chk'+(s.done[t.id]?' on':'')+'" data-a="done" data-t="'+t.id+'" aria-label="erledigt">✓</button>'+
         '<button class="chk'+(s.at===t.id?' on':'')+'" data-a="go" data-to="'+t.id+'">Hier</button></li>';
     });
@@ -663,9 +689,10 @@ function modalHTML(){
   else if(M.t==='st'){
     var t=p.tasks.find(function(x){return x.id===M.id}); if(!t){M=null;return '';}
     var here=p.kids.filter(function(k){var s=p.st[k.id];return s.at===t.id}), done=p.kids.filter(function(k){return p.st[k.id].done[t.id]});
-    c='<h2><span class="b'+(t.art==='z'?' z':'')+'">'+numOf(p,t.id)+'</span>'+esc(t.t)+'</h2>'+
-      '<p style="margin:0">'+(t.info?esc(t.info)+'<br>':'')+'<span class="muted">'+(t.art==='z'?'Zusatzaufgabe':'Pflichtaufgabe')+' · '+STUFE[t.stufe-1]+' ('+esc(VAR[p.variant].stufen[t.stufe-1])+')</span></p>'+
-      '<h3 style="font-size:21px">Arbeiten gerade hier ('+here.length+')</h3><div class="kids">'+(here.length?here.map(function(k){return kidChip(p,k)}).join(''):'<span class="muted">niemand</span>')+'</div>'+
+    c='<h2><span class="b '+t.art+'">'+numOf(p,t.id)+'</span>'+esc(t.t)+'</h2>'+
+      '<p style="margin:0">'+(t.info?esc(t.info)+'<br>':'')+'<span class="muted">'+artName(t,1)+(t.art==='i'?'':' · '+STUFE[t.stufe-1]+' ('+esc(VAR[p.variant].stufen[t.stufe-1])+')')+'</span></p>'+
+      (safeUrl(t.link)?'<div class="row">'+linkBtn(t,'btn pri','🔗 Aufgabe öffnen')+'</div>':'')+
+      '<h3 style="font-size:21px">'+(t.art==='i'?'Sind gerade hier (':'Arbeiten gerade hier (')+here.length+')</h3><div class="kids">'+(here.length?here.map(function(k){return kidChip(p,k)}).join(''):'<span class="muted">niemand</span>')+'</div>'+
       '<h3 style="font-size:21px">Schon erledigt ('+done.length+')</h3><div class="kids">'+(done.length?done.map(function(k){return kidChip(p,k)}).join(''):'<span class="muted">noch niemand</span>')+'</div>'+
       '<div class="row"><button class="btn sm" data-a="edit">Bearbeiten</button></div>';
   }
@@ -673,7 +700,7 @@ function modalHTML(){
     wide=true;
     var nn=0;
     c='<h2>Fortschritt</h2><p class="muted" style="margin:0">Tippe auf ein Feld, um eine Aufgabe ab- oder anzuhaken.</p><div class="tw"><table><thead><tr><th>Kind</th>'+
-      p.tasks.map(function(t){if(t.art==='p') nn++; return '<th class="'+t.art+'" title="'+esc(t.t)+'">'+(t.art==='z'?'★':nn)+'</th>'}).join('')+'<th>Pflicht</th><th style="text-align:left">Wo?</th></tr></thead><tbody>';
+      p.tasks.map(function(t){if(t.art==='p') nn++; return '<th class="'+t.art+'" title="'+esc(t.t)+'">'+sym(t,nn)+'</th>'}).join('')+'<th>Pflicht</th><th style="text-align:left">Wo?</th></tr></thead><tbody>';
     var tp=p.tasks.filter(function(t){return t.art==='p'}).length;
     p.kids.forEach(function(k){
       var s=p.st[k.id], dp=p.tasks.filter(function(t){return t.art==='p'&&s.done[t.id]}).length;
@@ -749,7 +776,7 @@ document.addEventListener('click',function(e){
       S.pfade.push(np); save(); M=null; V={v:'edit',id:np.id}; render(); window.scrollTo(0,0); break;
     case 'setvar': p.variant=el.dataset.v; save(); render(); break;
     case 'addtask':
-      t={id:uid(),t:'',info:'',art:el.dataset.v,stufe:el.dataset.v==='z'?2:1}; p.tasks.push(t); save(); render();
+      t={id:uid(),t:el.dataset.v==='i'?'Input':'',info:'',link:'',art:el.dataset.v,stufe:el.dataset.v==='z'?2:1}; p.tasks.push(t); save(); render();
       setTimeout(function(){var i=$('#t-'+t.id);if(i){i.focus();i.scrollIntoView({block:'center'});}},30); break;
     case 'art': case 'stufe': case 'up': case 'down': case 'deltask':
       var i=p.tasks.findIndex(function(x){return x.id===id}); if(i<0) break;
