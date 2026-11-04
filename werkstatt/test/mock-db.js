@@ -184,14 +184,22 @@
       D.store = D.store || {}; var k = c.teacher_id + '|pin-' + cid, d = D.store[k] = D.store[k] || {}; d[coll] = d[coll] || {}; if (obj == null) delete d[coll][id]; else d[coll][id] = JSON.parse(JSON.stringify(obj)); return delay(); },
     kidPin: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|pin-' + c.id];
       if (!d) return delay({ boards: {}, ideas: {}, labels: {}, my: null }); var b = {}, i = {};
-      Object.keys(d.boards || {}).forEach(function (id) { var x = d.boards[id]; if (x.visible === true) b[id] = { title: x.title, visible: true, at: x.at, cats: x.cats }; });
+      Object.keys(d.boards || {}).forEach(function (id) { var x = d.boards[id]; if (x.visible === true) b[id] = Object.assign({}, x, { visible: true }); });
       Object.keys(d.ideas || {}).forEach(function (id) { var x = d.ideas[id]; if (!b[x.boardId]) return;
-        if (x.status === 'ok') i[id] = { text: x.text, boardId: x.boardId, status: 'ok', tools: x.tools, at: x.at, okAt: x.okAt, order: x.order, lp: x.lp, cat: x.cat };
-        else if (x.status === 'pending' && x.uid === k.id) i[id] = { text: x.text, boardId: x.boardId, status: 'pending', at: x.at, uid: k.id }; });
+        if (x.status === 'ok') i[id] = { text: x.text, boardId: x.boardId, status: 'ok', tools: x.tools, at: x.at, okAt: x.okAt, order: x.order, lp: x.lp, cat: x.cat, img: x.img, pos: x.pos, poll: x.poll,
+          uid: x.uid === k.id ? k.id : undefined, by: (b[x.boardId].names || x.uid === k.id) ? x.by : undefined };
+        else if (x.status === 'pending' && x.uid === k.id) i[id] = { text: x.text, boardId: x.boardId, status: 'pending', at: x.at, uid: k.id, cat: x.cat, img: x.img, by: x.by }; });
       return delay(JSON.parse(JSON.stringify({ boards: b, ideas: i, labels: ((d.settings || {}).main || {}).labels || {}, my: (d.votes || {})[k.id] || null }))); },
     kidPinIdea: function (t, board, text) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|pin-' + c.id];
       if (!d || !(d.boards[board] || {}).visible) return Promise.reject(new Error('nicht offen')); var id = 'k' + Math.random().toString(36).slice(2, 10);
       d.ideas = d.ideas || {}; d.ideas[id] = { text: text, by: k.name, uid: k.id, boardId: board, status: 'pending', at: Date.now() }; return delay(id); },
+    kidPinPost: function (t, board, text, cat, img) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|pin-' + c.id];
+      var bd = d && d.boards[board]; if (!bd || !bd.visible) return Promise.reject(new Error('Diese Pinnwand ist im Moment nicht offen.'));
+      if (img && (!bd.imgs || img.length > 250000)) return Promise.reject(new Error('Dieses Bild geht leider nicht.'));
+      var id = 'k' + Math.random().toString(36).slice(2, 10), o = { text: String(text || '').trim().slice(0, 280), by: k.name, uid: k.id, boardId: board, at: Date.now() };
+      if (cat && (bd.cats || []).some(function (x) { return x.id === cat; })) o.cat = cat; if (img) o.img = img;
+      if (bd.direct) { o.status = 'ok'; o.okAt = Date.now(); o.tools = bd.tools || {}; } else o.status = 'pending';
+      d.ideas = d.ideas || {}; d.ideas[id] = o; return delay(id); },
     kidPinVote: function (t, body) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|pin-' + c.id];
       d.votes = d.votes || {}; var r = {}; Object.keys(body.r || {}).forEach(function (id) { if ((d.ideas[id] || {}).status === 'ok') r[id] = body.r[id]; }); d.votes[k.id] = { r: r, at: Date.now() }; return delay(true); },
     kidHeftOwn: function (t, x, del) { var k = kidOf(t), c = D.classes.filter(function (q) { return q.id === k.class_id; })[0];
