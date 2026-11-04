@@ -119,7 +119,7 @@ def alle(spiel):
                   dict(name='Sprechen', info='Das Wort laut sagen 🎤', t=3),
                   dict(name='my, your, his, her', info='Wem gehört es?', t=4),
                   dict(name='Sätze', info='This is my … / These are my …', t=5)],
-          daten={'items': items, 'png': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': MIA, 'noah': NOAH, 'aehnlich': AEHNLICH},
+          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': MIA, 'noah': NOAH, 'aehnlich': AEHNLICH},
           css=CSS, js=JS)
 
 
@@ -136,7 +136,7 @@ CSS = r"""
 .schrank .it.seen{filter:drop-shadow(0 0 3px rgba(240,194,75,.9))}
 .schrank .it.seen.an{filter:drop-shadow(0 0 10px #f0c24b) drop-shadow(0 0 4px #f0c24b)}
 .wortkarte{min-height:64px;display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:6px 18px;box-shadow:var(--sch-k)}
-.wortkarte b{font:700 clamp(26px,6vw,38px) system-ui,-apple-system,sans-serif;color:var(--sky-d)}
+.wortkarte b{font-size:clamp(30px,6.6vw,42px);color:var(--sky-d);font-weight:400}
 .wortkarte span{color:var(--soft);font-size:20px}
 .laut{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--sky);border:2px solid var(--ink);font-size:24px;box-shadow:var(--sch-k);flex:none}
 .laut:active{transform:scale(.94)}
@@ -146,14 +146,14 @@ CSS = r"""
 .bild .art.zwei img{max-width:62%}.bild .art.zwei img+img{margin-left:-14%;margin-top:-18%}
 .bild .laut{position:absolute;right:-14px;bottom:-14px}
 .wahl{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,560px)}
-.wahl button{background:#fff;border:2px solid var(--ink);border-radius:20px;box-shadow:var(--sch-k);min-height:70px;padding:8px;font:700 clamp(22px,5vw,30px) system-ui,-apple-system,sans-serif;transition:transform .12s}
+.wahl button{background:#fff;border:2px solid var(--ink);border-radius:20px;box-shadow:var(--sch-k);min-height:70px;padding:8px;font-size:clamp(26px,5.6vw,34px);transition:transform .12s}
 .wahl button:active{transform:scale(.96)}
 .wahl button.ok{background:#e7f3df;border-color:var(--ok)}.wahl button.no{background:#fbe5e2;border-color:var(--no)}.wahl button.hint{background:var(--sun);border-color:var(--gold)}
 .schreib{display:flex;gap:10px;width:min(100%,480px)}
-.schreib input{flex:1;min-width:0;font:700 30px system-ui,-apple-system,sans-serif;padding:8px 16px;border-radius:18px;border:2px solid var(--ink);background:#fff;color:var(--ink);text-align:center;box-shadow:var(--sch-k)}
+.schreib input{flex:1;min-width:0;font-family:inherit;font-size:32px;padding:6px 16px;border-radius:18px;border:2px solid var(--ink);background:#fff;color:var(--ink);text-align:center;box-shadow:var(--sch-k)}
 .schreib input:focus{outline:3px solid var(--gold);outline-offset:2px}
 .schreib input.ok{background:#e7f3df;border-color:var(--ok)}.schreib input.no{background:#fbe5e2;border-color:var(--no)}
-.luecke{font:700 28px system-ui,-apple-system,sans-serif;letter-spacing:.18em;color:var(--sky-d)}
+.luecke{font-size:32px;letter-spacing:.18em;color:var(--sky-d)}
 .mik{width:118px;height:118px;border-radius:50%;background:var(--rose);border:3px solid var(--ink);font-size:52px;box-shadow:var(--sch);display:grid;place-items:center}
 .mik.hoert{background:#fbe5e2;animation:puls 1s infinite}
 @keyframes puls{50%{box-shadow:0 0 0 14px rgba(200,87,78,.18),var(--sch)}}
@@ -179,10 +179,10 @@ CSS = r"""
 .satz{min-height:66px;width:min(100%,600px);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;background:#fff;border:2px dashed var(--line2);border-radius:20px;padding:8px}
 .satz.ok{border:2px solid var(--ok);background:#f1f7ec}.satz.no{border-color:var(--no)}
 .kaertli{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:min(100%,600px)}
-.kaertli button,.satz button{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:6px 14px;min-height:50px;font:700 clamp(20px,4.6vw,26px) system-ui,-apple-system,sans-serif;box-shadow:var(--sch-k)}
+.kaertli button,.satz button{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:6px 14px;min-height:50px;font-size:clamp(24px,5.2vw,30px);box-shadow:var(--sch-k)}
 .satz button{background:var(--sky)}
 .kaertli button.weg{visibility:hidden}
-.satz .pkt{font:700 26px system-ui,sans-serif}
+.satz .pkt{font-size:26px}
 .de{font-size:clamp(22px,5vw,28px);text-align:center}
 @media (max-height:700px){.bild{width:min(44vw,170px)}.mik{width:92px;height:92px;font-size:40px}}
 @media (max-width:520px){.kind-svg{max-width:88px}.ding .bild{width:min(32vw,118px)}.buehne .sprech{min-height:56px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
@@ -230,11 +230,11 @@ function stufeSchrank(api) {
   var w = neu('ks'); api.stage.appendChild(w);
   var karte = neu('wortkarte', '<span>Tippe auf ein Kleidungsstück im Schrank.</span>');
   var holder = neu('', D.schrank); var sv = holder.firstChild;
-  Array.prototype.forEach.call(sv.querySelectorAll('.it'), function (g) { g.querySelector('img').src = D.png[g.getAttribute('data-id')]; });
+  Array.prototype.forEach.call(sv.querySelectorAll('.it'), function (g) { g.querySelector('img').src = D.sp[g.getAttribute('data-id')]; });
   var los = document.createElement('button'); los.className = 'go sun'; los.textContent = 'Finde die Kleider! →';
   w.appendChild(karte); w.appendChild(sv); w.appendChild(los);
   var seen = {}, phase = 'schau', liste = reihe(G.n), k = 0, ziel = null, lock = false;
-  api.msg('<span class="em">👀</span> Schau in den Schrank! Tippe auf die Kleider und hör gut zu.');
+  api.msg('Schau in den Schrank! Tippe auf die Kleider und hör gut zu.');
   function itEl(id) { return sv.querySelector('[data-id="' + id + '"]'); }
   function zeig(id) {
     var x = ITM[id]; karte.innerHTML = ''; karte.appendChild(lautBtn(x.en));
@@ -244,7 +244,7 @@ function stufeSchrank(api) {
     ziel = liste[k]; lock = false;
     var t = 'Find the ' + ziel.en + '!';
     karte.innerHTML = ''; karte.appendChild(lautBtn(t)); karte.appendChild(neu('', '<b>Find the ' + h(ziel.en) + '!</b>'));
-    api.msg('<span class="em">🔎</span> Hör zu und tippe auf das richtige Kleidungsstück.');
+    api.msg('Hör zu und tippe auf das richtige Kleidungsstück.');
     say(t);
   }
   Array.prototype.forEach.call(sv.querySelectorAll('.it'), function (g) {
@@ -255,7 +255,7 @@ function stufeSchrank(api) {
         g.classList.add('an', 'seen'); seen[id] = 1; zeig(id); say(ITM[id].en);
         var n = Object.keys(seen).length;
         if (n >= 6) los.classList.add('pop');
-        api.msg('<span class="em">' + (n >= IT.length ? '🌟' : '👆') + '</span> ' + (n >= IT.length ? 'Du hast alles angeschaut! Jetzt «Finde die Kleider!»' : n + ' von ' + IT.length + ' angeschaut.'));
+        api.msg((n >= IT.length ? 'Du hast alles angeschaut! Jetzt «Finde die Kleider!»' : n + ' von ' + IT.length + ' angeschaut.'));
         return;
       }
       if (lock || !ziel) return; lock = true;
@@ -287,7 +287,7 @@ function stufeWahl(api) {
     var b = neu('bild', art(x.id)); w.appendChild(b);
     var opts = [x].concat(pick(IT.filter(function (y) { return y.id !== x.id; }), 3));
     var wahl = neu('wahl'); w.appendChild(wahl);
-    api.msg('<span class="em">🤔</span> Wie heisst das auf Englisch?');
+    api.msg('Wie heisst das auf Englisch?');
     shuffle(opts).forEach(function (o) {
       var bt = document.createElement('button'); bt.textContent = o.en;
       bt.onclick = function () {
@@ -508,7 +508,7 @@ function stufeSaetze(api) {
     if (a.x.sg) dazu.push(a.enPl ? a.x.sg : a.x.pl);
     var satz = neu('satz'), kae = neu('kaertli'); w.appendChild(satz); w.appendChild(kae);
     var go = document.createElement('button'); go.className = 'go'; go.textContent = 'Prüfen'; w.appendChild(go);
-    api.msg('<span class="em">🧩</span> Bau den Satz auf Englisch! Tippe die Wörter der Reihe nach an.');
+    api.msg('Bau den Satz auf Englisch! Tippe die Wörter der Reihe nach an.');
     var gewaehlt = [];
     function zeichnen() {
       satz.innerHTML = '';
