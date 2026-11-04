@@ -1056,3 +1056,18 @@ body.kidv .kid-go[disabled]{background:#c9d6e2;color:#5f6963;box-shadow:none;cur
 .umf-show .ranking{columns:2;max-width:900px;margin:0 auto;text-align:left}
 .ku .ur-feld.sm{grid-template-columns:auto minmax(200px,1fr) auto;gap:4px}
 .ku .ur-feld.sm .ur-ax.l,.ku .ur-feld.sm .ur-ax.r{max-width:4.2em;font-size:13px}
+/* ---- Version 97: Umfrage offen per QR-Code ---- */
+.umf-wer{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.umf-wer-btn{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:18px;border-radius:22px;border:1.5px solid #e1edf7;background:linear-gradient(180deg,#fff 0%,#f7fbfe 100%);cursor:pointer;font:inherit;color:inherit;box-shadow:0 6px 16px rgba(63,120,168,.12);transition:transform .15s,box-shadow .15s}
+.umf-wer-btn:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(63,120,168,.2);border-color:#d6ad45}
+.umf-wer-btn b{font-size:22px;font-weight:400}
+.umf-wer-btn small{color:var(--soft);font-size:16px;line-height:1.3}
+.umf-wer-emo{font-size:36px;line-height:1}
+@media (max-width:560px){.umf-wer{grid-template-columns:1fr}}
+.us-join.us-offen{display:flex;align-items:center;gap:12px;padding:6px 16px 6px 6px;border-radius:20px;cursor:pointer;font:inherit;font-size:17px;color:#5f6963;text-align:left;line-height:1.3}
+.us-join.us-offen:hover{background:#fffdf7}
+.us-qrmini{flex:none;width:74px;height:74px;border-radius:12px;background:#fff;overflow:hidden;display:grid;place-items:center}
+.us-qrmini svg{width:100%;height:100%;display:block}
+.us-nr6{font-size:22px;letter-spacing:.06em;color:#3f78a8!important}
+.ku-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--h);font-size:17px;color:#5f6963}
+.ku-brand img{width:40px;height:40px;border-radius:50%;background:#fff;padding:2px;box-shadow:0 0 0 2px #d6ad45}

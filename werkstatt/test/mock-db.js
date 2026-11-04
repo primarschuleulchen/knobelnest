@@ -37,6 +37,28 @@
   function quizLeft(l) { return l.phase === 'frage' ? Math.max(0, (l.questions[l.q].zeit || 20) * 1000 - (Date.now() - l.q_started)) : null; }
   function kqNames(ids) { return D.kids.filter(function (k) { return ids.indexOf(k.id) >= 0; }).map(function (k) { return { id: k.id, name: k.name }; }); }
   function kqMine(id) { var q = (D.kq || []).filter(function (x) { return x.id === id; })[0]; if (!q) return null; var c = D.classes.filter(function (x) { return x.id === q.class_id; })[0]; return c && c.teacher_id === me().id ? q : null; }
+  // Umfrage: dieselben Regeln wie _umf_apply / _umf_view / _umf_val in schema.sql
+  function umfApply(d, live, clear) { var n = Date.now();
+    if (live) { live = JSON.parse(JSON.stringify(live)); if (typeof live.sec === 'number') { live.until = live.sec > 0 ? n + live.sec * 1000 : null; delete live.sec; } d.live = live; }
+    d.ans = d.ans || {}; (clear || []).forEach(function (q) { if (q === '*') d.ans = {}; else delete d.ans[q]; }); return { now: n, until: d.live ? d.live.until || null : null }; }
+  function umfView(d, me) { var l = d && d.live; if (!l || !l.on) return null; var sh = !!l.show && l.kids !== false, out = { sid: l.sid, title: l.title, mode: l.mode || 'live', cur: l.cur, open: !!l.open, show: sh, until: l.until || null, now: Date.now(), rev: l.rev || [], qs: [], mine: {}, res: {} };
+    (l.qs || []).forEach(function (q) { if ((l.mode || 'live') !== 'selbst' && q.id !== l.cur) return; q = JSON.parse(JSON.stringify(q)); if ((l.rev || []).indexOf(q.id) < 0) delete q.ok; out.qs.push(q);
+      var a = (d.ans || {})[q.id] || {}; if (a[me] !== undefined) out.mine[q.id] = a[me];
+      if (sh) { var hk = (l.hid || {})[q.id] || [], hw = (l.hidw || {})[q.id] || []; out.res[q.id] = Object.keys(a).filter(function (id) { return hk.indexOf(id) < 0; }).map(function (id) {
+        var v = a[id]; return q.type === 'wort' && Array.isArray(v) ? v.filter(function (w) { return hw.indexOf(String(w).toLowerCase()) < 0; }) : v; }); } });
+    return JSON.parse(JSON.stringify(out)); }
+  function umfVal(l, qid, v) {
+    if (!l || !l.on || !l.open || (l.until && Date.now() > l.until + 3000) || ((l.mode || 'live') !== 'selbst' && qid !== l.cur)) return null;
+    var q = (l.qs || []).filter(function (x) { return x.id === qid; })[0]; if (!q) return null; var n = (q.opts || []).length, ints = function (a, lo, hi) { return Array.isArray(a) && a.every(function (x) { return typeof x === 'number' && x % 1 === 0 && x >= lo && x <= hi; }); };
+    var dist = function (a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }).length === a.length; }, ok = false;
+    if (/^(wahl|quiz|stimmung)$/.test(q.type)) ok = ints(v, 0, n - 1) && v.length >= 1 && v.length <= (q.multi ? n : 1) && dist(v);
+    else if (/^(wort|text)$/.test(q.type)) { v = Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string' && x.trim(); }).map(function (x) { return x.trim().slice(0, q.type === 'wort' ? 30 : 300); }) : []; ok = v.length >= 1 && v.length <= Math.min(q.type === 'wort' ? 5 : 3, Math.max(1, +q.max || (q.type === 'wort' ? 3 : 1))); }
+    else if (q.type === 'skala') ok = ints(v, 1, Math.min(10, Math.max(3, +q.max || 5))) && v.length === n;
+    else if (q.type === 'rang') ok = ints(v, 0, n - 1) && v.length === n && dist(v);
+    else if (q.type === 'punkte') { var P = Math.min(100, Math.max(1, +q.pts || 10)), s = 0; ok = ints(v, 0, P) && v.length === n; if (ok) v.forEach(function (x) { s += x; }); ok = ok && s >= 1 && s <= P; }
+    else if (q.type === 'zahl') ok = typeof v === 'number' && !(q.min !== '' && q.min != null && v < +q.min) && !(q.max !== '' && q.max != null && v > +q.max);
+    else if (q.type === 'feld') { ok = v && typeof v.x === 'number' && typeof v.y === 'number'; if (ok) v = { x: Math.max(0, Math.min(100, v.x)), y: Math.max(0, Math.min(100, v.y)) }; }
+    return ok ? JSON.parse(JSON.stringify(v)) : null; }
   window.__D = D;
   window.DB = {
     session: function () { return delay(D.session); },
@@ -181,28 +203,25 @@
       if ('x' in p) { e.x = typeof p.x === 'number' ? p.x : null; e.y = typeof p.y === 'number' ? p.y : null; } if (/^#[0-9a-f]{6}$/i.test(p.farbe || '')) e.farbe = p.farbe;
       if (d.open) { if (typeof p.thema === 'string') e.thema = p.thema; if (typeof p.umsetzung === 'string' && (!(d.arten || []).length || !p.umsetzung || d.arten.indexOf(p.umsetzung) >= 0)) e.umsetzung = p.umsetzung; } return delay(true); },
     umfragePut: function (cid, live, clear) { var c = D.classes.filter(function (x) { return x.id === cid; })[0]; if (!c || c.teacher_id !== D.session.user.id) return Promise.reject(new Error('Nicht erlaubt'));
-      D.store = D.store || {}; var k = c.teacher_id + '|umfrage-' + cid, d = D.store[k] = D.store[k] || { live: null, ans: {} }, n = Date.now();
-      if (live) { live = JSON.parse(JSON.stringify(live)); if (typeof live.sec === 'number') { live.until = live.sec > 0 ? n + live.sec * 1000 : null; delete live.sec; } d.live = live; }
-      (clear || []).forEach(function (q) { if (q === '*') d.ans = {}; else delete d.ans[q]; }); return delay({ now: n, until: d.live ? d.live.until || null : null }); },
-    kidUmfrage: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|umfrage-' + c.id];
-      var l = d && d.live; if (!l || !l.on) return delay(null); var sh = !!l.show && l.kids !== false, out = { sid: l.sid, title: l.title, mode: l.mode || 'live', cur: l.cur, open: !!l.open, show: sh, until: l.until || null, now: Date.now(), rev: l.rev || [], qs: [], mine: {}, res: {} };
-      (l.qs || []).forEach(function (q) { if ((l.mode || 'live') !== 'selbst' && q.id !== l.cur) return; q = JSON.parse(JSON.stringify(q)); if ((l.rev || []).indexOf(q.id) < 0) delete q.ok; out.qs.push(q);
-        var a = (d.ans || {})[q.id] || {}; if (a[k.id] !== undefined) out.mine[q.id] = a[k.id];
-        if (sh) { var hk = (l.hid || {})[q.id] || [], hw = (l.hidw || {})[q.id] || []; out.res[q.id] = Object.keys(a).filter(function (id) { return hk.indexOf(id) < 0; }).map(function (id) {
-          var v = a[id]; return q.type === 'wort' && Array.isArray(v) ? v.filter(function (w) { return hw.indexOf(String(w).toLowerCase()) < 0; }) : v; }); } });
-      return delay(out); },
+      D.store = D.store || {}; var k = c.teacher_id + '|umfrage-' + cid, d = D.store[k] = D.store[k] || { live: null, ans: {} }; return delay(umfApply(d, live, clear)); },
+    kidUmfrage: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0]; return delay(umfView((D.store || {})[c.teacher_id + '|umfrage-' + c.id], k.id)); },
     kidUmfrageSend: function (t, qid, v) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|umfrage-' + c.id];
-      var l = d && d.live; if (!l || !l.on || !l.open || (l.until && Date.now() > l.until + 3000) || ((l.mode || 'live') !== 'selbst' && qid !== l.cur)) return delay(false);
-      var q = (l.qs || []).filter(function (x) { return x.id === qid; })[0]; if (!q) return delay(false); var n = (q.opts || []).length, ints = function (a, lo, hi) { return Array.isArray(a) && a.every(function (x) { return typeof x === 'number' && x % 1 === 0 && x >= lo && x <= hi; }); };
-      var dist = function (a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }).length === a.length; }, ok = false;
-      if (/^(wahl|quiz|stimmung)$/.test(q.type)) ok = ints(v, 0, n - 1) && v.length >= 1 && v.length <= (q.multi ? n : 1) && dist(v);
-      else if (/^(wort|text)$/.test(q.type)) { v = Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string' && x.trim(); }).map(function (x) { return x.trim().slice(0, q.type === 'wort' ? 30 : 300); }) : []; ok = v.length >= 1 && v.length <= Math.min(q.type === 'wort' ? 5 : 3, Math.max(1, +q.max || (q.type === 'wort' ? 3 : 1))); }
-      else if (q.type === 'skala') ok = ints(v, 1, Math.min(10, Math.max(3, +q.max || 5))) && v.length === n;
-      else if (q.type === 'rang') ok = ints(v, 0, n - 1) && v.length === n && dist(v);
-      else if (q.type === 'punkte') { var P = Math.min(100, Math.max(1, +q.pts || 10)), s = 0; ok = ints(v, 0, P) && v.length === n; if (ok) v.forEach(function (x) { s += x; }); ok = ok && s >= 1 && s <= P; }
-      else if (q.type === 'zahl') ok = typeof v === 'number' && !(q.min !== '' && q.min != null && v < +q.min) && !(q.max !== '' && q.max != null && v > +q.max);
-      else if (q.type === 'feld') { ok = v && typeof v.x === 'number' && typeof v.y === 'number'; if (ok) v = { x: Math.max(0, Math.min(100, v.x)), y: Math.max(0, Math.min(100, v.y)) }; }
-      if (!ok) return delay(false); d.ans = d.ans || {}; d.ans[qid] = d.ans[qid] || {}; d.ans[qid][k.id] = JSON.parse(JSON.stringify(v)); return delay(true); },
+      v = d && umfVal(d.live, qid, v); if (v == null) return delay(false); d.ans = d.ans || {}; d.ans[qid] = d.ans[qid] || {}; d.ans[qid][k.id] = v; return delay(true); },
+    umfOffenOpen: function (live) { D.runden = (D.runden || []).filter(function (r) { return r.teacher_id !== D.session.user.id; });
+      var r = { id: uid(), nr: String(100000 + Math.floor(Math.random() * 900000)), teacher_id: D.session.user.id, data: { live: null, ans: {} }, gaeste: [] }; D.runden.push(r);
+      var x = umfApply(r.data, live, null); return delay({ id: r.id, nr: r.nr, now: x.now, until: x.until }); },
+    umfOffenPut: function (id, live, clear) { var r = (D.runden || []).filter(function (x) { return x.id === id && x.teacher_id === D.session.user.id; })[0]; if (!r) return Promise.reject(new Error('Runde nicht gefunden')); return delay(umfApply(r.data, live, clear)); },
+    umfOffenHost: function (id) { var r = (D.runden || []).filter(function (x) { return x.teacher_id === D.session.user.id && (!id || x.id === id); }).slice(-1)[0];
+      return delay(r ? { id: r.id, nr: r.nr, data: r.data, gaeste: r.gaeste.map(function (g) { return { id: g.id, name: g.name }; }) } : null); },
+    umfOffenClose: function (id) { D.runden = (D.runden || []).filter(function (x) { return x.id !== id; }); return delay(); },
+    umfGastJoin: function (nr, name) { var r = (D.runden || []).filter(function (x) { return x.nr === String(nr).replace(/\D/g, ''); })[0];
+      if (!r) return delay({ ok: false, error: 'nummer' }); if (!(r.data.live && r.data.live.on)) return delay({ ok: false, error: 'vorbei' });
+      var n = String(name || '').trim().replace(/\s+/g, ' '); if (n.length > 20 || /[<>]/.test(n)) return delay({ ok: false, error: 'name' });
+      if (!n) n = 'Gast ' + (r.gaeste.length + 1); var g = { id: uid(), token: uid(), name: n }; r.gaeste.push(g); return delay({ ok: true, token: g.token, name: n }); },
+    umfGastFind: function (t) { var out = null; (D.runden || []).forEach(function (r) { r.gaeste.forEach(function (g) { if (g.token === t) out = { r: r, g: g }; }); }); return out; },
+    umfGast: function (t) { var x = this.umfGastFind(t); return delay(x ? umfView(x.r.data, x.g.id) : { gone: true }); },
+    umfGastSend: function (t, qid, v) { var x = this.umfGastFind(t); if (!x) return delay(false); var d = x.r.data; v = umfVal(d.live, qid, v); if (v == null) return delay(false);
+      d.ans[qid] = d.ans[qid] || {}; d.ans[qid][x.g.id] = v; return delay(true); },
     pinPut: function (cid, coll, id, obj) { var c = D.classes.filter(function (x) { return x.id === cid; })[0]; if (!c || c.teacher_id !== D.session.user.id) return Promise.reject(new Error('Nicht erlaubt'));
       D.store = D.store || {}; var k = c.teacher_id + '|pin-' + cid, d = D.store[k] = D.store[k] || {}; d[coll] = d[coll] || {}; if (obj == null) delete d[coll][id]; else d[coll][id] = JSON.parse(JSON.stringify(obj)); return delay(); },
     kidPin: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0], d = (D.store || {})[c.teacher_id + '|pin-' + c.id];

@@ -359,6 +359,8 @@
     if (mp) return P.start(mp[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
     if (mh) return H.start(mh[1]);
+    var mg = hs.match(/^#\/u(?:\/(\d*))?\/?$/);
+    if (mg) return G.start(mg[1] || '');
     var mu = hs.match(/^#\/umfrage\/([0-9a-f-]{36})/);
     if (mu) return U.start(mu[1]);
     if (/^#\/quiz(\/|$)/.test(hs)) return QZ.start();
@@ -1074,17 +1076,29 @@
     app.innerHTML = '<p class="boot">Umfrage wird geladen …</p>';
     try {
       var r = await Promise.all([DB.listClasses(), DB.listKids(cid), DB.storeGet('umfragen'), DB.storeGet('umfrage-' + cid)]);
-      U.cls = r[0].filter(function (c) { return c.id === cid; })[0]; U.kids = (r[1] || []).slice().sort(kidSort);
+      U.cls = r[0].filter(function (c) { return c.id === cid; })[0]; U.ckids = (r[1] || []).slice().sort(kidSort);
       U.list = r[2] && Array.isArray(r[2].list) ? r[2].list : [];
-      U.doc = r[3] && typeof r[3] === 'object' ? r[3] : { live: null, ans: {} };
+      U.docs = { klasse: r[3] && typeof r[3] === 'object' ? r[3] : { live: null, ans: {} }, offen: null };
+      U.docs.klasse.ans = U.docs.klasse.ans || {};
     } catch (e) { U.cls = null; }
+    // Version 27: offene Runde (QR-Code) der Lehrperson; ohne neues SQL einfach keine
+    try { U.docs && (U.docs.offen = umfOffenDoc(await DB.umfOffenHost(null))); } catch (e) {}
     if (!U.cls) { paint('<div class="main"><div class="card stack"><h2>Umfrage nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
-    U.cid = cid; U.doc.ans = U.doc.ans || {}; U.add = false; U.fehlt = false; U.rank = false; U.more = false; U.off = 0;
+    U.cid = cid; U.add = false; U.fehlt = false; U.rank = false; U.more = false; U.off = 0;
+    U.use(U.docs.offen && U.docs.offen.live && U.docs.offen.live.on ? 'offen' : 'klasse');
     var l = U.doc.live; U.view = l && l.on ? 'show' : 'list';
     U.names = l && l.on ? U.namesDefault(l.sid) : null;
     U.render();
     every(1500, function () { if (!document.hidden && (U.view === 'show' || U.view === 'res')) U.poll(); });
     every(500, U.tick);
+  };
+  // Zwei Orte für den Live-Stand: «klasse» (Kinder der Klasse) und «offen» (Gäste per QR-Code, umf_runden)
+  function umfOffenDoc(r) { return r ? { id: r.id, nr: r.nr, live: (r.data && r.data.live) || null, ans: (r.data && r.data.ans) || {}, gaeste: r.gaeste || [] } : null; }
+  function umfGastUrl(nr) { return location.origin + location.pathname + '#/u' + (nr ? '/' + nr : ''); }
+  function umfNr(nr) { return String(nr || '').replace(/^(\d{3})(\d{3})$/, '$1 $2'); }
+  U.use = function (src) {
+    U.src = src === 'offen' && U.docs.offen ? 'offen' : 'klasse'; U.doc = U.docs[U.src];
+    U.kids = U.src === 'offen' ? U.doc.gaeste.map(function (g) { return { id: g.id, name: g.name }; }) : U.ckids;
   };
   U.find = function (id) { return U.list.filter(function (x) { return x.id === id; })[0] || null; };
   U.namesDefault = function (sid) { var sv = U.find(sid); return !!(sv && sv.set && sv.set.anon === false); };
@@ -1097,8 +1111,12 @@
   window.addEventListener('pagehide', function () { if (U.st) U.save(); });
   U.poll = async function () {
     if (U.busy) return; U.busy = true;
-    try { var d = await DB.storeGet('umfrage-' + U.cid), a = (d && d.ans) || {}; if (JSON.stringify(a) !== JSON.stringify(U.doc.ans)) { U.doc.ans = a; if (UI.view === 'umfrage') U.render(); } }
-    catch (e) {}
+    try {
+      if (U.src === 'offen') {
+        var o = umfOffenDoc(await DB.umfOffenHost(U.doc.id));
+        if (o && o.id === U.doc.id && (JSON.stringify(o.ans) !== JSON.stringify(U.doc.ans) || o.gaeste.length !== U.doc.gaeste.length)) { U.doc.ans = o.ans; U.doc.gaeste = o.gaeste; U.use('offen'); if (UI.view === 'umfrage') U.render(); }
+      } else { var d = await DB.storeGet('umfrage-' + U.cid), a = (d && d.ans) || {}; if (JSON.stringify(a) !== JSON.stringify(U.doc.ans)) { U.doc.ans = a; if (UI.view === 'umfrage') U.render(); } }
+    } catch (e) {}
     U.busy = false;
   };
   function umfSec(s) { s = Math.max(0, s); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
@@ -1115,7 +1133,7 @@
     (clear || []).forEach(function (q) { if (q === '*') U.doc.ans = {}; else delete U.doc.ans[q]; });
     var send = JSON.parse(JSON.stringify(l)); if (sec != null) send.sec = sec;
     U.render();
-    var r = await DB.umfragePut(U.cid, send, clear || null);
+    var r = U.src === 'offen' ? await DB.umfOffenPut(U.doc.id, send, clear || null) : await DB.umfragePut(U.cid, send, clear || null);
     if (r && r.now) { U.off = r.now - Date.now(); if (sec != null) { U.doc.live.until = r.until || null; U.render(); } }
   };
   U.render = function () {
@@ -1125,27 +1143,43 @@
     if (U.view === 'show' && !(l && l.on)) U.view = 'list';
     if (U.view === 'edit' && !U.find(U.eid)) U.view = 'list';
     paint(U.view === 'show' ? U.viewShow() : U.view === 'edit' ? U.viewEdit() : U.view === 'res' ? U.viewRes() : U.viewList());
-    if (U.view === 'show') U.tick();
+    if (U.view === 'show') { U.tick(); U.qrMini(); }
+  };
+  // QR-Code der offenen Runde (einmal erzeugen, dann merken)
+  U.qr = function () {
+    var o = U.docs.offen; if (!o) return Promise.reject(new Error('keine Runde'));
+    if (U.qrFor !== o.nr) { U.qrFor = o.nr; U.qrSvg = qrSvg(umfGastUrl(o.nr)); }
+    return U.qrSvg;
+  };
+  U.qrMini = function () { var b = document.getElementById('usQr'); if (b && U.src === 'offen') U.qr().then(function (svg) { var x = document.getElementById('usQr'); if (x) x.innerHTML = svg; }).catch(function () {}); };
+  ACT.uQr = function () {
+    var o = U.docs.offen; if (!o) return;
+    var ov = overlay('<div class="bigcode umf-qrbig"><p>Mitmachen ohne Login: QR-Code scannen oder <span style="color:#1f2421">' + h(shortUrl(umfGastUrl())) + '</span> öffnen und die Nummer eingeben</p>' +
+      '<div class="bigcode-row"><div class="qrbox" id="uQrBig" role="img" aria-label="QR-Code zum Mitmachen">QR-Code wird geladen …</div><b>' + h(umfNr(o.nr)) + '</b></div>' +
+      '<button class="btn" style="align-self:center" data-a="closeOverlay">Schliessen</button></div>');
+    U.qr().then(function (svg) { var b = ov.querySelector('#uQrBig'); if (b) b.innerHTML = svg; })
+      .catch(function () { var b = ov.querySelector('#uQrBig'); if (b) b.textContent = 'QR-Code nicht verfügbar. Bitte die Adresse eintippen.'; });
   };
   U.top = function (left, right) {
     return '<div class="umf-top"><div class="row">' + left + '</div><span class="umf-kick"><img src="' + h(klassBild(U.cls.bild)) + '" alt="" width="40" height="40">Umfrage · Klasse ' + h(U.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><div class="row">' + (right || '') + '</div></div>';
   };
-  U.answers = function (sv) { var n = 0; sv.qs.forEach(function (q) { n = Math.max(n, Object.keys(U.doc.ans[q.id] || {}).length); }); return n; };
+  U.answers = function (sv, src) { var d = U.docs[src || 'klasse'], n = 0; if (!d) return 0; sv.qs.forEach(function (q) { n = Math.max(n, Object.keys(d.ans[q.id] || {}).length); }); return n; };
 
   // ---------- Liste der Umfragen ----------
   U.viewList = function () {
-    var l = U.doc.live, out = '<div class="umf-page">' + U.top('<a class="btn sm" href="#/">← ' + h(C.PORTAL_NAME) + '</a>') +
+    var out = '<div class="umf-page">' + U.top('<a class="btn sm" href="#/">← ' + h(C.PORTAL_NAME) + '</a>') +
       '<section class="umf-hero card"><img class="umf-hero-bild" src="bilder/kacheln/umfrage.webp" alt="" width="110" height="110"><div class="stack" style="gap:8px;flex:1 1 320px"><h1>Umfragen</h1>' +
       '<p>Stellen Sie der Klasse Fragen: Abstimmungen, Wortwolken, Quiz, Schätzfragen und mehr. Die Kinder antworten am iPad, die Ergebnisse erscheinen live an der Wandtafel.</p>' +
       '<p class="muted small">Ihre Umfragen gelten für alle Ihre Klassen. Die Antworten werden pro Klasse gespeichert.</p></div>' +
       '<button class="btn primary big" data-a="uNew">+ Neue Umfrage</button></section>';
-    if (l && l.on) out += '<div class="note row" style="justify-content:space-between"><span>✦ Gerade läuft: <b>' + h(l.title || 'Umfrage') + '</b></span><button class="btn sm primary" data-a="uToShow">Zur Anzeige</button></div>';
+    ['klasse', 'offen'].forEach(function (src) { var d = U.docs[src], l = d && d.live;
+      if (l && l.on) out += '<div class="note row" style="justify-content:space-between"><span>✦ Gerade läuft' + (src === 'offen' ? ' (offen per QR-Code, Nummer ' + h(umfNr(d.nr)) + ')' : ' in der Klasse') + ': <b>' + h(l.title || 'Umfrage') + '</b></span><button class="btn sm primary" data-a="uToShow" data-s="' + src + '">Zur Anzeige</button></div>'; });
     out += '<section class="stack"><h2>Meine Umfragen</h2>' + (U.list.length ? '<div class="umf-grid">' + U.list.map(function (sv) {
-      var a = U.answers(sv), del = UI.confirm === 'uDel' + sv.id;
+      var a = U.answers(sv), ao = U.docs.offen && U.docs.offen.live && U.docs.offen.live.sid === sv.id ? U.answers(sv, 'offen') : 0, del = UI.confirm === 'uDel' + sv.id;
       return '<div class="umf-card card"><button class="umf-card-open" data-a="uEdit" data-id="' + sv.id + '"><b>' + h(sv.title || 'Ohne Titel') + '</b><span class="umf-icons">' + sv.qs.map(function (q) { return '<span title="' + h(umfType(q.type)[1]) + '">' + umfType(q.type)[2] + '</span>'; }).join('') + '</span>' +
-        '<small>' + plural(sv.qs.length, 'Frage', 'Fragen') + ' · ' + (sv.set && sv.set.mode === 'selbst' ? 'Selbsttempo' : 'Live') + (a ? ' · ' + plural(a, 'Kind hat', 'Kinder haben') + ' geantwortet' : '') + '</small></button>' +
+        '<small>' + plural(sv.qs.length, 'Frage', 'Fragen') + ' · ' + (sv.set && sv.set.mode === 'selbst' ? 'Selbsttempo' : 'Live') + (a ? ' · ' + plural(a, 'Kind hat', 'Kinder haben') + ' geantwortet' : '') + (ao ? ' · offen: ' + plural(ao, 'Antwort', 'Antworten') : '') + '</small></button>' +
         '<div class="row umf-card-btns"><button class="btn sm primary" data-a="uStart" data-id="' + sv.id + '">▶ Starten</button><button class="btn sm" data-a="uEdit" data-id="' + sv.id + '">✎ Bearbeiten</button>' +
-        (a ? '<button class="btn sm" data-a="uRes" data-id="' + sv.id + '">📊 Ergebnisse</button>' : '') +
+        (a || ao ? '<button class="btn sm" data-a="uRes" data-id="' + sv.id + '" data-s="' + (a ? 'klasse' : 'offen') + '">📊 Ergebnisse</button>' : '') +
         '<button class="btn sm icon" data-a="uCopy" data-id="' + sv.id + '" title="Kopieren" aria-label="Kopieren">⧉</button>' +
         '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uDel" data-id="' + sv.id + '">' + (del ? 'Wirklich löschen?' : '🗑') + '</button></div></div>';
     }).join('') + '</div>' : '<div class="empty">Noch keine Umfrage. Beginnen Sie mit «+ Neue Umfrage» oder übernehmen Sie eine Vorlage.</div>') + '</section>';
@@ -1168,7 +1202,7 @@
     U.list = U.list.filter(function (x) { return x.id !== id; }); U.save(); U.render(); toast('Umfrage gelöscht');
   };
   ACT.uList = function () { if (U.st) U.save(); U.view = 'list'; U.add = false; U.render(); window.scrollTo(0, 0); };
-  ACT.uToShow = function () { U.view = 'show'; if (U.names == null) U.names = U.namesDefault(U.doc.live.sid); U.render(); };
+  ACT.uToShow = function (el) { U.use(el.dataset.s || 'klasse'); U.view = 'show'; U.names = U.namesDefault(U.doc.live.sid); U.render(); };
 
   // ---------- Bearbeiten ----------
   U.sv = function () { return U.find(U.eid); };
@@ -1271,6 +1305,16 @@
     var sv = U.find(el.dataset.id); if (!sv) return;
     var bad = umfCheck(sv); if (bad) { if (U.view !== 'edit') { U.eid = sv.id; U.qi = 0; U.add = false; U.view = 'edit'; U.render(); } return toast(bad); }
     if (U.st) await U.save();
+    var o = U.docs.offen, ol = o && o.live;
+    return overlay('<div class="card stack" style="width:min(620px,100%)"><h2>Wer macht mit?</h2><div class="umf-wer">' +
+      '<button class="umf-wer-btn" data-a="uStartK" data-id="' + sv.id + '"><span class="umf-wer-emo">🏫</span><b>Klasse ' + h(U.cls.name) + '</b><small>Die Kinder machen mit ihrem Klassen-Login mit (Kachel «Umfrage!»).</small></button>' +
+      '<button class="umf-wer-btn" data-a="uGoO" data-id="' + sv.id + '"><span class="umf-wer-emo">🌍</span><b>Offen per QR-Code</b><small>Alle können ohne Login mitmachen, z. B. Eltern, andere Klassen oder das Team.</small></button></div>' +
+      (ol && ol.on ? '<p class="note">Ihre laufende offene Umfrage «' + h(ol.title || '') + '» wird beendet, wenn Sie eine neue offene starten.</p>' : '') +
+      '<button class="btn" style="align-self:flex-end" data-a="closeOverlay">Abbrechen</button></div>');
+  };
+  ACT.uStartK = function (el) {
+    closeOverlays(); var sv = U.find(el.dataset.id); if (!sv) return;
+    U.use('klasse');
     var has = sv.qs.some(function (q) { return Object.keys(U.doc.ans[q.id] || {}).length; }), l = U.doc.live;
     var other = l && l.on && l.sid !== sv.id ? '<p class="note">Die laufende Umfrage «' + h(l.title || '') + '» wird dabei beendet.</p>' : '';
     if (has) return overlay('<div class="card stack" style="width:min(560px,100%)"><h2>Diese Umfrage hat schon Antworten</h2>' +
@@ -1285,9 +1329,24 @@
     var sv = U.find(el.dataset.id), set = sv.set || {}, qs = sv.qs.map(umfClean);
     var live = { on: true, sid: sv.id, title: sv.title || 'Umfrage', mode: set.mode === 'selbst' ? 'selbst' : 'live', cur: qs[0].id, open: true,
       show: set.auto !== 'aufdecken', auto: set.auto === 'aufdecken' ? 'aufdecken' : 'live', kids: set.kids !== false, rev: [], hid: {}, hidw: {}, until: null, qs: qs };
-    U.view = 'show'; U.names = set.anon === false; U.fehlt = false; U.rank = false; U.more = false;
+    U.use('klasse'); U.view = 'show'; U.names = set.anon === false; U.fehlt = false; U.rank = false; U.more = false;
     await U.setLive(live, el.dataset.neu === '1' ? qs.map(function (q) { return q.id; }) : null, null, true);
     toast('Die Umfrage läuft. Die Kinder tippen auf «Umfrage».');
+  };
+  function umfLive(sv) {
+    var set = sv.set || {}, qs = sv.qs.map(umfClean);
+    return { on: true, sid: sv.id, title: sv.title || 'Umfrage', mode: set.mode === 'selbst' ? 'selbst' : 'live', cur: qs[0].id, open: true,
+      show: set.auto !== 'aufdecken', auto: set.auto === 'aufdecken' ? 'aufdecken' : 'live', kids: set.kids !== false, rev: [], hid: {}, hidw: {}, until: null, qs: qs };
+  }
+  // Offen per QR-Code: neue Runde mit 6-stelliger Nummer (die alte offene Runde wird gelöscht)
+  ACT.uGoO = async function (el) {
+    closeOverlays(); var sv = U.find(el.dataset.id); if (!sv) return;
+    var live = umfLive(sv), r;
+    try { r = await DB.umfOffenOpen(JSON.parse(JSON.stringify(live))); }
+    catch (e) { return toast(/umf_offen|function|schema cache/i.test(errMsg(e)) ? 'Dafür zuerst das neue SQL (Version 27) in Supabase ausführen.' : errMsg(e)); }
+    U.docs.offen = { id: r.id, nr: r.nr, live: live, ans: {}, gaeste: [] }; U.off = r.now ? r.now - Date.now() : 0;
+    U.use('offen'); U.view = 'show'; U.names = !!(sv.set && sv.set.anon === false); U.fehlt = false; U.rank = false; U.more = false;
+    U.render(); ACT.uQr();
   };
   U.idx = function () { var l = U.doc.live, qs = l.qs || []; for (var i = 0; i < qs.length; i++) if (qs[i].id === l.cur) return i; return 0; };
   U.viewShow = function () {
@@ -1297,8 +1356,9 @@
     var E = Object.keys(ans).filter(function (k) { return hid.indexOf(k) < 0; }).map(function (k) { return { k: k, v: ans[k], n: kidName[k] || '' }; });
     var answered = Object.keys(ans).filter(function (k) { return kidName[k]; }).length, total = U.kids.length, rev = (l.rev || []).indexOf(q.id) >= 0, selbst = l.mode === 'selbst';
     var hasQuiz = qs.some(function (x) { return x.type === 'quiz' && (x.ok || []).length; });
-    var head = '<div class="us-head"><img class="board-bild" src="' + h(klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · Klasse ' + h(U.cls.name) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
-      '<div class="us-join">Mitmachen: ' + h(C.PORTAL_NAME) + ' öffnen und auf <b>«Umfrage»</b> tippen · Code <b>' + h(U.cls.code || '') + '</b></div>' +
+    var head = '<div class="us-head"><img class="board-bild" src="' + h(U.src === 'offen' ? 'bilder/kacheln/umfrage.webp' : klassBild(U.cls.bild)) + '" alt=""><div class="us-tt"><span class="kick">Umfrage · ' + (U.src === 'offen' ? 'offen für alle' : 'Klasse ' + h(U.cls.name)) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span><b>' + h(l.title || 'Umfrage') + '</b></div>' +
+      (U.src === 'offen' ? '<button class="us-join us-offen" data-a="uQr" title="QR-Code gross zeigen"><span class="us-qrmini" id="usQr"></span><span>Mitmachen ohne Login:<br><b>' + h(shortUrl(umfGastUrl())) + '</b> · Nummer <b class="us-nr6">' + h(umfNr(U.doc.nr)) + '</b></span></button>'
+        : '<div class="us-join">Mitmachen: ' + h(C.PORTAL_NAME) + ' öffnen und auf <b>«Umfrage»</b> tippen · Code <b>' + h(U.cls.code || '') + '</b></div>') +
       '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button><button class="board-btn" data-a="uBack">Zur Liste</button><button class="board-btn' + (UI.confirm === 'uEnd' ? ' armed' : '') + '" data-a="uEnd">' + (UI.confirm === 'uEnd' ? 'Wirklich beenden?' : '■ Beenden') + '</button></div></div>';
     var body;
     if (U.rank) {
@@ -1316,7 +1376,7 @@
       else body += '<div class="us-res">' + umfRes(q, E, { rev: rev, names: U.names, mod: true, hidw: hidw }) + '</div>';
       if (U.fehlt && q.type !== 'info') {
         var miss = U.kids.filter(function (k) { return ans[k.id] === undefined; });
-        body += '<div class="board-fehlt">' + (miss.length ? '<b>Noch keine Antwort:</b>' + miss.map(function (k) { return '<span class="tag"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span>'; }).join('') : '<b>✓ Alle Kinder haben geantwortet.</b>') + '</div>';
+        body += '<div class="board-fehlt">' + (U.src === 'offen' && !U.kids.length ? '<b>Noch niemand macht mit.</b>' : miss.length ? '<b>Noch keine Antwort:</b>' + miss.map(function (k) { return '<span class="tag"><span class="ini" style="background:' + kidColor(k.name) + '">' + h(k.name.charAt(0)) + '</span>' + h(k.name) + '</span>'; }).join('') : (U.src === 'offen' ? '<b>✓ Alle haben geantwortet.</b>' : '<b>✓ Alle Kinder haben geantwortet.</b>')) + '</div>';
       }
     }
     var left = U.left(), b = function (a, txt, extra) { return '<button class="board-btn' + (extra || '') + '" data-a="' + a + '">' + txt + '</button>'; };
@@ -1337,7 +1397,7 @@
   ACT.uBack = function () { U.view = 'list'; U.render(); };
   ACT.uEnd = async function () {
     if (!armed('uEnd')) return U.render();
-    var sid = U.doc.live.sid; await U.setLive({ on: false, open: false, until: null });
+    var sid = U.doc.live.sid; await U.setLive({ on: false, open: false, until: null }); // Quelle (Klasse/offen) bleibt für die Ergebnisse
     U.rid = sid; U.view = U.find(sid) ? 'res' : 'list'; U.render(); toast('Umfrage beendet. Die Antworten bleiben gespeichert.');
   };
   ACT.uNav = function (el) {
@@ -1374,7 +1434,8 @@
   });
 
   // ---------- Ergebnisse (nach der Umfrage) ----------
-  ACT.uRes = function (el) { U.rid = el.dataset.id; U.view = 'res'; U.render(); window.scrollTo(0, 0); };
+  ACT.uRes = function (el) { U.rid = el.dataset.id; U.use(el.dataset.s || 'klasse'); U.view = 'res'; U.render(); window.scrollTo(0, 0); };
+  ACT.uResSrc = function (el) { U.use(el.dataset.s); U.render(); };
   U.viewRes = function () {
     var sv = U.find(U.rid); if (!sv) { U.view = 'list'; return U.viewList(); }
     var kidName = {}; U.kids.forEach(function (k) { kidName[k.id] = k.name; });
@@ -1383,7 +1444,9 @@
     var out = '<div class="umf-page">' + U.top('<button class="btn sm" data-a="uList">← Meine Umfragen</button>',
       '<button class="btn sm" data-a="uResNames">' + (U.resNames ? '🙈 Namen verbergen' : '🏷️ Namen zeigen') + '</button><button class="btn sm" data-a="uCsv">⬇ Tabelle</button>' +
       '<button class="btn sm danger' + (del ? ' armed' : '') + '" data-a="uResDel">' + (del ? 'Wirklich alle Antworten löschen?' : '🗑 Antworten löschen') + '</button><button class="btn primary" data-a="uStart" data-id="' + sv.id + '">▶ Nochmals starten</button>') +
-      '<section class="stack"><h2>' + h(sv.title || 'Umfrage') + ' · Ergebnisse</h2><p class="muted">Klasse ' + h(U.cls.name) + '. Alle Antworten, auch ausgeblendete. Die Tabelle können Sie in Excel öffnen.</p>';
+      '<section class="stack"><h2>' + h(sv.title || 'Umfrage') + ' · Ergebnisse</h2>' +
+      (U.docs.offen && U.docs.offen.live && U.docs.offen.live.sid === sv.id ? '<div class="chips"><button class="chip" aria-pressed="' + (U.src === 'klasse') + '" data-a="uResSrc" data-s="klasse">🏫 Klasse ' + h(U.cls.name) + '</button><button class="chip" aria-pressed="' + (U.src === 'offen') + '" data-a="uResSrc" data-s="offen">🌍 Offen per QR-Code (' + plural(U.docs.offen.gaeste.length, 'Person', 'Personen') + ')</button></div>' : '') +
+      '<p class="muted">' + (U.src === 'offen' ? 'Offene Runde (Nummer ' + h(umfNr(U.doc.nr)) + '). Sie bleibt bis zur nächsten offenen Umfrage gespeichert, höchstens 30 Tage.' : 'Klasse ' + h(U.cls.name) + '.') + ' Alle Antworten, auch ausgeblendete. Die Tabelle können Sie in Excel öffnen.</p>';
     if (hasQuiz) {
       var R = umfRank(qs, U.doc.ans, U.kids);
       out += '<div class="card stack"><h3>🏆 Quiz-Rangliste</h3><ol class="ur-rangkids">' + R.list.map(function (x) { return '<li><b>' + h(x.name) + '</b> ' + x.p + ' von ' + R.n + ' richtig</li>'; }).join('') + '</ol></div>';
@@ -1398,15 +1461,17 @@
   ACT.uResNames = function () { U.resNames = !U.resNames; U.render(); };
   ACT.uResDel = function () {
     if (!armed('uResDel')) return U.render();
-    var sv = U.find(U.rid); U.setLive(null, sv.qs.map(function (q) { return q.id; })).then(function () { toast('Antworten gelöscht'); U.view = 'list'; U.render(); });
+    var sv = U.find(U.rid);
+    if (U.src === 'offen') return DB.umfOffenClose(U.doc.id).then(function () { U.docs.offen = null; U.use('klasse'); toast('Offene Runde gelöscht'); U.view = 'list'; U.render(); });
+    U.setLive(null, sv.qs.map(function (q) { return q.id; })).then(function () { toast('Antworten gelöscht'); U.view = 'list'; U.render(); });
   };
   ACT.uCsv = function () {
     var sv = U.find(U.rid), qs = sv.qs.map(umfClean).filter(function (q) { return q.type !== 'info'; });
     var cell = function (s) { s = String(s == null ? '' : s); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    var rows = [['Kind'].concat(qs.map(function (q) { return q.text; }))];
+    var rows = [[U.src === 'offen' ? 'Name' : 'Kind'].concat(qs.map(function (q) { return q.text; }))];
     U.kids.forEach(function (k) { rows.push([k.name].concat(qs.map(function (q) { var v = (U.doc.ans[q.id] || {})[k.id]; return v === undefined ? '' : umfFmt(q, v); }))); });
     var blob = new Blob(['﻿' + rows.map(function (r) { return r.map(cell).join(';'); }).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Umfrage ' + (sv.title || '').replace(/[\\/:*?"<>|]/g, '') + ' ' + U.cls.name + '.csv';
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Umfrage ' + (sv.title || '').replace(/[\\/:*?"<>|]/g, '') + ' ' + (U.src === 'offen' ? 'offen' : U.cls.name) + '.csv';
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   };
 
@@ -3556,8 +3621,10 @@
     U2.dr[q.id] = d; return d;
   };
   K.umfLoad = async function () {
-    var d; try { d = await DB.kidUmfrage(K.sess.token); } catch (e) { return K.sessionLost(e); }
-    var U2 = K.U; if (!U2 || K.step !== 'umfrage') return;
+    var U2 = K.U; if (!U2) return; var gt = U2.guest, d;
+    try { d = gt ? await DB.umfGast(gt) : await DB.kidUmfrage(K.sess.token); } catch (e) { return gt ? null : K.sessionLost(e); }
+    U2 = K.U; if (!U2 || K.step !== 'umfrage') return;
+    if (gt && d && d.gone) { LS.del('kn_umf_gast'); clearInterval(K.umfIv); K.U = null; K.step = 'gast'; K.err = 'Diese Umfrage gibt es nicht mehr.'; return K.render(); }
     var sig = JSON.stringify(d ? Object.assign({}, d, { now: 0 }) : null);
     if (d) U2.off = d.now - Date.now();
     if (sig === U2.sig) return; U2.sig = sig;
@@ -3566,8 +3633,9 @@
     else if (d.mode !== 'selbst' && d.cur !== U2.d.cur) { U2.edit = {}; }
     U2.d = d; K.render();
   };
-  ACT.kUmf = function () {
-    K.step = 'umfrage'; K.U = { d: null, dr: {}, edit: {}, i: 0, sig: '', off: 0, first: true }; K.render();
+  ACT.kUmf = function () { K.umfBegin(null); };
+  K.umfBegin = function (guest, gname) {
+    K.step = 'umfrage'; K.U = { d: null, dr: {}, edit: {}, i: 0, sig: '', off: 0, first: true, guest: guest || null, gname: gname || '' }; K.render();
     K.umfLoad(); clearInterval(K.umfIv); var n = 0;
     K.umfIv = setInterval(function () {
       if (UI.view !== 'kid' || K.step !== 'umfrage' || !K.U) { clearInterval(K.umfIv); return; }
@@ -3577,13 +3645,14 @@
     }, 500);
   };
   K.view_umfrage = function () {
-    var U2 = K.U, d = U2 && U2.d;
-    if (!U2 || (!d && U2.sig === '')) return K.shell('<div class="kid-card"><p class="lead">Umfrage wird geladen …</p></div>', 'Zurück');
-    if (!d) return K.shell('<div class="kid-card"><div class="ku-big">🎉</div><h1>Die Umfrage ist fertig</h1><p class="lead">Danke fürs Mitmachen!</p><button class="kid-go" data-a="kBack">Zurück</button></div>', 'Zurück');
+    var U2 = K.U, d = U2 && U2.d, g = U2 && U2.guest, back = g ? null : 'Zurück';
+    var brand = g ? '<div class="ku-brand"><img src="bilder/eule.webp" alt="" width="40" height="40"><span>' + h(C.PORTAL_NAME) + (U2.gname ? ' · ' + h(U2.gname) : '') + '</span></div>' : '';
+    if (!U2 || (!d && U2.sig === '')) return K.shell(brand + '<div class="kid-card"><p class="lead">Umfrage wird geladen …</p></div>', back);
+    if (!d) return K.shell(brand + '<div class="kid-card"><div class="ku-big">🎉</div><h1>Die Umfrage ist fertig</h1><p class="lead">Danke fürs Mitmachen!</p>' + (g ? '' : '<button class="kid-go" data-a="kBack">Zurück</button>') + '</div>', back);
     var q = K.umfQ(), selbst = d.mode === 'selbst';
-    if (!q) return K.shell('<div class="kid-card"><div class="ku-big">👀</div><h1>Schau nach vorne</h1><p class="lead">Gleich kommt die nächste Frage.</p></div>', 'Zurück');
+    if (!q) return K.shell(brand + '<div class="kid-card"><div class="ku-big">👀</div><h1>Schau nach vorne</h1><p class="lead">Gleich kommt die nächste Frage.</p></div>', back);
     var mine = d.mine[q.id], t = umfType(q.type), rev = (d.rev || []).indexOf(q.id) >= 0, editing = U2.edit[q.id] || mine === undefined;
-    var o = '<div class="kid-card ku">';
+    var o = brand + '<div class="kid-card ku">';
     if (selbst) o += '<div class="ku-dots">' + d.qs.map(function (x, j) { return '<button class="ku-d' + (j === U2.i ? ' cur' : '') + (d.mine[x.id] !== undefined || x.type === 'info' ? ' ok' : '') + '" data-a="kuGo" data-i="' + j + '" aria-label="Frage ' + (j + 1) + '">' + (j + 1) + '</button>'; }).join('') + '</div>';
     o += '<span class="ku-nr">' + t[2] + ' ' + h(d.title || 'Umfrage') + '</span><h1 class="ku-q">' + h(q.text) + '</h1>';
     if (d.until && d.open) o += '<p class="ku-timer" id="kuTimer"></p>';
@@ -3599,13 +3668,42 @@
       o += umfInput(q, dr) + '<button class="kid-go" data-a="kuSend"' + (umfVal(q, dr) == null ? ' disabled' : '') + '>Abschicken</button>';
       if (mine !== undefined) o += '<button class="kid-btn" data-a="kuCancel">Nicht ändern</button>';
     }
-    if (d.show && d.res[q.id] && q.type !== 'info' && (mine !== undefined || !d.open)) o += '<div class="ku-res"><span class="ku-nr">So hat die Klasse geantwortet</span>' + umfRes(q, d.res[q.id].map(function (v) { return { v: v }; }), { small: true, rev: rev }) + '</div>';
+    if (d.show && d.res[q.id] && q.type !== 'info' && (mine !== undefined || !d.open)) o += '<div class="ku-res"><span class="ku-nr">' + (g ? 'So haben alle geantwortet' : 'So hat die Klasse geantwortet') + '</span>' + umfRes(q, d.res[q.id].map(function (v) { return { v: v }; }), { small: true, rev: rev }) + '</div>';
     if (selbst) {
       var last = U2.i >= d.qs.length - 1, all = d.qs.every(function (x) { return x.type === 'info' || d.mine[x.id] !== undefined; });
       o += '<div class="ku-nav"><button class="kid-btn" data-a="kuStep" data-d="-1"' + (U2.i ? '' : ' disabled') + '>◀ Zurück</button>' +
         (last ? (all ? '<span class="ku-fertig">🎉 Fertig! Danke.</span>' : '') : '<button class="kid-btn" data-a="kuStep" data-d="1">Weiter ▶</button>') + '</div>';
     }
-    return K.shell(o + '</div>', 'Zurück');
+    return K.shell(o + '</div>', back);
+  };
+  // Gäste: #/u/<Nummer> → Name (freiwillig) → Umfrage (Token in localStorage «kn_umf_gast»)
+  var G = {
+    start: function (nr) {
+      UI.view = 'kid'; K.err = '';
+      var s = LS.get('kn_umf_gast');
+      if (s && s.token && (!nr || s.nr === nr)) return K.umfBegin(s.token, s.name);
+      K.gnr = nr || ''; K.step = 'gast'; K.render();
+    }
+  };
+  K.view_gast = function () {
+    return K.shell('<div class="ku-brand"><img src="bilder/eule.webp" alt="" width="40" height="40"><span>' + h(C.PORTAL_NAME) + '</span></div>' +
+      '<form class="kid-card" data-a="gJoin"><div class="ku-big">📊</div><h1>Bei der Umfrage mitmachen</h1>' +
+      (K.gnr ? '<p class="lead">Nummer <b>' + h(umfNr(K.gnr)) + '</b></p><input type="hidden" name="nr" value="' + h(K.gnr) + '">'
+        : '<label class="sr" for="gNr">Nummer</label><input class="kid-input ku-in" id="gNr" name="nr" inputmode="numeric" autocomplete="off" placeholder="Nummer (6 Ziffern)" required>') +
+      '<label class="sr" for="gName">Dein Name</label><input class="kid-input ku-in" id="gName" name="name" maxlength="20" autocomplete="off" placeholder="Dein Name (freiwillig)">' +
+      '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go">Mitmachen</button></form>', null);
+  };
+  ACT.gJoin = async function (f) {
+    var nr = String(f.elements.nr.value || '').replace(/\D/g, ''), name = f.elements.name.value.trim();
+    if (nr.length !== 6) { K.err = 'Die Nummer hat 6 Ziffern.'; return K.render(); }
+    var r = await DB.umfGastJoin(nr, name);
+    if (!r || !r.ok) {
+      K.err = { nummer: 'Diese Nummer gibt es nicht. Schau nochmals genau.', vorbei: 'Diese Umfrage ist schon fertig.', name: 'Bitte einen anderen Namen wählen (ohne < und >).', voll: 'Es machen schon sehr viele mit.' }[r && r.error] || 'Das hat nicht geklappt.';
+      if (r && r.error === 'nummer') K.gnr = '';
+      return K.render();
+    }
+    LS.set('kn_umf_gast', { nr: nr, token: r.token, name: r.name });
+    K.umfBegin(r.token, r.name);
   };
   ACT.kuGo = function (el) { K.U.i = +el.dataset.i; K.render(); window.scrollTo(0, 0); };
   ACT.kuStep = function (el) { K.U.i += +el.dataset.d; K.render(); window.scrollTo(0, 0); };
@@ -3635,11 +3733,11 @@
     var v = umfVal(q, K.umfDr(q)); if (v == null) return;
     U2.busy = true;
     try {
-      var ok = await DB.kidUmfrageSend(K.sess.token, q.id, v);
+      var ok = U2.guest ? await DB.umfGastSend(U2.guest, q.id, v) : await DB.kidUmfrageSend(K.sess.token, q.id, v);
       if (!ok) { toast('Das hat nicht geklappt. Vielleicht ist die Abstimmung schon geschlossen.'); U2.sig = ''; return K.umfLoad(); }
       U2.d.mine[q.id] = v; delete U2.edit[q.id]; delete U2.dr[q.id]; U2.sig = '';
       K.render(); K.umfLoad();
-    } catch (e) { K.sessionLost(e); }
+    } catch (e) { if (U2.guest) toast(errMsg(e)); else K.sessionLost(e); }
     finally { U2.busy = false; }
   };
 

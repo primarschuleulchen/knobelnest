@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 26)
+-- Knobelnest – Datenbank-Einrichtung (Version 27)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1728,19 +1728,16 @@ language sql immutable set search_path = public as $$
               else d end;
 $$;
 
-create or replace function public.umfrage_put(p_class uuid, p_live jsonb, p_clear jsonb default null) returns json
-language plpgsql security definer set search_path = public as $$
-declare t uuid; d jsonb; dk text := 'umfrage-' || p_class::text; q text;
-  nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+-- Version 27: die Regeln sind aufgeteilt (_umf_apply, _umf_view, _umf_val), damit Klasse und offene Runde dieselben nutzen.
+-- Live-Stand ändern (Lehrperson): «sec» = Timer in Sekunden, die Datenbank rechnet die Endzeit selbst aus; p_clear = Antworten löschen
+create or replace function public._umf_apply(d jsonb, p_live jsonb, p_clear jsonb, nowms bigint) returns jsonb
+language plpgsql immutable set search_path = public as $$
+declare q text;
 begin
-  select teacher_id into t from public.classes where id = p_class;
-  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
-  if p_live is not null and (jsonb_typeof(p_live) <> 'object' or octet_length(p_live::text) > 60000) then raise exception 'Ungültig'; end if;
-  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{"live":null,"ans":{}}'::jsonb) on conflict (teacher_id, doc) do nothing;
-  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null or jsonb_typeof(d) <> 'object' then d := '{"live":null,"ans":{}}'::jsonb; end if;
   if jsonb_typeof(d->'ans') is distinct from 'object' then d := jsonb_set(d, '{ans}', '{}'::jsonb, true); end if;
   if p_live is not null then
-    -- «sec» = Timer in Sekunden; die Datenbank rechnet die Endzeit selbst aus
+    if jsonb_typeof(p_live) <> 'object' or octet_length(p_live::text) > 60000 then raise exception 'Ungültig'; end if;
     if jsonb_typeof(p_live->'sec') = 'number' then
       p_live := (p_live - 'sec') || jsonb_build_object('until', case when (p_live->>'sec')::numeric > 0
         then nowms + least(3600, (p_live->>'sec')::numeric)::bigint * 1000 else null end);
@@ -1752,19 +1749,17 @@ begin
       if q = '*' then d := jsonb_set(d, '{ans}', '{}'::jsonb); else d := jsonb_set(d, '{ans}', (d->'ans') - q); end if;
     end loop;
   end if;
-  update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
-  return json_build_object('now', nowms, 'until', d #> '{live,until}');
+  return d;
 end;
 $$;
 
-create or replace function public.kid_umfrage(p_token uuid) returns jsonb
-language plpgsql security definer set search_path = public as $$
-declare k public.kids; t uuid; d jsonb; l jsonb; q jsonb; qid text; qs jsonb := '[]'::jsonb; mine jsonb := '{}'::jsonb; res jsonb := '{}'::jsonb;
+-- Was ein Gerät sieht (me = Kind- oder Gast-ID): nur die erlaubten Fragen, Lösung erst nach dem Aufdecken,
+-- Antworten der anderen ohne Namen und nur, wenn die Lehrperson sie zeigt
+create or replace function public._umf_view(d jsonb, me text) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare l jsonb; q jsonb; qid text; qs jsonb := '[]'::jsonb; mine jsonb := '{}'::jsonb; res jsonb := '{}'::jsonb;
   hk jsonb; hw jsonb; sh boolean; nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
 begin
-  k := public._kid(p_token);
-  select teacher_id into t from public.classes where id = k.class_id;
-  select data into d from public.teacher_store where teacher_id = t and doc = 'umfrage-' || k.class_id::text;
   l := d->'live';
   if l is null or jsonb_typeof(l) <> 'object' or not coalesce((l->>'on')::boolean, false) then return null; end if;
   sh := coalesce((l->>'show')::boolean, false) and coalesce((l->>'kids')::boolean, true);
@@ -1773,7 +1768,7 @@ begin
     continue when qid is null or (coalesce(l->>'mode', 'live') <> 'selbst' and qid is distinct from l->>'cur');
     if not (coalesce(l->'rev', '[]'::jsonb) ? qid) then q := q - 'ok'; end if;
     qs := qs || jsonb_build_array(q);
-    if d #> array['ans', qid, k.id::text] is not null then mine := mine || jsonb_build_object(qid, d #> array['ans', qid, k.id::text]); end if;
+    if d #> array['ans', qid, me] is not null then mine := mine || jsonb_build_object(qid, d #> array['ans', qid, me]); end if;
     if sh then
       hk := coalesce(l #> array['hid', qid], '[]'::jsonb); hw := coalesce(l #> array['hidw', qid], '[]'::jsonb);
       res := res || jsonb_build_object(qid, coalesce((select jsonb_agg(case when q->>'type' = 'wort' and jsonb_typeof(a.value) = 'array'
@@ -1789,72 +1784,240 @@ begin
 end;
 $$;
 
-create or replace function public.kid_umfrage_send(p_token uuid, p_q text, p_val jsonb) returns boolean
-language plpgsql security definer set search_path = public as $$
-declare k public.kids; t uuid; d jsonb; dk text; l jsonb; q jsonb; ty text; n int; mx int; v jsonb; x numeric; y numeric;
+-- Antwort prüfen (Fragetyp, Grenzen) und bereinigt zurückgeben; null = nicht erlaubt
+create or replace function public._umf_val(l jsonb, p_q text, p_val jsonb) returns jsonb
+language plpgsql stable set search_path = public as $$
+declare q jsonb; ty text; n int; mx int; v jsonb; x numeric; y numeric;
   nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
 begin
-  k := public._kid(p_token);
-  if p_q is null or length(p_q) > 40 or p_val is null or octet_length(p_val::text) > 2000 then return false; end if;
-  select teacher_id into t from public.classes where id = k.class_id;
-  dk := 'umfrage-' || k.class_id::text;
-  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
-  l := d->'live';
-  if l is null or jsonb_typeof(l) <> 'object' or not coalesce((l->>'on')::boolean, false) or not coalesce((l->>'open')::boolean, false) then return false; end if;
-  if jsonb_typeof(l->'until') = 'number' and nowms > (l->>'until')::numeric + 3000 then return false; end if;
-  if coalesce(l->>'mode', 'live') <> 'selbst' and p_q is distinct from l->>'cur' then return false; end if;
+  if p_q is null or length(p_q) > 40 or p_val is null or octet_length(p_val::text) > 2000 then return null; end if;
+  if l is null or jsonb_typeof(l) <> 'object' or not coalesce((l->>'on')::boolean, false) or not coalesce((l->>'open')::boolean, false) then return null; end if;
+  if jsonb_typeof(l->'until') = 'number' and nowms > (l->>'until')::numeric + 3000 then return null; end if;
+  if coalesce(l->>'mode', 'live') <> 'selbst' and p_q is distinct from l->>'cur' then return null; end if;
   select x2 into q from jsonb_array_elements(case when jsonb_typeof(l->'qs') = 'array' then l->'qs' else '[]'::jsonb end) x2 where x2->>'id' = p_q limit 1;
-  if q is null then return false; end if;
+  if q is null then return null; end if;
   ty := q->>'type';
   n := case when jsonb_typeof(q->'opts') = 'array' then jsonb_array_length(q->'opts') else 0 end;
   if ty in ('wahl', 'quiz', 'stimmung') then
     mx := case when coalesce((q->>'multi')::boolean, false) then n else 1 end;
     if not public._umf_ints(p_val, 0, n - 1) or jsonb_array_length(p_val) < 1 or jsonb_array_length(p_val) > mx
-       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> jsonb_array_length(p_val) then return false; end if;
+       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> jsonb_array_length(p_val) then return null; end if;
     v := p_val;
   elsif ty in ('wort', 'text') then
-    if jsonb_typeof(p_val) <> 'array' then return false; end if;
+    if jsonb_typeof(p_val) <> 'array' then return null; end if;
     mx := least(case when ty = 'wort' then 5 else 3 end, greatest(1, public._umf_num(q->'max', case when ty = 'wort' then 3 else 1 end)))::int;
     select coalesce(jsonb_agg(to_jsonb(left(btrim(e.j #>> '{}'), case when ty = 'wort' then 30 else 300 end)) order by e.o), '[]'::jsonb) into v
       from jsonb_array_elements(p_val) with ordinality as e(j, o) where jsonb_typeof(e.j) = 'string' and btrim(e.j #>> '{}') <> '';
-    if jsonb_array_length(v) < 1 or jsonb_array_length(v) > mx then return false; end if;
+    if jsonb_array_length(v) < 1 or jsonb_array_length(v) > mx then return null; end if;
   elsif ty = 'skala' then
     mx := least(10, greatest(3, public._umf_num(q->'max', 5)))::int;
-    if not public._umf_ints(p_val, 1, mx) or jsonb_array_length(p_val) <> n then return false; end if;
+    if not public._umf_ints(p_val, 1, mx) or jsonb_array_length(p_val) <> n then return null; end if;
     v := p_val;
   elsif ty = 'rang' then
     if not public._umf_ints(p_val, 0, n - 1) or jsonb_array_length(p_val) <> n
-       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> n then return false; end if;
+       or (select count(distinct e #>> '{}') from jsonb_array_elements(p_val) e) <> n then return null; end if;
     v := p_val;
   elsif ty = 'punkte' then
     mx := least(100, greatest(1, public._umf_num(q->'pts', 10)))::int;
-    if not public._umf_ints(p_val, 0, mx) or jsonb_array_length(p_val) <> n then return false; end if;
-    if (select sum((e #>> '{}')::numeric) from jsonb_array_elements(p_val) e) not between 1 and mx then return false; end if;
+    if not public._umf_ints(p_val, 0, mx) or jsonb_array_length(p_val) <> n then return null; end if;
+    if (select sum((e #>> '{}')::numeric) from jsonb_array_elements(p_val) e) not between 1 and mx then return null; end if;
     v := p_val;
   elsif ty = 'zahl' then
-    if jsonb_typeof(p_val) <> 'number' then return false; end if;
+    if jsonb_typeof(p_val) <> 'number' then return null; end if;
     x := (p_val #>> '{}')::numeric;
-    if x < public._umf_num(q->'min', -1e12) or x > public._umf_num(q->'max', 1e12) or abs(x) > 1e12 then return false; end if;
+    if x < public._umf_num(q->'min', -1e12) or x > public._umf_num(q->'max', 1e12) or abs(x) > 1e12 then return null; end if;
     v := to_jsonb(round(x, 2));
   elsif ty = 'feld' then
-    if jsonb_typeof(p_val) <> 'object' or jsonb_typeof(p_val->'x') <> 'number' or jsonb_typeof(p_val->'y') <> 'number' then return false; end if;
+    if jsonb_typeof(p_val) <> 'object' or jsonb_typeof(p_val->'x') <> 'number' or jsonb_typeof(p_val->'y') <> 'number' then return null; end if;
     x := greatest(0, least(100, (p_val->>'x')::numeric)); y := greatest(0, least(100, (p_val->>'y')::numeric));
     v := jsonb_build_object('x', round(x, 1), 'y', round(y, 1));
   else
-    return false;
+    return null;
   end if;
+  return v;
+end;
+$$;
+
+-- Antwort eintragen (gibt das neue Dokument zurück)
+create or replace function public._umf_put_ans(d jsonb, p_q text, me text, v jsonb) returns jsonb
+language plpgsql immutable set search_path = public as $$
+begin
   if jsonb_typeof(d->'ans') is distinct from 'object' then d := jsonb_set(d, '{ans}', '{}'::jsonb, true); end if;
   if jsonb_typeof(d #> array['ans', p_q]) is distinct from 'object' then d := jsonb_set(d, array['ans', p_q], '{}'::jsonb, true); end if;
-  d := jsonb_set(d, array['ans', p_q, k.id::text], v, true);
+  return jsonb_set(d, array['ans', p_q, me], v, true);
+end;
+$$;
+
+create or replace function public.umfrage_put(p_class uuid, p_live jsonb, p_clear jsonb default null) returns json
+language plpgsql security definer set search_path = public as $$
+declare t uuid; d jsonb; dk text := 'umfrage-' || p_class::text;
+  nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  select teacher_id into t from public.classes where id = p_class;
+  if t is null or t is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  insert into public.teacher_store (teacher_id, doc, data) values (t, dk, '{"live":null,"ans":{}}'::jsonb) on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  d := public._umf_apply(d, p_live, p_clear, nowms);
   update public.teacher_store set data = d, updated_at = now() where teacher_id = t and doc = dk;
+  return json_build_object('now', nowms, 'until', d #> '{live,until}');
+end;
+$$;
+
+create or replace function public.kid_umfrage(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  select data into d from public.teacher_store where teacher_id = t and doc = 'umfrage-' || k.class_id::text;
+  return public._umf_view(d, k.id::text);
+end;
+$$;
+
+create or replace function public.kid_umfrage_send(p_token uuid, p_q text, p_val jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; t uuid; d jsonb; dk text; v jsonb;
+begin
+  k := public._kid(p_token);
+  select teacher_id into t from public.classes where id = k.class_id;
+  dk := 'umfrage-' || k.class_id::text;
+  select data into d from public.teacher_store where teacher_id = t and doc = dk for update;
+  if d is null then return false; end if;
+  v := public._umf_val(d->'live', p_q, p_val);
+  if v is null then return false; end if;
+  update public.teacher_store set data = public._umf_put_ans(d, p_q, k.id::text, v), updated_at = now() where teacher_id = t and doc = dk;
   return true;
 end;
 $$;
 
-revoke execute on function public._umf_ints(jsonb, numeric, numeric), public._umf_num(jsonb, numeric) from public, anon;
+revoke execute on function public._umf_ints(jsonb, numeric, numeric), public._umf_num(jsonb, numeric), public._umf_apply(jsonb, jsonb, jsonb, bigint),
+  public._umf_view(jsonb, text), public._umf_val(jsonb, text, jsonb), public._umf_put_ans(jsonb, text, text, jsonb) from public, anon, authenticated;
 revoke execute on function public.kid_umfrage(uuid), public.kid_umfrage_send(uuid, text, jsonb), public.umfrage_put(uuid, jsonb, jsonb) from public;
 grant execute on function public.kid_umfrage(uuid), public.kid_umfrage_send(uuid, text, jsonb) to anon, authenticated;
 revoke execute on function public.umfrage_put(uuid, jsonb, jsonb) from anon;
 grant execute on function public.umfrage_put(uuid, jsonb, jsonb) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Version 27: Umfrage offen teilen (QR-Code, ohne Login)
+--   Die Lehrperson startet eine offene Runde mit einer 6-stelligen Nummer (umf_runden). Mitmachen geht über
+--   #/u/<Nummer> mit freiwilligem Namen (umf_gaeste, Token). Gäste kommen nur über umf_gast / umf_gast_send an die Runde,
+--   mit denselben Regeln wie die Kinder (_umf_view, _umf_val). Pro Lehrperson gibt es eine offene Runde;
+--   sie bleibt für die Ergebnisse stehen, bis eine neue gestartet wird, und wird nach 30 Tagen gelöscht.
+-- ---------------------------------------------------------------------
+create table if not exists public.umf_runden (
+  id         uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  nr         text not null unique,
+  data       jsonb not null default '{"live":null,"ans":{}}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.umf_gaeste (
+  id         uuid primary key default gen_random_uuid(),
+  runde      uuid not null references public.umf_runden(id) on delete cascade,
+  token      uuid not null unique default gen_random_uuid(),
+  name       text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists umf_gaeste_runde on public.umf_gaeste (runde);
+alter table public.umf_runden enable row level security;
+alter table public.umf_gaeste enable row level security;
+revoke all on public.umf_runden, public.umf_gaeste from anon, authenticated;
+
+-- Lehrperson: neue offene Runde (die alte eigene wird gelöscht)
+create or replace function public.umf_offen_open(p_live jsonb) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare v_nr text; v_id uuid; i int := 0; d jsonb; nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  if auth.uid() is null then raise exception 'Bitte neu anmelden' using errcode = '42501'; end if;
+  delete from public.umf_runden where teacher_id = auth.uid() or updated_at < now() - interval '30 days';
+  loop
+    v_nr := lpad((floor(random() * 900000) + 100000)::int::text, 6, '0');
+    exit when not exists (select 1 from public.umf_runden where nr = v_nr);
+    i := i + 1; if i > 50 then raise exception 'Keine freie Nummer' using errcode = 'P0001'; end if;
+  end loop;
+  d := public._umf_apply(null, p_live, null, nowms);
+  insert into public.umf_runden (teacher_id, nr, data) values (auth.uid(), v_nr, d) returning id into v_id;
+  return json_build_object('id', v_id, 'nr', v_nr, 'now', nowms, 'until', d #> '{live,until}');
+end;
+$$;
+
+create or replace function public.umf_offen_put(p_id uuid, p_live jsonb, p_clear jsonb default null) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare d jsonb; nowms bigint := floor(extract(epoch from clock_timestamp()) * 1000);
+begin
+  select data into d from public.umf_runden where id = p_id and teacher_id = auth.uid() for update;
+  if not found then raise exception 'Runde nicht gefunden' using errcode = 'P0001'; end if;
+  d := public._umf_apply(d, p_live, p_clear, nowms);
+  update public.umf_runden set data = d, updated_at = now() where id = p_id;
+  return json_build_object('now', nowms, 'until', d #> '{live,until}');
+end;
+$$;
+
+-- Lehrperson: Stand der eigenen offenen Runde mit allen Gästen (ohne p_id: die neuste)
+create or replace function public.umf_offen_host(p_id uuid default null) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare r public.umf_runden;
+begin
+  select * into r from public.umf_runden where teacher_id = auth.uid() and (p_id is null or id = p_id) order by created_at desc limit 1;
+  if not found then return null; end if;
+  return json_build_object('id', r.id, 'nr', r.nr, 'data', r.data,
+    'gaeste', coalesce((select json_agg(json_build_object('id', g.id, 'name', g.name) order by g.created_at) from public.umf_gaeste g where g.runde = r.id), '[]'::json));
+end;
+$$;
+
+create or replace function public.umf_offen_close(p_id uuid) returns void
+language sql volatile security definer set search_path = public as $$
+  delete from public.umf_runden where id = p_id and teacher_id = auth.uid();
+$$;
+
+-- Gast: Nummer + freiwilliger Name → Token
+create or replace function public.umf_gast_join(p_nr text, p_name text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare r public.umf_runden; n text := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g'); t uuid; c int;
+begin
+  select * into r from public.umf_runden where nr = regexp_replace(coalesce(p_nr, ''), '\D', '', 'g');
+  if not found then return json_build_object('ok', false, 'error', 'nummer'); end if;
+  if not coalesce((r.data #>> '{live,on}')::boolean, false) then return json_build_object('ok', false, 'error', 'vorbei'); end if;
+  if char_length(n) > 20 or n ~ '[[:cntrl:]<>]' then return json_build_object('ok', false, 'error', 'name'); end if;
+  select count(*) into c from public.umf_gaeste where runde = r.id;
+  if c >= 300 then return json_build_object('ok', false, 'error', 'voll'); end if;
+  if n = '' then n := 'Gast ' || (c + 1); end if;
+  insert into public.umf_gaeste (runde, name) values (r.id, n) returning token into t;
+  return json_build_object('ok', true, 'token', t, 'name', n);
+end;
+$$;
+
+create or replace function public.umf_gast(p_token uuid) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare g public.umf_gaeste; d jsonb;
+begin
+  select * into g from public.umf_gaeste where token = p_token;
+  if not found then return '{"gone":true}'::jsonb; end if;
+  select data into d from public.umf_runden where id = g.runde;
+  return public._umf_view(d, g.id::text);
+end;
+$$;
+
+create or replace function public.umf_gast_send(p_token uuid, p_q text, p_val jsonb) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+declare g public.umf_gaeste; d jsonb; v jsonb;
+begin
+  select * into g from public.umf_gaeste where token = p_token;
+  if not found then return false; end if;
+  select data into d from public.umf_runden where id = g.runde for update;
+  v := public._umf_val(d->'live', p_q, p_val);
+  if v is null then return false; end if;
+  update public.umf_runden set data = public._umf_put_ans(d, p_q, g.id::text, v), updated_at = now() where id = g.runde;
+  return true;
+end;
+$$;
+
+revoke execute on function public.umf_offen_open(jsonb), public.umf_offen_put(uuid, jsonb, jsonb), public.umf_offen_host(uuid),
+  public.umf_offen_close(uuid) from public, anon;
+grant execute on function public.umf_offen_open(jsonb), public.umf_offen_put(uuid, jsonb, jsonb), public.umf_offen_host(uuid),
+  public.umf_offen_close(uuid) to authenticated;
+revoke execute on function public.umf_gast_join(text, text), public.umf_gast(uuid), public.umf_gast_send(uuid, text, jsonb) from public;
+grant execute on function public.umf_gast_join(text, text), public.umf_gast(uuid), public.umf_gast_send(uuid, text, jsonb) to anon, authenticated;
 
 -- Fertig.

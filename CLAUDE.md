@@ -13,6 +13,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Live-Quiz (Version 23): eigene Seite `quiz.html` (Bridge `window.knQuiz`, Modul `QZ` in `app.js`, `QUIZ_VER`). Lehrperson: Route `#/quiz`, Quiz in `teacher_store` «quiz» (Liste) und «quiz-<id>» (Fragen; Typen `quiz`, `rf`, `text`, `reihe`). Live-Runde: Tabellen `quiz_live`/`quiz_players`, Funktionen `quiz_open`/`quiz_step`/`quiz_host`/`quiz_kick`/`quiz_close` (Lehrperson) und `quiz_join`/`quiz_state`/`quiz_answer` (Mitspielen ohne Konto, Token). Mitspielen: `#/q/<6-stellige Nummer>` per QR-Code. Punkte rechnet die Datenbank (bis 1000 × Faktor, schneller = mehr). Runden verschwinden nach einem Tag. Freigabe pro Lehrperson wie die anderen Werkzeuge (`TOOLS` «quiz»).
 - Quiz-Ordner und Kinder-Quiz (Version 25): Ordner der Lehrperson in `teacher_store` «quiz» = `{list:[{…, ordner}], ordner:[{id,name}]}`. Kinder erstellen eigene Quiz, wenn die Lehrperson es pro Klasse einschaltet (`classes.kid_tools.quiz === true`, fehlt = aus; Schalter im Ordner «Von den Kindern»). Tabelle `kid_quizzes` (`members` = Kinder, die es sehen und bearbeiten; `ver` für gemeinsames Bearbeiten). Kinder: `kid_quiz_list/get/save/delete` (Kachel «Quiz erstellen», `K.view_quiz`, `mode: 'kid'`). Lehrperson: `kq_list/get/save/new/members/delete`. Bei altem Stand gibt `…_save` `conflict` zurück, `quiz.html` führt mit `merge()` zusammen (geänderte Fragen gewinnen) und holt alle 4 s neue Stände (`kidPull`).
 - Umfrage (Version 26, wie Mentimeter): Modul `U` in `app.js`, Route `#/umfrage/<Klasse>`, Freigabe-Schlüssel `umfrage` in `TOOLS`. Umfragen der Lehrperson (für alle Klassen) in `teacher_store` «umfragen» = `{list:[{id,title,set:{mode,auto,kids,anon},qs}]}`; Live-Stand und Antworten pro Klasse in «umfrage-<Klasse>» = `{live, ans:{Frage:{Kind:Antwort}}}`. «live» schreibt nur die Lehrperson (`umfrage_put`, Timer über `sec`), Kinder lesen mit `kid_umfrage` (Lösung `ok` erst nach Aufdecken `rev`, Antworten anderer ohne Namen und nur bei `show`) und antworten mit `kid_umfrage_send` (Prüfung pro Fragetyp). Fragetypen `UMF_TYPES` (wahl, quiz, stimmung, wort, text, skala, rang, punkte, zahl, feld, info), Ergebnisse `umfRes()`, Eingabe der Kinder `umfInput()`, Vorlagen `UMF_VORLAGEN`. Kinder: Kachel «Umfrage!» (`K.umfOpen`, geprüft in `K.checkRace`), Ansicht `K.view_umfrage`.
+- Umfrage offen per QR-Code (Version 27): Beim Starten «Wer macht mit?» → Klasse (`uStartK`) oder offen (`uGoO`). Offene Runde in Tabelle `umf_runden` (eine pro Lehrperson, 6-stellige Nummer `nr`, `data` = `{live, ans}`, nach 30 Tagen gelöscht) mit Gästen `umf_gaeste` (Token, freiwilliger Name, sonst «Gast N»). Lehrperson: `umf_offen_open/put/host/close`; Gäste: `umf_gast_join`, `umf_gast`, `umf_gast_send` (dieselben Regeln über `_umf_apply`, `_umf_view`, `_umf_val`). Im Portal `U.docs = {klasse, offen}`, umschalten mit `U.use()`. Mitmachen: Route `#/u/<Nummer>` (`G.start`, `K.view_gast`, Token in localStorage «kn_umf_gast», dann `K.umfBegin(token)`).
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -47,7 +48,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 26) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 27) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -115,7 +116,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 26).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 27).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -125,7 +126,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=96`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=97`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('38')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
