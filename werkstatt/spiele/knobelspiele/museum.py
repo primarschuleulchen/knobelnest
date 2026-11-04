@@ -20,6 +20,11 @@ def logo():
         return '<img class="logo" alt="" src="data:image/webp;base64,' + base64.b64encode(f.read()).decode() + '">'
 
 
+def wand_bild():
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logos', 'museum-wand.webp'), 'rb') as f:
+        return 'data:image/webp;base64,' + base64.b64encode(f.read()).decode()
+
+
 def alle(spiel):
     spiel(id='im-museum', titel='Im Museum', icon=logo(), fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=10,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Bilder 1 Stern, pro Stufe bis 10
@@ -30,7 +35,7 @@ def alle(spiel):
                   dict(name='Bild malen', info='Read and draw: lesen und malen', t='mal', min=2, max=3, extra=False, alle=True, pause=1300),
                   dict(name='Genau beschreiben', info='big, little, light, dark, facing …', t='sag', min=2, max=3, extra=True, alle=True),
                   dict(name='Zuhören und malen', info='Listen and draw: nur hören', t='mal', min=3, max=4, extra=True, alle=True, hoer=True, tempo=.68, pause=1800)],
-          css=CSS, js=JS)
+          css=CSS.replace('__WAND__', wand_bild()), js=JS)
 
 
 CSS = r"""
@@ -39,17 +44,16 @@ CSS = r"""
 /* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
 .lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
 .mu{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start;width:100%;max-width:1040px}
-.spalte{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(100%,470px)}
-.wand{position:relative;width:100%;border-radius:26px;padding:22px 20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;
-  background:radial-gradient(60% 50% at 50% 0%,rgba(255,250,225,.95) 0%,rgba(255,250,225,0) 100%),linear-gradient(180deg,#efe2c6 0%,#e6d5b2 82%,#c9a97a 82%,#b8955f 100%);
-  box-shadow:var(--sch)}
-.wand.klein{padding:12px 10px 8px;border-radius:18px}
-.rahmen{width:100%;padding:clamp(8px,2.2vw,15px);border-radius:5px;
-  background:linear-gradient(135deg,#f6e3a1 0%,#c4952f 22%,#f3d98a 45%,#a8741f 70%,#e9c46a 100%);
-  box-shadow:0 12px 18px rgba(90,60,10,.35),inset 0 0 0 2px rgba(255,255,255,.45),inset 0 0 0 4px rgba(120,80,20,.35)}
-.lein{border:3px solid #7a5418;background:#fff;line-height:0}
-.lein svg{display:block;width:100%;height:auto;touch-action:manipulation}
-.schild{background:linear-gradient(180deg,#f6e3a1,#d6ad45);border:1px solid #a8741f;border-radius:4px;padding:0 14px;font-size:17px;color:#5a3d0c;box-shadow:0 2px 4px rgba(90,60,10,.25)}
+.spalte{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(100%,400px)}
+.spalte.bildsp{width:min(100%,540px)}
+.wand{position:relative;width:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;background:#f6ead0 url(__WAND__) center/100% 100% no-repeat;box-shadow:var(--sch)}
+.wand.klein{border-radius:14px}
+/* weisses Feld im Museumsbild: x 297–1238, y 225–696 von 1536 × 1024 */
+.feld{position:absolute;left:19.2%;top:21.8%;width:61.6%;height:46.3%;line-height:0;box-shadow:inset 0 0 6px rgba(90,60,10,.35)}
+.feld svg{display:block;width:100%;height:100%;touch-action:manipulation}
+/* Handy: Säulen links und rechts etwas abschneiden, damit das Bild grösser wird */
+@media (max-width:640px){.wand{aspect-ratio:1/.867;background-size:130% 100%}.feld{left:10.1%;width:79.8%}}
+.schild{position:absolute;left:50%;top:76.5%;transform:translateX(-50%);white-space:nowrap;background:linear-gradient(180deg,#f6e3a1,#d6ad45);border:1px solid #a8741f;border-radius:4px;padding:0 12px;font-size:clamp(12px,2.6vw,16px);color:#5a3d0c;box-shadow:0 2px 4px rgba(90,60,10,.25)}
 .beschr{background:#fff;border:2px solid var(--line);border-radius:20px;padding:12px 16px;box-shadow:var(--sch-k);font-size:23px;width:100%;line-height:1.45}
 .beschr .kopfz{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:4px;color:var(--soft);font-size:18px}
 .beschr p{margin:2px 0}
@@ -190,7 +194,7 @@ function sag(t, immer) {
 }
 function still() { SPRICH++; try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
 
-// ---------- Zeichnen (SVG 300 × 210, 3 × 3 Felder à 100 × 70)
+// ---------- Zeichnen (SVG 360 × 180 = weisses Feld im Museumsbild, 3 × 3 Felder à 120 × 60)
 function formSvg(s, cx, cy, r, d, fill, extra) {
   var st = ' fill="' + fill + '" stroke="rgba(0,0,0,.22)" stroke-width="1.3"' + (extra || '');
   if (s === 'circle') return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '"' + st + '/>';
@@ -200,26 +204,27 @@ function formSvg(s, cx, cy, r, d, fill, extra) {
   return '<polygon points="' + cx + ',' + (cy - r) + ' ' + (cx - q) + ',' + (cy + r * .8) + ' ' + (cx + q) + ',' + (cy + r * .8) + '" transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"' + st + '/>';
 }
 function dingSvg(x) {
-  var cx = 50 + (x.p % 3) * 100, cy = 35 + Math.floor(x.p / 3) * 70, o = '';
+  var cx = 60 + (x.p % 3) * 120, cy = 30 + Math.floor(x.p / 3) * 60, o = '';
   if (x.n > 1) {
-    var r = x.s === 'rectangle' ? 8 : 10, ab = 24;
+    var r = x.s === 'rectangle' ? 8 : 9, ab = 25;
     for (var i = 0; i < x.n; i++) o += formSvg(x.s, cx + (i - (x.n - 1) / 2) * ab, cy, r, x.d, COL[x.c]);
     return o;
   }
-  var R = x.z === 'little' ? 12 : x.z === 'big' ? 29 : 20;
+  var R = x.z === 'little' ? 11 : x.z === 'big' ? 26 : 18;
   return formSvg(x.s, cx, cy, R, x.d, COL[x.c]);
 }
 // opt: { felder: true (Raster zum Malen), mark: Feld hervorheben, fehler: [Felder] }
 function bildSvg(b, opt) {
   opt = opt || {};
-  var o = '<svg viewBox="0 0 300 210" role="img" aria-label="Bild"><rect x="0" y="0" width="300" height="210" fill="' + (b.bg ? COL[b.bg] : '#fff') + '"/>';
+  var o = '<svg viewBox="0 0 360 180" preserveAspectRatio="none" role="img" aria-label="Bild"><rect x="0" y="0" width="360" height="180" fill="' + (b.bg ? COL[b.bg] : '#fff') + '"/>';
   b.it.forEach(function (x) { o += dingSvg(x); });
-  if (opt.mark != null) { var mx = (opt.mark % 3) * 100, my = Math.floor(opt.mark / 3) * 70; o += '<rect class="mark2" x="' + (mx + 4) + '" y="' + (my + 4) + '" width="92" height="62" rx="10"/><rect class="mark" x="' + (mx + 4) + '" y="' + (my + 4) + '" width="92" height="62" rx="10"/>'; }
-  if (opt.felder) for (var p = 0; p < 9; p++) o += '<rect class="zelle' + ((opt.fehler || []).indexOf(p) >= 0 ? ' f' : '') + '" data-p="' + p + '" x="' + ((p % 3) * 100 + 1) + '" y="' + (Math.floor(p / 3) * 70 + 1) + '" width="98" height="68" rx="6"/>';
+  if (opt.mark != null) { var mx = (opt.mark % 3) * 120, my = Math.floor(opt.mark / 3) * 60; o += '<rect class="mark2" x="' + (mx + 4) + '" y="' + (my + 3) + '" width="112" height="54" rx="10"/><rect class="mark" x="' + (mx + 4) + '" y="' + (my + 3) + '" width="112" height="54" rx="10"/>'; }
+  if (opt.felder) for (var p = 0; p < 9; p++) o += '<rect class="zelle' + ((opt.fehler || []).indexOf(p) >= 0 ? ' f' : '') + '" data-p="' + p + '" x="' + ((p % 3) * 120 + 1) + '" y="' + (Math.floor(p / 3) * 60 + 1) + '" width="118" height="58" rx="6"/>';
   return o + '</svg>';
 }
 function wand(b, schild, opt, klein) {
-  return '<div class="wand' + (klein ? ' klein' : '') + '"><div class="rahmen"><div class="lein">' + bildSvg(b, opt) + '</div></div>' + (schild ? '<div class="schild">' + schild + '</div>' : '') + '</div>';
+  // Museumswand (Bild der Lehrerin als Hintergrund im CSS), die Aufgabe liegt im weissen Feld des Rahmens
+  return '<div class="wand' + (klein ? ' klein' : '') + '"><div class="feld">' + bildSvg(b, opt) + '</div>' + (schild ? '<div class="schild">' + schild + '</div>' : '') + '</div>';
 }
 var SPK = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 var IC_BG = '<svg viewBox="0 0 60 60" aria-hidden="true"><rect x="8" y="12" width="44" height="36" rx="4" fill="#5f6963" fill-opacity=".35" stroke="#5f6963" stroke-width="3"/></svg>';
@@ -297,7 +302,7 @@ G.play = function (lv, api) {
       SAETZE.push({ mark: x.p, teile: t, x: x });
     });
     var erlaubt = voll ? 3 : 2;
-    api.stage.innerHTML = '<div class="mu"><div class="spalte"><div class="bildplatz" style="width:100%"></div></div><div class="spalte"><div class="satz" lang="en"></div><div class="opts4" lang="en"></div><div class="heft" lang="en"></div><div class="steuer"></div></div></div>';
+    api.stage.innerHTML = '<div class="mu"><div class="spalte bildsp"><div class="bildplatz" style="width:100%"></div></div><div class="spalte"><div class="satz" lang="en"></div><div class="opts4" lang="en"></div><div class="heft" lang="en"></div><div class="steuer"></div></div></div>';
     var platz = api.stage.querySelector('.bildplatz'), satzEl = api.stage.querySelector('.satz'), opts = api.stage.querySelector('.opts4'), heft = api.stage.querySelector('.heft'), steuer = api.stage.querySelector('.steuer');
     function zeigeBild(mark) { platz.innerHTML = wand(b, schild(), { mark: mark }); }
     function neuerSatz() {
@@ -358,7 +363,7 @@ G.play = function (lv, api) {
     var b = neuesBild(lv), voll = lv.extra, saetze = text(b, voll), versuch = 0, fertig = false, offen = !lv.hoer || !kannSprechen();
     var mein = { bg: '', it: [] }, wz = { m: 'form', s: 'circle', c: 'red', z: 'big', n: 1, d: 'up' }, fehlerFelder = [];
     var farben = lv.alle ? ALLE : GRUND;
-    api.stage.innerHTML = '<div class="mu"><div class="spalte"><div class="bildplatz" style="width:100%"></div><div class="steuer"></div></div>' +
+    api.stage.innerHTML = '<div class="mu"><div class="spalte bildsp"><div class="bildplatz" style="width:100%"></div><div class="steuer"></div></div>' +
       '<div class="spalte"><div class="beschr"></div><div class="werk"></div></div></div>';
     var platz = api.stage.querySelector('.bildplatz'), beschr = api.stage.querySelector('.beschr'), werk = api.stage.querySelector('.werk'), steuer = api.stage.querySelector('.steuer');
     function zeigeText() {
