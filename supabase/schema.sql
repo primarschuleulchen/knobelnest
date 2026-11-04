@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 23)
+-- Knobelnest – Datenbank-Einrichtung (Version 24)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1211,7 +1211,206 @@ $$;
 grant execute on function public.kid_class(text), public.kid_login(text, uuid, text) to anon, authenticated;
 
 -- =====================================================================
--- Version 23: Klassen-Pinnwand 6 (Leinwand, Vorlagen, Bilder, Kategorien wählen, direkt anpinnen, Umfrage)
+-- Version 23: Live-Quiz
+--   Die Lehrperson baut ihre Quiz im Portal (gespeichert in teacher_store «quiz»).
+--   Zum Spielen öffnet sie eine Runde (quiz_live) mit einer 6-stelligen Nummer und einem QR-Code.
+--   Mitspielen geht ohne Konto: Nummer + Name (+ Tierbild). Die Mitspielenden kommen nur über
+--   die Funktionen quiz_join / quiz_state / quiz_answer an die Runde (Token), nie an die Tabellen.
+--   Die richtigen Antworten sieht ein Gerät erst bei der Auflösung. Punkte rechnet die Datenbank.
+--   Runden werden nach einem Tag automatisch gelöscht.
+-- =====================================================================
+create table if not exists public.quiz_live (
+  id         uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  pin        text not null unique,
+  title      text not null default '',
+  questions  jsonb not null default '[]'::jsonb,
+  phase      text not null default 'lobby',   -- lobby | frage | aufloesung | rangliste | ende
+  q          int  not null default -1,
+  q_started  timestamptz,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.quiz_players (
+  id        uuid primary key default gen_random_uuid(),
+  live_id   uuid not null references public.quiz_live(id) on delete cascade,
+  token     uuid not null unique default gen_random_uuid(),
+  name      text not null,
+  avatar    text not null default 'eule',
+  score     int  not null default 0,
+  streak    int  not null default 0,
+  answers   jsonb not null default '{}'::jsonb,
+  joined_at timestamptz not null default now()
+);
+create unique index if not exists quiz_players_name on public.quiz_players (live_id, lower(name));
+alter table public.quiz_live enable row level security;
+alter table public.quiz_players enable row level security;
+revoke all on public.quiz_live, public.quiz_players from anon, authenticated;
+
+-- Text-Antworten vergleichen: Gross/klein und Leerzeichen egal
+create or replace function public._quiz_norm(t text) returns text
+language sql immutable as $$
+  select lower(regexp_replace(btrim(coalesce(t, '')), '\s+', ' ', 'g'));
+$$;
+
+-- Lehrperson: neue Runde öffnen (alte eigene Runden und alles älter als einen Tag wird gelöscht)
+create or replace function public.quiz_open(p_title text, p_questions jsonb) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare v_pin text; v_id uuid; i int := 0;
+begin
+  if auth.uid() is null then raise exception 'Bitte neu anmelden' using errcode = '42501'; end if;
+  if jsonb_typeof(p_questions) is distinct from 'array' or jsonb_array_length(p_questions) < 1 or jsonb_array_length(p_questions) > 100 then
+    raise exception 'Das Quiz braucht 1 bis 100 Fragen' using errcode = 'P0001';
+  end if;
+  if octet_length(p_questions::text) > 8000000 then raise exception 'Das Quiz ist zu gross (Bilder verkleinern)' using errcode = 'P0001'; end if;
+  delete from public.quiz_live where created_at < now() - interval '1 day' or teacher_id = auth.uid();
+  loop
+    v_pin := lpad((floor(random() * 900000) + 100000)::int::text, 6, '0');
+    exit when not exists (select 1 from public.quiz_live where pin = v_pin);
+    i := i + 1; if i > 50 then raise exception 'Keine freie Nummer' using errcode = 'P0001'; end if;
+  end loop;
+  insert into public.quiz_live (teacher_id, pin, title, questions) values (auth.uid(), v_pin, left(coalesce(p_title, ''), 120), p_questions)
+  returning id into v_id;
+  return json_build_object('id', v_id, 'pin', v_pin);
+end;
+$$;
+
+-- Lehrperson: nächster Schritt (Frage zeigen, auflösen, Rangliste, Ende)
+create or replace function public.quiz_step(p_id uuid, p_phase text, p_q int) returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare l public.quiz_live;
+begin
+  select * into l from public.quiz_live where id = p_id and teacher_id = auth.uid() for update;
+  if not found then raise exception 'Runde nicht gefunden' using errcode = 'P0001'; end if;
+  if p_phase not in ('lobby', 'frage', 'aufloesung', 'rangliste', 'ende') then raise exception 'Schritt ungültig' using errcode = 'P0001'; end if;
+  if p_q < -1 or p_q >= jsonb_array_length(l.questions) then raise exception 'Frage ungültig' using errcode = 'P0001'; end if;
+  update public.quiz_live set phase = p_phase, q = p_q,
+    q_started = case when p_phase = 'frage' and (l.phase <> 'frage' or l.q <> p_q) then now() else q_started end
+   where id = p_id;
+end;
+$$;
+
+-- Lehrperson: Stand der Runde mit allen Mitspielenden und Antworten
+create or replace function public.quiz_host(p_id uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare l public.quiz_live; lim int;
+begin
+  select * into l from public.quiz_live where id = p_id and teacher_id = auth.uid();
+  if not found then return null; end if;
+  if l.q >= 0 then lim := coalesce((l.questions -> l.q ->> 'zeit')::int, 20) * 1000; end if;
+  return json_build_object('phase', l.phase, 'q', l.q, 'pin', l.pin,
+    'left_ms', case when l.phase = 'frage' and l.q_started is not null then greatest(0, lim - (extract(epoch from now() - l.q_started) * 1000)::int) end,
+    'players', coalesce((select json_agg(json_build_object('id', p.id, 'name', p.name, 'avatar', p.avatar, 'score', p.score, 'streak', p.streak, 'answers', p.answers) order by p.joined_at)
+                           from public.quiz_players p where p.live_id = l.id), '[]'::json));
+end;
+$$;
+
+-- Lehrperson: jemanden aus der Runde nehmen / Runde beenden
+create or replace function public.quiz_kick(p_id uuid, p_player uuid) returns void
+language sql volatile security definer set search_path = public as $$
+  delete from public.quiz_players p using public.quiz_live l
+   where p.id = p_player and p.live_id = l.id and l.id = p_id and l.teacher_id = auth.uid();
+$$;
+create or replace function public.quiz_close(p_id uuid) returns void
+language sql volatile security definer set search_path = public as $$
+  delete from public.quiz_live where id = p_id and teacher_id = auth.uid();
+$$;
+revoke execute on function public.quiz_open(text, jsonb), public.quiz_step(uuid, text, int), public.quiz_host(uuid),
+  public.quiz_kick(uuid, uuid), public.quiz_close(uuid) from public, anon;
+grant execute on function public.quiz_open(text, jsonb), public.quiz_step(uuid, text, int), public.quiz_host(uuid),
+  public.quiz_kick(uuid, uuid), public.quiz_close(uuid) to authenticated;
+
+-- Mitspielen: Nummer + Name + Tierbild → Token
+create or replace function public.quiz_join(p_pin text, p_name text, p_avatar text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare l public.quiz_live; n text := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g'); t uuid;
+begin
+  select * into l from public.quiz_live where pin = regexp_replace(coalesce(p_pin, ''), '\D', '', 'g') and created_at > now() - interval '1 day';
+  if not found then return json_build_object('ok', false, 'error', 'nummer'); end if;
+  if l.phase = 'ende' then return json_build_object('ok', false, 'error', 'vorbei'); end if;
+  if char_length(n) < 1 or char_length(n) > 20 or n ~ '[[:cntrl:]<>]' then return json_build_object('ok', false, 'error', 'name'); end if;
+  if coalesce(p_avatar, '') !~ '^[a-z]{2,10}$' then p_avatar := 'eule'; end if;
+  if (select count(*) from public.quiz_players where live_id = l.id) >= 80 then return json_build_object('ok', false, 'error', 'voll'); end if;
+  if exists (select 1 from public.quiz_players where live_id = l.id and lower(name) = lower(n)) then
+    return json_build_object('ok', false, 'error', 'vergeben');
+  end if;
+  insert into public.quiz_players (live_id, name, avatar) values (l.id, n, p_avatar) returning token into t;
+  return json_build_object('ok', true, 'token', t, 'name', n, 'title', l.title);
+end;
+$$;
+
+-- Mitspielen: aktueller Stand für ein Gerät (ohne richtige Antworten, solange die Frage läuft)
+create or replace function public.quiz_state(p_token uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare p public.quiz_players; l public.quiz_live; qq jsonb; lim int; v_rank int; showq boolean;
+begin
+  select * into p from public.quiz_players where token = p_token;
+  if not found then return json_build_object('gone', true); end if;
+  select * into l from public.quiz_live where id = p.live_id;
+  if l.q >= 0 then qq := l.questions -> l.q; lim := coalesce((qq ->> 'zeit')::int, 20) * 1000; end if;
+  showq := l.q >= 0 and l.phase in ('frage', 'aufloesung');
+  select count(*) + 1 into v_rank from public.quiz_players where live_id = l.id and score > p.score;
+  return json_build_object(
+    'phase', l.phase, 'q', l.q, 'n', jsonb_array_length(l.questions), 'title', l.title,
+    'name', p.name, 'avatar', p.avatar, 'score', p.score, 'streak', p.streak, 'rank', v_rank,
+    'players', (select count(*) from public.quiz_players where live_id = l.id),
+    'left_ms', case when l.phase = 'frage' and l.q_started is not null then greatest(0, lim - (extract(epoch from now() - l.q_started) * 1000)::int) end,
+    'question', case when showq then json_build_object(
+        'typ', qq ->> 'typ', 'frage', qq ->> 'frage', 'bild', qq ->> 'bild', 'zeit', (qq ->> 'zeit')::int,
+        'mehrfach', coalesce((qq ->> 'mehrfach')::boolean, false), 'mix', qq -> 'mix',
+        'antworten', case when qq ->> 'typ' = 'text' then null else qq -> 'antworten' end,
+        'nrichtig', case when qq ->> 'typ' in ('quiz', 'rf') then jsonb_array_length(coalesce(qq -> 'richtig', '[]'::jsonb)) end) end,
+    'richtig', case when l.phase = 'aufloesung' then qq -> 'richtig' end,
+    'mine', case when l.q >= 0 then p.answers -> (l.q::text) end,
+    'top', case when l.phase in ('rangliste', 'ende') then (select json_agg(x) from (select name, avatar, score from public.quiz_players
+                where live_id = l.id order by score desc, joined_at limit 5) x) end);
+end;
+$$;
+
+-- Mitspielen: Antwort abgeben. p_ans = Zahlenliste (Quiz, Richtig/Falsch, Reihenfolge) oder Text.
+create or replace function public.quiz_answer(p_token uuid, p_q int, p_ans jsonb) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare p public.quiz_players; l public.quiz_live; qq jsonb; lim int; ms int; v_ok boolean := false; pts int := 0; typ text; mult int;
+begin
+  select * into p from public.quiz_players where token = p_token for update;
+  if not found then return json_build_object('ok', false, 'error', 'weg'); end if;
+  select * into l from public.quiz_live where id = p.live_id;
+  if l.phase <> 'frage' or l.q <> p_q then return json_build_object('ok', false, 'error', 'vorbei'); end if;
+  if p.answers ? (p_q::text) then return json_build_object('ok', false, 'error', 'schon'); end if;
+  qq := l.questions -> l.q; typ := qq ->> 'typ';
+  lim := coalesce((qq ->> 'zeit')::int, 20) * 1000;
+  ms := (extract(epoch from now() - l.q_started) * 1000)::int;
+  if ms > lim + 1500 then return json_build_object('ok', false, 'error', 'vorbei'); end if;
+  if octet_length(coalesce(p_ans, 'null'::jsonb)::text) > 400 then return json_build_object('ok', false, 'error', 'gross'); end if;
+  if typ = 'text' then
+    if jsonb_typeof(p_ans) <> 'string' then return json_build_object('ok', false, 'error', 'typ'); end if;
+    v_ok := exists (select 1 from jsonb_array_elements_text(coalesce(qq -> 'richtig', '[]'::jsonb)) r
+                     where public._quiz_norm(r) = public._quiz_norm(p_ans #>> '{}') and public._quiz_norm(r) <> '');
+  else
+    if jsonb_typeof(p_ans) <> 'array' or exists (select 1 from jsonb_array_elements(p_ans) e where jsonb_typeof(e) <> 'number') then
+      return json_build_object('ok', false, 'error', 'typ');
+    end if;
+    if typ = 'reihe' then
+      v_ok := p_ans = (select jsonb_agg(i order by i) from generate_series(0, jsonb_array_length(qq -> 'antworten') - 1) i);
+    else
+      v_ok := (select coalesce(jsonb_agg(e order by e), '[]'::jsonb) from (select distinct e from jsonb_array_elements(p_ans) e) d)
+            = (select coalesce(jsonb_agg(e order by e), '[]'::jsonb) from (select distinct e from jsonb_array_elements(coalesce(qq -> 'richtig', '[]'::jsonb)) e) d);
+    end if;
+  end if;
+  mult := coalesce((qq ->> 'punkte')::int, 1);
+  if mult not in (0, 1, 2) then mult := 1; end if;
+  if v_ok then pts := round(1000 * mult * (1 - least(greatest(ms, 0), lim)::numeric / lim / 2)); end if;
+  update public.quiz_players set
+    score = score + pts,
+    streak = case when v_ok then streak + 1 else 0 end,
+    answers = answers || jsonb_build_object(p_q::text, jsonb_build_object('a', p_ans, 'ok', v_ok, 'p', pts, 'ms', ms))
+   where id = p.id;
+  return json_build_object('ok', true);
+end;
+$$;
+grant execute on function public.quiz_join(text, text, text), public.quiz_state(uuid), public.quiz_answer(uuid, int, jsonb) to anon, authenticated;
+
+-- =====================================================================
+-- Version 24: Klassen-Pinnwand 6 (Leinwand, Vorlagen, Bilder, Kategorien wählen, direkt anpinnen, Umfrage)
 --   Kinder bekommen alle Einstellungen der offenen Pinnwände (stammen von der Lehrperson) und an den Zetteln
 --   zusätzlich Bild, Position, Umfrage und – nur wenn die Lehrperson «Namen zeigen» eingeschaltet hat – den Namen.
 --   Kinder können ein Bild (höchstens 250 kB) anhängen, wenn die Pinnwand das erlaubt, eine Kategorie wählen

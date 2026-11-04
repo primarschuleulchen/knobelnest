@@ -34,6 +34,7 @@
       kids: D.kids.filter(function (k) { return k.class_id === cid; }).map(function (k) { return { id: k.id, name: k.name }; }),
       entries: D.entries.filter(function (e) { return e.class_id === cid && subs.some(function (s) { return s.id === e.subject_id; }); }) };
   }
+  function quizLeft(l) { return l.phase === 'frage' ? Math.max(0, (l.questions[l.q].zeit || 20) * 1000 - (Date.now() - l.q_started)) : null; }
   window.__D = D;
   window.DB = {
     session: function () { return delay(D.session); },
@@ -159,7 +160,7 @@
     storeSet: function (d, v) { D.store = D.store || {}; D.store[D.session.user.id + '|' + d] = v; window.__storeSets = (window.__storeSets || 0) + 1; return delay(); },
     sharedGet: function (d) { D.shared = D.shared || {}; return delay(D.shared[d] || null); },
     sharedSet: function (d, v) { if (!me().is_admin) return Promise.reject(new Error('nicht erlaubt')); D.shared = D.shared || {}; D.shared[d] = v; return delay(); },
-    storeDel: function (d) { if (D.store) delete D.store[d]; return delay(); },
+    storeDel: function (d) { if (D.store) delete D.store[D.session.user.id + '|' + d]; return delay(); },
     storeUpload: function (b) { return Promise.resolve('data:image/png;base64,iVBORw0KGgo='); },
     kidHeft: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0];
       var d = (D.store || {})[c.teacher_id + '|hat-' + c.id]; if (!d || !Array.isArray(d.entries)) return delay(null);
@@ -208,6 +209,40 @@
     kidHeftTick: function (t, id, on) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0];
       var d = (D.store || {})[c.teacher_id + '|hat-' + c.id]; var e = d && d.entries.filter(function (x) { return x.id === id; })[0];
       if (!e || (e.type || 'aufgabe') !== 'aufgabe') return delay(false); e.selbst = e.selbst || {}; if (on) e.selbst[k.id] = true; else delete e.selbst[k.id]; return delay(true); },
+    // Live-Quiz (wie die SQL-Funktionen der Version 23)
+    quizOpen: function (title, qs) { D.quiz = (D.quiz || []).filter(function (l) { return l.teacher_id !== D.session.user.id; });
+      var l = { id: uid(), teacher_id: D.session.user.id, pin: String(100000 + Math.floor(Math.random() * 900000)), title: title, questions: JSON.parse(JSON.stringify(qs)), phase: 'lobby', q: -1, q_started: 0, players: [] };
+      D.quiz.push(l); return delay({ id: l.id, pin: l.pin }); },
+    quizStep: function (id, ph, q) { var l = (D.quiz || []).filter(function (x) { return x.id === id; })[0]; if (!l) return Promise.reject(new Error('Runde nicht gefunden'));
+      if (q < -1 || q >= l.questions.length) return Promise.reject(new Error('Frage ungültig'));
+      if (ph === 'frage' && (l.phase !== 'frage' || l.q !== q)) l.q_started = Date.now(); l.phase = ph; l.q = q; return delay(); },
+    quizHost: function (id) { var l = (D.quiz || []).filter(function (x) { return x.id === id; })[0]; if (!l) return delay(null);
+      return delay({ phase: l.phase, q: l.q, pin: l.pin, left_ms: quizLeft(l), players: l.players.map(function (p) { return { id: p.id, name: p.name, avatar: p.avatar, score: p.score, streak: p.streak, answers: p.answers }; }) }); },
+    quizKick: function (id, pid) { var l = (D.quiz || []).filter(function (x) { return x.id === id; })[0]; if (l) l.players = l.players.filter(function (p) { return p.id !== pid; }); return delay(); },
+    quizClose: function (id) { D.quiz = (D.quiz || []).filter(function (x) { return x.id !== id; }); return delay(); },
+    quizJoin: function (pin, name, av) { var l = (D.quiz || []).filter(function (x) { return x.pin === String(pin).replace(/\D/g, ''); })[0];
+      if (!l) return delay({ ok: false, error: 'nummer' }); if (l.phase === 'ende') return delay({ ok: false, error: 'vorbei' });
+      var n = String(name || '').trim().replace(/\s+/g, ' '); if (!n || n.length > 20 || /[<>]/.test(n)) return delay({ ok: false, error: 'name' });
+      if (l.players.some(function (p) { return p.name.toLowerCase() === n.toLowerCase(); })) return delay({ ok: false, error: 'vergeben' });
+      var p = { id: uid(), token: uid(), name: n, avatar: /^[a-z]{2,10}$/.test(av) ? av : 'eule', score: 0, streak: 0, answers: {} }; l.players.push(p);
+      return delay({ ok: true, token: p.token, name: n, title: l.title }); },
+    quizState: function (t) { var p = null, l = (D.quiz || []).filter(function (x) { return x.players.some(function (y) { if (y.token === t) p = y; return y.token === t; }); })[0];
+      if (!l) return delay({ gone: true }); var qq = l.q >= 0 ? l.questions[l.q] : null, showq = qq && (l.phase === 'frage' || l.phase === 'aufloesung');
+      var top = l.players.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 5).map(function (x) { return { name: x.name, avatar: x.avatar, score: x.score }; });
+      return delay({ phase: l.phase, q: l.q, n: l.questions.length, title: l.title, name: p.name, avatar: p.avatar, score: p.score, streak: p.streak,
+        rank: l.players.filter(function (x) { return x.score > p.score; }).length + 1, players: l.players.length, left_ms: quizLeft(l),
+        question: showq ? { typ: qq.typ, frage: qq.frage, bild: qq.bild || null, zeit: qq.zeit, mehrfach: !!qq.mehrfach, mix: qq.mix || null, antworten: qq.typ === 'text' ? null : qq.antworten,
+          nrichtig: (qq.typ === 'quiz' || qq.typ === 'rf') ? (qq.richtig || []).length : null } : null,
+        richtig: l.phase === 'aufloesung' ? qq.richtig : null, mine: l.q >= 0 ? p.answers[l.q] || null : null, top: (l.phase === 'rangliste' || l.phase === 'ende') ? top : null }); },
+    quizAnswer: function (t, q, a) { var p = null, l = (D.quiz || []).filter(function (x) { return x.players.some(function (y) { if (y.token === t) p = y; return y.token === t; }); })[0];
+      if (!l) return delay({ ok: false, error: 'weg' }); if (l.phase !== 'frage' || l.q !== q) return delay({ ok: false, error: 'vorbei' }); if (p.answers[q]) return delay({ ok: false, error: 'schon' });
+      var qq = l.questions[q], lim = (qq.zeit || 20) * 1000, ms = Date.now() - l.q_started, ok = false; if (ms > lim + 1500) return delay({ ok: false, error: 'vorbei' });
+      var nz = function (x) { return String(x || '').trim().replace(/\s+/g, ' ').toLowerCase(); };
+      if (qq.typ === 'text') ok = (qq.richtig || []).some(function (r) { return nz(r) && nz(r) === nz(a); });
+      else if (qq.typ === 'reihe') ok = a.join() === qq.antworten.map(function (x, i) { return i; }).join();
+      else { var s1 = a.filter(function (x, i) { return a.indexOf(x) === i; }).sort().join(), s2 = (qq.richtig || []).slice().sort().join(); ok = s1 === s2; }
+      var m = [0, 1, 2].indexOf(qq.punkte) >= 0 ? qq.punkte : 1, pts = ok ? Math.round(1000 * m * (1 - Math.min(Math.max(ms, 0), lim) / lim / 2)) : 0;
+      p.score += pts; p.streak = ok ? p.streak + 1 : 0; p.answers[q] = { a: a, ok: ok, p: pts, ms: ms }; return delay({ ok: true }); },
     tafelGet: function (t) { var k = kidOf(t); return delay({ me: k.id, state: state(k.class_id) }); },
     tafelSet: function (t, s, c) {
       var k = kidOf(t); D.entries = D.entries.filter(function (e) { return e.kid_id !== k.id; });
