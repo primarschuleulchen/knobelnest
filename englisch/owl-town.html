@@ -991,7 +991,7 @@ function buildWorld() {
         bx(ww * .28, .9, .7, '#4f8a3f', -ww * .32, .7, fz2 + .7, g); bx(ww * .28, .9, .7, '#4f8a3f', ww * .32, .7, fz2 + .7, g);
       }
     }
-    var hgt = L.place ? 14 : L.h + 1, ex = L.place ? 3 : .5, bx0 = L.x - (L.fx ? L.d : L.w) / 2, bx1 = L.x + (L.fx ? L.d : L.w) / 2, bz0 = L.z - (L.fz ? L.d : L.w) / 2, bz1 = L.z + (L.fz ? L.d : L.w) / 2;
+    var hgt = L.place ? ({ hospital: 24, space: 30, church: 28, airport: 22, site: 20, police: 13, school: 15 }[L.place] || 14) : L.h + (L.roof === 'dach' ? 4 : 2.5), ex = L.place ? 3 : .5, bx0 = L.x - (L.fx ? L.d : L.w) / 2, bx1 = L.x + (L.fx ? L.d : L.w) / 2, bz0 = L.z - (L.fz ? L.d : L.w) / 2, bz1 = L.z + (L.fz ? L.d : L.w) / 2;
     if (L.fx > 0) bx1 += ex; if (L.fx < 0) bx0 -= ex; if (L.fz > 0) bz1 += ex; if (L.fz < 0) bz0 -= ex;
     w.boxes.push({ x0: bx0, x1: bx1, z0: bz0, z1: bz1, h: hgt });
   });
@@ -1207,13 +1207,13 @@ function camStep(dt) {
     for (; dist > 3; dist -= .25) { var ok = true; for (var q = .2; q <= 1.001 && ok; q += .2) { var px = o.x - fx * dist * q, pz = o.z - fz * dist * q, py = 1.5 + (H0 - 1.5) * q;
       ok = !WD.boxes.some(function (b) { return px > b.x0 - 1.2 && px < b.x1 + 1.2 && pz > b.z0 - 1.2 && pz < b.z1 + 1.2 && py < b.h + 2; }); } if (ok) break; }
     if (CAM.d == null || CAM.snap) CAM.d = dist;
-    CAM.d += (dist - CAM.d) * Math.min(1, dt * (dist < CAM.d ? 12 : 3));
+    if (dist < CAM.d) CAM.d = dist; else CAM.d += (dist - CAM.d) * Math.min(1, dt * 3);
     dist = CAM.d;
     var H = H0 + Math.max(0, 8 - dist) * 1.4, ahead = dist < 8 ? 2.5 + (dist - 3) * .7 : 6;
     tp = new THREE.Vector3(o.x - fx * dist, H, o.z - fz * dist); tl = new THREE.Vector3(o.x + fx * ahead, 1.2, o.z + fz * ahead);
   }
   if (CAM.snap || !CAM.pos) { CAM.pos = tp.clone(); CAM.look = tl.clone(); CAM.snap = false; }
-  var k = 1 - Math.exp(-dt * (CAM.mode === 'follow' ? 5 : 2.2));
+  var k = CAM.mode === 'follow' && (CAM.drag || CAM.d < 12.9) ? 1 - Math.exp(-dt * 14) : 1 - Math.exp(-dt * (CAM.mode === 'follow' ? 5 : 2.2));
   CAM.pos.lerp(tp, k); CAM.look.lerp(tl, k); c.position.copy(CAM.pos); c.lookAt(CAM.look);
 }
 var LOOP = { on: false, last: 0 };
