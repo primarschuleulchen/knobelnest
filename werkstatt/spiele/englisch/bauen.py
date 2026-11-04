@@ -9,7 +9,7 @@
 # Verbesserungen kommen also über GitHub (dann EN_VER in app.js erhöhen), ohne neues Hochladen.
 # Rahmen (Stufen-Menü, Sterne, Ton, Meldungen an das Portal) und Stil kommen aus werkstatt/spiele/gedaechtnis/bauen.py.
 # Das eigentliche Spiel steht in owl-town.js und owl-town.css (gleicher Ordner).
-import importlib.util, json, os, sys
+import base64, importlib.util, json, os, sys
 sys.dont_write_bytecode = True
 
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -35,8 +35,14 @@ FRAME = rep(FRAME, "localStorage.getItem('gd')", "localStorage.getItem('en')")
 FRAME = rep(FRAME, "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#e3f4f1'];")
 FRAME = rep(FRAME, "app.innerHTML = o + '</div>';", "app.innerHTML = o + '</div>'; if (G.extra) G.extra();")
 
+def logo(name):
+    # Logo des Spiels (rund, durchsichtige Ecken, eigener Goldrand) direkt eingebettet, damit es auch als Artefakt läuft
+    with open(os.path.join(HIER, 'logos', name + '.webp'), 'rb') as f:
+        return '<img class="logo" alt="" src="data:image/webp;base64,' + base64.b64encode(f.read()).decode() + '">'
+
+
 SPIELE = [dict(
-    id='owl-town', titel='Owl Town', icon='🏙️', fach='Englisch', thema='Town, jobs & directions', stufe='4.–6. Klasse', sort=1, n=5,
+    id='owl-town', titel='Owl Town', icon=logo('owl-town'), fach='Englisch', thema='Town, jobs & directions', stufe='4.–6. Klasse', sort=1, n=5,
     sterne={'modus': 'runde', 'n': 5},
     kurz='3D-Stadt: Gebäude und Berufe finden, Wegbeschreibungen laufen.',
     intro='Lauf mit der Eule durch die Stadt! Mit den Pfeiltasten ⬆ ⬅ ➡ ⬇ gehst und drehst du dich. Am Ziel drückst du 📍.',
