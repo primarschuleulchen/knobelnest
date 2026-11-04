@@ -541,7 +541,7 @@
       UI.view = 'wall';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
-      if (!embed && !(await licGate())) return;
+      if (!embed && !(await toolGate('tafel', 'Die Arbeitsstand-Tafel'))) return;
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); W.bild = wc && wc.bild; } catch (e) {}
       async function load() {
@@ -554,14 +554,18 @@
   };
 
   // ===================================================================
-  // Werkzeuge (Tagesfolie, Hausaufgabenheft, Pinnwand, Otterteich) gibt die Admin-Person pro Lehrperson frei.
-  // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { folie: true, heft: true, pin: true, otter: true } }
+  // Tagesfolie, Pinnwand und Lautstärkeregler (Otterteich) hat jede Lehrperson (BASE_TOOLS).
+  // Die übrigen Werkzeuge (TOOLS) gibt die Admin-Person pro Lehrperson frei.
+  // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
-  var TOOLS = [['folie', '☀️ Tagesfolie'], ['heft', '📒 Hausaufgabenheft'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Otterteich'], ['atelier', '🚲 Atelier']];
+  var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier']];
   async function toolAccess(me) {
-    var all = {}; TOOLS.forEach(function (t) { all[t[0]] = true; });
+    var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
-    try { var d = await DB.sharedGet('werkzeuge'); return (d && me && d[me.id]) || {}; } catch (e) { return {}; }
+    var acc = {}; BASE_TOOLS.forEach(function (t) { acc[t[0]] = true; });
+    try { var d = await DB.sharedGet('werkzeuge'); var mine = (d && me && d[me.id]) || {}; TOOLS.forEach(function (t) { if (mine[t[0]]) acc[t[0]] = true; }); } catch (e) {}
+    return acc;
   }
   // Lizenz (Version 22): profiles.valid_until = letzter gültiger Tag (leer = unbefristet, Admin immer frei)
   function licLeft(me) {
@@ -947,6 +951,7 @@
     document.body.classList.add('lp');
     if (!T.me.name) return paint(T.onboardName());
     if (T.tab === 'verwaltung' && !T.me.is_admin) T.tab = 'spiele';
+    if (T.tab === 'tafel' && !(T.tools && T.tools.tafel)) T.tab = 'uebersicht';
     var body;
     if (!T.classes.length && T.tab !== 'verwaltung') body = T.onboardClass();
     else body = ({ uebersicht: T.tabSpiele, spiele: T.tabSpiele, kinder: T.tabKinder, fortschritt: T.tabFortschritt, tafel: T.tabTafel, verwaltung: T.tabAdmin }[T.tab] || T.tabSpiele)();
@@ -956,7 +961,8 @@
     paint(T.shell(body));
   };
   T.shell = function (body) {
-    var tabs = [['uebersicht', 'Übersicht'], ['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt'], ['tafel', 'Arbeitsstand-Tafel']];
+    var tabs = [['uebersicht', 'Übersicht'], ['spiele', 'Spiele'], ['kinder', 'Kinder'], ['fortschritt', 'Fortschritt']];
+    if (T.tools && T.tools.tafel) tabs.push(['tafel', 'Arbeitsstand-Tafel']);
     if (T.me.is_admin) tabs.push(['verwaltung', 'Verwaltung']);
     return '<header class="top"><div class="top-in"><a class="marke" href="#/" data-a="tab" data-t="uebersicht" aria-label="' + h(C.PORTAL_NAME) + ' – Start"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span>' +
       '<span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a><div class="row">' +
@@ -1147,8 +1153,8 @@
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
         var tiles = {};
         t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + foot(x[5]) + '</div>'; });
-        tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
-        if (vt) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
+        if (T.tools.tafel) tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
+        if (vt && T.tools.vk) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
         return '<div class="tooltiles">' + keys.map(function (k) { return tiles[k].replace(/<a class="tt-open"/, '<a draggable="false" class="tt-open"').replace(/<img /g, '<img draggable="false" '); }).join('') + '</div>' +
           '<p class="muted small tt-tipp">Tipp: Kacheln mit der Maus ziehen (am iPad kurz gedrückt halten), um die Reihenfolge zu ändern.</p>';
@@ -1986,7 +1992,7 @@
         (t.is_admin ? ' <span class="pill" style="background:#A8E6CF">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
         '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
         (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
-        (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span>' + TOOLS.map(function (x) {
+        (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span><span class="muted small">Immer dabei: ' + BASE_TOOLS.map(function (x) { return x[1].replace(/^\S+\s/, ''); }).join(', ') + ' ·</span>' + TOOLS.map(function (x) {
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
         (t.is_admin ? '' : licRow(t)) +
@@ -2121,7 +2127,17 @@
     A.tools = A.tools || {}; var cur = Object.assign({}, A.tools[t] || {});
     if (cur[k]) delete cur[k]; else cur[k] = true;
     A.tools[t] = cur; T.render();
-    try { await DB.sharedSet('werkzeuge', JSON.parse(JSON.stringify(A.tools))); toast((cur[k] ? 'Freigegeben: ' : 'Gesperrt: ') + TOOLS.filter(function (x) { return x[0] === k; })[0][1].replace(/^\S+\s/, '')); }
+    try {
+      await DB.sharedSet('werkzeuge', JSON.parse(JSON.stringify(A.tools)));
+      // Vokabelkiste: das Spiel gleich mit zuteilen bzw. wegnehmen
+      var vk = k === 'vk' ? T.games.filter(isVok)[0] : null;
+      if (vk && !vk.for_all) {
+        await DB.setTeacherGame(t, vk.id, !!cur[k]);
+        A.tg = (A.tg || []).filter(function (x) { return !(x.teacher_id === t && x.game_id === vk.id); });
+        if (cur[k]) A.tg.push({ teacher_id: t, game_id: vk.id });
+        T.render();
+      }
+      toast((cur[k] ? 'Freigegeben: ' : 'Gesperrt: ') + TOOLS.filter(function (x) { return x[0] === k; })[0][1].replace(/^\S+\s/, '')); }
     catch (e) { toast(errMsg(e)); }
   };
   // ---------- Vokabelkiste: Vorlagen einzelnen Lehrpersonen zuteilen (shared_store «vokabelkiste-zuweisung» = { Lehrperson-ID: [Portion-IDs] }) ----------
