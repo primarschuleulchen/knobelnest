@@ -916,7 +916,7 @@
   // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
   // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
   // ===================================================================
-  var QUIZ_VER = '1';
+  var QUIZ_VER = '2';
   function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
   var QZ = {
     start: async function () {
@@ -927,8 +927,26 @@
       window.knQuiz = {
         mode: 'teacher',
         back: function () { location.hash = '#/'; },
-        list: async function () { var d = await DB.storeGet('quiz'); return (d && Array.isArray(d.list)) ? d.list : []; },
-        saveList: function (l) { return DB.storeSet('quiz', { list: JSON.parse(JSON.stringify(l)) }); },
+        // «quiz» = { list: [{id, titel, n, at, ordner}], ordner: [{id, name}] }
+        list: async function () { var d = await DB.storeGet('quiz'); return { list: (d && Array.isArray(d.list)) ? d.list : [], ordner: (d && Array.isArray(d.ordner)) ? d.ordner : [] }; },
+        saveList: function (doc) { return DB.storeSet('quiz', JSON.parse(JSON.stringify(doc))); },
+        // Kinder-Quiz (Version 24): pro Klasse einschalten, Gruppen festlegen, mitbearbeiten
+        kidClasses: async function () {
+          var cl = await DB.listClasses(), out = [];
+          for (var i = 0; i < cl.length; i++) { var ks = await DB.listKids(cl[i].id);
+            out.push({ id: cl[i].id, name: cl[i].name, on: !!(cl[i].kid_tools && cl[i].kid_tools.quiz === true), kids: ks.slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; }) }); }
+          return out;
+        },
+        kidToggle: async function (cid, on) {
+          var c = (await DB.listClasses()).filter(function (x) { return x.id === cid; })[0]; if (!c) throw new Error('Klasse nicht gefunden');
+          var kt = Object.assign({}, c.kid_tools || {}); kt.quiz = !!on; await DB.updateClass(cid, { kid_tools: kt });
+        },
+        kidList: function () { return DB.kqList(); },
+        kidGet: function (id, ver) { return DB.kqGet(id, ver); },
+        kidSave: function (id, ver, title, data) { return DB.kqSave(id, ver, title, JSON.parse(JSON.stringify(data))); },
+        kidNew: function (cid, members, title) { return DB.kqNew(cid, members, title); },
+        kidMembers: function (id, members) { return DB.kqMembers(id, members); },
+        kidDelete: function (id) { return DB.kqDelete(id); },
         load: function (id) { return DB.storeGet('quiz-' + id); },
         save: function (id, q) { return DB.storeSet('quiz-' + id, JSON.parse(JSON.stringify(q))); },
         remove: function (id) { return DB.storeDel('quiz-' + id); },
@@ -2407,6 +2425,8 @@
       '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>') +
       (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic ic-bild"><img src="bilder/kacheln/pinnwand.webp" alt="" draggable="false"></span>' +
       '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
+      (kt.kid_tools.quiz === true ? '<button class="tafel-tile quiz-tile" data-a="kQuiz"><span class="ic ic-bild"><img src="bilder/kacheln/quiz.webp" alt="" draggable="false"></span>' +
+      '<span><b>Quiz erstellen</b><span>Bau dein eigenes Quiz für die Klasse.</span></span></button>' : '') +
       (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic ic-bild"><img src="bilder/kacheln/atelier.webp" alt="" draggable="false"></span>' +
       '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
   };
@@ -2496,6 +2516,21 @@
     return '<div class="folie"><iframe src="atelier.html?v=' + ATELIER_VER + '" title="Atelier" allow="fullscreen"></iframe></div>';
   };
   ACT.kAtelier = function () { K.step = 'atelier'; K.render(); };
+  // Kinder-Quiz: dieselbe Seite quiz.html, nur die eigenen Quiz (bzw. die der eigenen Gruppe)
+  K.view_quiz = function () {
+    if (!K.sess) { K.step = 'home'; return K.view_home(); }
+    var tok = K.sess.token;
+    window.knQuiz = {
+      mode: 'kid', name: (K.home && K.home.kid && K.home.kid.name) || '',
+      back: function () { ACT.kBack(); },
+      kidList: function () { return DB.kidQuizList(tok); },
+      kidGet: function (id, ver) { return DB.kidQuizGet(tok, id, ver); },
+      kidSave: function (id, ver, title, data) { return DB.kidQuizSave(tok, id, ver, title, JSON.parse(JSON.stringify(data))); },
+      kidDelete: function (id) { return DB.kidQuizDelete(tok, id); }
+    };
+    return '<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Quiz erstellen" allow="fullscreen"></iframe></div>';
+  };
+  ACT.kQuiz = function () { K.step = 'quiz'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
@@ -2550,6 +2585,7 @@
       case 'heft': K.step = 'home'; K.render(); break;
       case 'pin': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'atelier': K.step = 'home'; K.render(); K.checkHeft(); break;
+      case 'quiz': K.step = 'home'; K.loadHome(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }
