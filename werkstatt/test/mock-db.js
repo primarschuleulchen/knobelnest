@@ -318,24 +318,28 @@
       return delay({ me: k.id, state: state(k.class_id) });
     },
     // Elterngespräche wie eltern_get / eltern_set / talk_answer_put
-    talkGet: function (cid) { return delay((D.talks || {})[cid] || null); },
-    talkSave: function (cid, cfg) { D.talks = D.talks || {}; var t = D.talks[cid] || (D.talks[cid] = { class_id: cid, token: uid(), answers: {} }); t.cfg = JSON.parse(JSON.stringify(cfg)); t.updated_at = now(); return delay(t); },
-    talkReset: function (cid, patch) { Object.assign(D.talks[cid], JSON.parse(JSON.stringify(patch))); return delay(); },
-    talkAnswerPut: function (cid, kid, a) { var t = D.talks[cid]; if (!a) delete t.answers[kid]; else { var e = t.answers[kid] || {}; t.answers[kid] = { name: a.name || '', slots: a.slots || [], note: a.note || '', none: !!a.none, key: e.key || null, at: now(), lp: true }; } return delay(); },
+    talkList: function (cid) { return delay((D.talks || []).filter(function (t) { return t.class_id === cid; }).slice().reverse()); },
+    talkGet: function (id) { return delay((D.talks || []).filter(function (t) { return t.id === id; })[0] || null); },
+    talkNew: function (cid, cfg) { D.talks = D.talks || []; var t = { id: uid(), class_id: cid, token: uid(), cfg: JSON.parse(JSON.stringify(cfg)), answers: {}, created_at: now() }; D.talks.push(t); return delay(t); },
+    talkSave: function (id, cfg) { var t = D.talks.filter(function (x) { return x.id === id; })[0]; t.cfg = JSON.parse(JSON.stringify(cfg)); return delay(); },
+    talkReset: function (id, patch) { Object.assign(D.talks.filter(function (x) { return x.id === id; })[0], JSON.parse(JSON.stringify(patch))); return delay(); },
+    talkDelete: function (id) { D.talks = D.talks.filter(function (x) { return x.id !== id; }); return delay(); },
+    talkAnswerPut: function (id, kid, a) { var t = D.talks.filter(function (x) { return x.id === id; })[0]; if (!a) delete t.answers[kid]; else { var e = t.answers[kid] || {}; t.answers[kid] = { name: a.name || '', slots: a.slots || [], note: a.note || '', none: !!a.none, key: e.key || null, at: now(), lp: true }; } return delay(); },
     elternGet: function (tok, kid, key) {
-      var t = Object.keys(D.talks || {}).map(function (k) { return D.talks[k]; }).filter(function (x) { return x.token === tok; })[0]; if (!t) return delay(null);
+      var t = (D.talks || []).filter(function (x) { return x.token === tok; })[0]; if (!t) return delay(null);
       var c = D.classes.filter(function (x) { return x.id === t.class_id; })[0], p = D.profiles.filter(function (x) { return x.id === c.teacher_id; })[0] || {};
       if (!t.cfg.open) return delay({ open: false, title: t.cfg.title, class_name: c.name, teacher: p.name, bild: c.bild || null });
       var fx = t.cfg.fixed || {}, fk = Object.keys(fx).map(function (s) { return fx[s]; }), a = kid && t.answers[kid], mine = null;
       if (a && key && a.key === key) mine = { name: a.name, slots: a.slots, note: a.note, none: a.none, fixed: Object.keys(fx).filter(function (s) { return fx[s] === kid; })[0] || null };
       return delay({ open: true, title: t.cfg.title, info: t.cfg.info, class_name: c.name, teacher: p.name, bild: c.bild || null,
         slots: (t.cfg.slots || []).map(function (s) { return { id: s.id, d: s.d, t: s.t, e: s.e }; }), fixed: Object.keys(fx),
-        kids: D.kids.filter(function (k) { return k.class_id === c.id; }).map(function (k) { return { id: k.id, name: k.name, done: !!t.answers[k.id] || fk.indexOf(k.id) >= 0 }; }),
+        kids: D.kids.filter(function (k) { return k.class_id === c.id && (!Array.isArray(t.cfg.kids) || t.cfg.kids.indexOf(k.id) >= 0); }).map(function (k) { return { id: k.id, name: k.name, done: !!t.answers[k.id] || fk.indexOf(k.id) >= 0 }; }),
         others: Object.keys(t.answers).filter(function (k) { return k !== kid && !t.answers[k].none && fk.indexOf(k) < 0; }).map(function (k) { return t.answers[k].slots; }), mine: mine });
     },
     elternSet: function (tok, kid, key, a) {
-      var t = Object.keys(D.talks || {}).map(function (k) { return D.talks[k]; }).filter(function (x) { return x.token === tok; })[0];
+      var t = (D.talks || []).filter(function (x) { return x.token === tok; })[0];
       if (!t || !t.cfg.open) return Promise.reject(new Error('Die Anmeldung ist geschlossen.'));
+      if (Array.isArray(t.cfg.kids) && t.cfg.kids.indexOf(kid) < 0) return Promise.reject(new Error('Kind nicht gefunden'));
       var e = t.answers[kid], fx = t.cfg.fixed || {};
       if ((e && e.key !== key) || (!e && Object.keys(fx).some(function (s) { return fx[s] === kid; }))) return Promise.reject(new Error('Für dieses Kind ist schon ein Termin eingetragen. Bitte melden Sie sich bei der Lehrperson.'));
       if (!String(a.name || '').trim()) return Promise.reject(new Error('Bitte geben Sie Ihren Namen ein.'));

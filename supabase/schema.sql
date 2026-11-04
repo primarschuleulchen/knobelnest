@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 28)
+-- Knobelnest – Datenbank-Einrichtung (Version 29)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -2043,13 +2043,28 @@ create policy talks_own on public.talks for all to authenticated
 revoke all on public.talks from anon;
 grant select, insert, update, delete on public.talks to authenticated;
 
+-- =====================================================================
+-- Version 29: Elterngespräche – mehrere Gespräche pro Klasse (gespeichert, zum Nachschauen),
+--   cfg.kids = Kinder, die sich anmelden sollen (fehlt = alle). Neuer Schlüssel «id» statt «class_id».
+-- =====================================================================
+alter table public.talks add column if not exists id uuid not null default gen_random_uuid();
+alter table public.talks add column if not exists created_at timestamptz not null default now();
+do $$ begin
+  if exists (select 1 from pg_constraint where conname = 'talks_pkey' and conrelid = 'public.talks'::regclass
+              and pg_get_constraintdef(oid) like '%class_id%') then
+    alter table public.talks drop constraint talks_pkey;
+    alter table public.talks add constraint talks_pkey primary key (id);
+  end if;
+end $$;
+create index if not exists talks_class_idx on public.talks (class_id);
+
 -- Eltern: Angaben zum Link (Termine, Kinder, was schon belegt ist). Den eigenen Eintrag gibt es nur mit dem Schlüssel des Geräts.
 create or replace function public.eltern_get(p_token uuid, p_kid uuid default null, p_key text default null) returns json
 language plpgsql stable security definer set search_path = public as $$
 declare t public.talks; cname text; tname text; cbild text; fx jsonb; a jsonb; mine jsonb := null;
 begin
   select * into t from public.talks where token = p_token;
-  if t.class_id is null then return null; end if;
+  if t.id is null then return null; end if;
   select c.name, c.bild, p.name into cname, cbild, tname
     from public.classes c left join public.profiles p on p.id = c.teacher_id where c.id = t.class_id;
   if not coalesce((t.cfg->>'open')::boolean, false) then
@@ -2070,7 +2085,8 @@ begin
     'kids', (select coalesce(json_agg(json_build_object('id', k.id, 'name', k.name,
                 'done', (t.answers ? k.id::text) or exists (select 1 from jsonb_each_text(fx) f where f.value = k.id::text))
               order by k.nr nulls last, lower(k.name)), '[]'::json)
-               from public.kids k where k.class_id = t.class_id),
+               from public.kids k where k.class_id = t.class_id
+                and (jsonb_typeof(t.cfg->'kids') is distinct from 'array' or (t.cfg->'kids') ? k.id::text)),
     -- Termine der anderen Familien (ohne Namen), damit die Seite ausrechnen kann, welche Zeiten schon gebraucht werden
     'others', (select coalesce(jsonb_agg(x.value->'slots'), '[]'::jsonb) from jsonb_each(t.answers) x
                 where x.key is distinct from p_kid::text and jsonb_typeof(x.value->'slots') = 'array'
@@ -2087,10 +2103,11 @@ language plpgsql volatile security definer set search_path = public as $$
 declare t public.talks; a jsonb; fx jsonb; sl jsonb; nm text := left(btrim(coalesce(p_name, '')), 80);
 begin
   select * into t from public.talks where token = p_token for update;
-  if t.class_id is null or not coalesce((t.cfg->>'open')::boolean, false) then
+  if t.id is null or not coalesce((t.cfg->>'open')::boolean, false) then
     raise exception 'Die Anmeldung ist geschlossen.' using errcode = 'P0001';
   end if;
-  if p_kid is null or not exists (select 1 from public.kids where id = p_kid and class_id = t.class_id) then
+  if p_kid is null or not exists (select 1 from public.kids where id = p_kid and class_id = t.class_id)
+     or (jsonb_typeof(t.cfg->'kids') = 'array' and not (t.cfg->'kids') ? p_kid::text) then
     raise exception 'Kind nicht gefunden' using errcode = 'P0001';
   end if;
   if p_key is null or p_key !~ '^[0-9a-f]{32}$' then raise exception 'Ungültig' using errcode = 'P0001'; end if;
@@ -2116,34 +2133,35 @@ begin
   update public.talks set answers = jsonb_set(answers, array[p_kid::text], jsonb_build_object(
       'name', nm, 'slots', sl, 'note', left(coalesce(p_note, ''), 500), 'none', coalesce(p_none, false), 'key', p_key, 'at', now()), true),
     updated_at = now()
-   where class_id = t.class_id;
+   where id = t.id;
   return json_build_object('ok', true, 'slots', sl);
 end;
 $$;
 
 -- Lehrperson trägt für eine Familie ein oder löscht den Eintrag (p_ans = null). Der Schlüssel der Eltern bleibt erhalten.
-create or replace function public.talk_answer_put(p_class uuid, p_kid uuid, p_ans jsonb) returns void
+-- Version 29: pro Gespräch (p_talk) statt pro Klasse; die alte Fassung wird zuerst entfernt.
+drop function if exists public.talk_answer_put(uuid, uuid, jsonb);
+create function public.talk_answer_put(p_talk uuid, p_kid uuid, p_ans jsonb) returns void
 language plpgsql volatile security definer set search_path = public as $$
-declare tid uuid; e jsonb; sl jsonb;
+declare t public.talks; e jsonb; sl jsonb;
 begin
-  select teacher_id into tid from public.classes where id = p_class;
-  if tid is null or tid is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
-  if not exists (select 1 from public.kids where id = p_kid and class_id = p_class) then raise exception 'Kind nicht gefunden'; end if;
-  insert into public.talks (class_id, teacher_id) values (p_class, tid) on conflict (class_id) do nothing;
+  select * into t from public.talks where id = p_talk for update;
+  if t.id is null or t.teacher_id is distinct from auth.uid() then raise exception 'Nicht erlaubt'; end if;
+  if not exists (select 1 from public.kids where id = p_kid and class_id = t.class_id) then raise exception 'Kind nicht gefunden'; end if;
   if p_ans is null then
-    update public.talks set answers = answers - p_kid::text, updated_at = now() where class_id = p_class;
+    update public.talks set answers = answers - p_kid::text, updated_at = now() where id = p_talk;
     return;
   end if;
   if jsonb_typeof(p_ans) <> 'object' or octet_length(p_ans::text) > 8000 then raise exception 'Ungültig'; end if;
   select coalesce(jsonb_agg(distinct x.v), '[]'::jsonb) into sl
     from jsonb_array_elements_text(case when jsonb_typeof(p_ans->'slots') = 'array' then p_ans->'slots' else '[]'::jsonb end) as x(v)
    where length(x.v) <= 20;
-  select answers -> p_kid::text into e from public.talks where class_id = p_class for update;
+  e := t.answers -> p_kid::text;
   update public.talks set answers = jsonb_set(answers, array[p_kid::text], jsonb_build_object(
       'name', left(btrim(coalesce(p_ans->>'name', '')), 80), 'slots', sl, 'note', left(coalesce(p_ans->>'note', ''), 500),
       'none', coalesce((p_ans->>'none')::boolean, false), 'key', e->'key', 'at', now(), 'lp', true), true),
     updated_at = now()
-   where class_id = p_class;
+   where id = p_talk;
 end;
 $$;
 

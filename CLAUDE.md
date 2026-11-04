@@ -16,7 +16,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Umfrage offen per QR-Code (Version 27): Beim Starten «Wer macht mit?» → Klasse (`uStartK`) oder offen (`uGoO`). Offene Runde in Tabelle `umf_runden` (eine pro Lehrperson, 6-stellige Nummer `nr`, `data` = `{live, ans}`, nach 30 Tagen gelöscht) mit Gästen `umf_gaeste` (Token, freiwilliger Name, sonst «Gast N»). Lehrperson: `umf_offen_open/put/host/close`; Gäste: `umf_gast_join`, `umf_gast`, `umf_gast_send` (dieselben Regeln über `_umf_apply`, `_umf_view`, `_umf_val`). Im Portal `U.docs = {klasse, offen}`, umschalten mit `U.use()`. Mitmachen: Route `#/u/<Nummer>` (`G.start`, `K.view_gast`, Token in localStorage «kn_umf_gast», dann `K.umfBegin(token)`).
 - Zurück-Knöpfe: überall gleich wie in der Eulenkiste (weisse Pille «←» + Eule, oben links). Im Portal `backBtn(attr, label)` + CSS `.kn-back` in `style.css`; in den eingebauten Werkzeugen setzt `werkstatt/einbau/zurueck.py` (aufgerufen von `alle_neu_bauen.py`) den Knopf `#knBack`; `quiz.html` und `gedaechtnis/` (in `bauen.py`) haben ihn direkt.
 - Fächer-Bilder: `bilder/faecher/{deutsch,mathematik,englisch,nmg}.webp` (rund, Goldrand per CSS), Zuordnung über den Fachnamen in `fachBild()`; andere Fächer zeigen den Anfangsbuchstaben.
-- Elterngespräche (Version 28): Modul `E` (Lehrperson, `#/gespraeche/<Klasse>`, Kachel «eltern», Freigabe `eltern` in `TOOLS`) und `EP` (Eltern ohne Anmeldung, `#/eltern/<token>`). Tabelle `talks` (pro Klasse `cfg` = Termine/Schwierigkeit `diff`/Fixierungen `fixed`, `answers` pro Kind). Eltern nur über `eltern_get`/`eltern_set` (Schlüssel pro Gerät in `localStorage`), Lehrperson trägt mit `talk_answer_put` ein. Plan: `egPlan()` (grösste Zuteilung + Tauschen gegen anspruchsvolle Gespräche hintereinander); `egReserved()` = Termine, ohne die nicht alle Eingetragenen Platz hätten → für neue Eltern ausgeblendet.
+- Elterngespräche (Version 28, 29): Modul `E` (Lehrperson, `#/gespraeche/<Klasse>` = Liste aller gespeicherten Gespräche der Klasse `E.renderList()`, `#/gespraeche/<Klasse>/<Gespräch>` = planen `E.render()`, Kachel «eltern», Freigabe `eltern` in `TOOLS`) und `EP` (Eltern ohne Anmeldung, `#/eltern/<token>`). Tabelle `talks` (Version 29: Schlüssel `id`, mehrere pro Klasse; `cfg.kids` = Kinder, die sich anmelden sollen, fehlt = alle, `E.inKids()`; `cfg` = Termine/Schwierigkeit `diff`/Fixierungen `fixed`, `answers` pro Kind). Eltern nur über `eltern_get`/`eltern_set` (Schlüssel pro Gerät in `localStorage`; pro Gerät nur ein Kind), Lehrperson trägt mit `talk_answer_put(p_talk, …)` ein. Im Plan zeigt ein Klick auf die Zeit, wer sie angekreuzt hat (`E.open`). Plan: `egPlan()` (grösste Zuteilung + Tauschen gegen anspruchsvolle Gespräche hintereinander); `egReserved()` = Termine, ohne die nicht alle Eingetragenen Platz hätten → für neue Eltern ausgeblendet.
 - Seite: https://primarschuleulchen.github.io/knobelnest/ (GitHub Pages, Branch `main`, Hauptordner)
 - Kinder: `…/knobelnest/#/klasse`
 - Datenbank: Supabase (Projekt «Knobelnest»)
@@ -51,7 +51,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 28) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 29) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -119,7 +119,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 28).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 29).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -129,7 +129,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=99`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=100`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
