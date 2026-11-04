@@ -935,6 +935,7 @@ function buildWorld() {
   w.el = document.createElement('div'); w.el.className = 'ow';
   w.el.appendChild(ren.domElement);
   w.ro = new ResizeObserver(function () { resize(); }); w.ro.observe(w.el);
+  dragSetup(ren.domElement);
   buildMini();
 }
 function resize() {
@@ -1018,7 +1019,7 @@ var CAM = { mode: 'follow', snap: true, pos: null, look: null, view: null };
 function camStep(dt) {
   var c = WD.cam, o = WD.owl.position, fx = Math.cos(OW.hd), fz = Math.sin(OW.hd), tp, tl;
   if (CAM.mode === 'view' && CAM.view) { tp = CAM.view.pos; tl = CAM.view.look; }
-  else if (CAM.mode === 'top') { tp = new THREE.Vector3(o.x, 95, o.z + 38); tl = new THREE.Vector3(o.x, 0, o.z); }
+  else if (CAM.mode === 'top') { var T = CAM.top; tp = new THREE.Vector3(T.x, T.h, T.z + T.h * .35); tl = new THREE.Vector3(T.x, 0, T.z); }
   else {
     var dist = 13, H = 7.5;
     for (; dist > 3; dist -= .5) { var px = o.x - fx * dist, pz = o.z - fz * dist; if (!WD.boxes.some(function (b) { return px > b.x0 - .8 && px < b.x1 + .8 && pz > b.z0 - .8 && pz < b.z1 + .8 && H < b.h + 6; })) break; }
@@ -1101,6 +1102,32 @@ function floatMark(x, z, y, emo, big) {
 function ringMark(x, z, col) {
   var m = new THREE.Mesh(new THREE.TorusGeometry(3, .35, 8, 30), new THREE.MeshBasicMaterial({ color: col })); m.rotation.x = Math.PI / 2; m.position.set(x, .6, z); m.userData.y0 = .9; WD.marks.add(m); WD.hl.push(m); return m;
 }
+// Ganzer Plan von oben; ziehen verschiebt, Mausrad / zwei Finger zoomen (Karte und Auswertung)
+function topFit() { var asp = WD.cam.aspect || 1.5; CAM.top = { x: 140, z: 84, h: Math.max(130, Math.max(380 / asp, 270) * .9) }; }
+function panBy(dxPx, dyPx) {
+  var el = WD.ren.domElement, hpx = el.clientHeight || 600, H = CAM.mode === 'top' ? CAM.top.h : CAM.view.pos.y;
+  var k = 2 * H * 1.06 * Math.tan(WD.cam.fov * Math.PI / 360) / hpx, mx = -dxPx * k, mz = -dyPx * k;
+  if (CAM.mode === 'top') { CAM.top.x = Math.max(-80, Math.min(360, CAM.top.x + mx)); CAM.top.z = Math.max(-60, Math.min(230, CAM.top.z + mz)); }
+  else { CAM.view.pos.x += mx; CAM.view.look.x += mx; CAM.view.pos.z += mz; CAM.view.look.z += mz; }
+}
+function zoomBy(f) {
+  if (CAM.mode === 'top') CAM.top.h = Math.max(35, Math.min(420, CAM.top.h * f));
+  else if (CAM.mode === 'view') { var v = CAM.view, nh = Math.max(35, Math.min(420, v.pos.y * f)), r = nh / v.pos.y; v.pos.set(v.look.x + (v.pos.x - v.look.x) * r, nh, v.look.z + (v.pos.z - v.look.z) * r); }
+}
+function dragSetup(el) {
+  var pts = {}, last = null, pinch = 0;
+  function n() { return Object.keys(pts).length; }
+  el.addEventListener('pointerdown', function (e) { if (CAM.mode === 'follow') return; pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (x) {} pinch = 0; });
+  el.addEventListener('pointermove', function (e) {
+    var p0 = pts[e.pointerId]; if (!p0 || CAM.mode === 'follow') return;
+    if (n() === 1) { panBy(e.clientX - p0.x, e.clientY - p0.y); CAM.snap = true; }
+    p0.x = e.clientX; p0.y = e.clientY;
+    if (n() === 2) { var k = Object.keys(pts), a = pts[k[0]], b = pts[k[1]], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch) zoomBy(pinch / d); pinch = d; CAM.snap = true; }
+  });
+  function up(e) { delete pts[e.pointerId]; pinch = 0; }
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', function (e) { if (CAM.mode === 'follow') return; e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+}
 function viewFit(lists) {
   var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
   lists.forEach(function (l) { (l || []).forEach(function (id) { var n = NODES[id]; x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); z0 = Math.min(z0, n.z); z1 = Math.max(z1, n.z); }); });
@@ -1125,7 +1152,12 @@ function ui(api, lv) {
     b.addEventListener('pointerdown', function (e) { e.preventDefault(); if (c === 'U') OW.held = true; if (KEYH) KEYH(c); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, function () { if (c === 'U') OW.held = false; }); });
   });
-  box.querySelector('[data-k=top]').onclick = function (e) { if (CAM.mode === 'view') return; CAM.mode = CAM.mode === 'top' ? 'follow' : 'top'; e.currentTarget.classList.toggle('on', CAM.mode === 'top'); };
+  box.querySelector('[data-k=top]').onclick = function (e) {
+    if (CAM.mode === 'view') return;
+    if (CAM.mode !== 'top') topFit();
+    CAM.mode = CAM.mode === 'top' ? 'follow' : 'top'; e.currentTarget.classList.toggle('on', CAM.mode === 'top');
+    if (CAM.mode === 'top') toast('Ziehen = Plan verschieben<br>Mausrad oder zwei Finger = zoomen', 2600);
+  };
   box.querySelector('[data-k=help]').onclick = function () { helper(); };
   resize(); startLoop();
   try { window.focus(); } catch (e) {}
