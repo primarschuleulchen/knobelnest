@@ -79,6 +79,40 @@ select.input{padding-right:8px}
 .qcard::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:linear-gradient(90deg,#d9675c,#3f78a8,#d6ad45,#5d8f4a)}
 .qcard h3{font-size:26px;word-break:break-word}
 .qcard .row{margin-top:auto}
+.qcard{gap:8px;padding:20px 18px 12px}
+.qc-kopf{display:flex;flex-wrap:wrap;gap:6px}
+.qc-n,.qc-o{font-size:15px;border-radius:999px;padding:2px 12px}
+.qc-n{background:var(--sun-soft);box-shadow:inset 0 0 0 1.5px var(--gold);color:var(--gold-d)}
+.qc-o{background:var(--sky-soft);color:var(--sky-deep)}
+.qcard h3{line-height:1.15}
+.qcard>p.muted{margin-top:-4px;min-height:1.2em}
+.qc-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:auto;padding-top:6px}
+.qc-main .btn{min-height:50px;padding:0 10px}
+.qc-fuss{display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-top:1.5px dashed rgba(214,173,69,.55);padding-top:8px;margin-top:4px}
+.ib{min-height:36px;padding:0 10px;border:0;border-radius:10px;background:transparent;font-size:17px;color:var(--soft)}
+.ib:hover{background:var(--sky-soft);color:var(--ink)}
+select.ib{max-width:150px;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:10px;text-overflow:ellipsis}
+.ib.del:hover,.ib.del.armed{background:#fbe1dd;color:#9a3b33}
+.vor-tag{background:var(--sun-soft);box-shadow:inset 0 0 0 1.5px var(--gold);border-radius:999px;padding:4px 14px;font-size:18px}
+.vor-body{max-width:1100px;width:100%;margin:0 auto}
+.pans.vor button.ans{min-height:96px;position:relative}
+.pans.vor button.ans[disabled]{cursor:default}
+.ans.v-ok{border-color:var(--ok)!important;box-shadow:0 0 0 3px rgba(63,138,79,.35),var(--schatten)}
+.ans.v-no{border-color:var(--no)!important}
+.ans.v-dim{opacity:.4}
+.v-mark{margin-left:auto;font-size:30px}
+.slot.v-ok{border-color:var(--ok);background:#f2f8ef}
+.slot.v-no{border-color:var(--no);background:#fcefed}
+.v-res{display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:18px;padding:12px 18px;color:#fff;text-align:center;font-size:22px}
+.v-res b{font-weight:400;font-size:34px}
+.v-res.ok{background:linear-gradient(160deg,#5aa56a,#3f8a4f)}
+.v-res.no{background:linear-gradient(160deg,#d9675c,#b5524a)}
+.vor-nav{margin-top:6px}
+.grow{flex:1 1 auto}
+.qc-fuss{flex-wrap:nowrap}
+.ib{white-space:nowrap;flex:none}
+select.ib{max-width:130px;flex:0 1 auto;min-width:0}
+@media (max-width:620px){.new{min-height:110px}.qc-main .btn{font-size:17px}}
 .new{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:170px;border:2.5px dashed var(--gold);border-radius:20px;background:rgba(251,243,220,.5);font-size:24px}
 .new:hover{background:var(--sun-soft)}
 .new span{font-size:46px;line-height:1;color:var(--gold-d)}
@@ -406,11 +440,13 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     return kopfzeile + '<div class="qlist"><button class="new" data-a="neu"><span>+</span>Neues Quiz' + (o ? '<small class="muted">in «' + h(o.name) + '»</small>' : '') + '</button>' +
       '<button class="new ki" data-a="kiOpen"><span>✨</span>Mit KI erstellen<small class="muted">aus einem PDF oder Arbeitsblatt</small></button>' + l.map(function (x) {
       var on = L.ordner.filter(function (y) { return y.id === x.ordner; })[0];
-      return '<div class="qcard"><h3>' + h(x.titel || 'Ohne Titel') + '</h3><p class="muted small">' + anzahl(x.n) + (x.at ? ' · ' + datum(x.at) : '') + (!o && on ? ' · 📁 ' + h(on.name) : '') + '</p>' +
-        '<div class="row"><button class="btn gold" data-a="live" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn sm" data-a="edit" data-id="' + h(x.id) + '">✎ Bearbeiten</button>' +
-        '<button class="btn sm quiet" data-a="dup" data-id="' + h(x.id) + '" title="Kopie erstellen">⧉</button><button class="btn sm danger" data-a="del" data-id="' + h(x.id) + '">Löschen</button></div>' +
-        (L.ordner.length ? '<label class="osel"><span class="muted small">Ordner</span><select data-ch="move" data-id="' + h(x.id) + '"><option value="">– kein Ordner –</option>' +
-          L.ordner.map(function (y) { return '<option value="' + h(y.id) + '"' + (x.ordner === y.id ? ' selected' : '') + '>' + h(y.name) + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
+      return '<div class="qcard"><div class="qc-kopf"><span class="qc-n">' + anzahl(x.n) + '</span>' + (!o && on ? '<span class="qc-o">📁 ' + h(on.name) + '</span>' : '') + '</div>' +
+        '<h3>' + h(x.titel || 'Ohne Titel') + '</h3><p class="muted small">' + (x.at ? 'geändert ' + datum(x.at) : '') + '</p>' +
+        '<div class="qc-main"><button class="btn gold" data-a="live" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn" data-a="vor" data-id="' + h(x.id) + '"' + (x.n ? '' : ' disabled') + '>👁 Vorschau</button></div>' +
+        '<div class="qc-fuss"><button class="ib" data-a="edit" data-id="' + h(x.id) + '">✎ Bearbeiten</button><button class="ib" data-a="dup" data-id="' + h(x.id) + '" title="Kopie erstellen">⧉ Kopie</button>' +
+        (L.ordner.length ? '<select class="ib" data-ch="move" data-id="' + h(x.id) + '" title="Ordner" aria-label="Ordner"><option value="">📁 kein Ordner</option>' +
+          L.ordner.map(function (y) { return '<option value="' + h(y.id) + '"' + (x.ordner === y.id ? ' selected' : '') + '>📁 ' + h(y.name) + '</option>'; }).join('') + '</select>' : '') +
+        '<span class="grow"></span><button class="ib del" data-a="del" data-id="' + h(x.id) + '" title="Löschen">🗑</button></div></div>';
     }).join('') + '</div>';
   }
   function kidHTML() {
@@ -423,11 +459,12 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
           '<button class="btn sm" data-a="kMem" data-c="' + h(c.id) + '">👥 Gruppen-Quiz anlegen</button></div>' +
           (qs.length ? '<div class="qlist">' + qs.map(function (q) {
             var names = (q.members || []).map(function (id) { return kidName(c.id, id); }).filter(Boolean);
-            return '<div class="qcard kid"><h3>' + h(q.title || 'Ohne Titel') + '</h3><p class="muted small">' + anzahl(q.n) + ' · ' + datum(q.updated_at) + (q.updated_by ? ' · zuletzt ' + h(q.updated_by) : '') + '</p>' +
+            return '<div class="qcard kid"><div class="qc-kopf"><span class="qc-n">' + anzahl(q.n) + '</span></div><h3>' + h(q.title || 'Ohne Titel') + '</h3>' +
+              '<p class="muted small">' + datum(q.updated_at) + (q.updated_by ? ' · zuletzt ' + h(q.updated_by) : '') + '</p>' +
               '<div class="mem">' + (names.length ? names.map(function (n) { return '<span>' + h(n) + '</span>'; }).join('') : '<em class="muted small">noch niemand</em>') + '</div>' +
-              '<div class="row"><button class="btn gold" data-a="kLive" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn sm" data-a="kEdit" data-id="' + h(q.id) + '">✎ Ansehen</button>' +
-              '<button class="btn sm" data-a="kMem" data-c="' + h(c.id) + '" data-id="' + h(q.id) + '">👥 Gruppe</button><button class="btn sm quiet" data-a="kCopy" data-id="' + h(q.id) + '" title="In meine Quiz kopieren">⧉</button>' +
-              '<button class="btn sm danger" data-a="kDel" data-id="' + h(q.id) + '">Löschen</button></div></div>';
+              '<div class="qc-main"><button class="btn gold" data-a="kLive" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>▶ Live spielen</button><button class="btn" data-a="kVor" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>👁 Vorschau</button></div>' +
+              '<div class="qc-fuss"><button class="ib" data-a="kEdit" data-id="' + h(q.id) + '">✎ Bearbeiten</button><button class="ib" data-a="kMem" data-c="' + h(c.id) + '" data-id="' + h(q.id) + '">👥 Gruppe</button>' +
+              '<button class="ib" data-a="kCopy" data-id="' + h(q.id) + '" title="In meine Quiz kopieren">⧉ Kopie</button><span class="grow"></span><button class="ib del" data-a="kDel" data-id="' + h(q.id) + '" title="Löschen">🗑</button></div></div>';
           }).join('') + '</div>' : '<p class="muted">' + (c.on ? 'Noch keine Quiz von Kindern.' : 'Eingeschaltet erscheint bei den Kindern die Kachel «Quiz erstellen».') + '</p>') + '</section>';
       }).join('');
   }
@@ -544,9 +581,10 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     if (!d.on) { app.innerHTML = kopf() + '<div class="main">' + hero + '<div class="card"><p>Deine Lehrperson hat das Quiz-Erstellen gerade ausgeschaltet.</p></div></div>'; return; }
     app.innerHTML = kopf() + '<div class="main">' + hero + '<div class="qlist"><button class="new" data-a="kidNeu"><span>+</span>Neues Quiz</button>' + d.quizzes.map(function (q) {
       var mit = (q.members || []).map(function (m) { return m.name; }).filter(function (n) { return n !== me; });
-      return '<div class="qcard"><h3>' + h(q.title || 'Ohne Titel') + '</h3><p class="muted small">' + anzahl(q.n) + (q.updated_by ? ' · zuletzt ' + h(q.updated_by) : '') + '</p>' +
+      return '<div class="qcard"><div class="qc-kopf"><span class="qc-n">' + anzahl(q.n) + '</span></div><h3>' + h(q.title || 'Ohne Titel') + '</h3><p class="muted small">' + (q.updated_by ? 'zuletzt ' + h(q.updated_by) : '') + '</p>' +
         (mit.length ? '<div class="mem"><span class="muted small" style="background:none;padding:0">Gemeinsam mit</span>' + mit.map(function (n) { return '<span>' + h(n) + '</span>'; }).join('') + '</div>' : '') +
-        '<div class="row"><button class="btn gold" data-a="kidEdit" data-id="' + h(q.id) + '">✎ Bearbeiten</button>' + (q.mine ? '<button class="btn sm danger" data-a="kidDel" data-id="' + h(q.id) + '">Löschen</button>' : '') + '</div></div>';
+        '<div class="qc-main"><button class="btn gold" data-a="kidEdit" data-id="' + h(q.id) + '">✎ Bearbeiten</button><button class="btn" data-a="kidVor" data-id="' + h(q.id) + '"' + (q.n ? '' : ' disabled') + '>👁 Ausprobieren</button></div>' +
+        (q.mine ? '<div class="qc-fuss"><span class="grow"></span><button class="ib del" data-a="kidDel" data-id="' + h(q.id) + '" title="Löschen">🗑 Löschen</button></div>' : '') + '</div>';
     }).join('') + '</div></div>';
   }
   function kidFehler(r) { return { aus: 'Deine Lehrperson hat das Quiz-Erstellen ausgeschaltet.', viele: 'Du hast schon sehr viele Quiz. Lösche zuerst eines.', weg: 'Dieses Quiz gibt es nicht mehr.' }[r && r.error] || 'Das hat nicht geklappt.'; }
@@ -760,6 +798,94 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   };
 
   // =================================================================
+  // 👁 Vorschau: das Quiz selbst durchklicken und testen (ohne Klasse, nichts wird gespeichert)
+  // =================================================================
+  var V = null;
+  function vorStart(Q, zurueck, startId) {
+    var r = spielFragen(Q);
+    if (!r.qs.length) { toast('Noch keine fertige Frage. Bitte zuerst Fragen ausfüllen.'); return; }
+    stop();
+    var ids = Q.fragen.filter(function (q) { return !fehler(q); }).map(function (q) { return q.id; });
+    V = { Q: Q, qs: r.qs, bad: r.bad, i: Math.max(0, ids.indexOf(startId)), res: {}, zurueck: zurueck };
+    vorNeu(); vorRender();
+  }
+  function vorNeu() { V.pick = []; V.order = []; V.text = ''; }
+  function vorOk(q, a) {
+    if (q.typ === 'text') { var n = function (x) { return String(x || '').trim().replace(/\s+/g, ' ').toLowerCase(); }; return q.richtig.some(function (r) { return n(r) && n(r) === n(a); }); }
+    if (q.typ === 'reihe') return a.join() === q.antworten.map(function (x, i) { return i; }).join();
+    return a.slice().sort().join() === q.richtig.slice().sort().join();
+  }
+  function vorRender() {
+    var q = V.qs[V.i], n = V.qs.length, res = V.res[V.i], rf = q && q.typ === 'rf';
+    var kopfz = '<div class="bhead"><button class="btn sm" data-a="vorX">✕ Vorschau beenden</button><span class="marke"><img src="bilder/eule.webp" alt="" width="46" height="46"><b>' + h(V.Q.titel || 'Quiz') + '<i>✦</i></b></span>' +
+      '<span class="grow"></span><span class="vor-tag">👁 Vorschau</span>' + (V.i < n ? '<span style="font-size:22px">Frage ' + (V.i + 1) + ' von ' + n + '</span>' : '') + '</div>';
+    if (V.i >= n) {
+      var ok = Object.keys(V.res).filter(function (k) { return V.res[k].ok; }).length;
+      app.innerHTML = '<div class="beamer">' + kopfz + '<div class="rang"><span class="sterne">✦ ✧ ✦</span><h1>Vorschau fertig</h1><p style="font-size:30px">' + ok + ' von ' + n + ' richtig</p>' +
+        (V.bad.length ? '<p class="muted">Nicht dabei, weil noch nicht fertig: Frage ' + V.bad.join(', ') + '</p>' : '') +
+        '<div class="row" style="justify-content:center"><button class="btn" data-a="vorNochmal">↺ Nochmals</button>' + (B.mode === 'kid' ? '' : '<button class="btn gold" data-a="vorLive">▶ Live spielen</button>') +
+        '<button class="btn" data-a="vorX">Schliessen</button></div></div></div>';
+      return;
+    }
+    var body = '';
+    if (q.typ === 'quiz' || q.typ === 'rf') {
+      body = (q.mehrfach && !res ? '<p class="muted" style="text-align:center">Mehrfachauswahl: alle richtigen Antworten wählen, dann «Prüfen».</p>' : '') +
+        '<div class="pans vor' + (rf ? ' rf' : '') + '">' + q.antworten.map(function (a, i) {
+          var cls = '', isOk = q.richtig.indexOf(i) >= 0, picked = (res ? res.a : V.pick).indexOf(i) >= 0;
+          if (res) cls = isOk ? ' v-ok' : picked ? ' v-no' : ' v-dim';
+          return '<button class="ans' + cls + '" style="' + ansStyle(i, rf) + '" data-a="vorAns" data-i="' + i + '" aria-pressed="' + picked + '"' + (res ? ' disabled' : '') + '>' + sym(i, rf) + '<span>' + h(a) + '</span>' +
+            (res && isOk ? '<span class="v-mark">✓</span>' : res && picked ? '<span class="v-mark">✗</span>' : '') + '</button>'; }).join('') + '</div>';
+    } else if (q.typ === 'text') {
+      body = res ? '<p class="loesung">Eingegeben: <b style="color:' + (res.ok ? 'var(--ok)' : 'var(--no)') + '">' + h(res.a || '–') + '</b></p>' :
+        '<form id="vform"><input class="input" id="vtext" maxlength="60" autocomplete="off" placeholder="Antwort eintippen" value="' + h(V.text) + '" style="font-size:30px;min-height:70px;text-align:center"></form>';
+    } else {
+      var mix = q.mix || q.antworten.map(function (a, i) { return i; }), ord = res ? res.a : V.order;
+      body = '<div class="slots">' + q.antworten.map(function (a, k) {
+        var i = ord[k], cls = i != null ? ' full' : ''; if (res && i != null) cls += i === k ? ' v-ok' : ' v-no';
+        return '<div class="slot' + cls + '"' + (!res && i != null ? ' data-a="vorOut" data-k="' + k + '" role="button"' : '') + '><span class="nr">' + (k + 1) + '</span>' + (i != null ? h(q.antworten[i]) + (res ? '' : ' <span class="muted small" style="margin-left:auto">✕</span>') : '') + '</div>'; }).join('') + '</div>' +
+        (res ? '' : '<div class="pool">' + mix.filter(function (i) { return V.order.indexOf(i) < 0; }).map(function (i) { return '<button data-a="vorIn" data-i="' + i + '">' + h(q.antworten[i]) + '</button>'; }).join('') + '</div>');
+    }
+    var loes = '';
+    if (res) {
+      var richtig = q.typ === 'text' ? q.richtig.map(h).join(' / ') : q.typ === 'reihe' ? q.antworten.map(function (a, i) { return (i + 1) + '. ' + h(a); }).join(' · ') : q.richtig.map(function (i) { return h(q.antworten[i]); }).join(' · ');
+      loes = '<div class="v-res ' + (res.ok ? 'ok' : 'no') + '"><b>' + (res.ok ? '✓ Richtig!' : '✗ Leider falsch') + '</b>' + (res.ok ? '' : '<span>Richtig wäre: ' + richtig + '</span>') + '</div>';
+    }
+    var kannPruefen = q.typ === 'text' ? true : q.typ === 'reihe' ? V.order.length === q.antworten.length : V.pick.length > 0;
+    app.innerHTML = '<div class="beamer">' + kopfz + '<div class="bfrage vor-body"><div class="qtext">' + h(q.frage) + '</div>' +
+      (q.bild ? '<div class="qmid" style="grid-template-columns:1fr;min-height:0"><div class="bild"><img src="' + h(q.bild) + '" alt="" style="max-height:30vh"></div></div>' : '') +
+      '<p class="muted" style="text-align:center">' + TYPEN[q.typ][0] + ' ' + TYPEN[q.typ][1] + ' · ⏱ ' + q.zeit + ' s · ' + (q.punkte === 2 ? 'doppelte Punkte' : q.punkte === 0 ? 'ohne Punkte' : 'normale Punkte') + '</p>' +
+      body + loes +
+      '<div class="row vor-nav"><button class="btn" data-a="vorGo" data-d="-1"' + (V.i ? '' : ' disabled') + '>← Zurück</button><span class="grow"></span>' +
+      (res ? '<button class="btn sm quiet" data-a="vorReset">↺ Nochmals versuchen</button>' : (q.typ === 'quiz' || q.typ === 'rf') && !q.mehrfach ? '<span class="muted small">Tippe auf eine Antwort.</span>' : '<button class="btn primary" data-a="vorCheck"' + (kannPruefen ? '' : ' disabled') + '>Prüfen</button>') +
+      '<button class="btn gold" data-a="vorGo" data-d="1">' + (V.i + 1 < n ? 'Weiter →' : 'Fertig ✦') + '</button></div></div></div>';
+    var t = document.getElementById('vtext'); if (t) t.focus();
+  }
+  ACT.vorAns = function (el) {
+    var q = V.qs[V.i], i = +el.dataset.i;
+    if (!q.mehrfach) { V.pick = [i]; return ACT.vorCheck(); }
+    var k = V.pick.indexOf(i); if (k >= 0) V.pick.splice(k, 1); else V.pick.push(i); vorRender();
+  };
+  ACT.vorIn = function (el) { V.order.push(+el.dataset.i); vorRender(); };
+  ACT.vorOut = function (el) { V.order.splice(+el.dataset.k, 1); vorRender(); };
+  ACT.vorCheck = function () {
+    var q = V.qs[V.i], a;
+    if (q.typ === 'text') { var t = document.getElementById('vtext'); a = String((t && t.value) || '').trim(); if (!a) return toast('Bitte zuerst eine Antwort eintippen.'); }
+    else if (q.typ === 'reihe') { if (V.order.length !== q.antworten.length) return; a = V.order.slice(); }
+    else { if (!V.pick.length) return; a = V.pick.slice(); }
+    V.res[V.i] = { a: a, ok: vorOk(q, a) }; vorRender();
+  };
+  document.addEventListener('submit', function (e) { if (e.target.id === 'vform') { e.preventDefault(); ACT.vorCheck(); } });
+  ACT.vorReset = function () { delete V.res[V.i]; vorNeu(); vorRender(); };
+  ACT.vorGo = function (el) { V.i = Math.max(0, Math.min(V.qs.length, V.i + (+el.dataset.d))); vorNeu(); vorRender(); };
+  ACT.vorNochmal = function () { V.i = 0; V.res = {}; vorNeu(); vorRender(); };
+  ACT.vorLive = function () { var Q = V.Q; V = null; hostStart(Q); };
+  ACT.vorX = function () { var z = V && V.zurueck; V = null; if (z === 'editor' && L.cur) edRender(); else if (B.mode === 'kid') kidStart(); else listRender(); };
+  ACT.vor = async function (el) { var q = await B.load(el.dataset.id); if (q) vorStart(q, 'liste'); };
+  ACT.kVor = async function (el) { var d = await kidQuizLaden(el.dataset.id); if (d) vorStart(kidQ(d), 'liste'); };
+  ACT.kidVor = async function (el) { var d = await B.kidGet(el.dataset.id, null); if (d) vorStart(kidQ(d), 'liste'); };
+  ACT.edVor = async function () { var sel = L.cur.fragen[L.sel]; await flush(); vorStart(L.cur, 'editor', sel && sel.id); };
+
+  // =================================================================
   // Editor
   // =================================================================
   function edStart(q) {
@@ -786,7 +912,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   }
   function edRender() {
     var Q = L.cur, q = Q.fragen[L.sel];
-    var rechts = '<span class="saved" id="saved">' + (L.dirty ? 'wird gespeichert …' : '✓ gespeichert') + '</span>' + (B.mode === 'kid' ? '' : '<button class="btn gold" data-a="edLive">▶ Live spielen</button>');
+    var rechts = '<span class="saved" id="saved">' + (L.dirty ? 'wird gespeichert …' : '✓ gespeichert') + '</span><button class="btn" data-a="edVor">👁 ' + (B.mode === 'kid' ? 'Ausprobieren' : 'Vorschau') + '</button>' + (B.mode === 'kid' ? '' : '<button class="btn gold" data-a="edLive">▶ Live spielen</button>');
     var mitte = (Q.src === 'kid' && (Q.members || []).length ? '<p class="gruppe">👥 ' + (B.mode === 'kid' ? 'Gemeinsam mit ' : 'Gruppe: ') + Q.members.map(h).join(', ') + ' <span class="muted small">· Änderungen werden automatisch zusammengeführt.</span></p>' : '') +
       (Q.src === 'kid' && B.mode !== 'kid' ? '<p class="gruppe">✦ Quiz von Kindern. Ihre Änderungen sehen die Kinder sofort.</p>' : '') +
       '<input class="input fragein" id="frage" data-in="fFrage" maxlength="240" placeholder="Tippe deine Frage ein" value="' + h(q.frage) + '">' +
