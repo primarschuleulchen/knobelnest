@@ -219,6 +219,17 @@
     quizClose: async function (id) { try { await sb.rpc('quiz_close', { p_id: id }); } catch (e) {} },
     quizJoin: async function (pin, name, av) { return ok(await sb.rpc('quiz_join', { p_pin: String(pin || ''), p_name: String(name || ''), p_avatar: String(av || '') })); },
     quizState: async function (token) { return ok(await sb.rpc('quiz_state', { p_token: token })); },
+    // Kinder-Quiz (Version 24)
+    kidQuizList: async function (token) { return ok(await sb.rpc('kid_quiz_list', { p_token: token })); },
+    kidQuizGet: async function (token, id, ver) { return ok(await sb.rpc('kid_quiz_get', { p_token: token, p_id: id, p_ver: ver == null ? null : ver })); },
+    kidQuizSave: async function (token, id, ver, title, data) { return ok(await sb.rpc('kid_quiz_save', { p_token: token, p_id: id || null, p_ver: ver == null ? null : ver, p_title: String(title || ''), p_data: data })); },
+    kidQuizDelete: async function (token, id) { return ok(await sb.rpc('kid_quiz_delete', { p_token: token, p_id: id })); },
+    kqList: async function () { return ok(await sb.rpc('kq_list')); },
+    kqGet: async function (id, ver) { return ok(await sb.rpc('kq_get', { p_id: id, p_ver: ver == null ? null : ver })); },
+    kqSave: async function (id, ver, title, data) { return ok(await sb.rpc('kq_save', { p_id: id, p_ver: ver, p_title: String(title || ''), p_data: data })); },
+    kqNew: async function (cid, members, title) { return ok(await sb.rpc('kq_new', { p_class: cid, p_members: members || [], p_title: String(title || '') })); },
+    kqMembers: async function (id, members) { return ok(await sb.rpc('kq_members', { p_id: id, p_members: members || [] })); },
+    kqDelete: async function (id) { return ok(await sb.rpc('kq_delete', { p_id: id })); },
     quizAnswer: async function (token, q, ans) { return ok(await sb.rpc('quiz_answer', { p_token: token, p_q: q, p_ans: ans })); },
     tafelGet: async function (token) { return ok(await sb.rpc('tafel_get', { p_token: token })); },
     tafelSet: async function (token, subject, col) { return ok(await sb.rpc('tafel_set', { p_token: token, p_subject: subject, p_col: col })); }
