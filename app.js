@@ -895,11 +895,10 @@
   var LOGIN_TOOLS = [
     ['tagesfolie', 'Tagesfolie', 'Der Tag an der Wandtafel: Ablauf, Timer, Stundenplan, Zufallsname und mehr.'],
     ['vokabelkiste', 'Vokabelkiste', 'Wörter üben mit Karteikasten, Spielen, Tagessternen und Fortschritt pro Kind.'],
-    ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen, kontrollieren, und die Kinder sehen alles am iPad.'],
+    ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen und kontrollieren, Berichte drucken. Die Kinder sehen alles am iPad.'],
     ['arbeitsstand', 'Arbeitsstand', 'Wer kann helfen, wer hat eine Frage? Live an der Wandtafel.'],
     ['pinnwand', 'Pinnwand', 'Ideen sammeln und gemeinsam abstimmen.'],
-    ['otterteich', 'Otterteich', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.'],
-    ['atelier', 'Atelier', 'Jedes Kind zeigt auf dem Lernpfad, wo es gerade steht.']];
+    ['otterteich', 'Lautstärkeregler', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.']];
   ACT.shopSoon = function () { toast('Der Shop kommt bald. Melden Sie sich bis dahin bei ' + C.CONTACT + '.'); };
   ACT.login = async function (f) {
     T.loginErr = ''; T.loginEmail = f.elements.email.value.trim();
