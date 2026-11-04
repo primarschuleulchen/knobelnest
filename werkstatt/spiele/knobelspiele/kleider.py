@@ -95,15 +95,17 @@ def alle(spiel):
     items = [dict(w) for w in WORT]
     spiel(id='kleiderschrank', titel='Kleiderschrank', icon=logo(), fach='Englisch', thema='Clothes', stufe='3.–6. Klasse', sort=1, n=10,
           sterne={'modus': 'runde', 'n': 10},
-          kurz='Kleider auf Englisch: anschauen, hören, schreiben, sprechen und «This is my dress.»',
+          kurz='Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»',
           intro='Im Schrank hängen viele Kleider. Wie heissen sie auf Englisch? Hör gut zu und sprich nach!',
           levels=[dict(name='Entdecken', info='Antippen, hören und finden', t=0),
                   dict(name='Auswählen', info='Wie heisst es auf Englisch?', t=1),
                   dict(name='Schreiben', info='Das englische Wort schreiben', t=2),
                   dict(name='Sprechen', info='Das Wort laut sagen 🎤', t=3),
-                  dict(name='my, your, his, her', info='Wem gehört es?', t=4),
-                  dict(name='Sätze', info='This is my … / These are my …', t=5)],
-          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': kind_bild('mia'), 'eule': kind_bild('eule').replace('kind-bild', 'eule-bild'), 'noah': kind_bild('noah'), 'aehnlich': AEHNLICH},
+                  dict(name='Pronomen benennen', info='my, your, his, her, its … auswählen', t=4),
+                  dict(name='Pronomen schreiben', info='my hat, her tie … selber schreiben', t=5),
+                  dict(name='Sätze bauen', info='This is my … / These are my …', t=6),
+                  dict(name='Sätze schreiben', info='Den ganzen Satz selber schreiben', t=7)],
+          daten={'items': items, 'png': {w['id']: data_url('karte-' + w['id'] + '.webp') for w in WORT}, 'sp': {w['id']: data_url(w['id'] + '.webp') for w in WORT}, 'schrank': schrank(), 'mia': kind_bild('mia'), 'eule': kind_bild('eule').replace('kind-bild', 'eule-bild'), 'katze': kind_bild('katze').replace('kind-bild', 'katze-bild'), 'noah': kind_bild('noah'), 'aehnlich': AEHNLICH},
           css=CSS, js=JS)
 
 
@@ -164,6 +166,9 @@ CSS = r"""
 /* Person, der es gehört (über die gesprochen wird): goldener Schein um die Figur, Name in Gold */
 .kind.own .kind-bild{filter:drop-shadow(0 0 7px rgba(240,194,75,.95)) drop-shadow(0 0 16px rgba(240,194,75,.75))}
 .kind.own .nm2{background:#f0c24b;font-weight:700}
+.katze{grid-row:2;grid-column:1;justify-self:end;align-self:end;margin:0 -6px 30px 0;z-index:1;pointer-events:none}
+.katze-bild{height:min(11vh,82px);width:auto;display:block}
+.katze.own .katze-bild{filter:drop-shadow(0 0 6px rgba(240,194,75,.95)) drop-shadow(0 0 14px rgba(240,194,75,.75))}
 .ding{grid-row:2;grid-column:2;display:flex;align-items:center;padding-bottom:34px}
 .ding .bild{width:min(30vw,150px);padding:10px;border-width:3px}
 .ding.l{justify-content:flex-start}.ding.r{justify-content:flex-end}.ding.m{justify-content:center}
@@ -182,6 +187,8 @@ CSS = r"""
 /* Stufe 1: Wortkarte oben, Schrank, Knopf unten (hochkant); im Querformat Schrank links, Rest rechts */
 .ks.quer .seite{display:contents}.ks.quer .wortkarte{order:1}.ks.quer .schrank{order:2}.ks.quer .seite .go{order:3}
 .ks.quer .schrank{width:min(100%,640px,calc((100vh - 330px) * 1.13))}
+/* 8 Stufen: ab Tablet-Breite zweispaltig */
+@media (min-width:700px){.lvs{grid-template-columns:1fr 1fr;max-width:920px;gap:10px}}
 /* iPad und Laptop quer: alles auf einen Bildschirm ohne Scrollen */
 @media (orientation:landscape) and (min-width:820px) and (max-height:920px){
   .ring{width:112px;height:112px}.kopf h1{font-size:36px;margin-top:6px}.kopf p{font-size:19px}
@@ -197,7 +204,7 @@ CSS = r"""
   .ks.zs .wahl{width:min(100%,400px)}
   .kind-bild{height:min(40vh,260px)}
 }
-@media (max-width:520px){.kind-bild{height:min(26vh,170px)}.ding .bild{width:min(32vw,118px)}.buehne .sprech,.erzaehl{height:84px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
+@media (max-width:520px){.kind-bild{height:min(26vh,170px)}.ding .bild{width:min(32vw,118px)}.buehne .sprech,.erzaehl{height:84px}.katze-bild{height:56px}.katze{margin-right:-16px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
 """
 
 JS = r"""
@@ -455,11 +462,15 @@ function stufeSprechen(api) {
 var PR = {
   my: { de: 'mein', wer: 'self' }, your: { de: 'dein', wer: 'other' }, his: { de: 'sein', wer: 'noah' },
   her: { de: 'ihr', wer: 'mia' }, our: { de: 'unser', wer: 'beide-self' }, their: { de: 'ihr', wer: 'beide' },
-  your2: { de: 'euer', wer: 'eule-zu-beiden' }
+  your2: { de: 'euer', wer: 'eule-zu-beiden' }, its: { de: 'ihr', wer: 'katze' }
 };
-var PAAR = { my: 'your', your: 'my', his: 'her', her: 'his', our: 'their', their: 'our' };
+var PAAR = { my: 'your', your: 'my', his: 'her', her: 'his', our: 'their', their: 'our', its: 'her' };
+// Was die Katze tragen kann (für «its»)
+var KATZE = ['hat', 'cap', 'scarf', 'tie', 'socks', 'shoes', 'boots', 'gloves', 'jumper', 'tshirt'];
 function aufgabe(x, mehrErlaubt) {
-  var key = pick(['my', 'my', 'your', 'your', 'his', 'his', 'her', 'her', 'our', 'our', 'their', 'their', 'your2'], 1)[0], spr = 'eule', own, mit = null;
+  var keys = ['my', 'my', 'your', 'your', 'his', 'his', 'her', 'her', 'our', 'our', 'their', 'their', 'your2', 'your2', 'its', 'its'];
+  if (KATZE.indexOf(x.id) < 0) keys = keys.filter(function (q) { return q !== 'its'; });
+  var key = pick(keys, 1)[0], spr = 'eule', own, mit = null;
   var c = PR[key].wer, p = key === 'your2' ? 'your' : key;
   if (c === 'self') { own = pick(['mia', 'noah'], 1)[0]; spr = own; }
   else if (c === 'other') { own = pick(['mia', 'noah'], 1)[0]; spr = own === 'mia' ? 'noah' : 'mia'; mit = own; }
@@ -475,7 +486,7 @@ function aufgabe(x, mehrErlaubt) {
     word: enPl ? x.pl : x.sg, enP: p + ' ' + (enPl ? x.pl : x.sg),
     enS: (enPl ? 'These are ' : 'This is ') + p + ' ' + (enPl ? x.pl : x.sg) };
 }
-var NAME = { mia: 'Mia', noah: 'Noah', beide: 'Mia und Noah' };
+var NAME = { mia: 'Mia', noah: 'Noah', beide: 'Mia und Noah', katze: 'die Katze' };
 function buehne(a, text) {
   var b = neu('buehne');
   // obere Zeile hat immer dieselbe Höhe (Kinder und Bild springen nicht)
@@ -483,7 +494,8 @@ function buehne(a, text) {
   else b.appendChild(neu('erzaehl', D.eule + '<div class="blase">' + text + '</div>'));
   var m = neu('kind' + (a.own === 'mia' || a.own === 'beide' ? ' own' : ''), D.mia + '<span class="nm2">Mia</span>'); m.style.gridColumn = '1';
   var n = neu('kind' + (a.own === 'noah' || a.own === 'beide' ? ' own' : ''), D.noah + '<span class="nm2">Noah</span>'); n.style.gridColumn = '3';
-  var d = neu('ding ' + (a.own === 'mia' ? 'l' : a.own === 'noah' ? 'r' : 'm'), '<div class="bild">' + art(a.x.id, a.zwei) + '</div>');
+  var kz = neu('katze' + (a.own === 'katze' ? ' own' : ''), D.katze); b.appendChild(kz);
+  var d = neu('ding ' + (a.own === 'mia' || a.own === 'katze' ? 'l' : a.own === 'noah' ? 'r' : 'm'), '<div class="bild">' + art(a.x.id, a.zwei) + '</div>');
   b.appendChild(m); b.appendChild(d); b.appendChild(n);
   var t = a.spr === 'eule' ? (a.mit ? 'Die Eule spricht mit Mia und Noah.' : 'Die Eule erzählt über ' + NAME[a.own] + '.')
     : a.spr === 'beide' ? 'Mia und Noah sprechen über sich.'
@@ -508,15 +520,16 @@ window.addEventListener('resize', function () { Array.prototype.forEach.call(doc
 function buehneRein(w, a, text) { var b = buehne(a, text); w.appendChild(b); richte(b); requestAnimationFrame(function () { richte(b); }); return b; }
 function tippPr(a) {
   return { my: '«mein» = my', your: '«dein» = your', your2: '«euer» = your (auch für mehrere Personen)', his: 'Es gehört Noah (einem Jungen) → his',
-    her: 'Es gehört Mia (einem Mädchen) → her', our: '«unser» = our', their: 'Es gehört Mia und Noah → their' }[a.key];
+    her: 'Es gehört Mia (einem Mädchen) → her', our: '«unser» = our', their: 'Es gehört Mia und Noah → their',
+    its: 'Es gehört der Katze (einem Tier) → its' }[a.key];
 }
 function stufeBegleiter(api) {
   var w = neu('ks zs'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
     var a = aufgabe(liste[k], false), lock = false; w.innerHTML = ''; fb('');
     buehneRein(w, a, '<b>' + h(a.deP) + '</b>');
-    api.msg('<span class="em">🧺</span> Wem gehört es? Wie sagt man das auf Englisch?');
-    var opts = [a.p, PAAR[a.p]], rest = shuffle(['my', 'your', 'his', 'her', 'our', 'their'].filter(function (q) { return opts.indexOf(q) < 0; }));
+    api.msg('Wem gehört es? Wie sagt man das auf Englisch?');
+    var opts = [a.p, PAAR[a.p]], rest = shuffle(['my', 'your', 'his', 'her', 'its', 'our', 'their'].filter(function (q) { return opts.indexOf(q) < 0; }));
     opts = shuffle(opts.concat(rest.slice(0, 2)));
     var wahl = neu('wahl'); w.appendChild(wahl);
     opts.forEach(function (q) {
@@ -586,8 +599,52 @@ function stufeSaetze(api) {
   frage();
 }
 
+// Eingabe vergleichen: gross/klein, Satzzeichen und «T-shirt»-Schreibweisen egal
+function normS(s) { return String(s || '').toLowerCase().replace(/[’']/g, '').replace(/[.!?,;:]/g, ' ').replace(/\bt\s*-?\s*shirt/g, 'tshirt').replace(/\s+/g, ' ').trim(); }
+function luecke(t) { return t.split('').map(function (c) { return c === ' ' ? '   ' : c === '-' ? '-' : '_'; }).join(' '); }
+function schreibFeld(w, platz) {
+  var f = neu('schreib', '<input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Auf Englisch schreiben" placeholder="' + h(platz) + '"><button class="go">Prüfen</button>');
+  w.appendChild(f); var inp = f.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+  return { f: f, inp: inp, btn: f.querySelector('button') };
+}
+// Stufe 6 (Pronomen schreiben) und 8 (Sätze schreiben)
+function stufeSchreibPr(api, satz) {
+  var w = neu('ks zs'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
+  function frage() {
+    var a = aufgabe(liste[k], satz), vers = 0, lock = false; w.innerHTML = ''; fb('');
+    var ziel = satz ? a.enS + '.' : a.enP; window.__ziel = ziel; // für die Tests
+    buehneRein(w, a, '<b>' + h(satz ? a.deS : a.deP) + '</b>');
+    api.msg(satz ? 'Schreib den ganzen Satz auf Englisch.' : 'Wem gehört es? Schreib es auf Englisch.');
+    var hint = neu('luecke', ''); w.appendChild(hint);
+    var s = schreibFeld(w, satz ? 'This is … / These are …' : 'my …, his …');
+    function pruef() {
+      if (lock) return; if (!s.inp.value.trim()) { s.inp.focus(); return; }
+      var ok = normS(s.inp.value) === normS(ziel);
+      if (!ok && vers === 0) {
+        vers = 1; s.inp.classList.add('no'); s.f.classList.remove('shake'); void s.f.offsetWidth; s.f.classList.add('shake'); bad();
+        var g = normS(s.inp.value).split(' '), z = normS(ziel).split(' '), tipp;
+        if (satz && (g[0] !== z[0] || g[1] !== z[1])) tipp = !a.x.sg ? '«' + a.x.pl + '» ist auf Englisch immer Mehrzahl → These are' : a.enPl ? 'Mehrere Dinge → These are' : 'Ein Ding → This is';
+        else if (g[satz ? 2 : 0] !== z[satz ? 2 : 0]) tipp = tippPr(a);
+        else { tipp = 'Schau das Kleidungsstück genau an. So viele Buchstaben hat das Wort:'; hint.textContent = luecke(a.word); }
+        fb('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
+        api.later(function () { s.inp.classList.remove('no'); s.inp.select(); }, 600);
+        return;
+      }
+      lock = true; s.inp.classList.add(ok ? 'ok' : 'no'); s.inp.disabled = true; s.btn.remove();
+      hint.textContent = ''; w.appendChild(lautBtn(ziel)); say(ziel);
+      fb(ok ? '<span class="em">🌟</span> Richtig: <b>' + h(ziel) + '</b>' : '<span class="em">📝</span> So heisst es: <b>' + h(ziel) + '</b>');
+      k++; if (!api.answer(ok)) return;
+      api.later(frage, ok ? 1800 : 3400);
+    }
+    s.btn.onclick = pruef;
+    s.inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pruef(); } });
+  }
+  frage();
+}
+
 G.play = function (lv, api) {
   try { speechSynthesis.cancel(); } catch (e) {}
-  [stufeSchrank, stufeWahl, stufeSchreiben, stufeSprechen, stufeBegleiter, stufeSaetze][lv.t](api);
+  [stufeSchrank, stufeWahl, stufeSchreiben, stufeSprechen, stufeBegleiter, function (x) { stufeSchreibPr(x, false); }, stufeSaetze,
+   function (x) { stufeSchreibPr(x, true); }][lv.t](api);
 };
 """
