@@ -124,7 +124,14 @@ def kinder():
     m = Image.new('L', (S * 2, S * 2), 0); ImageDraw.Draw(m).ellipse((0, 0, S * 2 - 1, S * 2 - 1), fill=255)
     c.putalpha(m.resize((S, S), Image.LANCZOS)); c.resize((320, 320), Image.LANCZOS).save(os.path.join(HIER, 'logos', 'kleiderschrank.webp'), quality=85, method=6)
 
+def eule():
+    # Die Eule erzählt in Stufe 5 und 6 (eule-original.webp)
+    im = Image.open(os.path.join(ORD, 'eule-original.webp')).convert('RGBA')
+    c = im.crop(im.split()[3].point(lambda a: 255 if a > 20 else 0).getbbox()); c.thumbnail((220, 220), Image.LANCZOS)
+    c.save(os.path.join(ORD, 'eule.webp'), quality=84, method=6)
+
 if __name__ == '__main__':
+    eule()
     kinder()
     karten()
     im = schrank()
