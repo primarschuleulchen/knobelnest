@@ -58,3 +58,5 @@
   .mark{bottom:122px;font-size:20px;min-height:48px;padding:6px 14px}
   .near{bottom:176px;font-size:17px}
 }
+/* Logo statt Emoji im Kreis oben (das Bild hat den Goldrand schon) */
+.ring{width:150px;height:150px;background:none;border:none;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
