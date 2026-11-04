@@ -285,6 +285,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   .marke b{font-size:24px}
   .qmid{grid-template-columns:1fr 1fr}.qmid .bild{grid-column:1/-1;order:-1}
 }
+/* kn-back */#knBack,.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}#knBack:not([hidden]),.kn-back{display:inline-flex}#knBack:hover,.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}#knBack img,.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
 </style>
 </head>
 <body>
@@ -344,7 +345,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   function stop() { timers.forEach(clearInterval); timers = []; }
 
   function kopf(rechts, zurueck) {
-    return '<header class="top"><button class="btn sm quiet" data-a="' + (zurueck || 'back') + '">← ' + (zurueck ? 'Zurück' : 'Klassenkiste') + '</button>' +
+    return '<header class="top">' + (zurueck ? '<button class="btn sm quiet" data-a="' + zurueck + '">← Zurück</button>' : '<button class="kn-back" data-a="back" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>') +
       '<span class="marke"><img src="bilder/eule.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span><span class="grow"></span>' + (rechts || '') + '</header>';
   }
   ACT.back = function () { B.back(); };
@@ -984,7 +985,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
       '<label class="stack" style="gap:4px"><span class="lbl">Dein Name</span><input class="input" id="pname" maxlength="20" autocomplete="off" placeholder="z. B. Lena" value="' + h(P.name) + '" style="font-size:28px;min-height:60px"></label>' +
       '<div class="stack" style="gap:4px"><span class="lbl">Wähle dein Tier</span><div class="tiere">' + TIERE.map(function (t) { return '<button data-a="pTier" data-t="' + t[0] + '" aria-pressed="' + (P.av === t[0]) + '" aria-label="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
       '<button class="btn gold go" data-a="pJoin"' + (P.busy ? ' disabled' : '') + '>Mitmachen ✦</button><p class="err">' + h(P.err) + '</p>' +
-      (B.home ? '<button class="btn sm quiet" style="align-self:center" data-a="pHome">← Klassenkiste</button>' : '') + '</div></div>';
+      (B.home ? '<button class="kn-back" style="align-self:center" data-a="pHome" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>' : '') + '</div></div>';
     var f = document.getElementById(P.pin ? 'pname' : 'pin'); if (f && !P.name) f.focus();
   }
   ACT.pHome = function () { stop(); B.home(); };

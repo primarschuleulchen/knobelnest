@@ -987,12 +987,13 @@ main{max-width:1180px;margin:0 auto;padding:24px 24px 60px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 18px;z-index:30;font-size:18px}
 @media (max-width:640px){.top-in{padding:8px 14px;min-height:70px}.marke img{width:46px;height:46px}.marke b{font-size:23px}main{padding:16px 14px 40px}
   .banner{padding:20px}.banner h1{font-size:36px}.ring{width:96px;height:96px;font-size:50px}.spiele{grid-template-columns:1fr}.ov-bar b{font-size:20px;width:100%}}
+.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}.kn-back{display:inline-flex}.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
 </style>
 </head>
 <body>
 <header class="top"><div class="top-in">
   <div class="marke"><img src="../bilder/eule.webp" alt=""><span><b>Gedächtniskiste<i>✦</i></b><small id="kl">für Lehrpersonen</small></span></div>
-  <button class="btn sm" id="zur">← Klassenkiste</button>
+  <button class="kn-back" id="zur" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="../bilder/eule.webp" alt="" width="34" height="34"></button>
 </div></header>
 <main>
   <section class="banner">

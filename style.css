@@ -1071,3 +1071,15 @@ body.kidv .kid-go[disabled]{background:#c9d6e2;color:#5f6963;box-shadow:none;cur
 .us-nr6{font-size:22px;letter-spacing:.06em;color:#3f78a8!important}
 .ku-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--h);font-size:17px;color:#5f6963}
 .ku-brand img{width:40px;height:40px;border-radius:50%;background:#fff;padding:2px;box-shadow:0 0 0 2px #d6ad45}
+
+/* Einheitlicher Zurück-Knopf (wie Eulenkiste) */
+.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}
+.kn-back{display:inline-flex}
+.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}
+.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
+.player-bar .kn-back{min-height:0}
+.kid-top .kn-back{margin-right:auto}
+/* Fächer-Bilder in den Kacheln der Lehrperson */
+.tile .sw.sw-bild{padding:0;overflow:hidden;background:#fff!important}
+.tile .sw.sw-bild img{width:100%;height:100%;display:block;border-radius:50%}
+body.lp .tile .sw.sw-bild{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--gold)}

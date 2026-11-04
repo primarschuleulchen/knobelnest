@@ -2,6 +2,8 @@
 # Aufruf (im Repo-Hauptordner):  python3 werkstatt/einbau/alle_neu_bauen.py            -> nur prüfen
 #                                python3 werkstatt/einbau/alle_neu_bauen.py --schreiben -> Dateien im Hauptordner ersetzen
 import os, subprocess, sys, filecmp, tempfile
+sys.path.insert(0, os.path.dirname(__file__))
+from zurueck import zurueck
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 W = os.path.join(ROOT, 'werkstatt')
 JOBS = [  # (Einbau-Skript, Original, Ziel im Hauptordner)
@@ -20,6 +22,10 @@ with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run([sys.executable, os.path.join(W, script), os.path.join(W, src), out], capture_output=True, text=True)
         if r.returncode:
             ok = False; print('FEHLER  ', dst, '\n', r.stderr.strip()[-800:]); continue
+        # Einheitlicher Zurück-Knopf (Pfeil + Eule) für alle Werkzeuge
+        h = open(out, encoding='utf-8').read()
+        h = zurueck(h, '../bilder/eule.webp' if '/' in dst else 'bilder/eule.webp')
+        open(out, 'w', encoding='utf-8').write(h)
         same = filecmp.cmp(out, os.path.join(ROOT, dst), shallow=False) if os.path.exists(os.path.join(ROOT, dst)) else False
         print(('gleich  ' if same else 'anders  ') + dst)
         if write and not same:
