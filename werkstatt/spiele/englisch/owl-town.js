@@ -537,15 +537,49 @@ function person(o) {
 // Gezeichnete Figuren der Lehrerin (werkstatt/spiele/englisch/leute/<Beruf>.webp, von bauen.py als LEUTE eingebettet)
 function leute() { return typeof LEUTE !== 'undefined' ? LEUTE : {}; }
 var LTEX = {};
+// Aus der Zeichnung eine runde 3D-Figur machen: Umriss aus dem Bild, Dicke wächst vom Rand zur Mitte («aufgeblasen»),
+// vorne das Bild, hinten das Bild etwas dunkler. So sieht man auch von der Seite, dass die Figur Volumen hat.
 function cutout(job) {
-  var g = new THREE.Group(), src = leute()[job];
-  var t = LTEX[job] || (LTEX[job] = new THREE.TextureLoader().load(src.url)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-  var H = 4.4, W = H * src.w / src.h, geo = new THREE.PlaneGeometry(W, H); geo.translate(0, H / 2, 0);
-  var pl = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: t, transparent: true, alphaTest: .35, side: THREE.DoubleSide, depthTest: false }));
-  pl.renderOrder = 4;
-  pl.position.y = .05; g.add(pl); g.userData.bill = pl; g.userData.H = H;
-  var sh = new THREE.Mesh(new THREE.CircleGeometry(.75, 16), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .18, depthWrite: false }));
-  sh.rotation.x = -Math.PI / 2; sh.position.y = .03; sh.scale.set(1, .55, 1); g.add(sh);
+  var g = new THREE.Group(), src = leute()[job], H = 4.4, W = H * src.w / src.h;
+  g.userData.fig = true; g.userData.H = H;
+  var sh = new THREE.Mesh(new THREE.CircleGeometry(.8, 16), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .2, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = .03; sh.scale.set(1, .6, 1); g.add(sh);
+  var img = new Image();
+  img.onload = function () {
+    var NX = 60, NY = Math.round(NX * src.h / src.w), cv = document.createElement('canvas'); cv.width = NX; cv.height = NY;
+    var cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, NX, NY); var A = cx.getImageData(0, 0, NX, NY).data;
+    // Punkte am Rand der Zellen: drinnen, wenn eine der 4 Nachbarzellen sichtbar ist
+    function inC(x, y) { return x >= 0 && y >= 0 && x < NX && y < NY && A[(y * NX + x) * 4 + 3] > 110; }
+    var PX = NX + 1, PY = NY + 1, inside = [], dist = [], k, x, y;
+    for (y = 0; y < PY; y++) for (x = 0; x < PX; x++) { k = y * PX + x; inside[k] = inC(x - 1, y - 1) || inC(x, y - 1) || inC(x - 1, y) || inC(x, y); dist[k] = inside[k] ? 1e9 : 0; }
+    // Abstand zum Rand (zwei Durchgänge, wie ein Lineal)
+    for (var pass = 0; pass < 2; pass++) for (var yy = 0; yy < PY; yy++) for (var xx = 0; xx < PX; xx++) {
+      x = pass ? PX - 1 - xx : xx; y = pass ? PY - 1 - yy : yy; k = y * PX + x; if (!inside[k]) continue;
+      var d = dist[k], dx = pass ? 1 : -1;
+      [[dx, 0, 1], [0, dx, 1], [dx, dx, 1.414], [-dx, dx, 1.414]].forEach(function (o) { var nx = x + o[0], ny = y + o[1]; var nd = (nx < 0 || ny < 0 || nx >= PX || ny >= PY) ? 0 : dist[ny * PX + nx]; if (nd + o[2] < d) d = nd + o[2]; });
+      dist[k] = d;
+    }
+    var R = NX * .22, maxZ = W * .24, pos = [], uv = [], idx = [], idxB = [], map = {};
+    function vert(x, y, side) {
+      var key = x + ',' + y + side; if (map[key] != null) return map[key];
+      var dd = Math.min(1, Math.max(0, (dist[y * PX + x] - 1) / R)), z = maxZ * Math.sqrt(1 - (1 - dd) * (1 - dd));
+      pos.push((x / NX - .5) * W, (1 - y / NY) * H, side * z); uv.push(x / NX, 1 - y / NY);
+      return (map[key] = pos.length / 3 - 1);
+    }
+    for (y = 0; y < NY; y++) for (x = 0; x < NX; x++) {
+      if (!inC(x, y)) continue;
+      [1, -1].forEach(function (sd) {
+        var a = vert(x, y, sd), b = vert(x + 1, y, sd), c = vert(x, y + 1, sd), d2 = vert(x + 1, y + 1, sd);
+        if (sd > 0) idx.push(a, c, b, b, c, d2); else idxB.push(a, b, c, b, d2, c);
+      });
+    }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx.concat(idxB)); geo.addGroup(0, idx.length, 0); geo.addGroup(idx.length, idxB.length, 1); geo.computeVertexNormals();
+    var t = LTEX[job] || (LTEX[job] = new THREE.Texture(img)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.needsUpdate = true;
+    var mats = [new THREE.MeshLambertMaterial({ map: t, alphaTest: .06 }), new THREE.MeshLambertMaterial({ map: t, alphaTest: .06, color: '#a9a29a' })]; // hinten etwas dunkler
+    var m = new THREE.Mesh(geo, mats); m.castShadow = true; m.receiveShadow = true; m.position.y = .05; g.add(m);
+  };
+  img.src = src.url;
   return g;
 }
 function jobImg(job, cls) { var L2 = leute()[job]; return L2 ? '<img class="' + (cls || 'jb') + '" alt="" src="' + L2.url + '">' : ''; }
@@ -599,9 +633,9 @@ function placeBuild(L, g) {
       car(g, w / 2 + 1.5, fz - 2.5, 0, '#d8302a', 'truck'); break;
     case 'police': house(w, 10, d, P.col, 'office', g); bx(w + .6, .6, d + .6, '#1d4f96', 0, 10.2, 0, g);
       var hp = cyl(4, 4, .2, '#3a3a3a', 0, 10.6, 0, g, 20); var ht = canvasTex(128, 128, function (gg) { gg.fillStyle = '#3a3a3a'; gg.fillRect(0, 0, 128, 128); gg.fillStyle = '#fff'; gg.font = 'bold 90px Arial'; gg.textAlign = 'center'; gg.textBaseline = 'middle'; gg.fillText('H', 64, 68); });
-      var hm = new THREE.Mesh(new THREE.CircleGeometry(3.6, 20), new THREE.MeshBasicMaterial({ map: ht })); hm.rotation.x = -Math.PI / 2; hm.position.set(0, 10.72, 0); g.add(hm);
+      var hm = new THREE.Mesh(new THREE.CircleGeometry(3.6, 20), new THREE.MeshBasicMaterial({ map: ht })); hm.rotation.x = -Math.PI / 2; hm.position.set(0, 10.78, 0); g.add(hm);
       door(g, L, 3, 3.4, '#1d3f76'); sign(L, g, 7.8, 13); car(g, -w / 2 + 4, fz + 2.2, Math.PI / 2, '#f4f4f4', 'police'); break;
-    case 'hospital': house(w, 22, d, P.col, 'office', g); house(14, 10, d + 4, '#e8eef6', 'office', g, -w / 2 + 7, 0, 2);
+    case 'hospital': house(w, 22, d, P.col, 'office', g); house(14, 10, d + 3, '#e8eef6', 'office', g, -w / 2 + 7.4, 0, 2.2);
       bx(.9, 3.4, .3, '#d23a3a', w / 4, 18.5, fz + .2, g); bx(3.4, .9, .3, '#d23a3a', w / 4, 18.5, fz + .2, g);
       door(g, L, 4, 3.6, '#5a7a9a'); sign(L, g, 8.0, 12); car(g, w / 2 - 4, fz + 2.2, Math.PI / 2, '#ffffff', 'amb'); break;
     case 'supermarket': house(w, 8, d, P.col, 'office', g); bx(w + .4, .6, d + .4, '#2f7d4a', 0, 8.3, 0, g); door(g, L, 6, 3.4, '#a8d0e8'); sign(L, g, 6.4, 14);
@@ -679,7 +713,7 @@ function buildWorld() {
   w.cam = new THREE.PerspectiveCamera(58, 1, 1, 3000);
   sc.add(new THREE.HemisphereLight('#ffffff', '#8ab07a', 1.6));
   var sun = new THREE.DirectionalLight('#fff6e0', 2.0); sun.position.set(-120, 200, -60); sun.target.position.set(140, 0, 80);
-  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); var sc2 = sun.shadow.camera; sc2.left = -220; sc2.right = 220; sc2.top = 200; sc2.bottom = -200; sc2.near = 10; sc2.far = 600; sun.shadow.bias = -0.0008;
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); var sc2 = sun.shadow.camera; sc2.left = -220; sc2.right = 220; sc2.top = 200; sc2.bottom = -200; sc2.near = 10; sc2.far = 600; sun.shadow.bias = -0.0004; sun.shadow.normalBias = .06;
   sc.add(sun); sc.add(sun.target);
   var city = w.city = new THREE.Group(); sc.add(city);
   var PAVE = new THREE.MeshLambertMaterial({ map: noiseTex('#e2ddd2', 18, 3.2, true) }); PAVE.map.repeat.set(14, 10);
@@ -716,7 +750,7 @@ function buildWorld() {
       return;
     }
     var r = s.d === 'H' ? bx(len, .1, 8, roadM, cx, .06, cz, city, false) : bx(8, .1, len, roadM, cx, .06, cz, city, false); r.receiveShadow = true;
-    for (var t = 8; t < len - 6; t += 5) {
+    for (var t = 10.5; t < len - 9; t += 5) {
       var px = s.d === 'H' ? A.x + t : A.x, pz = s.d === 'H' ? A.z : A.z + t;
       if (Math.hypot(px - RBX, pz - RBZ) < RB.r + 5) continue;
       INS.dash.push(s.d === 'H' ? [px, .13, pz, 2.2, 1, .3] : [px, .13, pz, .3, 1, 2.2]);
@@ -731,7 +765,7 @@ function buildWorld() {
     // Zebrastreifen an den Kreuzungen
     [[A, 1], [B, -1]].forEach(function (q) {
       var nd = q[0], dir = q[1]; if (isRB(GX.indexOf(nd.x), GZ.indexOf(nd.z))) return;
-      for (var k = -3; k <= 3; k += 1.2) INS.zebra.push(s.d === 'H' ? [nd.x + dir * 6.3, .13, nd.z + k, 2, 1, .6] : [nd.x + k, .13, nd.z + dir * 6.3, .6, 1, 2]);
+      for (var k = -3; k <= 3; k += 1.2) INS.zebra.push(s.d === 'H' ? [nd.x + dir * 6.3, .15, nd.z + k, 2, 1, .6] : [nd.x + k, .15, nd.z + dir * 6.3, .6, 1, 2]);
     });
   });
   for (i = 0; i < GX.length; i++) for (j = 0; j < GZ.length; j++) if (!isRB(i, j)) bx(8, .1, 8, roadM, GX[i], .09, GZ[j], city, false);
@@ -750,8 +784,8 @@ function buildWorld() {
       if (L.roof === 'dach') { roof(ww, dd, 3, ['#b5402f', '#8a4a2a', '#5a6a7a', '#a0522d'][Math.floor(R() * 4)], g, hh); bx(.9, 2.4, .9, '#8a5a4a', ww * .25, hh + 2, -dd * .15, g); }
       else {
         bx(ww + .4, .7, dd + .4, shade(L.wall, -.22), 0, hh + .35, 0, g);           // Dachrand
-        bx(2.4, 1.6, 2.4, '#c8c8c8', (R() - .5) * 4, hh + 1.5, (R() - .5) * 4, g);
-        if (tall && R() < .5) { cyl(1.1, 1.1, 2.4, '#9a8a7a', -ww * .25, hh + 1.9, dd * .2, g, 10); cyl(.08, .08, 4, '#555', ww * .3, hh + 2.7, -dd * .2, g, 4); }
+        bx(2.4, 1.6, 2.4, '#c8c8c8', (R() - .5) * 4, hh + 1.6, (R() - .5) * 4, g);
+        if (tall && R() < .5) { cyl(1.1, 1.1, 2.4, '#9a8a7a', -ww * .25, hh + 2.0, dd * .2, g, 10); cyl(.08, .08, 4, '#555', ww * .3, hh + 2.7, -dd * .2, g, 4); }
       }
       if (tall && L.wall.charCodeAt(2) % 2 === 0) { g.updateMatrixWorld(true); for (var fy = 4.6; fy < hh - 1.5; fy += 3.6) [-1, 1].forEach(function (sx) { var bxp = sx * ww * .24;
         INS.balc.push(instM(g, bxp, fy, dd / 2 + .6, ww * .36, .25, 1.2)); INS.rail.push(instM(g, bxp, fy + .55, dd / 2 + 1.15, ww * .36, .9, .08)); }); }
@@ -795,8 +829,8 @@ function buildWorld() {
     var x0 = o[0], z0 = o[1], dx = o[2], dz = o[3], L0 = dx ? (dx < 0 ? 0 : 0) : 0, len = 620;
     var st = dx > 0 ? 75 : dz < 0 ? 28 : 30;  // erst nach den Gebäuden am Stadtrand
     var cx3 = x0 + dx * (st + len / 2), cz3 = z0 + dz * (st + len / 2);
-    bx(dx ? len : 7, .08, dx ? 7 : len, roadOut, cx3, .05, cz3, city, false).receiveShadow = true;
-    bx(dx ? st + 4 : 7, .08, dx ? 7 : st + 4, roadOut, x0 + dx * st / 2, .045, z0 + dz * st / 2, city, false);
+    var Lr = len + st - 4, cr3 = 4 + Lr / 2;
+    bx(dx ? Lr : 7, .08, dx ? 7 : Lr, roadOut, x0 + dx * cr3, .05, z0 + dz * cr3, city, false).receiveShadow = true;
     for (var t3 = st + 40; t3 < st + len; t3 += 22 + R() * 30) [-1, 1].forEach(function (sd) {
       if (R() < .45) return;
       var hx = x0 + dx * t3 - dz * sd * 14, hz = z0 + dz * t3 + dx * sd * 14;
@@ -820,7 +854,7 @@ function buildWorld() {
     if (inCity(fx, fz, 40) || (fx > 320 && fx < 372 && fz > -40 && fz < 200) || Math.abs(fz - 205) < 30) continue;
     var fw = 40 + R() * 50, fd = 30 + R() * 40, col3 = FELD[Math.floor(R() * FELD.length)];
     var fm = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, function (g4) { g4.fillStyle = col3; g4.fillRect(0, 0, 64, 64); g4.fillStyle = 'rgba(0,0,0,.08)'; for (var y4 = 0; y4 < 64; y4 += 8) g4.fillRect(0, y4, 64, 3); }) });
-    var fl = mesh(new THREE.PlaneGeometry(fw, fd), fm, fx, .03 + f3 * .001, fz, city, false); fl.rotation.x = -Math.PI / 2; fl.rotation.z = Math.round(R() * 3) * Math.PI / 2 + (R() - .5) * .3; fl.receiveShadow = true;
+    var fl = mesh(new THREE.PlaneGeometry(fw, fd), fm, fx, .04 + f3 * .012, fz, city, false); fl.rotation.x = -Math.PI / 2; fl.rotation.z = Math.round(R() * 3) * Math.PI / 2 + (R() - .5) * .3; fl.receiveShadow = true;
     if (R() < .5) for (var hb = 0; hb < 4; hb++) cyl(1.2, 1.2, 1.6, '#e8c86a', fx + (R() - .5) * fw * .6, .8, fz + (R() - .5) * fd * .6, city, 10).rotation.z = Math.PI / 2;
   }
   // Wälder
@@ -879,12 +913,11 @@ function buildWorld() {
       if (L.place === 'farm') { lx = 4; lz = L.d / 2 - 3; }
       if (L.place === 'school') lz = L.d / 2 - 2;
       if (L.place === 'church') lz = L.d / 2 - .5;
-      if (p.userData.bill && L.place !== 'park' && L.place !== 'farm') lz = Math.max(lz, L.d / 2 + 2.45); // Bildfiguren vor Markisen und Vordächer
+      if (p.userData.fig && L.place !== 'park' && L.place !== 'farm') lz = Math.max(lz, L.d / 2 + 2.45); // Bildfiguren vor Markisen und Vordächer
       p.position.set(lx, .24, lz); L.g.add(p);
       if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
-      if (J[0] === 'musician' && !p.userData.bill) bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
-      var lb = labelSprite(J[0]); lb.position.set(lx, p.userData.H ? p.userData.H + 1.4 : 4.3, lz); L.g.add(lb);
-      if (p.userData.bill) { lb.material.depthTest = false; lb.renderOrder = 6; }
+      if (J[0] === 'musician' && !p.userData.fig) bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
+      var lb = labelSprite(J[0]); lb.position.set(lx, p.userData.H ? p.userData.H + 1.6 : 4.3, lz - (p.userData.H ? .8 : 0)); L.g.add(lb);
       w.workers.push({ job: J[0], place: L.place, p: p, lb: lb, ph: Math.random() * 6, box: LOTS.indexOf(L) });
     });
   });
@@ -1012,16 +1045,7 @@ function loop() {
   var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
   placeLabels(showP, op, far);
   WD.workers.forEach(function (w) {
-    if (!w.p.userData.bill) { w.p.rotation.y = Math.sin(t * .8 + w.ph) * .25; return; }
-    // Bildfigur dreht sich immer zur Kamera (nur um die senkrechte Achse)
-    // Verdeckt ein Haus die Figur? (Bild wird ohne Tiefe gezeichnet, darum selber prüfen)
-    w.p.getWorldPosition(PV2); var cp3 = WD.cam.position, vis = PV2.distanceTo(cp3) < 160;
-    for (var q = 1; vis && q < 14; q++) { var f = q / 14, x = cp3.x + (PV2.x - cp3.x) * f, y = cp3.y + (PV2.y + 2.5 - cp3.y) * f, z = cp3.z + (PV2.z - cp3.z) * f;
-      for (var bi = 0; bi < WD.boxes.length; bi++) { var b = WD.boxes[bi]; if (bi !== w.box && x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1 && y < b.h - 1) { vis = false; break; } } }
-    w.p.visible = vis; w.lb.scale.set(vis ? 6 : .001, vis ? 1.5 : .001, 1);
-    if (vis) { PV3 = PV3 || new THREE.Vector3(); PV3.set(0, 1, 0).applyQuaternion(WD.cam.quaternion).multiplyScalar(w.p.userData.H + .9).add(PV2); w.p.parent.worldToLocal(PV3); w.lb.position.copy(PV3); }
-    // Bild ganz zur Kamera drehen, die Füsse bleiben am Boden
-    w.p.parent.getWorldQuaternion(PQ); w.p.userData.bill.quaternion.copy(PQ.invert()).multiply(WD.cam.quaternion);
+    w.p.rotation.y = Math.sin(t * .8 + w.ph) * (w.p.userData.fig ? .45 : .25);
   });
   WD.hl.forEach(function (m) { m.position.y = m.userData.y0 + Math.sin(t * 3) * .5; if (m.userData.spin) m.rotation.y = t * 2; });
   if (WD.grow) { var gr = WD.grow; gr.t = Math.min(1, gr.t + dt / gr.dur); gr.list.forEach(function (m) { m.geometry.setDrawRange(0, Math.floor(m.geometry.index.count * gr.t / 6) * 6); }); if (gr.t >= 1) WD.grow = null; }
