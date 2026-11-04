@@ -2211,7 +2211,7 @@
     var tiles = fachs.map(function (f) {
       var gs = games.filter(function (g) { return g.fach === f; }), n = gs.length;
       // Ein Fach, das nur aus der Vokabelkiste besteht: Kachel mit dem Kisten-Symbol, öffnet die Vokabelkiste direkt
-      if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic">' + VK_SVG + '</span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
+      if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic ic-bild"><img src="bilder/kacheln/vokabelkiste.webp" alt="" draggable="false"></span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '"><span class="ic">' + h(f.charAt(0)) + '</span><b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
@@ -2219,15 +2219,15 @@
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
-      '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="9" y="7" width="46" height="52" rx="6" fill="#87ad74"/><rect x="14" y="7" width="41" height="52" rx="4" fill="#6f9a5f"/><rect x="18" y="11" width="33" height="44" rx="3" fill="#fbfaf6"/><path d="M23 21h23M23 28h23M23 35h17M23 42h20" stroke="#c9d3c4" stroke-width="2.4" stroke-linecap="round"/><path d="M23 21h12" stroke="#2f6fd0" stroke-width="2.6" stroke-linecap="round"/><path d="M23 35h9" stroke="#d0493f" stroke-width="2.6" stroke-linecap="round"/><path d="M41 40l3 3 6-7" fill="none" stroke="#3f9a52" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<g fill="none" stroke="#5c6670" stroke-width="2.4" stroke-linecap="round"><path d="M11 15h7M11 24h7M11 33h7M11 42h7M11 51h7"/></g><rect x="44" y="4" width="6" height="14" rx="1.5" fill="#e07a70"/></svg>' + '</span>' +
-        '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
-      (!toolOn(kt, 'tafel') ? '' : '<button class="tafel-tile" data-a="kTafel"><span class="ic" style="flex:none;width:60px;height:60px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ic(I.board, 34, '#1B2A3D', 2) + '</span>' +
+      '<div class="tile-pair">' + (K.heftOk && toolOn(kt, 'heft') ? '<button class="tafel-tile heft-tile" data-a="kHeft"><span class="ic ic-bild"><img src="bilder/kacheln/hausaufgaben.webp" alt="" draggable="false"></span>' +
+
+      '<span><b>Hausaufgaben</b><span>Schau in dein Hausaufgabenheft.</span></span></button>' : '') +
+      (!toolOn(kt, 'tafel') ? '' : '<button class="tafel-tile" data-a="kTafel"><span class="ic ic-bild"><img src="bilder/kacheln/arbeitsstand.webp" alt="" draggable="false"></span>' +
       '<span><b>Arbeitsstand</b><span>Zeig, wo du beim Arbeiten stehst, und finde Hilfe.</span></span></button>') +
-      (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + '<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true"><rect x="6" y="9" width="52" height="44" rx="5" fill="#c99a5b"/><rect x="10" y="13" width="44" height="36" rx="3" fill="#e6c48f"/><rect x="14" y="17" width="16" height="14" rx="1.5" fill="#fff3a6" transform="rotate(-5 22 24)"/><rect x="33" y="19" width="16" height="14" rx="1.5" fill="#bfe3f5" transform="rotate(4 41 26)"/><rect x="21" y="33" width="17" height="13" rx="1.5" fill="#f7c6d3" transform="rotate(-3 29 39)"/><circle cx="22" cy="18" r="2.4" fill="#d0493f"/><circle cx="41" cy="20" r="2.4" fill="#3f7fc0"/><circle cx="29" cy="34" r="2.4" fill="#3f9a52"/></svg>' + '</span>' +
-        '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
-      (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic" style="flex:none;width:68px;height:68px;border-radius:16px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center">' + ATELIER_SVG + '</span>' +
-        '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
+      (K.pinOk && toolOn(kt, 'pin') ? '<button class="tafel-tile pin-tile" data-a="kPin"><span class="ic ic-bild"><img src="bilder/kacheln/pinnwand.webp" alt="" draggable="false"></span>' +
+      '<span><b>Pinnwand</b><span>Schreib deine Ideen und stimm ab.</span></span></button>' : '') +
+      (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic ic-bild"><img src="bilder/kacheln/atelier.webp" alt="" draggable="false"></span>' +
+      '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
   };
   K.view_thema = function () {
     var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
