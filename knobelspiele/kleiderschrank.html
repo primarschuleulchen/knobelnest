@@ -108,15 +108,16 @@ button.card:active{transform:scale(.96)}
 @keyframes puls{50%{box-shadow:0 0 0 14px rgba(200,87,78,.18),var(--sch)}}
 .gehoert{color:var(--soft);font-size:20px;min-height:26px;text-align:center}
 .buehne{width:min(100%,620px);display:grid;grid-template-columns:1fr 1.15fr 1fr;grid-template-rows:auto auto;align-items:end;column-gap:6px;row-gap:6px}
-.buehne .sprech{grid-row:1;min-height:70px;display:flex;align-items:flex-end}
+.buehne .sprech{grid-row:1;grid-column:1/4;height:92px;display:flex;align-items:flex-end;justify-content:flex-start}
 .blase{position:relative;background:#fff;border:2px solid var(--ink);border-radius:18px;padding:8px 12px;font-size:clamp(19px,4.4vw,24px);box-shadow:var(--sch-k);line-height:1.2}
 .blase::after{content:"";position:absolute;bottom:-11px;left:30px;width:18px;height:18px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
 .blase.r::after{left:auto;right:30px}
-.sprech .blase{width:100%}
-.sprech .blase::after{left:calc(23% - 10px)}.sprech .blase.r{text-align:right}.sprech .blase.r::after{left:auto;right:calc(23% - 10px)}
+.sprech .blase{width:max-content;max-width:100%;margin-bottom:12px;text-align:center}
+.sprech .blase::after{left:calc(var(--t1,30px) - 10px)}
+.sprech .blase.zwei::before{content:"";position:absolute;bottom:-11px;left:calc(var(--t2,60px) - 10px);width:18px;height:18px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
 .rueck{min-height:44px;font-size:24px;text-align:center;margin:-6px 0 8px;max-width:760px;line-height:1.3}
 .rueck .em{font-size:32px;vertical-align:middle;margin:0 4px;line-height:1}
-.erzaehl{grid-column:1/4;display:flex;align-items:center;gap:22px;justify-content:center}
+.erzaehl{grid-row:1;grid-column:1/4;height:92px;display:flex;align-items:center;gap:22px;justify-content:center}
 .eule-bild{width:auto;height:78px;display:block;flex:none}
 .erzaehl .blase::after{left:-11px;top:50%;bottom:auto;transform:translateY(-50%) rotate(135deg)}
 .kind{grid-row:2;display:flex;flex-direction:column;align-items:center;position:relative}
@@ -139,7 +140,7 @@ button.card:active{transform:scale(.96)}
 .satz .pkt{font-size:26px}
 .de{font-size:clamp(22px,5vw,28px);text-align:center}
 @media (max-height:700px){.bild{width:min(44vw,170px)}.mik{width:92px;height:92px;font-size:40px}}
-@media (max-width:520px){.kind-bild{height:min(26vh,170px)}.ding .bild{width:min(32vw,118px)}.buehne .sprech{min-height:56px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
+@media (max-width:520px){.kind-bild{height:min(26vh,170px)}.ding .bild{width:min(32vw,118px)}.buehne .sprech,.erzaehl{height:84px}.kaertli button,.satz button{min-height:44px;padding:4px 12px}}
 </style>
 </head>
 <body>
@@ -407,52 +408,71 @@ function stufeSprechen(api) {
 }
 
 // ---------- Stufe 5 und 6: Mia und Noah
+// Besitzer und wer spricht: self = das Kind über sich, other = ein Kind zum anderen, beide-self = beide Kinder zusammen (our),
+// eule = die Eule erzählt (his, her, their), eule-zu-beiden = die Eule spricht mit beiden (your für mehrere, «euer»)
 var PR = {
   my: { de: 'mein', wer: 'self' }, your: { de: 'dein', wer: 'other' }, his: { de: 'sein', wer: 'noah' },
-  her: { de: 'ihr', wer: 'mia' }, our: { de: 'unser', wer: 'beide-self' }, their: { de: 'ihr', wer: 'beide' }
+  her: { de: 'ihr', wer: 'mia' }, our: { de: 'unser', wer: 'beide-self' }, their: { de: 'ihr', wer: 'beide' },
+  your2: { de: 'euer', wer: 'eule-zu-beiden' }
 };
 var PAAR = { my: 'your', your: 'my', his: 'her', her: 'his', our: 'their', their: 'our' };
 function aufgabe(x, mehrErlaubt) {
-  var p = pick(['my', 'your', 'his', 'her', 'my', 'your', 'his', 'her', 'our', 'their'], 1)[0], spr = null, own;
-  var c = PR[p].wer;
+  var key = pick(['my', 'my', 'your', 'your', 'his', 'his', 'her', 'her', 'our', 'our', 'their', 'their', 'your2'], 1)[0], spr = 'eule', own, mit = null;
+  var c = PR[key].wer, p = key === 'your2' ? 'your' : key;
   if (c === 'self') { own = pick(['mia', 'noah'], 1)[0]; spr = own; }
-  else if (c === 'other') { own = pick(['mia', 'noah'], 1)[0]; spr = own === 'mia' ? 'noah' : 'mia'; }
-  else if (c === 'beide-self') { own = 'beide'; spr = pick(['mia', 'noah'], 1)[0]; }
+  else if (c === 'other') { own = pick(['mia', 'noah'], 1)[0]; spr = own === 'mia' ? 'noah' : 'mia'; mit = own; }
+  else if (c === 'beide-self') { own = 'beide'; spr = 'beide'; }
+  else if (c === 'eule-zu-beiden') { own = 'beide'; mit = 'beide'; }
   else own = c;
   var enPl = !x.sg || (mehrErlaubt && Math.random() < 0.45);
   var dePl = x.dg === 'p' || (x.sg && enPl);
-  var g = dePl ? 'p' : x.dg, noun = dePl && x.sg ? x.dpl : x.dn;
-  var poss = PR[p].de + (g === 'f' || g === 'p' ? 'e' : '');
-  return { x: x, p: p, own: own, spr: spr, enPl: enPl, zwei: !!(x.sg && enPl),
+  var g = dePl ? 'p' : x.dg, noun = dePl && x.sg ? x.dpl : x.dn, fe = g === 'f' || g === 'p';
+  var poss = key === 'your2' ? (fe ? 'eure' : 'euer') : PR[key].de + (fe ? 'e' : '');
+  return { x: x, key: key, p: p, own: own, spr: spr, mit: mit, enPl: enPl, zwei: !!(x.sg && enPl),
     deP: poss + ' ' + noun, deS: (dePl ? 'Das sind ' : 'Das ist ') + poss + ' ' + noun + '.',
     word: enPl ? x.pl : x.sg, enP: p + ' ' + (enPl ? x.pl : x.sg),
     enS: (enPl ? 'These are ' : 'This is ') + p + ' ' + (enPl ? x.pl : x.sg) };
 }
+var NAME = { mia: 'Mia', noah: 'Noah', beide: 'Mia und Noah' };
 function buehne(a, text) {
   var b = neu('buehne');
-  if (a.spr) {
-    var bl = neu('sprech', '<div class="blase' + (a.spr === 'noah' ? ' r' : '') + '">' + text + '</div>');
-    bl.style.gridColumn = a.spr === 'mia' ? '1/3' : '2/4'; if (a.spr === 'noah') bl.style.justifyContent = 'flex-end';
-    b.appendChild(bl);
-  } else b.appendChild(neu('erzaehl', D.eule + '<div class="blase">' + text + '</div>'));
+  // obere Zeile hat immer dieselbe Höhe (Kinder und Bild springen nicht)
+  if (a.spr !== 'eule') { var bl = neu('sprech', '<div class="blase">' + text + '</div>'); bl.dataset.wer = a.spr; b.appendChild(bl); }
+  else b.appendChild(neu('erzaehl', D.eule + '<div class="blase">' + text + '</div>'));
   var m = neu('kind' + (a.own === 'mia' || a.own === 'beide' ? ' own' : ''), D.mia + '<span class="nm2">Mia</span>'); m.style.gridColumn = '1';
   var n = neu('kind' + (a.own === 'noah' || a.own === 'beide' ? ' own' : ''), D.noah + '<span class="nm2">Noah</span>'); n.style.gridColumn = '3';
   var d = neu('ding ' + (a.own === 'mia' ? 'l' : a.own === 'noah' ? 'r' : 'm'), '<div class="bild">' + art(a.x.id, a.zwei) + '</div>');
   b.appendChild(m); b.appendChild(d); b.appendChild(n);
-  b.appendChild(neu('wer', a.spr ? (a.spr === 'mia' ? 'Mia' : 'Noah') + ' sagt:' : ''));
-  if (!a.spr) b.lastChild.textContent = 'Die Eule erzählt über ' + (a.own === 'beide' ? 'Mia und Noah' : a.own === 'mia' ? 'Mia' : 'Noah') + '.';
-  else if (a.spr) b.lastChild.textContent = (a.spr === 'mia' ? 'Mia' : 'Noah') + ' spricht' + (a.p === 'your' ? ' mit ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : a.p === 'our' ? ' über sich und ' + (a.spr === 'mia' ? 'Noah' : 'Mia') : ' über sich') + '.';
+  var t = a.spr === 'eule' ? (a.mit ? 'Die Eule spricht mit Mia und Noah.' : 'Die Eule erzählt über ' + NAME[a.own] + '.')
+    : a.spr === 'beide' ? 'Mia und Noah sprechen über sich.'
+    : NAME[a.spr] + ' spricht' + (a.mit ? ' mit ' + NAME[a.mit] : ' über sich') + '.';
+  b.appendChild(neu('wer', h(t)));
   return b;
 }
+// Sprechblase so breit wie der Text, Spitze genau über dem Kind (bei «beide» zwei Spitzen)
+function richte(b) {
+  var s = b.querySelector('.sprech'); if (!s) return;
+  var bl = s.querySelector('.blase'), sr = s.getBoundingClientRect(), ks = b.querySelectorAll('.kind'); if (!sr.width) return;
+  function cx(el) { var q = el.getBoundingClientRect(); return q.left + q.width / 2 - sr.left; }
+  var wer = s.dataset.wer, z = wer === 'mia' ? [cx(ks[0])] : wer === 'noah' ? [cx(ks[1])] : [cx(ks[0]), cx(ks[1])];
+  bl.style.minWidth = z.length > 1 ? (z[1] - z[0] + 56) + 'px' : '';
+  var bw = bl.offsetWidth, mitte = (z[0] + z[z.length - 1]) / 2, left = Math.max(0, Math.min(sr.width - bw, mitte - bw / 2));
+  bl.style.marginLeft = left + 'px';
+  bl.style.setProperty('--t1', Math.max(18, Math.min(bw - 18, z[0] - left)) + 'px');
+  if (z.length > 1) bl.style.setProperty('--t2', Math.max(18, Math.min(bw - 18, z[1] - left)) + 'px');
+  bl.classList.toggle('zwei', z.length > 1);
+}
+window.addEventListener('resize', function () { Array.prototype.forEach.call(document.querySelectorAll('.buehne'), richte); });
+function buehneRein(w, a, text) { var b = buehne(a, text); w.appendChild(b); richte(b); requestAnimationFrame(function () { richte(b); }); return b; }
 function tippPr(a) {
-  return { my: '«mein» = my', your: '«dein» = your', his: 'Es gehört Noah (einem Jungen) → his', her: 'Es gehört Mia (einem Mädchen) → her',
-    our: '«unser» = our', their: 'Es gehört Mia und Noah → their' }[a.p];
+  return { my: '«mein» = my', your: '«dein» = your', your2: '«euer» = your (auch für mehrere Personen)', his: 'Es gehört Noah (einem Jungen) → his',
+    her: 'Es gehört Mia (einem Mädchen) → her', our: '«unser» = our', their: 'Es gehört Mia und Noah → their' }[a.key];
 }
 function stufeBegleiter(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
     var a = aufgabe(liste[k], false), lock = false; w.innerHTML = ''; fb('');
-    w.appendChild(buehne(a, '<b>' + h(a.deP) + '</b>'));
+    buehneRein(w, a, '<b>' + h(a.deP) + '</b>');
     api.msg('<span class="em">🧺</span> Wem gehört es? Wie sagt man das auf Englisch?');
     var opts = [a.p, PAAR[a.p]], rest = shuffle(['my', 'your', 'his', 'her', 'our', 'their'].filter(function (q) { return opts.indexOf(q) < 0; }));
     opts = shuffle(opts.concat(rest.slice(0, 2)));
@@ -477,7 +497,7 @@ function stufeSaetze(api) {
   var w = neu('ks'); api.stage.appendChild(w); var liste = reihe(G.n), k = 0;
   function frage() {
     var a = aufgabe(liste[k], true), vers = 0, lock = false; w.innerHTML = ''; fb('');
-    w.appendChild(buehne(a, '<b>' + h(a.deS) + '</b>'));
+    buehneRein(w, a, '<b>' + h(a.deS) + '</b>');
     var ziel = a.enS.split(' ');
     var dazu = [a.enPl ? 'This' : 'These', a.enPl ? 'is' : 'are', PAAR[a.p]];
     if (a.x.sg) dazu.push(a.enPl ? a.x.sg : a.x.pl);
