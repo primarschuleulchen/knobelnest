@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wort des Tages</title>
+<meta name="knobelnest-sterne" content='{"modus":"sammeln","pro":1,"max":20}'>
+<!-- Gebaut mit werkstatt/spiele/bau_wort_des_tages.py (Schrift und Eule sind eingepackt) -->
+<style>
+@font-face{font-family:"Patrick Hand";src:url(data:font/woff2;base64,__FONT__) format("woff2");font-weight:400;font-display:swap}
+:root{
+  --bg:#f4f9fd; --ink:#1f2421; --soft:#5f6963; --line:#dbe7f1; --line2:#c5d8e8;
+  --gold:#d6ad45; --gold-d:#b98d25; --sky-soft:#dcf0fd; --sky-deep:#3f78a8; --sun-soft:#fbf3dc; --leaf-soft:#e9f1e3;
+  --ok:#5f9b4a; --near:#e2b93f; --no:#9aabbb;
+  --schatten:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);
+  --f:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:19px;-webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(circle at 12% 8%,rgba(214,173,69,.06) 0 120px,transparent 121px),radial-gradient(circle at 92% 90%,rgba(63,120,168,.08) 0 160px,transparent 161px)}
+button{font-family:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;min-height:100%;height:100dvh;display:flex;flex-direction:column;padding:10px 12px max(10px,env(safe-area-inset-bottom))}
+
+/* Kopf */
+.kopf{display:flex;align-items:center;gap:10px;background:#fff;border-radius:22px;padding:8px 10px 8px 12px;box-shadow:var(--schatten)}
+.kopf img{width:46px;height:46px;flex:none}
+.kopf .t{flex:1;min-width:0;line-height:1.05}
+.kopf h1{margin:0;font-size:27px;font-weight:400;white-space:nowrap}
+.kopf .sub{font-size:16px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kopf .sub .stern{color:var(--gold)}
+.rund{width:44px;height:44px;flex:none;border-radius:50%;border:2px solid var(--ink);background:#fff;font-size:21px;line-height:1;display:grid;place-items:center;box-shadow:0 4px 12px rgba(63,120,168,.16);transition:transform .15s}
+.rund:hover{transform:translateY(-2px)}
+.rund svg{width:22px;height:22px}
+
+/* Umschalter Wort des Tages / Übungswort */
+.modi{display:flex;justify-content:center;gap:6px;margin:10px 0 0}
+.modus{border:1.5px solid transparent;background:transparent;border-radius:999px;padding:4px 16px;font-size:18px;min-height:38px}
+.modus[aria-pressed="true"]{background:#fff;border-color:var(--ink);box-shadow:var(--schatten)}
+
+/* Meldung */
+.meldung{min-height:34px;margin:6px 0 2px;text-align:center;font-size:19px;display:flex;align-items:center;justify-content:center}
+.meldung span{background:var(--ink);color:#fff;border-radius:14px;padding:3px 14px;animation:rein .2s ease-out}
+.meldung span.gut{background:var(--ok)}
+@keyframes rein{from{opacity:0;transform:translateY(-6px)}}
+
+/* Spielfeld */
+.feld{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.gitter{display:grid;grid-template-rows:repeat(6,1fr);gap:7px;height:min(100%,calc((100vw - 24px) * 1.2),420px);aspect-ratio:5/6}
+.reihe{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.reihe.wackeln{animation:wackeln .4s}
+@keyframes wackeln{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.kachel{display:grid;place-items:center;border-radius:12px;background:#fff;border:2px solid var(--line2);font-size:clamp(26px,7.5vmin,38px);text-transform:uppercase;line-height:1;user-select:none}
+.kachel.voll{border-color:var(--ink);animation:plopp .12s}
+@keyframes plopp{50%{transform:scale(1.08)}}
+.kachel.ok,.kachel.near,.kachel.no{border-color:transparent;color:#fff;animation:drehen .5s both}
+.kachel.ok{background:var(--ok)}
+.kachel.near{background:var(--near);color:var(--ink)}
+.kachel.no{background:var(--no)}
+.kachel.sofort{animation:none}
+@keyframes drehen{0%{transform:rotateX(0);background:#fff;color:var(--ink);border-color:var(--ink)}49%{background:#fff;color:var(--ink);border-color:var(--ink)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.reihe.jubel .kachel{animation:huepfen .5s both}
+@keyframes huepfen{40%{transform:translateY(-14px)}70%{transform:translateY(3px)}}
+
+/* Tastatur */
+.tasten{display:flex;flex-direction:column;gap:6px;margin-top:8px;user-select:none}
+.tr{display:flex;justify-content:center;gap:4px}
+.taste{flex:1 1 0;max-width:46px;min-width:0;height:50px;border-radius:10px;border:0;background:#fff;font-size:21px;padding:0;box-shadow:0 2px 0 var(--line2),0 4px 10px rgba(63,120,168,.12);touch-action:manipulation}
+.taste:active{transform:translateY(2px);box-shadow:0 0 0 var(--line2)}
+.taste.breit{flex:1.6 1 0;max-width:74px;font-size:17px}
+.taste.ok{background:var(--ok);color:#fff;box-shadow:none}
+.taste.near{background:var(--near);box-shadow:none}
+.taste.no{background:var(--no);color:#fff;box-shadow:none;opacity:.75}
+.taste svg{width:24px;height:24px;vertical-align:middle}
+.pruefen{margin:10px auto 0;display:block;min-width:180px;min-height:48px;border:2px solid var(--ink);border-radius:14px;background:var(--sky-soft);font-size:21px;box-shadow:var(--schatten);transition:transform .15s,opacity .15s}
+.pruefen:disabled{opacity:.45;box-shadow:none;cursor:default}
+.pruefen:not(:disabled):hover{transform:translateY(-2px)}
+
+/* Fenster (Anleitung, Statistik) */
+.decke{position:fixed;inset:0;background:rgba(31,36,33,.35);display:flex;align-items:center;justify-content:center;padding:14px;z-index:9}
+.decke[hidden]{display:none}
+.fenster{background:#fff;border-radius:22px;box-shadow:var(--schatten);width:min(480px,100%);max-height:calc(100dvh - 28px);overflow:auto;animation:rein .2s}
+.fenster .fk{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
+.fenster h2{flex:1;margin:0;font-size:26px;font-weight:400}
+.fenster .zu{width:40px;height:40px;border-radius:50%;border:0;background:var(--sky-soft);font-size:22px}
+.fenster .inhalt{padding:4px 18px 18px;line-height:1.35}
+.fenster p{margin:8px 0}
+.sterne{color:var(--gold);letter-spacing:4px;text-align:center;margin:6px 0}
+.bsp{display:flex;gap:5px;margin:10px 0 4px}
+.bsp .kachel{width:44px;height:44px;font-size:26px;animation:none}
+.bsp+p{margin-top:2px;color:var(--soft)}
+.zahlen{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:6px 0 12px}
+.zahlen b{display:block;font-size:34px;font-weight:400;line-height:1}
+.zahlen span{font-size:15px;color:var(--soft);line-height:1.1;display:block}
+.balken{display:flex;flex-direction:column;gap:5px}
+.balken div{display:flex;align-items:center;gap:8px;font-size:18px}
+.balken i{font-style:normal;display:inline-block;min-width:26px;padding:1px 8px;border-radius:8px;background:var(--line);text-align:right}
+.balken i.jetzt{background:var(--gold);color:var(--ink)}
+.knopf{display:block;margin:16px auto 0;min-height:46px;padding:0 22px;border:2px solid var(--ink);border-radius:14px;background:var(--sun-soft);font-size:20px;box-shadow:var(--schatten)}
+.loesung{font-size:30px;letter-spacing:6px;text-align:center;margin:4px 0}
+
+@media (max-height:640px){.taste{height:44px}.kopf img{width:38px;height:38px}.kopf h1{font-size:23px}.gitter{gap:5px}.reihe{gap:5px}.pruefen{min-height:42px;margin-top:6px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="kopf">
+    <img src="data:image/webp;base64,__EULE__" alt="">
+    <div class="t"><h1>Wort des Tages</h1><div class="sub" id="datum"></div></div>
+    <button class="rund" id="bStat" aria-label="Statistik" title="Statistik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V12M10 20V5M15 20v-9M20 20v-5"/></svg></button>
+    <button class="rund" id="bHilfe" aria-label="Spielanleitung" title="Spielanleitung">?</button>
+  </header>
+  <div class="modi" role="group" aria-label="Was spielen?">
+    <button class="modus" data-m="tag" aria-pressed="true">✦ Wort des Tages</button>
+    <button class="modus" data-m="ueben" aria-pressed="false">Übungswort</button>
+  </div>
+  <div class="meldung" id="meldung" aria-live="polite"></div>
+  <div class="feld"><div class="gitter" id="gitter"></div></div>
+  <div class="tasten" id="tasten"></div>
+  <button class="pruefen" id="bPruefen" disabled>Wort prüfen</button>
+</div>
+
+<div class="decke" id="dHilfe" hidden><div class="fenster" role="dialog" aria-labelledby="hH">
+  <div class="fk"><h2 id="hH">So geht's</h2><button class="zu" data-zu aria-label="Schliessen">✕</button></div>
+  <div class="inhalt">
+    <p>Finde das geheime Wort mit <b>5 Buchstaben</b>. Du hast <b>6 Versuche</b>. Jeden Tag gibt es ein neues Wort!</p>
+    <p>Tippe ein Wort und drücke «Wort prüfen». Danach zeigen die Farben, wie nahe du dran bist. Ä, Ö und Ü sind eigene Tasten.</p>
+    <div class="sterne">✦ ✧ ✦</div>
+    <div class="bsp"><span class="kachel ok">K</span><span class="kachel voll">I</span><span class="kachel voll">S</span><span class="kachel voll">T</span><span class="kachel voll">E</span></div>
+    <p><b style="color:var(--ok)">Grün:</b> Das K ist im Wort und steht am richtigen Platz.</p>
+    <div class="bsp"><span class="kachel voll">E</span><span class="kachel voll">U</span><span class="kachel near">L</span><span class="kachel voll">E</span><span class="kachel voll">N</span></div>
+    <p><b style="color:var(--gold-d)">Gold:</b> Das L ist im Wort, aber an einem anderen Platz.</p>
+    <div class="bsp"><span class="kachel voll">B</span><span class="kachel voll">L</span><span class="kachel voll">U</span><span class="kachel no">M</span><span class="kachel voll">E</span></div>
+    <p><b style="color:#6f8193">Grau:</b> Das M kommt im Wort nicht vor.</p>
+    <p>Fertig mit dem Wort des Tages? Dann kannst du mit einem <b>Übungswort</b> weiterknobeln.</p>
+    <button class="knopf" data-zu>Alles klar!</button>
+  </div>
+</div></div>
+
+<div class="decke" id="dStat" hidden><div class="fenster" role="dialog" aria-labelledby="hS">
+  <div class="fk"><h2 id="hS">Deine Statistik</h2><button class="zu" data-zu aria-label="Schliessen">✕</button></div>
+  <div class="inhalt" id="statInhalt"></div>
+</div></div>
+
+<script>
+(function () {
+  'use strict';
+  var LOESUNGEN = __WOERTER__;
+  var EXTRA = __EXTRA__;
+  var ALLE = {}; LOESUNGEN.concat(EXTRA).forEach(function (w) { ALLE[w] = 1; });
+  var KEY = 'wort-des-tages';
+  var LOB = ['Wow, auf Anhieb!', 'Super gemacht!', 'Toll geknobelt!', 'Sehr gut!', 'Geschafft!', 'Puh, knapp geschafft!'];
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- Datum und Wort des Tages (für alle gleich) ----------
+  function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function tagNr(d) { return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); }
+  function mischen(n, seed) {
+    var a = [], i; for (i = 0; i < n; i++) a.push(i);
+    var s = seed >>> 0;
+    function zufall() { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+    for (i = n - 1; i > 0; i--) { var j = Math.floor(zufall() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; }
+    return a;
+  }
+  var REIHE = mischen(LOESUNGEN.length, 2611);
+  var heute = new Date(), HEUTE = iso(heute);
+  var WORT_HEUTE = LOESUNGEN[REIHE[tagNr(heute) % LOESUNGEN.length]];
+  // Letzter Schultag vor einem Datum (Wochenende zählt für die Serie nicht)
+  function vorher(isoTag) {
+    var p = isoTag.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    do { d.setDate(d.getDate() - 1); } while (d.getDay() === 0 || d.getDay() === 6);
+    return iso(d);
+  }
+  var TAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  var MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  $('datum').innerHTML = '<span class="stern">✦</span> ' + TAGE[heute.getDay()] + ', ' + heute.getDate() + '. ' + MONATE[heute.getMonth()];
+
+  // ---------- Speicher (im Portal: Spielstand des Kindes) ----------
+  var D;
+  try { D = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { D = null; }
+  if (!D || typeof D !== 'object') D = {};
+  D.stat = D.stat || { gespielt: 0, geloest: 0, serie: 0, beste: 0, letzt: '', vert: [0, 0, 0, 0, 0, 0] };
+  if (!D.tag || D.tag.d !== HEUTE) D.tag = { d: HEUTE, g: [] };
+  if (!D.ueben || !D.ueben.w || LOESUNGEN.indexOf(D.ueben.w) < 0) D.ueben = { w: neuesUebungswort(), g: [] };
+  var neu = !D.gesehen;
+  function speichern() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+  function neuesUebungswort() {
+    var w; do { w = LOESUNGEN[Math.floor(Math.random() * LOESUNGEN.length)]; } while (w === WORT_HEUTE && LOESUNGEN.length > 1);
+    return w;
+  }
+  function melde(art, wert) { try { if (window.knobelnest && window.knobelnest[art]) window.knobelnest[art](wert); } catch (e) {} }
+
+  // ---------- Spielzustand ----------
+  var modus = 'tag', eingabe = '', sperre = false, unbekannt = '';
+  function runde() { return modus === 'tag' ? D.tag : D.ueben; }
+  function loesung() { return modus === 'tag' ? WORT_HEUTE : D.ueben.w; }
+  function fertig(r) { r = r || runde(); return r.g.length >= 6 || r.g.indexOf(r === D.tag ? WORT_HEUTE : D.ueben.w) >= 0; }
+
+  // Farben eines Versuchs: 2 = richtiger Platz, 1 = im Wort, 0 = nicht im Wort
+  function bewerten(rate, ziel) {
+    var r = [0, 0, 0, 0, 0], rest = {}, i;
+    for (i = 0; i < 5; i++) { if (rate[i] === ziel[i]) r[i] = 2; else rest[ziel[i]] = (rest[ziel[i]] || 0) + 1; }
+    for (i = 0; i < 5; i++) if (r[i] !== 2 && rest[rate[i]]) { r[i] = 1; rest[rate[i]]--; }
+    return r;
+  }
+  var KL = ['no', 'near', 'ok'];
+
+  // ---------- Zeichnen ----------
+  var gitter = $('gitter');
+  for (var z = 0; z < 6; z++) {
+    var row = document.createElement('div'); row.className = 'reihe';
+    for (var s = 0; s < 5; s++) { var k = document.createElement('div'); k.className = 'kachel'; row.appendChild(k); }
+    gitter.appendChild(row);
+  }
+  var TR = [['Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P', 'Ü'], ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ö', 'Ä'], ['⌫', 'Y', 'X', 'C', 'V', 'B', 'N', 'M', '✓']];
+  var tasten = $('tasten'), TASTE = {};
+  TR.forEach(function (reihe) {
+    var d = document.createElement('div'); d.className = 'tr';
+    reihe.forEach(function (b) {
+      var t = document.createElement('button'); t.className = 'taste'; t.type = 'button';
+      if (b === '⌫') { t.className += ' breit'; t.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M9 5h11v14H9l-6-7z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg>'; t.setAttribute('aria-label', 'Löschen'); t.dataset.t = 'del'; }
+      else if (b === '✓') { t.className += ' breit'; t.textContent = 'OK'; t.setAttribute('aria-label', 'Wort prüfen'); t.dataset.t = 'enter'; }
+      else { t.textContent = b; t.dataset.t = b; TASTE[b] = t; }
+      d.appendChild(t);
+    });
+    tasten.appendChild(d);
+  });
+
+  function zeichnen(neuReihe) {
+    var r = runde(), ziel = loesung(), best = {};
+    for (var i = 0; i < 6; i++) {
+      var row = gitter.children[i], w = r.g[i], f = w ? bewerten(w, ziel) : null;
+      row.classList.remove('wackeln', 'jubel');
+      for (var j = 0; j < 5; j++) {
+        var k = row.children[j];
+        if (w) {
+          k.textContent = w[j];
+          k.className = 'kachel ' + KL[f[j]] + (i === neuReihe ? '' : ' sofort');
+          k.style.animationDelay = i === neuReihe ? (j * 0.25) + 's' : '';
+          best[w[j]] = Math.max(best[w[j]] == null ? -1 : best[w[j]], f[j]);
+        } else if (i === r.g.length && !fertig()) {
+          k.textContent = eingabe[j] || ''; k.className = 'kachel' + (eingabe[j] ? ' voll' : ''); k.style.animationDelay = '';
+        } else { k.textContent = ''; k.className = 'kachel'; k.style.animationDelay = ''; }
+      }
+    }
+    Object.keys(TASTE).forEach(function (b) { TASTE[b].className = 'taste' + (best[b] != null ? ' ' + KL[best[b]] : ''); });
+    $('bPruefen').disabled = eingabe.length !== 5 || fertig();
+    Array.prototype.forEach.call(document.querySelectorAll('.modus'), function (b) { b.setAttribute('aria-pressed', b.dataset.m === modus ? 'true' : 'false'); });
+  }
+
+  var mTimer;
+  function meldung(text, gut, lang) {
+    clearTimeout(mTimer);
+    $('meldung').innerHTML = text ? '<span' + (gut ? ' class="gut"' : '') + '></span>' : '';
+    if (text) $('meldung').firstChild.textContent = text;
+    if (text && !lang) mTimer = setTimeout(function () { $('meldung').innerHTML = ''; }, 2600);
+  }
+  function zustandMeldung() {
+    var r = runde();
+    if (!fertig()) { meldung(''); return; }
+    if (r.g.indexOf(loesung()) >= 0) meldung(modus === 'tag' ? 'Gelöst! Morgen gibt es ein neues Wort.' : 'Gelöst!', true, true);
+    else meldung('Das Wort war: ' + loesung(), false, true);
+  }
+
+  // ---------- Eingabe ----------
+  function taste(t) {
+    if (sperre || fertig()) return;
+    if (t === 'del') { eingabe = eingabe.slice(0, -1); unbekannt = ''; }
+    else if (t === 'enter') return pruefen();
+    else if (eingabe.length < 5) { eingabe += t; unbekannt = ''; }
+    zeichnen();
+  }
+  function wackeln() {
+    var row = gitter.children[runde().g.length];
+    row.classList.remove('wackeln'); void row.offsetWidth; row.classList.add('wackeln');
+  }
+  function pruefen() {
+    if (sperre || fertig()) return;
+    if (eingabe.length < 5) { meldung('Es braucht 5 Buchstaben.'); wackeln(); return; }
+    if (!/[AEIOUÄÖÜY]/.test(eingabe)) { meldung('Da fehlt ein Selbstlaut (A, E, I, O, U).'); wackeln(); return; }
+    if (!ALLE[eingabe] && unbekannt !== eingabe) {
+      unbekannt = eingabe; meldung('Kenne ich nicht. Ist es ein echtes Wort? Dann nochmals prüfen.', false, true); wackeln(); return;
+    }
+    var r = runde(), w = eingabe, ziel = loesung();
+    r.g.push(w); eingabe = ''; unbekannt = '';
+    sperre = true; meldung('');
+    zeichnen(r.g.length - 1);
+    var nr = r.g.length;
+    setTimeout(function () {
+      sperre = false;
+      if (w === ziel) {
+        gitter.children[nr - 1].classList.add('jubel');
+        meldung(LOB[nr - 1] + ' ✦', true, true);
+        ende(true, nr);
+      } else if (nr >= 6) {
+        meldung('Das Wort war: ' + ziel, false, true);
+        ende(false, nr);
+      }
+      speichern(); zeichnen();
+      if (w === ziel) gitter.children[nr - 1].classList.add('jubel');
+    }, 1500);
+    speichern();
+  }
+  function ende(geloest, nr) {
+    melde('answer', geloest);
+    if (modus === 'tag') {
+      var st = D.stat;
+      st.gespielt++;
+      if (geloest) {
+        st.geloest++; st.vert[nr - 1]++;
+        st.serie = st.letzt === vorher(HEUTE) || st.letzt === HEUTE ? st.serie + 1 : 1;
+        st.beste = Math.max(st.beste, st.serie); st.letzt = HEUTE;
+      } else st.serie = 0;
+      D.tag.zug = nr;
+      setTimeout(function () { statistik(true); }, 1600);
+    } else {
+      setTimeout(function () { statistik(true); }, 1600);
+    }
+  }
+
+  // ---------- Fenster ----------
+  function oeffne(id) { $(id).hidden = false; var b = $(id).querySelector('.zu'); if (b) b.focus(); }
+  function zu() { $('dHilfe').hidden = true; $('dStat').hidden = true; if (!D.gesehen) { D.gesehen = 1; speichern(); } }
+  function statistik(amEnde) {
+    var st = D.stat, max = Math.max.apply(null, st.vert.concat(1)), r = runde(), o = '';
+    if (amEnde && fertig()) {
+      var gel = r.g.indexOf(loesung()) >= 0;
+      o += '<p style="text-align:center;margin-top:0">' + (gel ? 'Gelöst in ' + r.g.length + (r.g.length === 1 ? ' Versuch!' : ' Versuchen!') : 'Diesmal nicht. Das Wort war:') + '</p>';
+      o += '<div class="loesung">' + loesung() + '</div><div class="sterne">✦ ✧ ✦</div>';
+    }
+    o += '<p style="margin:4px 0 6px">Wort des Tages</p><div class="zahlen">' +
+      '<div><b>' + st.gespielt + '</b><span>gespielt</span></div>' +
+      '<div><b>' + (st.gespielt ? Math.round(100 * st.geloest / st.gespielt) : 0) + '</b><span>% gelöst</span></div>' +
+      '<div><b>' + st.serie + '</b><span>Serie</span></div>' +
+      '<div><b>' + st.beste + '</b><span>beste Serie</span></div></div>';
+    o += '<p style="margin:6px 0">So viele Versuche hast du gebraucht:</p><div class="balken">';
+    for (var i = 0; i < 6; i++) {
+      var jetzt = modus === 'tag' && fertig(D.tag) && D.tag.g.length === i + 1 && D.tag.g.indexOf(WORT_HEUTE) >= 0;
+      o += '<div>' + (i + 1) + ' <i' + (jetzt ? ' class="jetzt"' : '') + ' style="width:' + Math.max(8, Math.round(88 * st.vert[i] / max)) + '%">' + st.vert[i] + '</i></div>';
+    }
+    o += '</div><p class="sub" style="color:var(--soft);font-size:16px;margin-top:10px">Die Serie zählt Schultage hintereinander, an denen du das Wort des Tages gelöst hast.</p>';
+    if (fertig(D.tag)) o += '<button class="knopf" data-a="ueben">' + (modus === 'ueben' && fertig() ? 'Neues Übungswort' : 'Übungswort spielen') + '</button>';
+    $('statInhalt').innerHTML = o;
+    oeffne('dStat');
+  }
+  function wechsle(m) {
+    if (sperre) return;
+    if (m === 'ueben' && fertig(D.ueben)) { D.ueben = { w: neuesUebungswort(), g: [] }; speichern(); }
+    modus = m; eingabe = ''; unbekannt = '';
+    zeichnen(); zustandMeldung();
+    if (m === 'ueben' && !fertig()) meldung('Übungswort: zählt nicht für die Statistik.');
+  }
+
+  // ---------- Ereignisse ----------
+  tasten.addEventListener('click', function (e) { var b = e.target.closest('.taste'); if (b) { taste(b.dataset.t); b.blur(); } });
+  $('bPruefen').addEventListener('click', pruefen);
+  $('bHilfe').addEventListener('click', function () { oeffne('dHilfe'); });
+  $('bStat').addEventListener('click', function () { statistik(false); });
+  Array.prototype.forEach.call(document.querySelectorAll('.modus'), function (b) { b.addEventListener('click', function () { wechsle(b.dataset.m); }); });
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-zu]') || e.target.classList.contains('decke')) zu();
+    var a = e.target.closest('[data-a="ueben"]'); if (a) { zu(); wechsle('ueben'); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!$('dHilfe').hidden || !$('dStat').hidden) { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); zu(); } return; }
+    if (e.key === 'Enter') { e.preventDefault(); taste('enter'); }
+    else if (e.key === 'Backspace') { e.preventDefault(); taste('del'); }
+    else if (/^[a-zäöü]$/i.test(e.key)) taste(e.key.toUpperCase());
+  });
+
+  zeichnen(); zustandMeldung();
+  if (neu) oeffne('dHilfe');
+})();
+</script>
+</body>
+</html>
