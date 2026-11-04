@@ -35,6 +35,8 @@
       entries: D.entries.filter(function (e) { return e.class_id === cid && subs.some(function (s) { return s.id === e.subject_id; }); }) };
   }
   function quizLeft(l) { return l.phase === 'frage' ? Math.max(0, (l.questions[l.q].zeit || 20) * 1000 - (Date.now() - l.q_started)) : null; }
+  function kqNames(ids) { return D.kids.filter(function (k) { return ids.indexOf(k.id) >= 0; }).map(function (k) { return { id: k.id, name: k.name }; }); }
+  function kqMine(id) { var q = (D.kq || []).filter(function (x) { return x.id === id; })[0]; if (!q) return null; var c = D.classes.filter(function (x) { return x.id === q.class_id; })[0]; return c && c.teacher_id === me().id ? q : null; }
   window.__D = D;
   window.DB = {
     session: function () { return delay(D.session); },
@@ -235,6 +237,30 @@
       else { var s1 = a.filter(function (x, i) { return a.indexOf(x) === i; }).sort().join(), s2 = (qq.richtig || []).slice().sort().join(); ok = s1 === s2; }
       var m = [0, 1, 2].indexOf(qq.punkte) >= 0 ? qq.punkte : 1, pts = ok ? Math.round(1000 * m * (1 - Math.min(Math.max(ms, 0), lim) / lim / 2)) : 0;
       p.score += pts; p.streak = ok ? p.streak + 1 : 0; p.answers[q] = { a: a, ok: ok, p: pts, ms: ms }; return delay({ ok: true }); },
+    // Kinder-Quiz (wie die SQL-Funktionen der Version 24)
+    kidQuizList: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0];
+      return delay({ me: k.id, on: !!(c.kid_tools && c.kid_tools.quiz === true), quizzes: (D.kq || []).filter(function (q) { return q.class_id === k.class_id && q.members.indexOf(k.id) >= 0; })
+        .map(function (q) { return { id: q.id, title: q.title, n: q.data.length, ver: q.ver, mine: q.created_by === k.id, members: kqNames(q.members), updated_at: q.updated_at, updated_by: q.updated_by }; }) }); },
+    kidQuizGet: function (t, id, ver) { var k = kidOf(t), q = (D.kq || []).filter(function (x) { return x.id === id && x.class_id === k.class_id && x.members.indexOf(k.id) >= 0; })[0];
+      if (!q) return delay(null); if (ver != null && ver === q.ver) return delay({ same: true, ver: q.ver });
+      return delay({ id: q.id, title: q.title, data: q.data, ver: q.ver, mine: q.created_by === k.id, members: kqNames(q.members), updated_by: q.updated_by }); },
+    kidQuizSave: function (t, id, ver, title, data) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0]; D.kq = D.kq || [];
+      if (!(c.kid_tools && c.kid_tools.quiz === true)) return delay({ ok: false, error: 'aus' });
+      if (!id) { var n = { id: uid(), class_id: k.class_id, title: title || '', data: JSON.parse(JSON.stringify(data)), members: [k.id], created_by: k.id, ver: 1, updated_by: k.name, updated_at: now() }; D.kq.push(n); return delay({ ok: true, id: n.id, ver: 1 }); }
+      var q = D.kq.filter(function (x) { return x.id === id && x.class_id === k.class_id && x.members.indexOf(k.id) >= 0; })[0]; if (!q) return delay({ ok: false, error: 'weg' });
+      if (q.ver !== ver) return delay({ ok: false, conflict: true, ver: q.ver, title: q.title, data: q.data });
+      q.title = title || ''; q.data = JSON.parse(JSON.stringify(data)); q.ver++; q.updated_by = k.name; q.updated_at = now(); return delay({ ok: true, id: q.id, ver: q.ver }); },
+    kidQuizDelete: function (t, id) { var k = kidOf(t), before = (D.kq || []).length; D.kq = (D.kq || []).filter(function (q) { return !(q.id === id && q.created_by === k.id); }); return delay(D.kq.length < before); },
+    kqList: function () { var mine = D.classes.filter(function (c) { return c.teacher_id === me().id; }).map(function (c) { return c.id; });
+      return delay((D.kq || []).filter(function (q) { return mine.indexOf(q.class_id) >= 0; }).map(function (q) { return { id: q.id, class_id: q.class_id, title: q.title, n: q.data.length, ver: q.ver, members: q.members, created_by: q.created_by, updated_at: q.updated_at, updated_by: q.updated_by }; })); },
+    kqGet: function (id, ver) { var q = kqMine(id); if (!q) return delay(null); if (ver != null && ver === q.ver) return delay({ same: true, ver: q.ver });
+      return delay({ id: q.id, class_id: q.class_id, title: q.title, data: q.data, ver: q.ver, members: q.members, updated_by: q.updated_by }); },
+    kqSave: function (id, ver, title, data) { var q = kqMine(id); if (!q) return delay({ ok: false, error: 'weg' }); if (q.ver !== ver) return delay({ ok: false, conflict: true, ver: q.ver, title: q.title, data: q.data });
+      q.title = title || ''; q.data = JSON.parse(JSON.stringify(data)); q.ver++; q.updated_by = 'Lehrperson'; q.updated_at = now(); return delay({ ok: true, id: q.id, ver: q.ver }); },
+    kqNew: function (cid, members, title) { D.kq = D.kq || []; var n = { id: uid(), class_id: cid, title: title || '', data: [], members: members.filter(function (m) { return D.kids.some(function (k) { return k.id === m && k.class_id === cid; }); }), created_by: null, ver: 1, updated_by: 'Lehrperson', updated_at: now() };
+      D.kq.push(n); return delay({ id: n.id }); },
+    kqMembers: function (id, members) { var q = kqMine(id); if (q) { q.members = members.filter(function (m) { return D.kids.some(function (k) { return k.id === m && k.class_id === q.class_id; }); }); q.ver++; } return delay(); },
+    kqDelete: function (id) { var q = kqMine(id); if (q) D.kq = D.kq.filter(function (x) { return x !== q; }); return delay(); },
     tafelGet: function (t) { var k = kidOf(t); return delay({ me: k.id, state: state(k.class_id) }); },
     tafelSet: function (t, s, c) {
       var k = kidOf(t); D.entries = D.entries.filter(function (e) { return e.kid_id !== k.id; });

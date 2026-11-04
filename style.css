@@ -465,6 +465,8 @@ button.zr-st{cursor:pointer}
 .pin-tile span span{color:#7A5634}
 .atelier-tile{background:#DCEAF6}
 .atelier-tile span span{color:#35597a}
+.quiz-tile{background:#FBF1DC}
+.quiz-tile span span{color:#7a5a1c}
 /* Werkzeuge als Kacheln im Klassen-Banner */
 .tooltiles{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .tooltile{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--ink);border-radius:16px;padding:12px;color:var(--ink);text-decoration:none;box-shadow:0 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}

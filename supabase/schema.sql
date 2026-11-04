@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 23)
+-- Knobelnest – Datenbank-Einrichtung (Version 24)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -1408,5 +1408,177 @@ begin
 end;
 $$;
 grant execute on function public.quiz_join(text, text, text), public.quiz_state(uuid), public.quiz_answer(uuid, int, jsonb) to anon, authenticated;
+
+-- =====================================================================
+-- Version 24: Kinder erstellen eigene Quiz
+--   Die Lehrperson schaltet es pro Klasse ein (classes.kid_tools.quiz = true, fehlt = aus).
+--   Ein Kinder-Quiz gehört zu einer Klasse und hat Mitglieder (members = Kinder, die es bearbeiten
+--   dürfen). Ein Kind sieht nur Quiz, in denen es Mitglied ist. Die Lehrperson legt Gruppen fest.
+--   ver zählt jede Änderung: Wer mit einem alten Stand speichert, bekommt den neuen Stand zurück
+--   und das Gerät führt beide Änderungen zusammen (gemeinsames Bearbeiten).
+-- =====================================================================
+create table if not exists public.kid_quizzes (
+  id         uuid primary key default gen_random_uuid(),
+  class_id   uuid not null references public.classes(id) on delete cascade,
+  title      text not null default '',
+  data       jsonb not null default '[]'::jsonb,
+  members    uuid[] not null default '{}',
+  created_by uuid references public.kids(id) on delete set null,
+  n          int not null default 0,
+  ver        int not null default 1,
+  updated_by text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists kid_quizzes_class on public.kid_quizzes (class_id);
+alter table public.kid_quizzes enable row level security;
+revoke all on public.kid_quizzes from anon, authenticated;
+
+-- Mitglieder nur aus der eigenen Klasse, Anzahl Fragen mitführen
+create or replace function public._kq_fix() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  new.members := coalesce((select array_agg(k.id order by k.name) from public.kids k
+                            where k.class_id = new.class_id and k.id = any(new.members)), '{}');
+  new.n := case when jsonb_typeof(new.data) = 'array' then jsonb_array_length(new.data) else 0 end;
+  return new;
+end;
+$$;
+drop trigger if exists kid_quizzes_fix on public.kid_quizzes;
+create trigger kid_quizzes_fix before insert or update on public.kid_quizzes for each row execute function public._kq_fix();
+
+create or replace function public._kq_check(p_title text, p_data jsonb) returns void
+language plpgsql immutable as $$
+begin
+  if char_length(coalesce(p_title, '')) > 80 then raise exception 'Titel zu lang' using errcode = 'P0001'; end if;
+  if jsonb_typeof(p_data) is distinct from 'array' or jsonb_array_length(p_data) > 50
+     or exists (select 1 from jsonb_array_elements(p_data) e where jsonb_typeof(e) <> 'object') then
+    raise exception 'Quiz ungültig (höchstens 50 Fragen)' using errcode = 'P0001';
+  end if;
+  if octet_length(p_data::text) > 3000000 then raise exception 'Das Quiz ist zu gross. Bitte weniger oder kleinere Bilder.' using errcode = 'P0001'; end if;
+end;
+$$;
+
+create or replace function public._kq_names(p_members uuid[]) returns json
+language sql stable security definer set search_path = public as $$
+  select coalesce(json_agg(json_build_object('id', k.id, 'name', k.name) order by k.name), '[]'::json) from public.kids k where k.id = any(p_members);
+$$;
+revoke execute on function public._kq_names(uuid[]) from public, anon, authenticated;
+
+-- Kinder: Liste der eigenen Quiz (und ob die Lehrperson das Erstellen eingeschaltet hat)
+create or replace function public.kid_quiz_list(p_token uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids := public._kid(p_token);
+begin
+  return json_build_object('me', k.id,
+    'on', coalesce((select (c.kid_tools ->> 'quiz')::boolean from public.classes c where c.id = k.class_id), false),
+    'quizzes', coalesce((select json_agg(json_build_object('id', q.id, 'title', q.title, 'n', q.n, 'ver', q.ver, 'mine', q.created_by = k.id,
+                 'members', public._kq_names(q.members), 'updated_at', q.updated_at, 'updated_by', q.updated_by) order by q.updated_at desc)
+                 from public.kid_quizzes q where q.class_id = k.class_id and k.id = any(q.members)), '[]'::json));
+end;
+$$;
+
+-- Kinder: ein Quiz laden (p_ver = eigener Stand; gleich → nur «same»)
+create or replace function public.kid_quiz_get(p_token uuid, p_id uuid, p_ver int) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids := public._kid(p_token); q public.kid_quizzes;
+begin
+  select * into q from public.kid_quizzes where id = p_id and class_id = k.class_id and k.id = any(members);
+  if not found then return null; end if;
+  if p_ver is not null and p_ver = q.ver then return json_build_object('same', true, 'ver', q.ver); end if;
+  return json_build_object('id', q.id, 'title', q.title, 'data', q.data, 'ver', q.ver, 'mine', q.created_by = k.id,
+    'members', public._kq_names(q.members), 'updated_by', q.updated_by);
+end;
+$$;
+
+-- Kinder: neues Quiz (p_id leer) oder speichern. Alter Stand → conflict mit dem neuen Stand.
+create or replace function public.kid_quiz_save(p_token uuid, p_id uuid, p_ver int, p_title text, p_data jsonb) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids := public._kid(p_token); q public.kid_quizzes; v_id uuid; v_ver int;
+begin
+  if not coalesce((select (c.kid_tools ->> 'quiz')::boolean from public.classes c where c.id = k.class_id), false) then
+    return json_build_object('ok', false, 'error', 'aus');
+  end if;
+  perform public._kq_check(p_title, p_data);
+  if p_id is null then
+    if (select count(*) from public.kid_quizzes where created_by = k.id) >= 30 then return json_build_object('ok', false, 'error', 'viele'); end if;
+    insert into public.kid_quizzes (class_id, title, data, members, created_by, updated_by)
+    values (k.class_id, coalesce(p_title, ''), p_data, array[k.id], k.id, k.name) returning id, ver into v_id, v_ver;
+    return json_build_object('ok', true, 'id', v_id, 'ver', v_ver);
+  end if;
+  select * into q from public.kid_quizzes where id = p_id and class_id = k.class_id and k.id = any(members) for update;
+  if not found then return json_build_object('ok', false, 'error', 'weg'); end if;
+  if q.ver <> p_ver then return json_build_object('ok', false, 'conflict', true, 'ver', q.ver, 'title', q.title, 'data', q.data); end if;
+  update public.kid_quizzes set title = coalesce(p_title, ''), data = p_data, ver = ver + 1, updated_by = k.name, updated_at = now()
+   where id = q.id returning ver into v_ver;
+  return json_build_object('ok', true, 'id', q.id, 'ver', v_ver);
+end;
+$$;
+
+-- Kinder: eigenes Quiz löschen (nur wer es erstellt hat)
+create or replace function public.kid_quiz_delete(p_token uuid, p_id uuid) returns boolean
+language plpgsql volatile security definer set search_path = public as $$
+declare k public.kids := public._kid(p_token);
+begin
+  delete from public.kid_quizzes where id = p_id and class_id = k.class_id and created_by = k.id;
+  return found;
+end;
+$$;
+grant execute on function public.kid_quiz_list(uuid), public.kid_quiz_get(uuid, uuid, int), public.kid_quiz_save(uuid, uuid, int, text, jsonb),
+  public.kid_quiz_delete(uuid, uuid) to anon, authenticated;
+
+-- Lehrperson: alle Kinder-Quiz ihrer Klassen
+create or replace function public.kq_list() returns json
+language sql stable security definer set search_path = public as $$
+  select coalesce(json_agg(json_build_object('id', q.id, 'class_id', q.class_id, 'title', q.title, 'n', q.n, 'ver', q.ver, 'members', q.members,
+           'created_by', q.created_by, 'updated_at', q.updated_at, 'updated_by', q.updated_by) order by q.updated_at desc), '[]'::json)
+    from public.kid_quizzes q join public.classes c on c.id = q.class_id where c.teacher_id = auth.uid();
+$$;
+create or replace function public.kq_get(p_id uuid, p_ver int) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare q public.kid_quizzes;
+begin
+  select q2.* into q from public.kid_quizzes q2 join public.classes c on c.id = q2.class_id where q2.id = p_id and c.teacher_id = auth.uid();
+  if not found then return null; end if;
+  if p_ver is not null and p_ver = q.ver then return json_build_object('same', true, 'ver', q.ver); end if;
+  return json_build_object('id', q.id, 'class_id', q.class_id, 'title', q.title, 'data', q.data, 'ver', q.ver, 'members', q.members, 'updated_by', q.updated_by);
+end;
+$$;
+create or replace function public.kq_save(p_id uuid, p_ver int, p_title text, p_data jsonb) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare q public.kid_quizzes; v_ver int;
+begin
+  perform public._kq_check(p_title, p_data);
+  select q2.* into q from public.kid_quizzes q2 join public.classes c on c.id = q2.class_id where q2.id = p_id and c.teacher_id = auth.uid() for update of q2;
+  if not found then return json_build_object('ok', false, 'error', 'weg'); end if;
+  if q.ver <> p_ver then return json_build_object('ok', false, 'conflict', true, 'ver', q.ver, 'title', q.title, 'data', q.data); end if;
+  update public.kid_quizzes set title = coalesce(p_title, ''), data = p_data, ver = ver + 1, updated_by = 'Lehrperson', updated_at = now()
+   where id = q.id returning ver into v_ver;
+  return json_build_object('ok', true, 'id', q.id, 'ver', v_ver);
+end;
+$$;
+create or replace function public.kq_new(p_class uuid, p_members uuid[], p_title text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare v_id uuid;
+begin
+  if not exists (select 1 from public.classes where id = p_class and teacher_id = auth.uid()) then raise exception 'Klasse nicht gefunden' using errcode = 'P0001'; end if;
+  insert into public.kid_quizzes (class_id, title, members, updated_by) values (p_class, left(coalesce(p_title, ''), 80), coalesce(p_members, '{}'), 'Lehrperson')
+  returning id into v_id;
+  return json_build_object('id', v_id);
+end;
+$$;
+create or replace function public.kq_members(p_id uuid, p_members uuid[]) returns void
+language sql volatile security definer set search_path = public as $$
+  update public.kid_quizzes q set members = coalesce(p_members, '{}'), ver = q.ver + 1
+    from public.classes c where c.id = q.class_id and q.id = p_id and c.teacher_id = auth.uid();
+$$;
+create or replace function public.kq_delete(p_id uuid) returns void
+language sql volatile security definer set search_path = public as $$
+  delete from public.kid_quizzes q using public.classes c where c.id = q.class_id and q.id = p_id and c.teacher_id = auth.uid();
+$$;
+revoke execute on function public.kq_list(), public.kq_get(uuid, int), public.kq_save(uuid, int, text, jsonb), public.kq_new(uuid, uuid[], text),
+  public.kq_members(uuid, uuid[]), public.kq_delete(uuid) from public, anon;
+grant execute on function public.kq_list(), public.kq_get(uuid, int), public.kq_save(uuid, int, text, jsonb), public.kq_new(uuid, uuid[], text),
+  public.kq_members(uuid, uuid[]), public.kq_delete(uuid) to authenticated;
 
 -- Fertig.
