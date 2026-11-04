@@ -876,7 +876,10 @@
     document.body.classList.add('lp');
     UI.view = 'login';
     paint('<div class="login"><section class="login-hero"><a class="marke" href="#/"><span class="marke-bild"><img src="bilder/eule.webp" alt="" width="60" height="60"></span><span class="marke-text"><b>' + markeName() + '<i aria-hidden="true">✦</i></b><small>für Lehrpersonen</small></span></a>' +
-      '<div class="stack" style="gap:18px"><h1>Ihre Lernspiele an einem Ort.</h1><p>Spiele für die Klasse freigeben, den Fortschritt sehen und die Arbeitsstand-Tafel für den Wochenplan nutzen.</p></div>' +
+      '<div class="stack" style="gap:16px"><span class="login-klein">Für Ihren Schulalltag ✦</span><h1>Lernspiele und Werkzeuge an einem Ort.</h1>' +
+      '<p>Lernspiele freigeben, den Fortschritt der Kinder sehen und Ihre Klassenwerkzeuge nutzen. Alles in einer Klassenkiste, damit Sie nur noch ein Tool brauchen.</p></div>' +
+      '<div class="login-tools">' + LOGIN_TOOLS.map(function (t) {
+        return '<div class="ltool" tabindex="0"><img src="bilder/kacheln/' + t[0] + '.webp" alt="" width="84" height="84"><b>' + t[1] + '</b><span class="ltip" role="tooltip">' + t[2] + '</span></div>'; }).join('') + '</div>' +
       '<a class="kidlink" href="#/klasse">' + ic(I.play, 22) + '<span>Für Kinder: Hier geht\'s zum Klassen-Login</span></a></section>' +
       '<section class="login-form"><form data-a="login" class="stack"><div class="stack" style="gap:8px"><h2 style="font-size:34px">Anmelden</h2>' +
       '<p class="muted">Für Lehrpersonen mit Zugang zur ' + h(C.PORTAL_NAME) + '.</p></div>' +
@@ -886,8 +889,18 @@
       '<button class="btn primary" style="min-height:54px;font-size:18px">Anmelden</button>' +
       '<button type="button" class="btn" data-a="forgot">Passwort vergessen?</button>' +
       (T.loginInfo ? '<p class="note">' + h(T.loginInfo) + '</p>' : '') +
+      '<div class="login-shop"><span>Noch kein Login?</span>' + (C.SHOP_URL ? '<a class="btn amber" href="' + h(C.SHOP_URL) + '" target="_blank" rel="noopener">✦ Hol dir hier deinen Zugang</a>' : '<button type="button" class="btn amber" data-a="shopSoon">✦ Hol dir hier deinen Zugang</button>') + '</div>' +
       '</form></section></div>');
   };
+  var LOGIN_TOOLS = [
+    ['tagesfolie', 'Tagesfolie', 'Der Tag an der Wandtafel: Ablauf, Timer, Stundenplan, Zufallsname und mehr.'],
+    ['vokabelkiste', 'Vokabelkiste', 'Wörter üben mit Karteikasten, Spielen, Tagessternen und Fortschritt pro Kind.'],
+    ['hausaufgaben', 'Hausaufgabenheft', 'Aufgaben eintragen, kontrollieren, und die Kinder sehen alles am iPad.'],
+    ['arbeitsstand', 'Arbeitsstand', 'Wer kann helfen, wer hat eine Frage? Live an der Wandtafel.'],
+    ['pinnwand', 'Pinnwand', 'Ideen sammeln und gemeinsam abstimmen.'],
+    ['otterteich', 'Otterteich', 'Je leiser die Klasse, desto mehr Otter kommen an den Teich.'],
+    ['atelier', 'Atelier', 'Jedes Kind zeigt auf dem Lernpfad, wo es gerade steht.']];
+  ACT.shopSoon = function () { toast('Der Shop kommt bald. Melden Sie sich bis dahin bei ' + C.CONTACT + '.'); };
   ACT.login = async function (f) {
     T.loginErr = ''; T.loginEmail = f.elements.email.value.trim();
     try { await DB.signIn(T.loginEmail, f.elements.pw.value); }

@@ -756,3 +756,31 @@ body.tt-dragging .tooltiles [data-tile]:not(.dragging){transition:transform .15s
 body.kidv .ic.ic-bild{flex:none;width:84px!important;height:84px!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;box-shadow:0 6px 14px rgba(63,120,168,.2)!important;display:block!important;overflow:hidden}
 body.kidv .ic.ic-bild img{width:100%;height:100%;display:block;border-radius:50%}
 body.kidv .big-tile .ic.ic-bild{width:96px!important;height:96px!important}
+
+/* ---- Version 87: Kreisbilder mit eigenem Goldrand, neue Anmeldeseite ---- */
+body.lp .tooltile .tti.bild,body.kidv .ic.ic-bild{border:3px solid #d6ad45!important;box-shadow:0 0 0 3px #fff,0 6px 14px rgba(63,120,168,.2)!important;background:#fff!important}
+.banner-bild img,.kid-bild,.board-bild,.bildopt img{object-fit:cover}
+.login-klein{font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#3f78a8}
+body.lp .login-hero{justify-content:flex-start;gap:34px}
+body.lp .login-hero h1{font-size:clamp(38px,5vw,58px);font-weight:400;line-height:1.05}
+body.lp .login-hero p{color:#5f6963}
+.login-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:16px 10px;margin-top:auto}
+.ltool{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:default;outline:0}
+.ltool img{width:84px;height:84px;border-radius:50%;border:3px solid #d6ad45;box-shadow:0 0 0 3px #fff,0 8px 18px rgba(63,120,168,.2);background:#fff;transition:transform .25s}
+.ltool:hover img,.ltool:focus img{transform:translateY(-4px) rotate(-4deg) scale(1.06)}
+.ltool b{font-weight:400;font-size:18px;line-height:1.1}
+.ltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translate(-50%,6px);width:220px;padding:10px 14px;border-radius:16px;background:#fff;border:1.5px solid #d6ad45;box-shadow:0 12px 28px rgba(63,120,168,.25);font-size:15px;line-height:1.35;color:#1f2421;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
+.ltip::after{content:"";position:absolute;top:100%;left:50%;margin-left:-7px;border:7px solid transparent;border-top-color:#d6ad45}
+.ltool:hover .ltip,.ltool:focus .ltip{opacity:1;transform:translate(-50%,0)}
+body.lp .kidlink{margin-top:4px}
+.login-shop{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px;padding-top:18px;border-top:1.5px dashed rgba(214,173,69,.6);text-align:center;color:#5f6963}
+.login-shop .btn{min-height:50px;justify-content:center}
+.login-tools{grid-template-columns:repeat(auto-fill,minmax(82px,1fr))}
+.ltool img{width:72px;height:72px}
+.ltool b{font-size:16px}
+@media (max-width:760px){.login-hero,.login-form{flex:1 1 100%;min-width:0}.login-form{order:-1;padding:32px 20px 8px}}
+.ltip{width:min(220px,calc(100vw - 40px))}
+.ltool:first-child .ltip,.ltool:nth-child(3n+1) .ltip{left:0;transform:translate(0,6px)}
+.ltool:first-child:hover .ltip,.ltool:nth-child(3n+1):hover .ltip,.ltool:nth-child(3n+1):focus .ltip{transform:translate(0,0)}
+.ltool:first-child .ltip::after,.ltool:nth-child(3n+1) .ltip::after{left:36px}
+.login{overflow-x:hidden}
