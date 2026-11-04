@@ -21,7 +21,7 @@ def logo():
 
 
 def alle(spiel):
-    spiel(id='im-museum', titel='Im Museum', icon=logo(), fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=4,
+    spiel(id='im-museum', titel='Im Museum', icon=logo(), fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=10,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Bilder 1 Stern, pro Stufe bis 10
           kurz='Bilder im Museum auf Englisch beschreiben, lesen und malen.',
           intro='Willkommen im Museum! Hier hängen bunte Bilder. Beschreibe sie auf Englisch: <b>There is a</b> + Farbe + Form + Ort.',
@@ -54,6 +54,7 @@ CSS = r"""
 .beschr .kopfz{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:4px;color:var(--soft);font-size:18px}
 .beschr p{margin:2px 0}
 .beschr .zu{color:var(--soft);font-size:19px;text-align:center;padding:6px 0}
+.hoer .ico{width:20px;height:20px;vertical-align:-3px}.hoer.gross .ico{width:28px;height:28px;vertical-align:-5px}
 .hoer{background:var(--sun);border:2px solid var(--gold-d);border-radius:14px;min-height:46px;padding:4px 14px;font-size:20px;box-shadow:var(--sch-k)}
 .hoer.gross{font-size:26px;min-height:70px;padding:8px 26px}
 .drei{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px;width:100%;max-width:960px}
@@ -220,6 +221,9 @@ function bildSvg(b, opt) {
 function wand(b, schild, opt, klein) {
   return '<div class="wand' + (klein ? ' klein' : '') + '"><div class="rahmen"><div class="lein">' + bildSvg(b, opt) + '</div></div>' + (schild ? '<div class="schild">' + schild + '</div>' : '') + '</div>';
 }
+var SPK = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+var IC_BG = '<svg viewBox="0 0 60 60" aria-hidden="true"><rect x="8" y="12" width="44" height="36" rx="4" fill="#5f6963" fill-opacity=".35" stroke="#5f6963" stroke-width="3"/></svg>';
+var IC_WEG = '<svg viewBox="0 0 24 24" fill="none" stroke="#5f6963" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h11"/><path d="M4.5 15.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18H8z"/><path d="M9.5 10.5l5 5"/></svg>';
 var TITEL = ['Sunny Day', 'Happy Shapes', 'The Blue Dream', 'Little Party', 'Owl Night', 'Colour Dance', 'Funny Friends', 'Big Adventure', 'Morning Light', 'Quiet Garden', 'Jumping Shapes', 'Rainbow Walk'];
 function weiterKnopf(api, wo, fn, label) {
   var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = label || 'Nächstes Bild →';
@@ -246,17 +250,17 @@ G.play = function (lv, api) {
       var k = schluessel(v); if (seen[k]) continue; seen[k] = 1; bilder.push(v);
     }
     var reihe = shuffle(range(bilder.length)), saetze = text(b, false), fertig = false;
-    api.stage.innerHTML = '<div class="beschr"><div class="kopfz"><span>📜 Read the description:</span>' + (kannSprechen() ? '<button class="hoer" data-hoer>🔊 Listen</button>' : '') + '</div>' +
+    api.stage.innerHTML = '<div class="beschr"><div class="kopfz"><span>Read the description:</span>' + (kannSprechen() ? '<button class="hoer" data-hoer>' + SPK + ' Listen</button>' : '') + '</div>' +
       saetze.map(function (s) { return '<p lang="en">' + h(s) + '</p>'; }).join('') + '</div><div class="drei">' +
       reihe.map(function (i) { return '<button data-i="' + i + '" aria-label="Bild">' + wand(bilder[i], '', null, true) + '</button>'; }).join('') + '</div><div class="steuer"></div>';
-    api.msg('<span class="em">🔍</span> Bild ' + (idx + 1) + ' von ' + G.n + ': Welches Bild passt zur Beschreibung?');
+    api.msg('Welches Bild passt zur Beschreibung?');
     var hb = api.stage.querySelector('[data-hoer]'); if (hb) hb.onclick = function () { sag(saetze, true); };
     api.stage.querySelector('.drei').onclick = function (e) {
       var k = e.target.closest('[data-i]'); if (!k || fertig) return; fertig = true;
       var ok = k.dataset.i === '0';
       k.classList.add(ok ? 'ok' : 'no');
       if (!ok) api.stage.querySelector('[data-i="0"]').classList.add('hint');
-      api.msg(ok ? '<span class="em">🎉</span> ' + pick(LOB, 1)[0] + ' Das ist das richtige Bild.' : '<span class="em">💡</span> Fast! Das Bild mit dem goldenen Rand passt. Lies nochmal genau.');
+      api.msg(ok ? '' + pick(LOB, 1)[0] + ' Das ist das richtige Bild.' : 'Fast! Das Bild mit dem goldenen Rand passt. Lies nochmal genau.');
       if (api.answer(ok)) weiterKnopf(api, api.stage.querySelector('.steuer'), function () { idx++; waehlen(); });
     };
   }
@@ -299,8 +303,8 @@ G.play = function (lv, api) {
     function neuerSatz() {
       var S = SAETZE[si], ti = -1, falsch = 0;
       zeigeBild(S.mark);
-      api.msg(si === 0 ? '<span class="em">🖼️</span> Bild ' + (idx + 1) + ' von ' + G.n + ': Start with the background! <small>Beschreibe zuerst den Hintergrund.</small>' :
-        '<span class="em">✨</span> Beschreibe die Form mit dem goldenen Rahmen.');
+      api.msg(si === 0 ? 'Start with the background! <small>Beschreibe zuerst den Hintergrund.</small>' :
+        'Beschreibe die Form mit dem goldenen Rahmen.');
       function nextSlot() { ti++; while (ti < S.teile.length && !S.teile[ti].o) ti++; falsch = 0; zeichne(); }
       function zeichne() {
         satzEl.innerHTML = S.teile.map(function (t, i) {
@@ -332,17 +336,17 @@ G.play = function (lv, api) {
           }
         } else {
           fehler++; falsch++; bad(); k.classList.add('no'); k.classList.remove('shake'); void k.offsetWidth; k.classList.add('shake');
-          api.msg('<span class="em">🤔</span> Schau nochmal genau hin!');
+          api.msg('Schau nochmal genau hin!');
           if (falsch >= 2) Array.prototype.forEach.call(opts.children, function (c) { if (c.dataset.w === t.a) c.classList.add('hint'); });
         }
       };
       nextSlot();
     }
     function bildFertig() {
-      zeigeBild(null); opts.innerHTML = ''; satzEl.innerHTML = '🎨 <b>' + h(titel[idx]) + '</b>';
+      zeigeBild(null); opts.innerHTML = ''; satzEl.innerHTML = '«' + h(titel[idx]) + '»';
       var ok = fehler <= erlaubt;
-      api.msg(ok ? '<span class="em">🎉</span> ' + pick(LOB, 1)[0] + ' Das ganze Bild ist beschrieben' + (fehler ? '.' : ', ganz ohne Fehler!') :
-        '<span class="em">💪</span> Geschafft! Es waren noch ' + fehler + ' Fehler. Beim nächsten Bild klappt es besser.');
+      api.msg(ok ? '' + pick(LOB, 1)[0] + ' Das ganze Bild ist beschrieben' + (fehler ? '.' : ', ganz ohne Fehler!') :
+        'Geschafft! Es waren noch ' + fehler + ' Fehler. Beim nächsten Bild klappt es besser.');
       if (api.answer(ok, true)) weiterKnopf(api, steuer, function () { idx++; beschreiben(); });
       if (ok) good();
     }
@@ -358,9 +362,9 @@ G.play = function (lv, api) {
       '<div class="spalte"><div class="beschr"></div><div class="werk"></div></div></div>';
     var platz = api.stage.querySelector('.bildplatz'), beschr = api.stage.querySelector('.beschr'), werk = api.stage.querySelector('.werk'), steuer = api.stage.querySelector('.steuer');
     function zeigeText() {
-      beschr.innerHTML = '<div class="kopfz"><span>' + (lv.hoer ? '👂 Listen and draw:' : '📜 Read and draw:') + '</span>' + (kannSprechen() && offen ? '<button class="hoer" data-hoer>🔊 Listen</button>' : '') + '</div>' +
+      beschr.innerHTML = '<div class="kopfz"><span>' + (lv.hoer ? 'Listen and draw:' : 'Read and draw:') + '</span>' + (kannSprechen() && offen ? '<button class="hoer" data-hoer>' + SPK + ' Listen</button>' : '') + '</div>' +
         (offen ? saetze.map(function (s) { return '<p lang="en">' + h(s) + '</p>'; }).join('') :
-          '<div class="zu"><button class="hoer gross" data-hoer>🔊 Hör gut zu!</button><br><button class="go alt" data-zeig style="margin-top:10px;font-size:18px;min-height:44px">👀 Text zeigen</button></div>');
+          '<div class="zu"><button class="hoer gross" data-hoer>' + SPK + ' Hör gut zu!</button><br><button class="go alt" data-zeig style="margin-top:10px;font-size:18px;min-height:44px">Text zeigen</button></div>');
     }
     zeigeText();
     beschr.onclick = function (e) {
@@ -371,9 +375,9 @@ G.play = function (lv, api) {
     function icon(s, d) { return '<svg viewBox="0 0 60 60">' + formSvg(s, 30, 32, s === 'rectangle' ? 11 : 17, d || 'up', '#5f6963') + '</svg>'; }
     function werkzeug() {
       var o = '<h3>1. Was willst du malen?</h3><div class="reihe">' +
-        '<button class="tb" data-m="bg" aria-pressed="' + (wz.m === 'bg') + '">🖌️ <span lang="en">background</span></button>' +
+        '<button class="tb" data-m="bg" aria-pressed="' + (wz.m === 'bg') + '">' + IC_BG + '<span lang="en">background</span></button>' +
         FORM.map(function (s) { return '<button class="tb" data-s="' + s + '" aria-pressed="' + (wz.m === 'form' && wz.s === s) + '">' + icon(s) + '<span lang="en">' + s + '</span></button>'; }).join('') +
-        '<button class="tb" data-m="weg" aria-pressed="' + (wz.m === 'weg') + '">🧽 Radieren</button></div>';
+        '<button class="tb" data-m="weg" aria-pressed="' + (wz.m === 'weg') + '">' + IC_WEG + 'Radieren</button></div>';
       if (wz.m !== 'weg') {
         o += '<h3>2. Welche Farbe?</h3><div class="reihe">' + farben.map(function (c) {
           var an = wz.m === 'bg' ? mein.bg === c : wz.c === c;
@@ -385,7 +389,7 @@ G.play = function (lv, api) {
           (wz.n === 1 ? ['little', 'big'].map(function (z) { return '<button class="tb" data-z="' + z + '" aria-pressed="' + (wz.z === z) + '">' + z + '</button>'; }).join('') : '') + '</div>';
         if (wz.s === 'triangle') o += '<h3>4. Wohin zeigt das Dreieck?</h3><div class="reihe" lang="en">' + RICHT.map(function (d) { return '<button class="tb" data-d="' + d + '" aria-pressed="' + (wz.d === d) + '">' + icon('triangle', d) + RICHTW[d].replace('facing ', '') + '</button>'; }).join('') + '</div>';
       }
-      o += '<p style="margin:2px 0;color:var(--soft);font-size:18px">' + (wz.m === 'bg' ? '👉 Tippe auf eine Farbe für den Hintergrund.' : wz.m === 'weg' ? '👉 Tippe im Bild auf eine Form, die weg soll.' : '👉 Tippe im Bild auf den richtigen Platz.') + '</p>';
+      o += '<p style="margin:2px 0;color:var(--soft);font-size:18px">' + (wz.m === 'bg' ? 'Tippe auf eine Farbe für den Hintergrund.' : wz.m === 'weg' ? 'Tippe im Bild auf eine Form, die weg soll.' : 'Tippe im Bild auf den richtigen Platz.') + '</p>';
       werk.innerHTML = o;
     }
     werk.onclick = function (e) {
@@ -407,12 +411,12 @@ G.play = function (lv, api) {
       if (wz.m === 'form') {
         var neu = { s: wz.s, c: wz.c, p: p, z: voll ? (wz.n > 1 ? 'little' : wz.z) : '', d: voll && wz.s === 'triangle' ? wz.d : 'up', n: voll ? wz.n : 1 };
         if (!alt || norm(alt, true) !== norm(neu, true)) { mein.it.push(neu); tone(700, 0.06, 'sine', 0.08); }
-      } else if (wz.m === 'bg') { api.msg('<span class="em">🖌️</span> Für den Hintergrund tippst du auf eine Farbe.'); if (alt) mein.it.push(alt); }
+      } else if (wz.m === 'bg') { api.msg('Für den Hintergrund tippst du auf eine Farbe.'); if (alt) mein.it.push(alt); }
       zeigeBild();
     };
     function pruefen() {
       if (fertig) return;
-      if (!mein.bg && !mein.it.length) { api.msg('<span class="em">🖌️</span> Male zuerst etwas!'); return; }
+      if (!mein.bg && !mein.it.length) { api.msg('Male zuerst etwas!'); return; }
       versuch++;
       var soll = {}, ist = {}, falsch = [];
       b.it.forEach(function (x) { soll[x.p] = norm(x, voll); });
@@ -421,7 +425,7 @@ G.play = function (lv, api) {
       var bgOk = mein.bg === b.bg;
       if (bgOk && !falsch.length) {
         fertig = true; fehlerFelder = []; zeigeBild();
-        api.msg('<span class="em">🎉</span> ' + pick(LOB, 1)[0] + ' Dein Bild hängt jetzt im Museum!' + (versuch === 1 ? ' Beim ersten Versuch!' : ''));
+        api.msg('' + pick(LOB, 1)[0] + ' Dein Bild hängt jetzt im Museum!' + (versuch === 1 ? ' Beim ersten Versuch!' : ''));
         if (api.answer(versuch <= 2)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
         werk.innerHTML = ''; if (!offen) { offen = true; zeigeText(); }
         return;
@@ -432,16 +436,16 @@ G.play = function (lv, api) {
         fertig = true; fehlerFelder = []; zeigeBild();
         offen = true; zeigeText();
         werk.innerHTML = '<div class="loes">' + wand(b, 'So sieht das Bild aus', null, true) + '</div>';
-        api.msg('<span class="em">💡</span> Schau, so sieht das Bild aus. Lies die Beschreibung nochmal.');
+        api.msg('Schau, so sieht das Bild aus. Lies die Beschreibung nochmal.');
         if (api.answer(false, true)) weiterKnopf(api, steuer, function () { idx++; malen(); }); else steuer.innerHTML = '';
         return;
       }
-      api.msg('<span class="em">🤔</span> Noch nicht ganz: ' + (n === 1 ? 'eine Sache stimmt' : n + ' Sachen stimmen') + ' noch nicht.' + (bgOk ? '' : ' <small>Schau auch den Hintergrund an!</small>') +
+      api.msg('Noch nicht ganz: ' + (n === 1 ? 'eine Sache stimmt' : n + ' Sachen stimmen') + ' noch nicht.' + (bgOk ? '' : ' <small>Schau auch den Hintergrund an!</small>') +
         (falsch.length ? ' <small>Die roten Felder musst du anschauen.</small>' : ''));
     }
     steuer.innerHTML = '<button class="go fertig">✓ Fertig!</button>';
     steuer.firstChild.onclick = pruefen;
-    api.msg('<span class="em">🎨</span> Bild ' + (idx + 1) + ' von ' + G.n + ': ' + (offen ? 'Lies die Beschreibung und male das Bild.' : 'Hör gut zu und male das Bild.'));
+    api.msg((offen ? 'Lies die Beschreibung und male das Bild.' : 'Hör gut zu und male das Bild.'));
     zeigeBild(); werkzeug();
     if (!offen) api.later(function () { sag(saetze); }, 600);
   }
