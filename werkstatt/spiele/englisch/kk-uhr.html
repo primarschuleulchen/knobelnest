@@ -1,0 +1,33 @@
+
+<!-- Alle kleinen Uhren im gleichen Stil wie die Uhr zum Einstellen (Goldrand, Zahlen, farbige Zeiger) -->
+<style id="kk-uhr-css">
+  html body .clock-face.kk-uhr{ width:min(124px, calc(var(--u,8px)*16)) !important; height:min(124px, calc(var(--u,8px)*16)) !important; filter:drop-shadow(0 6px 10px rgba(31,53,80,.22)); }
+  html body .flip-front .clock-face.kk-uhr{ width:min(100px, calc(var(--u,8px)*11.5)) !important; height:min(100px, calc(var(--u,8px)*11.5)) !important; }
+  html body .flip-front .visual-row{ margin:0 !important; }
+</style>
+<script id="kk-uhr">
+(function(){
+  var NS = 'http://www.w3.org/2000/svg';
+  function winkel(line){ var m = /rotate\(([-\d.]+)/.exec(line.getAttribute('transform') || ''); return m ? +m[1] : 0; }
+  function schoen(svg){
+    if (svg.classList.contains('kk-uhr')) return;
+    var lines = svg.querySelectorAll('line'); if (lines.length < 2) return;
+    var hA = winkel(lines[0]), mA = winkel(lines[1]);
+    var s = '<defs><radialGradient id="kkF" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#F6FAFE"/><stop offset="1" stop-color="#EAF3FC"/></radialGradient></defs>'
+      + '<circle cx="50" cy="50" r="48" fill="#D6AD45"/><circle cx="50" cy="50" r="45.2" fill="#fff"/><circle cx="50" cy="50" r="43.4" fill="url(#kkF)" stroke="#E8F0F8" stroke-width="1"/>';
+    for (var n = 1; n <= 12; n++){
+      var a = n * 30 * Math.PI / 180, sx = Math.sin(a), cy = -Math.cos(a);
+      s += '<line x1="' + (50 + 37.5 * sx).toFixed(2) + '" y1="' + (50 + 37.5 * cy).toFixed(2) + '" x2="' + (50 + 41 * sx).toFixed(2) + '" y2="' + (50 + 41 * cy).toFixed(2) + '" stroke="#D6AD45" stroke-width="1.6" stroke-linecap="round"/>';
+      s += '<text x="' + (50 + 30 * sx).toFixed(2) + '" y="' + (50 + 30 * cy).toFixed(2) + '" font-family="Fredoka, Andika, sans-serif" font-size="9.5" fill="#1F3550" text-anchor="middle" dominant-baseline="central">' + n + '</text>';
+    }
+    s += '<line x1="50" y1="50" x2="50" y2="29" stroke="#E07A5F" stroke-width="5" stroke-linecap="round" transform="rotate(' + hA + ' 50 50)"/>'
+      + '<line x1="50" y1="50" x2="50" y2="17" stroke="#1F3550" stroke-width="3.2" stroke-linecap="round" transform="rotate(' + mA + ' 50 50)"/>'
+      + '<circle cx="50" cy="50" r="3.6" fill="#D6AD45" stroke="#fff" stroke-width="1.6"/>';
+    svg.innerHTML = s; svg.classList.add('kk-uhr');
+  }
+  function alle(root){ (root.querySelectorAll ? root : document).querySelectorAll('svg.clock-face').forEach(schoen); }
+  alle(document);
+  new MutationObserver(function(ms){ ms.forEach(function(m){ m.addedNodes.forEach(function(n){ if (n.nodeType !== 1) return; if (n.matches && n.matches('svg.clock-face')) schoen(n); else alle(n); }); }); })
+    .observe(document.body, { childList: true, subtree: true });
+})();
+</script>
