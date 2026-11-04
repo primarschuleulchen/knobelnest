@@ -13,7 +13,7 @@
 
 def alle(spiel):
     spiel(id='im-museum', titel='Im Museum', icon='🏛️', fach='Englisch', thema='Describing pictures', stufe='3.–6. Klasse', sort=1, n=4,
-          sterne={'modus': 'runde', 'n': 4},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Bilder 1 Stern, pro Stufe bis 10
           kurz='Bilder im Museum auf Englisch beschreiben, lesen und malen.',
           intro='Willkommen im Museum! Hier hängen bunte Bilder. Beschreibe sie auf Englisch: <b>There is a</b> + Farbe + Form + Ort.',
           levels=[dict(name='Leicht', info='Read and choose: das richtige Bild finden', t='wahl', min=1, max=2, extra=False, alle=False),
@@ -25,6 +25,8 @@ def alle(spiel):
 
 
 CSS = r"""
+/* bis 10 Sterne pro Stufe: im Stufen-Menü in eine eigene Zeile */
+.lv{flex-wrap:wrap}.lv .stars{width:100%;text-align:center;font-size:21px;letter-spacing:1px;margin-top:-2px}
 .mu{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;align-items:flex-start;width:100%;max-width:1040px}
 .spalte{display:flex;flex-direction:column;align-items:center;gap:12px;width:min(100%,470px)}
 .wand{position:relative;width:100%;border-radius:26px;padding:22px 20px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;
