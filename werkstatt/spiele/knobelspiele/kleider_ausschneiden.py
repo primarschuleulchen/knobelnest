@@ -1,6 +1,7 @@
 # Schneidet die Kleider aus dem Schrankbild (kleider_bilder/schrank-original.webp) aus.
 # Aufruf: python3 werkstatt/spiele/knobelspiele/kleider_ausschneiden.py   (braucht Pillow)
-# Ergebnis in kleider_bilder/: schrank.webp (ganzer Schrank, aufgeräumter Rand) und <id>.webp (einzelne Kleider, Hintergrund durchsichtig).
+# Ergebnis in kleider_bilder/: schrank.webp (ganzer Schrank, aufgeräumter Rand) und <id>.webp (Kleider aus dem Schrank, liegen im Spiel auf dem Schrank).
+# Dazu karte-<id>.webp aus dem Einzelbild der Lehrerin (einzeln-original.webp): die Bilder auf den Karten (Stufe 2–6).
 # Die Kästen (BOX) stehen auch in kleider.py, damit die Kleider im Spiel genau auf dem Schrank liegen.
 import os, sys
 from collections import deque
@@ -93,7 +94,23 @@ def frei(im, box, tol=46, k=None):
     bb = out.getbbox()
     return out, bb
 
+# Kästen im Einzelbild (1402 × 1122, durchsichtiger Hintergrund)
+EINZELN = {'hat': (40, 40, 370, 290), 'cap': (405, 40, 710, 290), 'scarf': (770, 20, 1000, 290), 'tie': (1120, 20, 1270, 290),
+           'jumper': (40, 300, 360, 555), 'tshirt': (395, 300, 690, 555), 'shirt': (715, 300, 1025, 555), 'jacket': (1045, 300, 1355, 555),
+           'dress': (60, 560, 335, 885), 'coat': (385, 560, 680, 885), 'skirt': (710, 590, 1025, 885), 'trousers': (1070, 570, 1320, 885),
+           'shorts': (20, 900, 280, 1115), 'boots': (305, 895, 550, 1115), 'shoes': (555, 900, 825, 1115), 'socks': (835, 895, 1065, 1115),
+           'gloves': (1090, 895, 1385, 1115)}
+
+def karten():
+    im = Image.open(os.path.join(ORD, 'einzeln-original.webp')).convert('RGBA')
+    for k, box in EINZELN.items():
+        c = im.crop(box); c = c.crop(c.split()[3].point(lambda a: 255 if a > 20 else 0).getbbox())
+        c.thumbnail((280, 280), Image.LANCZOS)
+        c.save(os.path.join(ORD, 'karte-' + k + '.webp'), quality=80, method=6)
+        print('karte', k, c.size)
+
 if __name__ == '__main__':
+    karten()
     im = schrank()
     im.save(os.path.join(ORD, 'schrank.webp'), quality=82, method=6)
     for k, box in BOX.items():
