@@ -803,10 +803,10 @@ function placeBuild(L, g) {
 function buildWorld() {
   var w = WD = { spin: [], boxes: [], workers: [], hl: [] };
   var R = rng(11);
-  var sc = w.scene = new THREE.Scene(); sc.background = new THREE.Color('#bfe3f7'); sc.fog = new THREE.Fog('#cfe8f6', 180, 620);
+  var sc = w.scene = new THREE.Scene(); sc.background = new THREE.Color('#bfe3f7'); sc.fog = new THREE.Fog('#cfe8f6', 300, 1500);
   var ren = w.ren = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
   ren.shadowMap.enabled = true; ren.shadowMap.type = THREE.PCFSoftShadowMap;
-  w.cam = new THREE.PerspectiveCamera(58, 1, 1, 900);
+  w.cam = new THREE.PerspectiveCamera(58, 1, 1, 3000);
   sc.add(new THREE.HemisphereLight('#ffffff', '#8ab07a', 1.6));
   var sun = new THREE.DirectionalLight('#fff6e0', 2.0); sun.position.set(-120, 200, -60); sun.target.position.set(140, 0, 80);
   sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); var sc2 = sun.shadow.camera; sc2.left = -220; sc2.right = 220; sc2.top = 200; sc2.bottom = -200; sc2.near = 10; sc2.far = 600; sun.shadow.bias = -0.0008;
@@ -814,12 +814,13 @@ function buildWorld() {
   var city = w.city = new THREE.Group(); sc.add(city);
   var PAVE = new THREE.MeshLambertMaterial({ map: noiseTex('#e2ddd2', 18, 3.2, true) }); PAVE.map.repeat.set(14, 10);
   // Boden, Fluss, Gleise, Piste
-  var grM = new THREE.MeshLambertMaterial({ map: noiseTex('#9cd27a', 26) }); grM.map.repeat.set(160, 130);
-  var gr = mesh(new THREE.PlaneGeometry(1000, 800), grM, 140, 0, 80, city); gr.rotation.x = -Math.PI / 2; gr.castShadow = false;
-  var rv = mesh(new THREE.PlaneGeometry(RIV[1] - RIV[0], 800), '#5fb3e6', (RIV[0] + RIV[1]) / 2, .08, 80, city); rv.rotation.x = -Math.PI / 2; rv.castShadow = false; w.river = rv;
-  [RIV[0] - 1, RIV[1] + 1].forEach(function (x) { var bk = mesh(new THREE.PlaneGeometry(2.4, 800), '#d9c79a', x + (x < RIV[0] ? -.7 : .7), .03, 80, city); bk.rotation.x = -Math.PI / 2; bk.castShadow = false; });
-  bx(500, .3, 1.2, '#8a7a6a', 120, .15, 203, city, false); bx(500, .3, 1.2, '#8a7a6a', 120, .15, 207, city, false);
-  for (var s = -120; s < 360; s += 3) bx(.6, .2, 6, '#6a4a2a', s, .1, 205, city, false);
+  var grM = new THREE.MeshLambertMaterial({ map: noiseTex('#9cd27a', 26) }); grM.map.repeat.set(480, 480);
+  var gr = mesh(new THREE.PlaneGeometry(3000, 3000), grM, 140, 0, 80, city); gr.rotation.x = -Math.PI / 2; gr.castShadow = false;
+  var rv = mesh(new THREE.PlaneGeometry(RIV[1] - RIV[0], 3000), '#5fb3e6', (RIV[0] + RIV[1]) / 2, .08, 80, city); rv.rotation.x = -Math.PI / 2; rv.castShadow = false; w.river = rv;
+  [RIV[0] - 1, RIV[1] + 1].forEach(function (x) { var bk = mesh(new THREE.PlaneGeometry(2.4, 3000), '#d9c79a', x + (x < RIV[0] ? -.7 : .7), .03, 80, city); bk.rotation.x = -Math.PI / 2; bk.castShadow = false; });
+  bx(3000, .3, 1.2, '#8a7a6a', 140, .15, 203, city, false); bx(3000, .3, 1.2, '#8a7a6a', 140, .15, 207, city, false);
+  var slp = []; for (var s = -1300; s < 1600; s += 3) slp.push([s, .1, 205, .6, .2, 6]);
+  (function () { var keep = WD.city; WD.city = city; buildInst(new THREE.BoxGeometry(1, 1, 1), M('#6a4a2a'), slp, false); WD.city = keep; })();
   bx(14, .1, 200, '#5a5a5a', 345, .06, 80, city, false); for (var rz = -10; rz < 180; rz += 12) bx(.6, .12, 5, '#ffffff', 345, .1, rz, city, false);
   // Häuserblöcke als Trottoir
   for (var i = 0; i < GX.length - 1; i++) for (var j = 0; j < GZ.length - 1; j++) {
@@ -916,6 +917,55 @@ function buildWorld() {
   }
   for (var q = -40; q < 210; q += 10) { tree(city, RIV[0] - 7, q + 3, .9); tree(city, RIV[1] + 7, q, .9); }
   for (q = 0; q < 50; q++) { var ox = -90 + R() * 500, oz = -90 + R() * 360; if ((ox > -30 && ox < 310 && oz > -40 && oz < 200)) continue; tree(city, ox, oz, .8 + R() * .8); }
+  // Umgebung: Strassen aus der Stadt hinaus, Dörfer, Felder, Wälder, Berge
+  function inCity(x, z, m) { m = m || 0; return x > -45 - m && x < 360 + m && z > -75 - m && z < 215 + m; }
+  var OUT = [[0, GZ[1], -1, 0], [0, GZ[3], -1, 0], [GX[1], 0, 0, -1], [GX[5], 0, 0, -1], [GX[2], GZ[4], 0, 1], [GX[5], GZ[4], 0, 1]];
+  var roadOut = M('#666a6e'), houses = [];
+  OUT.forEach(function (o) {
+    var x0 = o[0], z0 = o[1], dx = o[2], dz = o[3], L0 = dx ? (dx < 0 ? 0 : 0) : 0, len = 620;
+    var st = dx > 0 ? 75 : dz < 0 ? 28 : 30;  // erst nach den Gebäuden am Stadtrand
+    var cx3 = x0 + dx * (st + len / 2), cz3 = z0 + dz * (st + len / 2);
+    bx(dx ? len : 7, .08, dx ? 7 : len, roadOut, cx3, .05, cz3, city, false).receiveShadow = true;
+    bx(dx ? st + 4 : 7, .08, dx ? 7 : st + 4, roadOut, x0 + dx * st / 2, .045, z0 + dz * st / 2, city, false);
+    for (var t3 = st + 40; t3 < st + len; t3 += 22 + R() * 30) [-1, 1].forEach(function (sd) {
+      if (R() < .45) return;
+      var hx = x0 + dx * t3 - dz * sd * 14, hz = z0 + dz * t3 + dx * sd * 14;
+      if (inCity(hx, hz, 12) || (hx > 330 && hx < 362) || Math.abs(hz - 205) < 12) return;
+      houses.push([hx, hz, Math.atan2(-(dx ? 0 : -sd * dz) || 0, 1) , dx, dz, sd]);
+    });
+  });
+  houses.forEach(function (hq) {
+    var g = new THREE.Group(), w3 = 7 + R() * 4, d3 = 6 + R() * 3, h3 = 4 + R() * 3;
+    g.position.set(hq[0], 0, hq[1]); g.rotation.y = hq[3] ? (hq[5] > 0 ? 0 : Math.PI) : (hq[5] > 0 ? -Math.PI / 2 : Math.PI / 2); city.add(g);
+    var wc = ['#f3e3c3', '#efe2cf', '#e8d3b5', '#f6efe0', '#ecdcc8', '#d9e4ec'][Math.floor(R() * 6)];
+    house(w3, h3, d3, wc, 'win', g); roof(w3, d3, 2.6, ['#b5402f', '#8a4a2a', '#a0522d', '#6a5a5a'][Math.floor(R() * 4)], g, h3);
+    bx(1.4, 2.2, .2, '#6b4a2f', 0, 1.1, d3 / 2 + .05, g);
+    if (R() < .6) { bx(w3 + 6, .9, .3, '#4f8a3f', 0, .45, d3 / 2 + 4, g); }
+    treeAt(hq[0] + (R() - .5) * 22, hq[1] + (R() - .5) * 22, .8 + R() * .5, 'laub');
+  });
+  // Felder (Streifen in verschiedenen Farben)
+  var FELD = ['#e6cf6a', '#b9d66a', '#8fbf5a', '#c9a56a', '#d9e08a', '#a8c86a'];
+  for (var f3 = 0; f3 < 34; f3++) {
+    var fa = R() * Math.PI * 2, fr = 230 + R() * 260, fx = 140 + Math.cos(fa) * fr * 1.25, fz = 80 + Math.sin(fa) * fr;
+    if (inCity(fx, fz, 40) || (fx > 320 && fx < 372 && fz > -40 && fz < 200) || Math.abs(fz - 205) < 30) continue;
+    var fw = 40 + R() * 50, fd = 30 + R() * 40, col3 = FELD[Math.floor(R() * FELD.length)];
+    var fm = new THREE.MeshLambertMaterial({ map: canvasTex(64, 64, function (g4) { g4.fillStyle = col3; g4.fillRect(0, 0, 64, 64); g4.fillStyle = 'rgba(0,0,0,.08)'; for (var y4 = 0; y4 < 64; y4 += 8) g4.fillRect(0, y4, 64, 3); }) });
+    var fl = mesh(new THREE.PlaneGeometry(fw, fd), fm, fx, .03 + f3 * .001, fz, city, false); fl.rotation.x = -Math.PI / 2; fl.rotation.z = Math.round(R() * 3) * Math.PI / 2 + (R() - .5) * .3; fl.receiveShadow = true;
+    if (R() < .5) for (var hb = 0; hb < 4; hb++) cyl(1.2, 1.2, 1.6, '#e8c86a', fx + (R() - .5) * fw * .6, .8, fz + (R() - .5) * fd * .6, city, 10).rotation.z = Math.PI / 2;
+  }
+  // Wälder
+  for (var wq = 0; wq < 26; wq++) {
+    var wa = R() * Math.PI * 2, wr = 250 + R() * 330, wx = 140 + Math.cos(wa) * wr * 1.3, wz = 80 + Math.sin(wa) * wr;
+    if (inCity(wx, wz, 50)) continue;
+    for (var tq = 0; tq < 32; tq++) { var tx = wx + (R() - .5) * 70, tz2 = wz + (R() - .5) * 55; if (inCity(tx, tz2, 20) || Math.abs(tz2 - 205) < 8 || (tx > 335 && tx < 356)) continue; treeAt(tx, tz2, 1 + R() * .9, R() < .55 ? 'nadel' : 'laub'); }
+  }
+  // Berge in der Ferne (mit Schnee)
+  var bergM = new THREE.MeshLambertMaterial({ color: '#8fa39a', flatShading: true }), schneeM = new THREE.MeshLambertMaterial({ color: '#ffffff', flatShading: true });
+  for (var bq = 0; bq < 22; bq++) {
+    var ba = bq / 22 * Math.PI * 2 + R() * .2, br = 950 + R() * 250, bh = 140 + R() * 170, brad = 150 + R() * 120;
+    var bm = new THREE.Mesh(new THREE.ConeGeometry(brad, bh, 7), bergM); bm.position.set(140 + Math.cos(ba) * br, bh / 2 - 5, 80 + Math.sin(ba) * br); bm.rotation.y = R() * 3; sc.add(bm);
+    var sn = new THREE.Mesh(new THREE.ConeGeometry(brad * .32, bh * .32, 7), schneeM); sn.position.set(bm.position.x, bh - 5 - bh * .16 + 1, bm.position.z); sn.rotation.y = bm.rotation.y; sc.add(sn);
+  }
   // Instanzen bauen
   var GREENS = ['#4f9a4a', '#5fae52', '#3f8a3f', '#6cb85a', '#4a8f5a'];
   buildInst(new THREE.BoxGeometry(1, .02, 1), dashM, INS.dash, false); buildInst(new THREE.BoxGeometry(1, .02, 1), dashM, INS.zebra, false);
@@ -1085,6 +1135,7 @@ function loop() {
     var want = Math.atan2(dx, dz), cur = c.g.rotation.y; c.g.rotation.y = cur + angd(want, cur) * Math.min(1, dt * 8);
   });
   WD.clouds.forEach(function (c, k) { var a = Math.atan2(c.position.z - 80, c.position.x - 140) + dt * .004, r = Math.hypot(c.position.z - 80, c.position.x - 140); c.position.x = 140 + Math.cos(a) * r; c.position.z = 80 + Math.sin(a) * r; });
+  var ch = WD.cam.position.y; WD.scene.fog.near = 260 + ch * 1.2; WD.scene.fog.far = 1300 + ch * 2.5;
   var showP = LABELS === 'immer' || CAM.mode !== 'follow';
   var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
   placeLabels(showP, op, far);
