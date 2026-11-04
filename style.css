@@ -1202,3 +1202,31 @@ button.eg-time:hover{background:var(--sky-soft,#dcf0fd)}
 .umf-weg-row{gap:10px;flex-wrap:nowrap}
 .umf-tpl-emo.sm{width:40px;height:40px;font-size:22px}
 .umf-emo-chips .chip{font-size:22px;padding:0 12px}
+/* Werkzeuge, die die Lehrperson noch nicht hat: grau, mit Vorschau und «Hol es dir» */
+.tt-mehr-kopf{flex:1 1 100%;margin-top:22px}
+.tt-mehr-kopf h3{margin:0;font-family:var(--h);font-weight:400;font-size:24px}
+.tt-mehr-kopf h3 .sterne{color:var(--gold);font-size:14px;letter-spacing:.2em}
+.tt-mehr-kopf p{margin:2px 0 0;color:var(--soft)}
+body.lp .tooltile.tt-zu{background:#f6f7f8;border:1.5px dashed #cdd6de;box-shadow:none}
+body.lp .tooltile.tt-zu:hover{transform:translateY(-2px);box-shadow:var(--schatten)}
+body.lp .tt-zu .tt-open{position:relative;cursor:pointer}
+body.lp .tt-zu .tt-open .tti,body.lp .tt-zu .tt-open b,body.lp .tt-zu .tt-open small{filter:grayscale(1);opacity:.55;transition:filter .2s,opacity .2s}
+body.lp .tt-zu:hover .tt-open .tti,body.lp .tt-zu:hover .tt-open b{filter:grayscale(.3);opacity:.85}
+.tt-schloss{position:absolute;top:10px;right:12px;font-size:17px;opacity:.75}
+.tt-zu-fuss{display:flex;width:100%;border-top:1.5px dashed #cdd6de}
+.tt-zu-fuss>*{flex:1 1 50%;border:0;background:#fff;padding:8px 4px 9px;font:inherit;font-size:15px;text-align:center;cursor:pointer;color:var(--ink);text-decoration:none;line-height:1.25}
+.tt-zu-fuss .tt-vor{border-right:1.5px dashed #cdd6de}
+.tt-zu-fuss .tt-vor:hover{background:var(--sky-soft)}
+.tt-zu-fuss .tt-hol{background:#fbf3dc;color:#7a5a12;font-weight:700}
+.tt-zu-fuss .tt-hol:hover{background:#f5e6b8}
+.tt-vorschau{background:#fff;border-radius:24px;padding:22px;max-width:760px;width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(31,36,33,.25)}
+.tt-v-kopf{display:flex;align-items:center;gap:14px}
+.tt-v-kopf .tti{flex:none;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:36px;background:var(--sky-soft,#e8f3fc);border:3px solid var(--gold,#d6ad45);overflow:hidden}
+.tt-v-kopf .tti img{width:100%;height:100%;display:block;border-radius:50%}
+.tt-v-kopf h2{margin:0;font-size:30px}
+.tt-v-kopf p{margin:0;color:var(--soft)}
+.tt-v-kopf .klein{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#3f78a8}
+.tt-v-bild{width:100%;border-radius:16px;border:1.5px solid #e1edf7;box-shadow:var(--schatten);display:block}
+.tt-v-liste{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:18px}
+.tt-v-liste li{padding-left:28px;position:relative}
+.tt-v-liste li::before{content:"✦";position:absolute;left:4px;color:var(--gold,#d6ad45)}
