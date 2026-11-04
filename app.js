@@ -282,7 +282,7 @@
   var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var KS_VER = '18'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
-  var EN_VER = '9'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
+  var EN_VER = '10'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();

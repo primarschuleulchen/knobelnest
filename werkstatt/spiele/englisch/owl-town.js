@@ -590,7 +590,7 @@ function cutout(job) {
 var MCACHE = {};
 function hasModel(job) { return GLTF && typeof MODELLE !== 'undefined' && !!MODELLE[job]; }
 function model3d(job) {
-  var g = new THREE.Group(), H = 4.4; g.userData.fig = true; g.userData.H = H;
+  var g = new THREE.Group(), H = 3.7; g.userData.fig = true; g.userData.H = H; g.userData.model = true;
   var sh = new THREE.Mesh(new THREE.CircleGeometry(.9, 16), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .2, depthWrite: false }));
   sh.rotation.x = -Math.PI / 2; sh.position.y = .03; sh.scale.set(1, .7, 1); g.add(sh);
   function put(src) {
@@ -629,10 +629,10 @@ function owlMesh() {
 function placeBuild(L, g) {
   var P = PLACES[L.place], d = L.d, w = L.w, fz = d / 2;
   switch (L.place) {
-    case 'bakery': house(w, 6, d, P.col, 'win', g); awning(g, L, w, '#e0782c', '#fff4d6'); door(g, L); sign(L, g, 5.1); break;
-    case 'butcher': house(w, 6.5, d, P.col, 'win', g); awning(g, L, w, '#c8302c', '#ffffff'); door(g, L); sign(L, g, 5.4); break;
-    case 'pharmacy': house(w, 6, d, P.col, 'win', g); awning(g, L, w, '#3a9ad0', '#ffffff'); door(g, L, 2, 3, '#2f8f9a');
-      bx(1.6, .5, .2, '#d0367a', 0, 7, fz - .5, g); bx(.5, 1.6, .2, '#d0367a', 0, 7, fz - .5, g); sign(L, g, 5.0); break;
+    case 'bakery': house(w, 7.4, d, P.col, 'win', g); awning(g, L, w, '#e0782c', '#fff4d6', 4.5); door(g, L); sign(L, g, 6.2); break;
+    case 'butcher': house(w, 7.4, d, P.col, 'win', g); awning(g, L, w, '#c8302c', '#ffffff', 4.5); door(g, L); sign(L, g, 6.2); break;
+    case 'pharmacy': house(w, 7.4, d, P.col, 'win', g); awning(g, L, w, '#3a9ad0', '#ffffff', 4.5); door(g, L, 2, 3, '#2f8f9a');
+      bx(1.6, .5, .2, '#d0367a', 0, 8.4, fz - .5, g); bx(.5, 1.6, .2, '#d0367a', 0, 8.4, fz - .5, g); sign(L, g, 6.2); break;
     case 'vet': house(w, 6.5, d, P.col, 'win', g); bx(w + .6, .5, d + .6, '#c8302c', 0, 6.7, 0, g); door(g, L, 2, 3, '#2f8f9a'); sign(L, g, 5.2); break;
     case 'postoffice': house(w, 7, d, P.col, 'office', g); bx(w + .6, .5, d + .6, '#2a6fb0', 0, 7.2, 0, g); door(g, L); sign(L, g, 5.6); car(g, w / 2 + 2.5, fz - 2, 0, '#f4f4f4', 'van'); break;
     case 'restaurant': house(w, 6, d, P.col, 'win', g); roof(w, d, 3, '#c0392b', g, 6); door(g, L, 2.4, 3.2, '#b8302c'); sign(L, g, 4.8); break;
@@ -937,7 +937,7 @@ function buildWorld() {
       if (L.place === 'farm') { lx = 4; lz = L.d / 2 - 3; }
       if (L.place === 'school') lz = L.d / 2 - 2;
       if (L.place === 'church') lz = L.d / 2 - .5;
-      if (p.userData.fig && L.place !== 'park' && L.place !== 'farm') lz = Math.max(lz, L.d / 2 + 2.45); // Bildfiguren vor Markisen und Vordächer
+      if (p.userData.fig && !p.userData.model && L.place !== 'park' && L.place !== 'farm') lz = Math.max(lz, L.d / 2 + 2.45); // Bildfiguren vor Markisen und Vordächer
       p.position.set(lx, .24, lz); L.g.add(p);
       if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
       if (J[0] === 'musician' && !p.userData.fig) bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
@@ -1034,15 +1034,16 @@ function owlStep(dt) {
   o.rotation.y = Math.PI / 2 - OW.hd;
   function next() { var c = OW.q; OW.q = null; if (c) owlCmd(c); else if (OW.held) owlCmd('U'); }
 }
-var CAM = { mode: 'follow', snap: true, pos: null, look: null, view: null };
+var CAM = { mode: 'follow', snap: true, pos: null, look: null, view: null, yaw: 0, tilt: 0 };
 function camStep(dt) {
-  var c = WD.cam, o = WD.owl.position, fx = Math.cos(OW.hd), fz = Math.sin(OW.hd), tp, tl;
+  if ((OW.mv || OW.tr) && !CAM.drag) { CAM.yaw *= Math.exp(-dt * 2.5); CAM.tilt *= Math.exp(-dt * 2.5); }
+  var c = WD.cam, o = WD.owl.position, fx = Math.cos(OW.hd + CAM.yaw), fz = Math.sin(OW.hd + CAM.yaw), tp, tl;
   if (CAM.mode === 'view' && CAM.view) { tp = CAM.view.pos; tl = CAM.view.look; }
   else if (CAM.mode === 'top') { var T = CAM.top; tp = new THREE.Vector3(T.x, T.h, T.z + T.h * .35); tl = new THREE.Vector3(T.x, 0, T.z); }
   else {
-    var dist = 13, H = 7.5;
+    var dist = 13, H = 7.5 + CAM.tilt;
     for (; dist > 3; dist -= .5) { var px = o.x - fx * dist, pz = o.z - fz * dist; if (!WD.boxes.some(function (b) { return px > b.x0 - .8 && px < b.x1 + .8 && pz > b.z0 - .8 && pz < b.z1 + .8 && H < b.h + 6; })) break; }
-    var ahead = 6; if (dist < 8) { H = 7.5 + (8 - dist) * 2.4; ahead = 2.5; }
+    var ahead = 6; if (dist < 8) { H = Math.max(H, 7.5 + (8 - dist) * 2.4); ahead = 2.5; }
     tp = new THREE.Vector3(o.x - fx * dist, H, o.z - fz * dist); tl = new THREE.Vector3(o.x + fx * ahead, 1.2, o.z + fz * ahead);
   }
   if (CAM.snap || !CAM.pos) { CAM.pos = tp.clone(); CAM.look = tl.clone(); CAM.snap = false; }
@@ -1156,14 +1157,15 @@ function zoomBy(f) {
 function dragSetup(el) {
   var pts = {}, last = null, pinch = 0;
   function n() { return Object.keys(pts).length; }
-  el.addEventListener('pointerdown', function (e) { if (CAM.mode === 'follow') return; pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (x) {} pinch = 0; });
+  el.addEventListener('pointerdown', function (e) { if (CAM.mode === 'follow') CAM.drag = true; pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (x) {} pinch = 0; });
   el.addEventListener('pointermove', function (e) {
-    var p0 = pts[e.pointerId]; if (!p0 || CAM.mode === 'follow') return;
+    var p0 = pts[e.pointerId]; if (!p0) return;
+    if (CAM.mode === 'follow') { if (n() === 1) { CAM.yaw += (e.clientX - p0.x) * .008; CAM.tilt = Math.max(-5, Math.min(22, CAM.tilt + (e.clientY - p0.y) * .05)); } p0.x = e.clientX; p0.y = e.clientY; return; }
     if (n() === 1) { panBy(e.clientX - p0.x, e.clientY - p0.y); CAM.snap = true; }
     p0.x = e.clientX; p0.y = e.clientY;
     if (n() === 2) { var k = Object.keys(pts), a = pts[k[0]], b = pts[k[1]], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch) zoomBy(pinch / d); pinch = d; CAM.snap = true; }
   });
-  function up(e) { delete pts[e.pointerId]; pinch = 0; }
+  function up(e) { delete pts[e.pointerId]; pinch = 0; if (!n()) CAM.drag = false; }
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   el.addEventListener('wheel', function (e) { if (CAM.mode === 'follow') return; e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.12 : 1 / 1.12); }, { passive: false });
 }
@@ -1179,7 +1181,7 @@ function viewFit(lists) {
 var UI = null;
 function ui(api, lv) {
   var box = document.createElement('div'); box.className = 'owbox';
-  box.innerHTML = '<div class="card" id="owCard"></div>' +
+  box.innerHTML = '<div class="cardw"><button class="cmin" data-k="min" aria-label="Aufgabe kleiner oder grösser">▴</button><div class="card" id="owCard"></div></div>' +
     '<div class="tools"><button class="pill" data-k="top" title="Von oben schauen">🗺 Karte</button><button class="pill" data-k="help" title="Little Helper">💡 Helper</button></div>' +
     '<div class="pad"><span></span><button data-c="U" aria-label="geradeaus">⬆</button><span></span><button data-c="L" aria-label="links drehen">⬅</button><button data-c="B" aria-label="umdrehen">⬇</button><button data-c="R" aria-label="rechts drehen">➡</button></div>' +
     '<button class="mark" data-c="M">📍 Hier ist das Ziel!</button><div class="near" id="owNear"></div><div class="pop" id="owPop" hidden></div><div class="toast" id="owToast"></div>';
@@ -1198,6 +1200,8 @@ function ui(api, lv) {
     if (CAM.mode === 'top') toast('Ziehen = Plan verschieben<br>Mausrad oder zwei Finger = zoomen', 2600);
   };
   box.querySelector('[data-k=help]').onclick = function () { helper(); };
+  box.querySelector('[data-k=min]').onclick = function (e) { var on = box.classList.toggle('kz'); e.currentTarget.textContent = on ? '▾' : '▴'; try { localStorage.setItem('kn_ow_klein', on ? '1' : ''); } catch (x) {} };
+  try { if (localStorage.getItem('kn_ow_klein')) { box.classList.add('kz'); box.querySelector('[data-k=min]').textContent = '▾'; } } catch (x) {}
   resize(); startLoop();
   try { window.focus(); } catch (e) {}
   return U;

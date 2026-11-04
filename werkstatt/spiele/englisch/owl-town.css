@@ -6,7 +6,8 @@
 .lv.frei{border:2px dashed var(--line2);background:#fff}
 .owbox{position:relative;width:100%;height:calc(100vh - 112px);min-height:380px;border-radius:22px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--sch);background:#bfe3f7;user-select:none;-webkit-user-select:none;touch-action:none}
 .ow{position:absolute;inset:0}.ow canvas{display:block;width:100%;height:100%}
-.owbox .card{position:absolute;left:12px;top:12px;width:min(410px,44%);max-height:calc(100% - 110px);overflow:auto;aspect-ratio:auto;display:block;place-items:initial;
+.owbox .cardw{position:absolute;left:12px;top:12px;width:min(410px,44%);z-index:2}
+.owbox .card{position:relative;width:100%;max-height:calc(100vh - 260px);overflow:auto;aspect-ratio:auto;display:block;place-items:initial;
   background:rgba(255,255,255,.95);border:2px solid var(--line);border-radius:20px;padding:10px 16px 12px;box-shadow:var(--sch);font-size:21px;text-align:left;line-height:1.3}
 .owbox .card .hd{font-size:24px;margin-bottom:4px}.owbox .card .hd small{color:var(--soft);font-size:18px}
 .owbox .card b{font-weight:400;color:var(--sky-d)}
@@ -49,14 +50,16 @@
 .owbox.review .pad,.owbox.review .mark,.owbox.review .near{display:none}
 @media (max-width:760px){
   .owbox{height:calc(100vh - 100px)}
-  .owbox .card{left:8px;right:8px;top:8px;width:auto;max-height:42%;padding:8px 12px;font-size:19px}
-  .owbox .card .hd{font-size:21px}.steps li{font-size:19px}
-  .owbox.review .card{max-height:60%}
+  .owbox .cardw{left:8px;right:8px;top:8px;width:auto}
+  .owbox .card{max-height:34vh;padding:6px 12px 8px;font-size:17px}
+  .owbox .card .de{font-size:15px;margin:3px 0}.owbox .go{font-size:17px;min-height:38px;padding:4px 10px}
+  .owbox .card .hd{font-size:19px;padding-right:30px}.steps li{font-size:17px}
+  .owbox.review .card{max-height:55vh}
   .tools{top:auto;bottom:118px;right:8px;flex-direction:column}
   .pad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);left:8px;bottom:8px}
   .mini{width:132px;height:88px;right:8px;bottom:8px}
   .mark{bottom:122px;font-size:20px;min-height:48px;padding:6px 14px}
-  .near{bottom:176px;font-size:17px}
+  .near{bottom:224px;font-size:16px;max-width:calc(100% - 20px)}
 }
 /* Logo statt Emoji im Kreis oben (das Bild hat den Goldrand schon) */
 .ring{width:150px;height:150px;background:none;border:none;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
@@ -67,3 +70,11 @@
 .lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
 .owbox .card img.jb{float:right;height:118px;margin:-2px -4px 4px 10px}
 @media (max-width:760px){.owbox .card img.jb{height:80px}}
+/* Aufgabe einklappen: nur die erste Zeile bleibt */
+.cmin{position:absolute;right:8px;top:8px;z-index:3;width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid var(--line2);font-size:16px;line-height:1;box-shadow:var(--sch-k)}
+.owbox .card .hd{padding-right:34px}
+.owbox.kz:not(.review) .card > :not(.hd){display:none}
+.owbox.kz:not(.review) .card .hd{margin:0;font-size:19px}
+.owbox.kz:not(.review) .card img.jb{display:none}
+.ow canvas{cursor:grab}.ow canvas:active{cursor:grabbing}
+@media (max-width:760px){.mark{left:8px;transform:none}.mark:active{transform:scale(.96)}}
