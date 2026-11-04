@@ -4,6 +4,8 @@ window.KN_CONFIG = {
   PORTAL_NAME: 'Klassenkiste',
   TAGLINE: 'Lernspiele für die Primarschule',
   CONTACT: 'primarschuleulchen@hotmail.com',
+  // Link zum Shop für «Noch kein Login?» (leer = Hinweis «kommt bald»)
+  SHOP_URL: '',
 
   // Verbindung zur Datenbank (Supabase). Der «Publishable key» darf öffentlich sein.
   SUPABASE_URL: 'https://nqqepdfupfmzghcjlkun.supabase.co',
