@@ -36,6 +36,60 @@
    "stufe": "1.–6. Klasse",
    "sort": 2,
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/eulen-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 5}\"><title>Eulen-Weg</title></head><body><p>Eulen-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Wie spät ist es?",
+   "description": "Die Uhr lesen: volle Stunden bis genaue Minuten.",
+   "fach": "Mathematik",
+   "thema": "Zeit",
+   "stufe": "1.–4. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/uhr-lesen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Wie spät ist es?</title></head><body><p>Wie spät ist es?: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kiosk",
+   "description": "Mit Franken und Rappen genau bezahlen.",
+   "fach": "Mathematik",
+   "thema": "Geld",
+   "stufe": "1.–4. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kiosk.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 8}\"><title>Kiosk</title></head><body><p>Kiosk: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Der, die, das",
+   "description": "Nomen in die richtige Artikel-Kiste legen.",
+   "fach": "Deutsch",
+   "thema": "Wortarten",
+   "stufe": "1.–5. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/der-die-das.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Der, die, das</title></head><body><p>Der, die, das: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Silben-Puzzle",
+   "description": "Silben in die richtige Reihenfolge bringen.",
+   "fach": "Deutsch",
+   "thema": "Lesen",
+   "stufe": "1.–4. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/silben-puzzle.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 8}\"><title>Silben-Puzzle</title></head><body><p>Silben-Puzzle: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Bilder-Sudoku",
+   "description": "Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/bilder-sudoku.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 3}\"><title>Bilder-Sudoku</title></head><body><p>Bilder-Sudoku: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Wasser-Weg",
+   "description": "Röhren drehen, bis das Wasser zur Blume fliesst.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 4,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wasser-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 3}\"><title>Wasser-Weg</title></head><body><p>Wasser-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   }
  ]
 }
