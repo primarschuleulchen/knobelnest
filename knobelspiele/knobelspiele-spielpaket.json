@@ -90,6 +90,15 @@
    "stufe": "1.–6. Klasse",
    "sort": 4,
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wasser-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 3}\"><title>Wasser-Weg</title></head><body><p>Wasser-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kleiderschrank",
+   "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen und «This is my dress.»",
+   "fach": "Englisch",
+   "thema": "Clothes",
+   "stufe": "3.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kleiderschrank.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 10}\"><title>Kleiderschrank</title></head><body><p>Kleiderschrank: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   }
  ]
 }
