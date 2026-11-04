@@ -2778,18 +2778,22 @@
     ['gd', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', ['12 Spiele mit je 5 Stufen', 'Bilder, Orte, Reihenfolgen und Namen merken', 'Selbst ausprobieren, bevor die Klasse spielt', 'Pro Klasse freigeben, Fortschritt pro Kind']],
     ['umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', ['Abstimmung, Wortwolke, Skala, Schätzfrage und mehr', 'Ergebnisse erscheinen live an der Wandtafel', 'Mit der Klasse oder offen per QR-Code (z. B. am Elternabend)', 'Fertige Vorlagen für Klassenrat, Wochenrückblick und mehr']],
     ['eltern', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', ['Kein mühsames Terminfinden mehr: Die Eltern kreuzen per Link an, wann sie können (ohne Anmeldung)', 'Die Liste wird automatisch erstellt, und Termine werden blockiert, damit es am Schluss für alle aufgeht', 'Sie bekommen eine fix fertige Liste', 'Sie können auch selbst Termine fixieren', 'Anspruchsvolle Gespräche nicht direkt hintereinander']]];
-  function mehrList() { return T.me && T.me.is_admin ? [] : MEHR.filter(function (x) { return !T.tools[x[0]]; }); }
+  function mehrList() { return T.me && T.me.is_admin ? (T.mehrAdmin ? MEHR : []) : MEHR.filter(function (x) { return !T.tools[x[0]]; }); }
   function shopBtn(txt, cls) {
     return C.SHOP_URL ? '<a class="' + cls + '" href="' + h(C.SHOP_URL) + '" target="_blank" rel="noopener">' + txt + '</a>' : '<button type="button" class="' + cls + '" data-a="shopSoon">' + txt + '</button>';
   }
   function mehrTiles() {
-    var l = mehrList(); if (!l.length) return '';
-    return '<div class="tt-mehr-kopf"><h3>Noch mehr in der ' + h(C.PORTAL_NAME) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></h3><p>Diese Werkzeuge können Sie dazuholen. In der Vorschau sehen Sie, was sie können.</p></div>' +
+    var l = mehrList(), adm = T.me && T.me.is_admin;
+    // Admin hat alles: Knopf, um zu sehen, was andere Lehrpersonen ohne Freigabe sehen
+    var knopf = adm ? '<div class="tt-mehr-admin"><button class="btn sm" data-a="mehrAdmin">' + (T.mehrAdmin ? '✕ Ansicht schliessen' : '👁 So sehen Lehrpersonen die Werkzeuge, die sie noch nicht haben') + '</button></div>' : '';
+    if (!l.length) return knopf;
+    return knopf + '<div class="tt-mehr-kopf"><h3>Noch mehr in der ' + h(C.PORTAL_NAME) + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></h3><p>Diese Werkzeuge können Sie dazuholen. In der Vorschau sehen Sie, was sie können.</p></div>' +
       '<div class="tooltiles tt-mehr">' + l.map(function (x) {
         return '<div class="tooltile tt-card tt-zu"><button class="tt-open" data-a="ttVorschau" data-k="' + x[0] + '">' + ttIcon(x[0], x[1]) + '<span><b>' + x[2] + '</b><small>' + x[3] + '</small></span><span class="tt-schloss" aria-hidden="true">🔒</span></button>' +
           '<div class="tt-zu-fuss"><button class="tt-vor" data-a="ttVorschau" data-k="' + x[0] + '">👁 Vorschau</button>' + shopBtn('✦ Hol es dir', 'tt-hol') + '</div></div>';
       }).join('') + '</div>';
   }
+  ACT.mehrAdmin = function () { T.mehrAdmin = !T.mehrAdmin; T.render(); };
   ACT.ttVorschau = function (el) {
     var x = MEHR.filter(function (m) { return m[0] === el.dataset.k; })[0]; if (!x) return;
     overlay('<div class="tt-vorschau" role="dialog" aria-label="Vorschau ' + x[2] + '"><div class="tt-v-kopf">' + ttIcon(x[0], x[1]) + '<div><span class="klein">Vorschau</span><h2>' + x[2] + '</h2><p>' + x[3] + '</p></div></div>' +

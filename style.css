@@ -1230,3 +1230,4 @@ body.lp .tt-zu:hover .tt-open .tti,body.lp .tt-zu:hover .tt-open b{filter:graysc
 .tt-v-liste{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:18px}
 .tt-v-liste li{padding-left:28px;position:relative}
 .tt-v-liste li::before{content:"✦";position:absolute;left:4px;color:var(--gold,#d6ad45)}
+.tt-mehr-admin{flex:1 1 100%;margin-top:14px}
