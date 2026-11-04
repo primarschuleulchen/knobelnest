@@ -558,11 +558,21 @@ var ART={
   }
 };
 
-function board(x,y){ // kleine Wandtafel = Input der Lehrperson
-  return '<rect class="badge" x="'+f1(x-24)+'" y="'+f1(y-16)+'" width="48" height="31" rx="4" fill="#2f5d50" stroke="#8a5a2f" stroke-width="3.5"/>'+
-    '<text x="'+f1(x)+'" y="'+f1(y+1)+'" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#fff">Input</text>'+
-    '<line x1="'+f1(x-10)+'" y1="'+f1(y+17)+'" x2="'+f1(x-14)+'" y2="'+f1(y+25)+'" stroke="#8a5a2f" stroke-width="3" stroke-linecap="round"/>'+
-    '<line x1="'+f1(x+10)+'" y1="'+f1(y+17)+'" x2="'+f1(x+14)+'" y2="'+f1(y+25)+'" stroke="#8a5a2f" stroke-width="3" stroke-linecap="round"/>';
+function board(x,y,v){ // Input der Lehrperson: Meer = grosses Schiff, Schatzkarte = Schriftrolle, Berge = Holzschild
+  function P(a,b){return f1(x+a)+' '+f1(y+b)}
+  var t='<text x="'+f1(x)+'" y="'+f1(y+(v==='meer'?9:0))+'" text-anchor="middle" dominant-baseline="central" font-size="14" fill="'+(v==='meer'?'#fff':v==='schatz'?'#5b3a1e':'#3b2410')+'">Input</text>';
+  if(v==='meer') return '<path d="M'+P(-40,8)+' q10 -5 20 0 t20 0 t20 0 t20 0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>'+
+    '<rect x="'+f1(x-6)+'" y="'+f1(y-30)+'" width="10" height="16" fill="#e4572e" stroke="#1f2421" stroke-width="1.5"/><rect x="'+f1(x-6)+'" y="'+f1(y-30)+'" width="10" height="4" fill="#1f2421"/>'+
+    '<rect x="'+f1(x-22)+'" y="'+f1(y-16)+'" width="38" height="15" rx="2" fill="#fff" stroke="#1f2421" stroke-width="1.5"/>'+
+    [-15,-6,3].map(function(d){return '<circle cx="'+f1(x+d+2)+'" cy="'+f1(y-8.5)+'" r="2.6" fill="#3f78a8"/>'}).join('')+
+    '<path class="badge" d="M'+P(-38,-2)+' L'+P(38,-2)+' L'+P(28,18)+' L'+P(-30,18)+' Z" fill="#2b4a6f" stroke="#1f2421" stroke-width="2" stroke-linejoin="round"/>'+t;
+  if(v==='schatz') return '<rect class="badge" x="'+f1(x-27)+'" y="'+f1(y-14)+'" width="54" height="28" fill="#f7ecd2" stroke="#5b3a1e" stroke-width="2"/>'+
+    '<rect x="'+f1(x-33)+'" y="'+f1(y-18)+'" width="8" height="36" rx="4" fill="#e2c48a" stroke="#5b3a1e" stroke-width="2"/>'+
+    '<rect x="'+f1(x+25)+'" y="'+f1(y-18)+'" width="8" height="36" rx="4" fill="#e2c48a" stroke="#5b3a1e" stroke-width="2"/>'+
+    '<circle cx="'+f1(x+18)+'" cy="'+f1(y+15)+'" r="5" fill="#b3261e"/>'+t;
+  return '<line x1="'+f1(x)+'" y1="'+f1(y+12)+'" x2="'+f1(x)+'" y2="'+f1(y+30)+'" stroke="#6b4423" stroke-width="4" stroke-linecap="round"/>'+
+    '<rect class="badge" x="'+f1(x-28)+'" y="'+f1(y-15)+'" width="56" height="28" rx="4" fill="#d9a066" stroke="#6b4423" stroke-width="2.5"/>'+
+    '<line x1="'+f1(x-22)+'" y1="'+f1(y+7)+'" x2="'+f1(x+22)+'" y2="'+f1(y+7)+'" stroke="#b07a45" stroke-width="1.5"/>'+t;
 }
 function mapSVG(p,opt){
   opt=opt||{};
@@ -581,7 +591,7 @@ function mapSVG(p,opt){
     o+='<g class="stn" data-st="'+s.t.id+'"'+(opt.mini?'':' tabindex="0" role="button" aria-label="'+esc((s.t.art==='z'?'Zusatz: ':s.t.art==='i'?'Input: ':'Aufgabe '+s.num+': ')+s.t.t)+'"')+'>';
     o+= s.t.art==='z'
       ? '<circle class="badge" cx="'+f1(s.x)+'" cy="'+f1(s.y)+'" r="14" fill="#ffd75e" stroke="#b98d24" stroke-width="2.2"/>'
-      : s.t.art==='i' ? board(s.x,s.y) : A.mark(s);
+      : s.t.art==='i' ? board(s.x,s.y,v) : A.mark(s);
     if(s.t.art!=='i') o+='<text class="num" x="'+f1(s.x)+'" y="'+f1(s.y+1)+'"'+(s.t.art==='z'?' fill="#6b4a00" style="fill:#6b4a00"':'')+'>'+s.num+'</text>';
     if(safeUrl(s.t.link)&&!opt.mini) o+='<g transform="translate('+f1(s.x+(s.t.art==='i'?27:16))+' '+f1(s.y+(s.t.art==='i'?-14:-15))+')"><circle r="9" fill="#3f78a8" stroke="#fff" stroke-width="1.5"/><path d="M-3 3 L3 -3 M-1 -3.5 H3.5 V1" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>';
     o+=textLines(s.x,s.y+(s.t.art==='p'?42:36),wrap(s.t.t,15),'lbl');
@@ -628,7 +638,7 @@ function mapHTML(p){
   o+='<div class="card"><h3>Legende</h3><div class="legend">'+
     '<div>'+mini('<circle cx="16" cy="16" r="13" fill="#fff" stroke="#1f2421" stroke-width="2"/><text x="16" y="17" font-size="16" text-anchor="middle" dominant-baseline="central">1</text>')+'Pflichtaufgabe, in dieser Reihenfolge</div>'+
     '<div>'+mini('<circle cx="16" cy="16" r="13" fill="#ffd75e" stroke="#b98d24" stroke-width="2"/><text x="16" y="17" font-size="16" text-anchor="middle" dominant-baseline="central" fill="#6b4a00">★</text>')+'Zusatzaufgabe, freiwillig</div>'+
-    '<div>'+mini('<rect x="2" y="7" width="28" height="19" rx="3" fill="#2f5d50" stroke="#8a5a2f" stroke-width="2.5"/><text x="16" y="17" font-size="9" fill="#fff" text-anchor="middle" dominant-baseline="central">Input</text>')+'Input: die Lehrperson erklärt etwas, alle kommen</div>'+
+    '<div><svg viewBox="-42 -32 84 64" width="44" height="34" aria-hidden="true">'+board(0,0,p.variant)+'</svg>'+'Input: die Lehrperson erklärt etwas, alle kommen</div>'+
     '<div>'+mini('<circle cx="16" cy="16" r="10" fill="#3f78a8"/><path d="M12 20 L20 12 M14.5 11.5 H20.5 V17.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>')+'mit Link: antippen und «Aufgabe öffnen»</div>'+
     STUFE.map(function(s,i){return '<div><span class="stars" style="width:32px;text-align:center">'+'●●●'.slice(0,i+1)+'</span>'+s+' = '+vv.stufen[i]+'</div>'}).join('')+
     '<div>'+mini('<rect x="5" y="6" width="22" height="20" rx="10" fill="#2e9e6a"/><text x="16" y="17" font-size="13" fill="#fff" text-anchor="middle" dominant-baseline="central">✓3</text>')+'so viele Kinder sind schon fertig</div>'+
