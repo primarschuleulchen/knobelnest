@@ -22,7 +22,7 @@
   {
    "title": "Bilderrätsel",
    "description": "Felder nach Zahlen ausmalen, bis ein Bild erscheint.",
-   "fach": "Knobeln",
+   "fach": "Knobelkiste",
    "thema": "Logik",
    "stufe": "2.–6. Klasse",
    "sort": 1,
@@ -31,7 +31,7 @@
   {
    "title": "Eulen-Weg",
    "description": "Pfeile legen, damit die Eule nach Hause findet.",
-   "fach": "Knobeln",
+   "fach": "Knobelkiste",
    "thema": "Programmieren",
    "stufe": "1.–6. Klasse",
    "sort": 2,
@@ -76,7 +76,7 @@
   {
    "title": "Bilder-Sudoku",
    "description": "Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.",
-   "fach": "Knobeln",
+   "fach": "Knobelkiste",
    "thema": "Logik",
    "stufe": "1.–6. Klasse",
    "sort": 3,
@@ -85,7 +85,7 @@
   {
    "title": "Wasser-Weg",
    "description": "Röhren drehen, bis das Wasser zur Blume fliesst.",
-   "fach": "Knobeln",
+   "fach": "Knobelkiste",
    "thema": "Logik",
    "stufe": "1.–6. Klasse",
    "sort": 4,

@@ -2230,6 +2230,7 @@
     var saved = LS.get('kn_cls');
     T.cls = (T.classes.filter(function (c) { return c.id === saved; })[0] || T.classes[0] || {}).id || null;
     T.games = await DB.listGames();
+    await knobelnUmzug();
     await wdtSync();
     wdtVorne(T.games);
     await T.loadClass();
@@ -2656,6 +2657,19 @@
   }
   // Admin: «Wort des Tages» aus spiele/wort-des-tages.html anlegen (Fach Knobelkiste, für alle Lehrpersonen)
   // oder auf die neue Version bringen. Eine selbst hochgeladene Fassung ohne Versionsnummer kommt dabei ins Fach Knobelkiste.
+  // Admin, einmalig: alle Spiele aus dem Fach «Knobeln» ins Fach «Knobelkiste» verschieben (Thema bleibt).
+  // Gemerkt in shared_store «umzuege».knobeln, damit ein später neu angelegtes Fach «Knobeln» bleibt.
+  async function knobelnUmzug() {
+    if (!T.me || !T.me.is_admin) return;
+    try {
+      var u = (await DB.sharedGet('umzuege')) || {}; if (u.knobeln) return;
+      var gs = T.games.filter(function (g) { return String(g.fach || '').trim() === 'Knobeln'; });
+      for (var i = 0; i < gs.length; i++) { var g = gs[i];
+        await DB.saveGame({ id: g.id, title: g.title, description: g.description, fach: 'Knobelkiste', thema: g.thema, stufe: g.stufe, for_all: g.for_all, sort: g.sort }); }
+      await DB.sharedSet('umzuege', Object.assign({}, u, { knobeln: true }));
+      if (gs.length) T.games = await DB.listGames();
+    } catch (e) { console.warn('Umzug Knobeln:', e); }
+  }
   var WDT_VER = 2; // gleich wie <meta name="wdt-version"> in spiele/wort-des-tages.html
   async function wdtSync() {
     if (!T.me || !T.me.is_admin) return;
@@ -2873,6 +2887,7 @@
   // Bilder für die Fächer (bilder/faecher/), sonst der Anfangsbuchstabe
   function fachBild(f) {
     var k = String(f || '').toLowerCase().replace(/[^a-zäöü]/g, '');
+    if (/^knobel/.test(k)) return '<img src="bilder/kacheln/knobelkiste.webp" alt="" draggable="false">';
     var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
     return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
   }

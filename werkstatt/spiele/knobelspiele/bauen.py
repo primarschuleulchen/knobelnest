@@ -289,7 +289,7 @@ G.play = function (lv, api) {
 def nono_level(n):
     return [{'n': b[0], 'e': b[1], 'c': b[2], 'p': b[3].split('\n')} for b in BILDER[n]]
 
-spiel(id='bilderraetsel', titel='Bilderrätsel', icon=logo('bilderraetsel'), fach='Knobeln', thema='Logik', stufe='2.–6. Klasse', sort=1, n=3,
+spiel(id='bilderraetsel', titel='Bilderrätsel', icon=logo('bilderraetsel'), fach='Knobelkiste', thema='Logik', stufe='2.–6. Klasse', sort=1, n=3,
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Felder nach Zahlen ausmalen, bis ein Bild erscheint.',
       intro='Die Zahlen sagen, wie viele Felder in einer Reihe nebeneinander ausgemalt sind. «2 1» heisst: zuerst 2 Felder, dann eine Lücke, dann 1 Feld. Male so lange, bis ein Bild erscheint!',
@@ -411,7 +411,7 @@ G.play = function (lv, api) {
 
 
 # ================================================================== Eulen-Weg (Programmieren)
-spiel(id='eulen-weg', titel='Eulen-Weg', icon=logo('eulen-weg'), fach='Knobeln', thema='Programmieren', stufe='1.–6. Klasse', sort=2, n=5,
+spiel(id='eulen-weg', titel='Eulen-Weg', icon=logo('eulen-weg'), fach='Knobelkiste', thema='Programmieren', stufe='1.–6. Klasse', sort=2, n=5,
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Pfeile legen, damit die Eule nach Hause findet.',
       intro='Lege Pfeil-Karten hintereinander. Dann tippe auf «▶ Los!» und die Eule läuft genau so, wie du es programmiert hast. Findet sie nach Hause?',
