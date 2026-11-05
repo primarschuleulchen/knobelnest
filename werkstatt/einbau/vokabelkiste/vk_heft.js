@@ -109,9 +109,9 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
     <div class="hcover"><i class="hstich"></i><div class="hband"><i></i></div><i class="hribbon"></i>
       <span class="hdoo d1">✦</span><span class="hdoo d2">✧</span><span class="hdoo d3">♡</span><span class="hdoo d4">✦</span><span class="hdoo d5">☆</span><span class="hdoo d6">✧</span>
       <div class="hlabel"><i class="htape l"></i><i class="htape r"></i><span class="hk">✦ Vokabelkiste · ${esc(SUB().name)} ✦</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span><span class="hz"></span></div>
-      <img src="../bilder/eule.webp" alt="" class="heule" draggable="false"></div>
+</div>
     ${vkZielHTML(false)}
-    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=1" alt="" draggable="false">${t}</button>`).join('')}</div>
+    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=2" alt="" draggable="false">${t}</button>`).join('')}</div>
     <div class="hpage">${body}</div></div></div>`;
   $$('[data-ht]').forEach(b=>b.onclick=()=>goHeft(b.dataset.ht));
   const vb=$('#hvorB');if(vb)vb.onclick=()=>{heftVor=!heftVor;goHeft(tab)};
@@ -195,3 +195,9 @@ function bindBulk(node,redraw){const inp=$('#bulkPic');if(!inp)return;inp.onchan
     ${miss.length?`<p>Diese passen zu keinem Wort dieser Portion. Der Dateiname muss gleich heissen wie das Wort:</p><ul class="miss">${miss.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'<p>Alle Bilder haben ein Wort gefunden.</p>'}
     ${ok?'<p class="note">Vergiss nicht: unten «Für die Klasse veröffentlichen».</p>':''}<div class="dact"><button class="pill go" id="bok">OK</button></div></div>`;
   $('#bok',L).onclick=()=>{L.innerHTML=''};$('.scrim',L).onclick=()=>{L.innerHTML=''}}}
+
+/* Kachel «Mein Heft» auf der Startseite der Sprache */
+function vkHeftCard(){const list=stkList(),st=list.filter(s=>(P.stk||{})[s.id]).length,bd=BADGES.filter(b=>b[4]()>0).length,ur=Object.keys(P.urk||{}).length;
+  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh"><span class="mhl">Mein Heft</span><i></i></span>
+    <span class="ktx"><b>Mein Heft</b><span class="mhz"><span><img src="abzeichen/reiter-sticker.webp?v=2" alt="">${st}/${list.length}</span><span><img src="abzeichen/reiter-abzeichen.webp?v=2" alt="">${bd}</span><span><img src="abzeichen/reiter-urkunden.webp?v=2" alt="">${ur}</span></span><small>Sticker, Abzeichen und Urkunden anschauen →</small></span></button>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#heftCard');if(b)goHeft()});

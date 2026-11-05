@@ -360,7 +360,7 @@ rep('<span class="fmeta">${meta}', '<span class="fmeta">${meta}${vkCardMark(n)?\
 #     Bilder-Speicher in vk_ausbau.js: w.img = 'vk:<id>', geholt über das Portal mit knAsk('vkBilder')).
 rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_heft.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
 # Knopf «Mein Heft» oben und Ansicht im Navigations-Verteiler
-rep("${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}", "${KN?`<button class=\"pill\" id=\"heftBtn\">📒 Mein Heft</button>`:''}${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}")
+rep("${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}", "${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}")
 rep("const cb=$('#clsbtn');if(cb)cb.onclick=goClass;", "const cb=$('#clsbtn');if(cb)cb.onclick=goClass;const hb=$('#heftBtn');if(hb)hb.onclick=()=>goHeft();")
 rep("function rerender(){if(nav.view==='class')", "function rerender(){if(nav.view==='heft')return goHeft(nav.tab);if(nav.view==='class')")
 # Klassen-Ziel auf der Startseite der Sprache
@@ -380,6 +380,12 @@ rep("  if(KN){setInterval(knTick,1000);knAward();}", "  if(KN){setInterval(knTic
 
 # 16) Abzeichen «Regenmeister»: jedes Mal, wenn das Kind im Wortregen seinen eigenen Rekord knackt (ab 10 Punkten)
 rep("if(isRec){P.rain[key]=score;", "if(isRec){P.rain[key]=score;if(score>=10){vkCount('regen');vkBadgeCheck()}")
+
+
+# 17) «Mein Heft» als Kachel auf der Startseite der Sprache (statt Wochenheld/Kistenprofi; die sind jetzt Abzeichen im Heft)
+rep("""    <div class="kt kt-badges">${bd('🏅','Wochenheld',wk>0,wk?(wk>1?wk+'× geschafft':'geschafft!'):'jeden Schultag einer Woche einen Tagesstern')}
+      ${bd('📦','Kistenprofi',f5>=PROFI,f5>=PROFI?'100 Wörter im letzten Fach!':f5+' von '+PROFI+' Wörtern im letzten Fach')}</div></div>`}""",
+    """    ${vkHeftCard()}</div>`}""")
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
