@@ -1290,3 +1290,14 @@ body.kidv .kk-tile{background:#F6E7C8}
 .af2 .chip{min-height:36px}
 .af2-l{font-size:15px;color:var(--soft,#5f6963);margin-right:2px}
 .af2-sort{margin-left:10px}
+/* Stichwörter: farbige Schildchen, Farbwahl, Auswahl im Reiter «Spiele» */
+.lab-pill{font-weight:400}
+.lab-wahl{display:inline-flex;align-items:center;gap:2px}
+.lab-pinsel{border:0;background:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;box-shadow:0 2px 8px rgba(63,120,168,.18);font-size:15px}
+.lab-pinsel:hover{transform:scale(1.08)}
+.lab-farben{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lab-farbe{font:inherit;font-size:18px;min-height:46px;border-radius:999px;border:2px solid transparent;cursor:pointer}
+.lab-farbe:hover{border-color:currentColor}
+.sw-wahl{gap:10px;align-items:flex-end;flex-wrap:wrap;margin-left:auto}
+.sw-feld{flex:0 0 auto;min-width:150px}
+.sw-feld select{min-height:48px}

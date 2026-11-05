@@ -2484,7 +2484,11 @@
     var fachs = uniq(games.map(function (g) { return g.fach; }));
     if (T.fach !== 'alle' && fachs.indexOf(T.fach) < 0) T.fach = 'alle';
     var q = T.q.trim().toLowerCase();
+    if (!T.labels || !T.labelFarben) labelsLaden();
+    var ordnen = T.ordnen || 'thema', fKl = T.fKl || 'alle', fLab = T.fLab || 'alle';
     var shown = games.filter(function (g) {
+      if (fKl !== 'alle' && klassen(g).indexOf(+fKl) < 0) return false;
+      if (fLab !== 'alle' && spielLabels(g).indexOf(fLab) < 0) return false;
       return (T.fach === 'alle' || g.fach === T.fach) && (!q || (g.title + ' ' + g.description + ' ' + g.thema + ' ' + g.fach).toLowerCase().indexOf(q) >= 0);
     });
     var out = '<section class="banner"><button class="banner-bild" data-a="bildEdit" title="Klassenbild ändern"><img src="' + h(klassBild(c.bild)) + '" alt="Klassenbild" width="150" height="150"><span class="bild-edit">✎ ändern</span></button><div class="stack banner-text" style="gap:8px;flex:1 1 320px"><span class="klein">Ihre Klasse</span><h2>Klasse ' + h(c.name) + '</h2>' +
@@ -2529,20 +2533,26 @@
           (t.id === 'alle' ? '★' : fachBild(t.id) || h(t.label.charAt(0))) + '</span><span><b' + (t.label.length > 13 ? ' style="font-size:' + (t.label.length > 17 ? 13 : 15) + 'px"' : '') + '>' + h(t.label) + '</b><span>' + plural(t.n, 'Spiel', 'Spiele') + '</span></span></button>';
       }).join('') + '</div></section>';
     out += '<section class="stack"><div class="row" style="justify-content:space-between;align-items:flex-end"><h2 style="font-size:26px">' +
-      (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div><div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
+      (T.fach === 'alle' ? 'Alle Spiele' : 'Spiele in ' + h(T.fach)) + '</h2><div class="row" style="align-items:flex-end"><button class="btn sm" data-a="gGroupAll" data-v="1">Alle einklappen</button><button class="btn sm" data-a="gGroupAll" data-v="0">Alle ausklappen</button></div>' + spieleWahl(games) + '<div class="field" style="flex:0 1 320px"><label for="gSearch">Spiel suchen</label>' +
       '<input class="input" id="gSearch" type="search" placeholder="z. B. Einmaleins" value="' + h(T.q) + '" data-input="search"></div></div>';
     var groups = [], by = {};
-    shown.forEach(function (g) { themen(g).forEach(function (th) { var k = g.fach + '|' + th; if (!by[k]) { by[k] = { fach: g.fach, thema: th, list: [] }; groups.push(by[k]); } by[k].list.push(g); }); });
+    if (ordnen === 'klasse') {
+      shown.forEach(function (g) { var kl = klassen(g), k = 'K|' + (kl.length ? g.stufe : ''); if (!by[k]) { by[k] = { fach: 'Klasse', thema: kl.length ? g.stufe : 'Ohne Klasse', key: k, sk: kl.length ? kl[0] * 100 + kl[kl.length - 1] : 9999, list: [] }; groups.push(by[k]); } by[k].list.push(g); });
+      groups.sort(function (a, b) { return a.sk - b.sk; });
+    } else if (ordnen === 'stichwort') {
+      shown.forEach(function (g) { var ls = spielLabels(g); (ls.length ? ls : ['']).forEach(function (x) { var k = 'L|' + x; if (!by[k]) { by[k] = { fach: 'Stichwort', thema: x || 'Ohne Stichwort', key: k, list: [] }; groups.push(by[k]); } by[k].list.push(g); }); });
+      groups.sort(function (a, b) { return (a.key === 'L|') - (b.key === 'L|') || a.thema.localeCompare(b.thema, 'de'); });
+    } else shown.forEach(function (g) { themen(g).forEach(function (th) { var k = g.fach + '|' + th; if (!by[k]) { by[k] = { fach: g.fach, thema: th, list: [] }; groups.push(by[k]); } by[k].list.push(g); }); });
     if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
     groups.forEach(function (gr) {
-      var gk = gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
+      var gk = gr.key || gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
       var sorting = T.sorting === gk && !shut, real = gr.list.filter(function (g) { return !g.live; });
       out += '<div class="ghead"><h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
         '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
         gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
         (real.length ? (function () { var all = real.every(function (g) { return T.rel.has(g.id); });
-          return '<button class="btn sm" data-a="gRelAll" data-k="' + h(gk) + '" data-v="' + (all ? 0 : 1) + '">' + (all ? '🔒 Alle sperren' : '✓ Alle freigeben') + '</button>'; })() : '') +
-        (T.me.is_admin && !shut && real.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
+          return '<button class="btn sm" data-a="gRelAll" data-k="' + h(gk) + '" data-ids="' + real.map(function (g) { return g.id; }).join(',') + '" data-v="' + (all ? 0 : 1) + '">' + (all ? '🔒 Alle sperren' : '✓ Alle freigeben') + '</button>'; })() : '') +
+        (T.me.is_admin && ordnen === 'thema' && !shut && real.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
       if (sorting) {
         out += '<div class="sortbox"><p class="muted">Ziehen Sie ein Spiel am Griff <span aria-hidden="true">⠿</span> an die richtige Stelle oder benutzen Sie die Pfeile. Die Reihenfolge wird sofort gespeichert und gilt für alle Lehrpersonen und Kinder.</p>' +
           '<ol class="sorter" data-k="' + h(gk) + '">' + real.map(function (g, i) {
@@ -2563,7 +2573,7 @@
           return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
             (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
             '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span>' +
-            (g.stufe ? (/zusatz/i.test(g.stufe) ? '<span class="pill zusatz-t">★ ' + h(g.stufe) + '</span>' : '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>') : '') + '</div>' +
+            (g.stufe ? (/zusatz/i.test(g.stufe) ? '<span class="pill zusatz-t">★ ' + h(g.stufe) + '</span>' : '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>') : '') + spielLabels(g).map(labelPill).join('') + '</div>' +
             '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
@@ -2893,6 +2903,20 @@
     LS.set('kn_closed', T.closed); T.render();
   };
   ACT.search = function (el) { T.q = el.value; T.render(); };
+  // Auswahl links neben «Spiel suchen»: ordnen nach Thema/Klasse/Stichwort, Filter Klasse und Stichwort
+  function spieleWahl(games) {
+    var kl = [], labs = [];
+    games.forEach(function (g) { klassen(g).forEach(function (k) { if (kl.indexOf(k) < 0) kl.push(k); }); spielLabels(g).forEach(function (x) { if (labs.indexOf(x) < 0) labs.push(x); }); });
+    kl.sort(function (a, b) { return a - b; }); labs.sort(function (a, b) { return a.localeCompare(b, 'de'); });
+    var sel = function (id, lab, ch, val, opts) { return '<div class="field sw-feld"><label for="' + id + '">' + lab + '</label><select class="input" id="' + id + '" data-change="' + ch + '">' +
+      opts.map(function (o) { return '<option value="' + h(o[0]) + '"' + (String(val) === String(o[0]) ? ' selected' : '') + '>' + h(o[1]) + '</option>'; }).join('') + '</select></div>'; };
+    return '<div class="row sw-wahl">' + sel('gOrdnen', 'Ordnen nach', 'gOrdnen', T.ordnen || 'thema', [['thema', 'Thema'], ['klasse', 'Klasse'], ['stichwort', 'Stichwort']]) +
+      (kl.length ? sel('gFKl', 'Klasse', 'gFKl', T.fKl || 'alle', [['alle', 'Alle Klassen']].concat(kl.map(function (k) { return [k, k + '. Klasse']; }))) : '') +
+      (labs.length ? sel('gFLab', 'Stichwort', 'gFLab', T.fLab || 'alle', [['alle', 'Alle Stichwörter']].concat(labs.map(function (x) { return [x, x]; }))) : '') + '</div>';
+  }
+  ACT.gOrdnen = function (el) { T.ordnen = el.value; T.render(); };
+  ACT.gFKl = function (el) { T.fKl = el.value; T.render(); };
+  ACT.gFLab = function (el) { T.fLab = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
   // Bilder für die Fächer (bilder/faecher/), sonst der Anfangsbuchstabe
   function fachBild(f) {
@@ -2993,7 +3017,8 @@
   };
   ACT.gRelAll = async function (el) {
     var on = el.dataset.v === '1', k = el.dataset.k;
-    var ids = T.games.filter(function (g) { return themen(g).some(function (th) { return g.fach + '|' + th === k; }) && T.rel.has(g.id) !== on; }).map(function (g) { return g.id; });
+    var nur = el.dataset.ids ? el.dataset.ids.split(',') : null;
+    var ids = T.games.filter(function (g) { return (nur ? nur.indexOf(g.id) >= 0 : themen(g).some(function (th) { return g.fach + '|' + th === k; })) && T.rel.has(g.id) !== on; }).map(function (g) { return g.id; });
     ids.forEach(function (id) { if (on) T.rel.add(id); else T.rel.delete(id); });
     T.render();
     try { for (var i = 0; i < ids.length; i++) await DB.setRelease(T.cls, ids[i], on); toast(on ? ids.length + ' Spiele freigegeben' : ids.length + ' Spiele gesperrt'); }
@@ -3442,7 +3467,7 @@
       Promise.all([DB.listTeachers(), DB.listTeacherGames(), DB.sharedGet('werkzeuge').catch(function () { return null; }),
         DB.sharedGet('vokabelkiste-vorlage').catch(function () { return null; }), DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; }),
         DB.sharedGet('klassenbilder').catch(function () { return null; }), DB.sharedGet('spiel-labels').catch(function () { return null; })]).then(function (r) {
-        A.kb = Array.isArray(r[5]) ? r[5] : []; A.labels = r[6] && typeof r[6] === 'object' ? r[6] : {};
+        A.kb = Array.isArray(r[5]) ? r[5] : []; T.labels = r[6] && typeof r[6] === 'object' ? r[6] : {}; labelsLaden();
         A.teachers = r[0]; A.tg = r[1]; A.tools = r[2] || {}; A.vtpl = r[3]; A.vz = r[4] && typeof r[4] === 'object' ? r[4] : {}; A.busy = false; if (T.tab === 'verwaltung') T.render(); })
         .catch(function (e) { A.busy = false; toast(errMsg(e)); });
     }
@@ -3488,14 +3513,14 @@
       return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td><div class="ft-edit"><input class="ft-in" list="fachList" value="' + h(g.fach) + '" maxlength="40" aria-label="Fach von ' + h(g.title) + '" title="Fach ändern" data-change="gFtSet" data-k="fach" data-id="' + g.id + '"><span aria-hidden="true">›</span>' +
           themen(g).map(function (th) { return '<span class="ft-chip">' + h(th) + (themen(g).length > 1 ? '<button class="ft-x" aria-label="Thema ' + h(th) + ' entfernen" title="Thema entfernen" data-a="gThDel" data-id="' + g.id + '" data-t="' + h(th) + '">×</button>' : '') + '</span>'; }).join('') +
           '<input class="ft-in ft-neu" list="alleThemenList" maxlength="40" placeholder="+ Thema" aria-label="Weiteres Thema für ' + h(g.title) + '" title="Weiteres Thema (das Spiel steht dann in beiden)" data-change="gThAdd" data-id="' + g.id + '"></div>' +
-          '<div class="ft-edit ft-labs">' + spielLabels(g).map(function (x) { return '<span class="ft-chip lab">🏷 ' + h(x) + '<button class="ft-x" aria-label="Stichwort ' + h(x) + ' entfernen" data-a="gLabDel" data-id="' + g.id + '" data-t="' + h(x) + '">×</button></span>'; }).join('') +
+          '<div class="ft-edit ft-labs">' + spielLabels(g).map(function (x) { return '<span class="ft-chip lab" style="background:' + labelFarbe(x)[0] + ';color:' + labelFarbe(x)[1] + '">🏷 ' + h(x) + '<button class="ft-x" aria-label="Stichwort ' + h(x) + ' entfernen" data-a="gLabDel" data-id="' + g.id + '" data-t="' + h(x) + '">×</button></span>'; }).join('') +
           '<input class="ft-in ft-neu" list="labelList" maxlength="40" placeholder="+ Stichwort" aria-label="Stichwort für ' + h(g.title) + '" title="Stichwort hinzufügen, z. B. Young World 3" data-change="gLabAdd" data-id="' + g.id + '"></div></td>' +
         '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
         '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
     }).join('') + '</tbody></table></div>' +
       '<datalist id="alleThemenList">' + alleThemen(T.games).map(function (t) { return '<option value="' + h(t) + '">'; }).join('') + '</datalist>' +
-      '<datalist id="labelList">' + (function () { var o = []; Object.keys(A.labels || {}).forEach(function (k) { (A.labels[k] || []).forEach(function (x) { if (o.indexOf(x) < 0) o.push(x); }); }); return o; })().map(function (x) { return '<option value="' + h(x) + '">'; }).join('') + '</datalist>' : '<div class="empty">Noch keine Spiele hochgeladen.</div>';
+      '<datalist id="labelList">' + (function () { var o = []; Object.keys(T.labels || {}).forEach(function (k) { (T.labels[k] || []).forEach(function (x) { if (o.indexOf(x) < 0) o.push(x); }); }); return o; })().map(function (x) { return '<option value="' + h(x) + '">'; }).join('') + '</datalist>' : '<div class="empty">Noch keine Spiele hochgeladen.</div>';
     var teachers = A.teachers === null ? '<p class="muted">Wird geladen …</p>' : '<ul class="list">' + A.teachers.map(function (t) {
       var mine = A.tg.filter(function (x) { return x.teacher_id === t.id; }).map(function (x) { return x.game_id; });
       var open = A.open === t.id;
@@ -3618,7 +3643,28 @@
     await DB.deleteGame(el.dataset.id); T.games = wdtVorne(await DB.listGames()); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
   };
   ACT.gSel = function (el) { var s = T.admin.sel; if (el.checked) s[el.dataset.id] = 1; else delete s[el.dataset.id]; T.render(); };
-  function spielLabels(g) { var L = T.admin.labels || {}; return Array.isArray(L[g.id]) ? L[g.id] : []; }
+  function spielLabels(g) { var L = T.labels || {}; return Array.isArray(L[g.id]) ? L[g.id] : []; }
+  // Farben der Stichwörter: shared_store «spiel-label-farben» = {Stichwort: Nummer in LABEL_FARBEN}
+  var LABEL_FARBEN = [['#FBF3DC', '#7A5A12', 'Gelb'], ['#E3F0FC', '#2B6CB0', 'Blau'], ['#DDF5EA', '#1F6B50', 'Grün'], ['#FCE4EC', '#9C2E58', 'Rosa'],
+    ['#EDE7F8', '#5B3F96', 'Lila'], ['#FFE9D6', '#9A4B12', 'Orange'], ['#DDF4F4', '#1E6E6E', 'Türkis'], ['#EEF0F2', '#4A5560', 'Grau']];
+  function labelFarbe(x) { var i = (T.labelFarben || {})[x]; return LABEL_FARBEN[i == null ? 0 : i] || LABEL_FARBEN[0]; }
+  function labelPill(x) { var f = labelFarbe(x); return '<span class="pill lab-pill" style="background:' + f[0] + ';color:' + f[1] + '">🏷 ' + h(x) + '</span>'; }
+  // Stichwörter und Farben einmal laden (auch für Lehrpersonen im Reiter «Spiele»)
+  function labelsLaden() {
+    if (T.labelsLadend) return; T.labelsLadend = true;
+    Promise.all([T.labels ? Promise.resolve(T.labels) : DB.sharedGet('spiel-labels').catch(function () { return null; }), DB.sharedGet('spiel-label-farben').catch(function () { return null; })])
+      .then(function (r) { T.labels = r[0] && typeof r[0] === 'object' ? r[0] : {}; T.labelFarben = r[1] && typeof r[1] === 'object' ? r[1] : {}; if (T.tab === 'spiele' || T.tab === 'verwaltung') T.render(); });
+  }
+  ACT.labFarbe = function (el) {
+    var x = el.dataset.l;
+    overlay('<div class="card stack" style="width:min(420px,100%)"><h2 style="margin:0">Farbe für «' + h(x) + '»</h2><div class="lab-farben">' + LABEL_FARBEN.map(function (f, i) {
+      return '<button class="lab-farbe" style="background:' + f[0] + ';color:' + f[1] + '" data-a="labFarbeSet" data-l="' + h(x) + '" data-i="' + i + '">🏷 ' + f[2] + '</button>'; }).join('') + '</div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeOverlay">Schliessen</button></div></div>');
+  };
+  ACT.labFarbeSet = async function (el) {
+    T.labelFarben = T.labelFarben || {}; T.labelFarben[el.dataset.l] = +el.dataset.i; closeOverlays(); T.render();
+    try { await DB.sharedSet('spiel-label-farben', T.labelFarben); toast('Farbe gespeichert.'); } catch (e) { toast(errMsg(e)); }
+  };
   function adminGames(ohne) {
     var A = T.admin, f = A.fach || 'alle', t = f === 'alle' ? 'alle' : (A.thema || 'alle');
     var l = T.games.filter(function (g) { return (f === 'alle' || g.fach === f) && (t === 'alle' || hatThema(g, t)); });
@@ -3638,7 +3684,10 @@
         return '<button class="chip" aria-pressed="' + (String(A.kl || 'alle') === String(k)) + '" data-a="aKl" data-k="' + k + '">' + (k === 'alle' ? 'Alle' : k + '.') + '</button>'; }).join('') +
       '<button class="chip af2-sort" aria-pressed="' + !!A.sortKl + '" data-a="aSortKl">↕ Nach Klasse sortieren</button></div>' +
       (labs.length ? '<div class="chips af2" role="group" aria-label="Nach Stichwort filtern"><span class="af2-l">Stichwort</span>' + ['alle'].concat(labs).map(function (x) {
-        return '<button class="chip" aria-pressed="' + ((A.lab || 'alle') === x) + '" data-a="aLab" data-k="' + h(x) + '">' + (x === 'alle' ? 'Alle' : '🏷 ' + h(x)) + '</button>'; }).join('') + '</div>' : '');
+        if (x === 'alle') return '<button class="chip" aria-pressed="' + ((A.lab || 'alle') === x) + '" data-a="aLab" data-k="alle">Alle</button>';
+        var f = labelFarbe(x);
+        return '<span class="lab-wahl"><button class="chip" style="background:' + f[0] + ';color:' + f[1] + '" aria-pressed="' + (A.lab === x) + '" data-a="aLab" data-k="' + h(x) + '">🏷 ' + h(x) + '</button>' +
+          '<button class="lab-pinsel" title="Farbe wählen" aria-label="Farbe für ' + h(x) + ' wählen" data-a="labFarbe" data-l="' + h(x) + '">🎨</button></span>'; }).join('') + '</div>' : '');
   }
   ACT.aKl = function (el) { T.admin.kl = el.dataset.k; T.render(); };
   ACT.aLab = function (el) { T.admin.lab = el.dataset.k; T.render(); };
@@ -3676,17 +3725,17 @@
     await themaSpeichern(g, l, g.title + ': Thema «' + el.dataset.t + '» entfernt.');
   };
   async function labelsSpeichern(msg) {
-    try { await DB.sharedSet('spiel-labels', T.admin.labels); toast(msg); } catch (e) { toast(errMsg(e)); }
+    try { await DB.sharedSet('spiel-labels', T.labels); toast(msg); } catch (e) { toast(errMsg(e)); }
     T.render();
   }
   ACT.gLabAdd = async function (el) {
-    var A = T.admin, id = el.dataset.id, v = el.value.trim(); if (!v) return; A.labels = A.labels || {};
-    var l = (A.labels[id] || []).slice(); if (l.indexOf(v) >= 0) { el.value = ''; return; }
-    l.push(v); A.labels[id] = l; await labelsSpeichern('Stichwort «' + v + '» hinzugefügt.');
+    var A = T.admin, id = el.dataset.id, v = el.value.trim(); if (!v) return; T.labels = T.labels || {};
+    var l = (T.labels[id] || []).slice(); if (l.indexOf(v) >= 0) { el.value = ''; return; }
+    l.push(v); T.labels[id] = l; await labelsSpeichern('Stichwort «' + v + '» hinzugefügt.');
   };
   ACT.gLabDel = async function (el) {
-    var A = T.admin, id = el.dataset.id; A.labels = A.labels || {};
-    A.labels[id] = (A.labels[id] || []).filter(function (x) { return x !== el.dataset.t; }); if (!A.labels[id].length) delete A.labels[id];
+    var A = T.admin, id = el.dataset.id; T.labels = T.labels || {};
+    T.labels[id] = (T.labels[id] || []).filter(function (x) { return x !== el.dataset.t; }); if (!T.labels[id].length) delete T.labels[id];
     await labelsSpeichern('Stichwort «' + el.dataset.t + '» entfernt.');
   };
   ACT.gFtSet = async function (el) {
@@ -3955,15 +4004,20 @@
   ACT.kKnobel = function () { K.step = 'knobel'; K.render(); window.scrollTo(0, 0); };
   ACT.kkArt = function (el) { K.kkArt = el.dataset.k; K.render(); };
   // Themen und Spiele eines Fachs im Stil der Knobelkiste (Kopf mit Bild, runde Karten)
-  function kkKopf(f, titel, text) {
-    var bild = fachBild(f);
+  function kkKopf(f, titel, text, eigen) {
+    var bild = eigen ? '<img src="bilder/spiele/' + eigen + '.webp" alt="" draggable="false">' : fachBild(f);
     return '<div class="kk-kopf">' + (bild ? '<span class="kk-bild kk-fbild">' + bild + '</span>' : '<span class="kk-bild kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>') +
       '<h1>' + h(titel) + '</h1>' + (text ? '<p>' + text + '</p>' : '') + '</div>';
   }
   // Eigene Bilder für einzelne Spiele: bilder/spiele/<Datei>.webp (rund, 160 px), Schlüssel = Spieltitel klein geschrieben.
   // Ohne Eintrag zeigt die Karte das Bild des Fachs.
   var SPIEL_BILD = { 'zeit & uhr': 'zeit-und-uhr' };
-  function spielBild(g) { var k = g && SPIEL_BILD[String(g.title || '').trim().toLowerCase()]; return k ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + k + '.webp" alt="" draggable="false"></span>' : ''; }
+  // Bilder für ganze Themen (Ordner), z. B. alle Spiele im 1×1
+  function themaBild(t) { return /^\s*(1\s*[x×*·]\s*1|einmaleins)\b/i.test(String(t || '')) ? 'einmaleins' : ''; }
+  function spielBild(g) {
+    var k = g && (SPIEL_BILD[String(g.title || '').trim().toLowerCase()] || (/zeitreise/i.test(g.title || '') ? 'zeitreise' : '') || themen(g).map(themaBild).filter(Boolean)[0]);
+    return k ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + k + '.webp" alt="" draggable="false"></span>' : '';
+  }
   function kkIc(f) {
     var bild = fachBild(f);
     return bild ? '<span class="kk-ic kk-fbild">' + bild + '</span>' : '<span class="kk-ic kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>';
@@ -3975,14 +4029,14 @@
       var gs = games.filter(function (g) { return hatThema(g, t); });
       var played = gs.filter(function (g) { return g.plays; }).length;
       var stars = gs.reduce(function (n, g) { var a = g.award || {}; return n + (typeof a.stars === 'number' ? a.stars : awardSum(a)); }, 0);
-      return '<article class="kk-karte">' + kkIc(K.fach) + '<span class="kk-fach">Thema</span><b>' + h(t) + '</b><p>' + plural(gs.length, 'Spiel', 'Spiele') + ' · ' +
+      return '<article class="kk-karte">' + (themaBild(t) ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + themaBild(t) + '.webp" alt="" draggable="false"></span>' : kkIc(K.fach)) + '<span class="kk-fach">Thema</span><b>' + h(t) + '</b><p>' + plural(gs.length, 'Spiel', 'Spiele') + ' · ' +
         (played ? 'schon gespielt: ' + played + ' von ' + gs.length : 'noch nichts gespielt') + '</p>' + (stars ? '<span class="kk-stand">⭐ ' + stars + ' Sterne</span>' : '') +
         '<button class="kk-los" data-a="kThema" data-t="' + h(t) + '">Öffnen</button></article>';
     }).join('') + '</div></div>', 'Zurück');
   };
   K.view_games = function () {
     var games = kidGames().filter(function (g) { return g.fach === K.fach && hatThema(g, K.thema); });
-    return K.shell('<div class="kk">' + kkKopf(K.fach, K.thema, h(K.fach) + ' · Wähle ein Spiel.') + '<div class="kk-spiele">' + games.map(function (g) {
+    return K.shell('<div class="kk">' + kkKopf(K.fach, K.thema, h(K.fach) + ' · Wähle ein Spiel.', themaBild(K.thema)) + '<div class="kk-spiele">' + games.map(function (g) {
       var p = pct(g), l = lvlInfo(g)[0];
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
         g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
