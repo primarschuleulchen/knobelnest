@@ -595,7 +595,7 @@ G.play = function (lv, api) {
 
 # ================================================================== Zweite Lieferung (weitere.py)
 import weitere
-weitere.alle(spiel)
+weitere.alle(spiel, logo, LOGO_CSS)
 
 # ================================================================== Kleiderschrank (Englisch, kleider.py)
 import kleider

@@ -48,7 +48,7 @@ SIL_WORT = ['Schu-le','Leh-re-rin','Pau-sen-platz','Fe-ri-en','Ge-burts-tag','Mo
             'Scho-ko-la-den-ku-chen','Ge-burts-tags-fest','Re-gen-bo-gen-far-ben','Ta-schen-rech-ner']
 
 
-def alle(spiel):
+def alle(spiel, logo=None, LOGO_CSS=''):
     # ================================================================== Wie spät ist es?
     spiel(id='uhr-lesen', titel='Wie spät ist es?', icon='⏰', fach='Mathematik', thema='Zeit', stufe='1.–4. Klasse', sort=2, n=10,
           sterne={'modus': 'runde', 'n': 10},
@@ -148,7 +148,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Kiosk (Geld)
-    spiel(id='kiosk', titel='Kiosk', icon='🪙', fach='Mathematik', thema='Geld', stufe='1.–4. Klasse', sort=3, n=8,
+    spiel(id='kiosk', titel='Kiosk', icon=logo('kiosk'), fach='Mathematik', thema='Geld', stufe='1.–4. Klasse', sort=3, n=8,
           sterne={'modus': 'runde', 'n': 8},
           kurz='Mit Franken und Rappen genau bezahlen.',
           intro='Im Kiosk kostet alles etwas. Lege genau so viel Geld hin, wie es kostet. Tippe auf eine Münze, um sie hinzulegen, und auf eine Münze auf der Theke, um sie wieder wegzunehmen.',
@@ -157,7 +157,7 @@ G.play = function (lv, api) {
                   dict(name='Mittel', info='Franken und 50 Rappen', t=2),
                   dict(name='Schwer', info='Mit 10 und 20 Rappen', t=3),
                   dict(name='Profi', info='Wie viel Rückgeld?', t=4)],
-          css=r"""
+          css=LOGO_CSS + r"""
 .ki{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:860px}
 .ki .ware{display:flex;align-items:center;gap:16px;background:#fff;border:2px solid var(--line);border-radius:26px;padding:10px 22px;box-shadow:var(--sch)}
 .ki .ware .em2{font-size:64px;line-height:1}
@@ -254,7 +254,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Der, die, das
-    spiel(id='der-die-das', titel='Der, die, das', icon='🗂️', fach='Deutsch', thema='Wortarten', stufe='1.–5. Klasse', sort=2, n=10,
+    spiel(id='der-die-das', titel='Der, die, das', icon=logo('der-die-das'), fach='Deutsch', thema='Wortarten', stufe='1.–5. Klasse', sort=2, n=10,
           sterne={'modus': 'runde', 'n': 10},
           kurz='Nomen in die richtige Artikel-Kiste legen.',
           intro='Heisst es <b style="color:#3f78a8">der</b>, <b style="color:#c8574e">die</b> oder <b style="color:#4c8a37">das</b>? Tippe auf die richtige Kiste.',
@@ -264,7 +264,7 @@ G.play = function (lv, api) {
                   dict(name='Schwer', info='Knifflige Wörter', t=3),
                   dict(name='Profi', info='Zusammengesetzte Wörter', t=4)],
           daten={'DER': DER_BILD, 'DIE': DIE_BILD, 'DAS': DAS_BILD, 'WORT': DDD_WORT, 'SCHWER': DDD_SCHWER, 'ZUS': DDD_ZUS},
-          css=r"""
+          css=LOGO_CSS + r"""
 .dd{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
 .dd .karte2{background:#fff;border:2px solid var(--line);border-radius:28px;padding:14px 30px;box-shadow:var(--sch);text-align:center;min-width:240px}
 .dd .karte2 .em2{font-size:76px;line-height:1.1;display:block}
@@ -317,7 +317,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Silben-Puzzle
-    spiel(id='silben-puzzle', titel='Silben-Puzzle', icon='🧩', fach='Deutsch', thema='Lesen', stufe='1.–4. Klasse', sort=3, n=8,
+    spiel(id='silben-puzzle', titel='Silben-Puzzle', icon=logo('silben-puzzle'), fach='Deutsch', thema='Lesen', stufe='1.–4. Klasse', sort=3, n=8,
           sterne={'modus': 'runde', 'n': 8},
           kurz='Silben in die richtige Reihenfolge bringen.',
           intro='Die Silben sind durcheinander geraten. Tippe sie der Reihe nach an, damit das Wort entsteht. Klatsch die Silben dazu!',
@@ -327,7 +327,7 @@ G.play = function (lv, api) {
                   dict(name='Schwer', info='Ohne Bild', t=3),
                   dict(name='Profi', info='Lange Wörter und eine Silbe zu viel', t=4)],
           daten={'S2': SIL2, 'S3': SIL3, 'S4': SIL4, 'SW': SIL_WORT},
-          css=r"""
+          css=LOGO_CSS + r"""
 .si{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
 .si .em2{font-size:84px;line-height:1;background:#fff;border:3px solid var(--gold);border-radius:50%;width:130px;height:130px;display:grid;place-items:center;box-shadow:inset 0 0 0 6px #fff,var(--sch)}
 .si .plaetze{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:76px}
@@ -389,7 +389,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Bilder-Sudoku
-    spiel(id='bilder-sudoku', titel='Bilder-Sudoku', icon='🍓', fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=3, n=3,
+    spiel(id='bilder-sudoku', titel='Bilder-Sudoku', icon=logo('bilder-sudoku'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=3, n=3,
           sterne={'modus': 'runde', 'n': 3},
           kurz='Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.',
           intro='Fülle die leeren Felder. In jeder Zeile, jeder Spalte und jedem dicken Kästchen kommt jedes Bild genau einmal vor.',
@@ -398,7 +398,7 @@ G.play = function (lv, api) {
                   dict(name='Mittel', info='6 × 6 mit Tieren', n=6, weg=16, bild=True),
                   dict(name='Schwer', info='6 × 6 mit Zahlen', n=6, weg=22, bild=False),
                   dict(name='Profi', info='9 × 9 mit Zahlen', n=9, weg=44, bild=False)],
-          css=r"""
+          css=LOGO_CSS + r"""
 .su{display:flex;gap:22px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}
 .su .feld{display:grid;background:#1f2421;border:3px solid #1f2421;border-radius:14px;overflow:hidden;gap:1px;box-shadow:var(--sch)}
 .su .z{background:#fff;display:grid;place-items:center;font-family:system-ui,-apple-system,sans-serif;font-weight:700;padding:0;border:0;line-height:1}
@@ -508,7 +508,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Wasser-Weg
-    spiel(id='wasser-weg', titel='Wasser-Weg', icon='🚰', fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=4, n=3,
+    spiel(id='wasser-weg', titel='Wasser-Weg', icon=logo('wasser-weg'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=4, n=3,
           sterne={'modus': 'runde', 'n': 3},
           kurz='Röhren drehen, bis das Wasser zur Blume fliesst.',
           intro='Tippe auf eine Röhre, dann dreht sie sich. Baue einen Weg vom Wasserhahn bis zur Blume. Blaue Röhren haben schon Wasser.',
@@ -517,7 +517,7 @@ G.play = function (lv, api) {
                   dict(name='Mittel', info='6 × 6 Felder', s=6, min=9),
                   dict(name='Schwer', info='7 × 7 Felder', s=7, min=12),
                   dict(name='Profi', info='8 × 8 Felder, langer Weg', s=8, min=16)],
-          css=r"""
+          css=LOGO_CSS + r"""
 .ww{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
 .ww .rahmen{display:flex;align-items:stretch}
 .ww .seitel,.ww .seiter{display:grid;flex:none}
