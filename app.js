@@ -3960,6 +3960,10 @@
     return '<div class="kk-kopf">' + (bild ? '<span class="kk-bild kk-fbild">' + bild + '</span>' : '<span class="kk-bild kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>') +
       '<h1>' + h(titel) + '</h1>' + (text ? '<p>' + text + '</p>' : '') + '</div>';
   }
+  // Eigene Bilder für einzelne Spiele: bilder/spiele/<Datei>.webp (rund, 160 px), Schlüssel = Spieltitel klein geschrieben.
+  // Ohne Eintrag zeigt die Karte das Bild des Fachs.
+  var SPIEL_BILD = { 'zeit & uhr': 'zeit-und-uhr' };
+  function spielBild(g) { var k = g && SPIEL_BILD[String(g.title || '').trim().toLowerCase()]; return k ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + k + '.webp" alt="" draggable="false"></span>' : ''; }
   function kkIc(f) {
     var bild = fachBild(f);
     return bild ? '<span class="kk-ic kk-fbild">' + bild + '</span>' : '<span class="kk-ic kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>';
@@ -3983,7 +3987,7 @@
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
         g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
       var extra = /zusatz/i.test(g.stufe || ''), st = awardText(g.award);
-      return '<article class="kk-karte' + (extra ? ' extra' : '') + '">' + kkIc(g.fach) + '<span class="kk-fach">' + h(K.thema) + (extra ? ' · ★ Zusatz' : '') + '</span>' +
+      return '<article class="kk-karte' + (extra ? ' extra' : '') + '">' + (spielBild(g) || kkIc(g.fach)) + '<span class="kk-fach">' + h(K.thema) + (extra ? ' · ★ Zusatz' : '') + '</span>' +
         '<b>' + h(g.title) + '</b>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
         (st ? '<span class="kk-stand">' + h(st) + '</span>' : '') + vbHTML(g.award) +
         (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span class="kk-info">' + h(label) + '</span>' +
