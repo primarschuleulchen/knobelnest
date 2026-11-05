@@ -1259,3 +1259,22 @@ body.kidv .kk-tile{background:#F6E7C8}
 .ft-in{font:inherit;color:inherit;background:transparent;border:1.5px dashed #d9e3ee;border-radius:10px;padding:4px 8px;width:9.5em;min-width:0;cursor:text}
 .ft-in:hover{border-color:var(--gold,#d6ad45);background:#fff}
 .ft-in:focus{outline:none;border-style:solid;border-color:var(--gold,#d6ad45);background:#fff;box-shadow:0 0 0 3px rgba(214,173,69,.2)}
+/* Spiele ohne blauen Balken: nur der runde Zurück-Knopf oben links, «Vollbild» klein unten rechts */
+.player .player-bar{position:absolute;inset:0;z-index:2;display:block;padding:0;background:none;color:inherit;pointer-events:none}
+.player .player-bar>*{pointer-events:auto}
+.player .player-bar>b,.player .player-bar .starbar{display:none!important}
+.player .player-bar .kn-back{position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px))}
+.player .player-bar .btn[data-a="playerFull"]{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));min-height:36px;padding:0 14px;border-radius:999px;border:0;background:rgba(255,255,255,.88);color:#1f2421;box-shadow:0 4px 14px rgba(63,120,168,.25);font-size:14px;opacity:.75}
+.player .player-bar .btn[data-a="playerFull"]:hover{opacity:1}
+.player iframe{position:absolute;inset:0;height:100%}
+.player .pmodal{top:12px}
+.player.player-vk .player-bar{display:none!important}
+/* Fach-Bild im Kopf und auf den Karten (Themen und Spiele wie in der Knobelkiste) */
+.kk-fbild,.kk-fbuchst{display:grid;place-items:center;border-radius:50%;overflow:hidden;border:3px solid #d6ad45;box-shadow:0 0 0 3px #fff,0 6px 14px rgba(63,120,168,.2);background:#fff;flex:none}
+.kk-fbild img{width:100%;height:100%;display:block;border-radius:50%}
+.kk-fbuchst{font-size:44px;color:#1f2421}
+.kk-ic.kk-fbild,.kk-ic.kk-fbuchst{width:84px;height:84px;margin:4px 0 6px 4px}
+.kk-bild.kk-fbuchst{font-size:60px}
+.kk-info{font-size:17px;color:#5f6963}
+.kk-karte .kbar{align-self:stretch}
+.kk-karte.extra{background:linear-gradient(180deg,#fffaf0 0%,#fff 70%)}
