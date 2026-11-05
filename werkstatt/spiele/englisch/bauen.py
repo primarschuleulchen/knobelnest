@@ -33,6 +33,7 @@ FRAME = rep(FRAME, "localStorage.setItem('gd', s)", "localStorage.setItem('en', 
 FRAME = rep(FRAME, "x.store && x.store.gd", "x.store && x.store.en")
 FRAME = rep(FRAME, "localStorage.getItem('gd')", "localStorage.getItem('en')")
 FRAME = rep(FRAME, "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#e3f4f1'];")
+FRAME = rep(FRAME, "function stopAll() { TM.forEach(clearTimeout); TM = []; }", "function stopAll() { TM.forEach(clearTimeout); TM = []; if (typeof stopSay === 'function') stopSay(); }")  # Vorlesen stoppen bei Stufen, Ende, Zurück
 FRAME = rep(FRAME, "app.innerHTML = o + '</div>';", "app.innerHTML = o + '</div>'; if (G.extra) G.extra();")
 
 def logo(name):

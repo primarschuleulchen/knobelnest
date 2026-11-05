@@ -511,6 +511,7 @@ function say(t, rate) { return sayList([t], rate, 0); }
 // Mehrere Sätze nacheinander, mit Pause dazwischen (Stufe «Listening»)
 function sayList(list, rate, pause) {
   if (!canSay()) return false;
+  if (typeof ST !== 'undefined' && ST.mute) { stopSay(); return true; } // Ton aus: ganz still
   var run = ++SAYRUN, k = 0;
   try { var ss = speechSynthesis; if (ss.speaking || ss.pending) ss.cancel(); if (ss.paused) ss.resume(); } catch (e) { return false; }
   function next() {
@@ -524,6 +525,10 @@ function sayList(list, rate, pause) {
   next(); return true;
 }
 function stopSay() { SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} }
+// Still sein, wenn die Übung verlassen wird, das Fenster zugeht oder der Ton ausgeschaltet wird
+['pagehide', 'beforeunload', 'unload'].forEach(function (ev) { window.addEventListener(ev, stopSay); });
+document.addEventListener('visibilitychange', function () { if (document.hidden) stopSay(); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-snd]')) setTimeout(function () { if (ST.mute) stopSay(); }, 0); }, true);
 
 // ---------------------------------------------------------------------- 3D-Welt
 var WD = null; // die Welt (wird nur einmal gebaut)
@@ -1680,7 +1685,7 @@ function pick(a, n) { return shuffle(a).slice(0, n); }
 function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
 function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
 function anyCat() { var k = Object.keys(BILD); return BILD[k[rnd(0, k.length - 1)]]; }
-function stopAll() { TM.forEach(clearTimeout); TM = []; }
+function stopAll() { TM.forEach(clearTimeout); TM = []; if (typeof stopSay === 'function') stopSay(); }
 function pop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 // Raster, das auf den Bildschirm passt (reserve = Platz für Kopf und Text)
 function grid(cols, rows, maxPx, reserve) {
