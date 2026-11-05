@@ -2106,7 +2106,7 @@ function bindBulk(node,redraw){const inp=$('#bulkPic');if(!inp)return;inp.onchan
 
 /* Kachel «Mein Heft» auf der Startseite der Sprache */
 function vkHeftCard(){const list=stkList(),st=list.filter(s=>(P.stk||{})[s.id]).length,bd=BADGES.filter(b=>b[4]()>0).length,ur=Object.keys(P.urk||{}).length;
-  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh" aria-hidden="true"><span class="mhl"></span><i></i></span>
+  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh" aria-hidden="true"><i></i></span>
     <span class="ktx"><b>Mein Heft</b><span class="mhz"><span><img src="abzeichen/reiter-sticker.webp?v=2" alt="">${st}/${list.length}</span><span><img src="abzeichen/reiter-abzeichen.webp?v=2" alt="">${bd}</span><span><img src="abzeichen/reiter-urkunden.webp?v=2" alt="">${ur}</span></span><small>Sticker, Abzeichen und Urkunden anschauen →</small></span></button>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#heftCard');if(b)goHeft()});
 
