@@ -422,6 +422,23 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 /* Meldung */
 .toast{background:#fff;color:#1f2421;font-size:18px;padding:8px 20px;box-shadow:0 0 0 2px var(--gold),0 10px 26px rgba(63,120,168,.28)}
 .toast::before{content:"✦ ";color:var(--gold)}
+/* Farbkreis */
+.fk-btn{width:34px;height:34px;border-radius:50%;border:2px solid #fff;padding:0;cursor:pointer;flex:none;font:400 22px/1 var(--eui);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45);
+  background:conic-gradient(from 90deg,#f28b82,#f6c26b,#f3e27a,#9fd18b,#7ccfc3,#8fc1e8,#9a9ee8,#c7a2e0,#f4a7b9,#f28b82);box-shadow:0 0 0 1.5px var(--gold)}
+.fk-btn.big{width:42px;height:42px;border-width:3px}
+.swrow.sm .fk-btn{width:26px;height:26px;font-size:18px}
+.fk-btn:hover{transform:scale(1.08)}
+.fk-panel{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:8px 0 14px;padding:14px;border-radius:20px;background:#fbfdff;box-shadow:inset 0 0 0 1.5px var(--eline);font-family:var(--eui)}
+.fk-wheel{position:relative;width:190px;height:190px;border-radius:50%;flex:none;cursor:crosshair;touch-action:none;box-shadow:0 0 0 3px #fff,0 0 0 4.5px var(--gold),0 6px 16px rgba(63,120,168,.2)}
+.fk-dot{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px #1f2421,0 2px 6px rgba(0,0,0,.3);pointer-events:none}
+.fk-side{flex:1;min-width:170px;display:flex;flex-direction:column;gap:10px}
+.fk-prev{height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:17px;letter-spacing:.05em;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.08)}
+.fk-lab{display:flex;flex-direction:column;gap:2px;font-size:16px;color:#6c766f}
+.fk-lab input{width:100%;accent-color:var(--gold)}
+.fk-last span{font-size:15px;color:#6c766f}
+.fk-last div{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.fk-old{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--eline);padding:0;cursor:pointer}
+.fk-ok{align-self:flex-start}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -465,8 +482,8 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const WD = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
 const BLOBS = ["#87a557","#cbe4cb","#b8d3be","#7bab84","#a7c98b","#d6e7c4"];
 const SHAPES = ["58% 42% 55% 45% / 48% 58% 42% 52%","45% 55% 40% 60% / 55% 45% 55% 45%","52% 48% 62% 38% / 42% 52% 48% 58%","40% 60% 50% 50% / 60% 40% 60% 40%"];
-const TITLE_COLORS = ["#e07a70","#6f9a6c","#6f8fb3","#c99a52","#9b84c4","#1f2421"];
-const CAL_COLORS = { rose:["#ec9d95","#fcefed"], blau:["#7fa3c8","#edf3f9"], gruen:["#87ad74","#eef5e9"], sand:["#d6ad6e","#fbf3e5"], lila:["#a690cf","#f3effa"], petrol:["#5f9a98","#e8f3f2"] };
+const TITLE_COLORS = ["#e07a70","#6f9a6c","#6f8fb3","#c99a52","#9b84c4","#1f2421","#c4952f","#3f78a8","#b5527a","#4f9a98","#e0954f","#8a8f5a"];
+const CAL_COLORS = { rose:["#ec9d95","#fcefed"], blau:["#7fa3c8","#edf3f9"], gruen:["#87ad74","#eef5e9"], sand:["#d6ad6e","#fbf3e5"], lila:["#a690cf","#f3effa"], petrol:["#5f9a98","#e8f3f2"], gold:["#d6ad45","#fbf3dc"], himmel:["#6fa6d6","#e6f2fc"], beere:["#c9708f","#f9e9ef"], salbei:["#8fa88c","#eef3ec"] };
 function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2000); }
 const soft = (hex, a = .18) => { const n = parseInt(hex.slice(1), 16); const r = n >> 16, g = (n >> 8) & 255, b = n & 255; const m = c => Math.round(c * a + 255 * (1 - a)); return `rgb(${m(r)},${m(g)},${m(b)})`; };
 
@@ -506,6 +523,10 @@ function edgeSpots(W, H, n, seed, cx = .2, cy = .17){
 }
 const softBlobs = (W, H, list) => `<defs><filter id="wc" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${Math.round(Math.min(W, H) / 22)}"/></filter></defs><g filter="url(#wc)">${list.map(([x, y, rx, ry, c, o]) => `<ellipse cx="${x * W}" cy="${y * H}" rx="${rx * W}" ry="${ry * H}" fill="${c}" opacity="${o}"/>`).join("")}</g>`;
 const HAND = `font-family="Patrick Hand,Comic Sans MS,cursive"`;
+// Stern wie ✦ (gefüllt) und ✧ (nur Umriss)
+const sternPfad = r => `M0 ${-r}Q${r * .16} ${-r * .16} ${r} 0Q${r * .16} ${r * .16} 0 ${r}Q${-r * .16} ${r * .16} ${-r} 0Q${-r * .16} ${-r * .16} 0 ${-r}Z`;
+const stern = (x, y, r, c, rot) => `<path d="${sternPfad(r)}" fill="${c}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(rot || 0).toFixed(0)})"/>`;
+const sternRand = (x, y, r, c, rot) => `<path d="${sternPfad(r)}" fill="none" stroke="${c}" stroke-width="${Math.max(1.2, r * .14).toFixed(1)}" stroke-linejoin="round" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(rot || 0).toFixed(0)})"/>`;
 const BG_TPL = {
   mathe: { name: "Mathe", base: "radial-gradient(ellipse at 45% 35%,#fdfdfb,#f1f5fa)", fill: "#f4f7fb",
     theme: { title: "#4f7fb5", blobs: ["#8fb8e2", "#f2cd6b", "#a5cf98", "#eba7a0", "#c4a9e2", "#f3b37c"], cal: ["#4f7fb5", "#e3edf8"] },
@@ -537,6 +558,48 @@ const BG_TPL = {
       return softBlobs(W, H, [[0, 1, .26, .3, "#f3cfc6", .55], [1, 0, .22, .28, "#d6e8c9", .5], [1, 1, .22, .25, "#d6e2f3", .45], [0, 0, .2, .22, "#f6e3b5", .45]]) +
         stack + row + open(W - s * .2, s * .14, s * .26) + pencil +
         sp.map(([x, y, r], i) => `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" ${HAND} font-size="${(s * (.05 + r * .05)).toFixed(0)}" fill="${C[i % C.length]}" opacity=".75" text-anchor="middle" transform="rotate(${(r * 36 - 18).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})">${L[i % L.length]}</text>`).join("");
+    } },
+  eulen: { name: "Eulenkiste", base: "radial-gradient(ellipse at 50% 40%,#fdfeff,#eef6fc)", fill: "#f4f9fd",
+    theme: { title: "#3f78a8", blobs: ["#9fd0f3", "#f3d27a", "#a5cf98", "#eba7a0", "#c4a9e2", "#7fb6e0"], cal: ["#3f78a8", "#e6f2fc"] },
+    draw(W, H){
+      const s = Math.min(W, H), G = "#d6ad45";
+      const cloud = (x, y, w, o) => `<g fill="#fff" opacity="${o}"><ellipse cx="${x}" cy="${y}" rx="${w * .5}" ry="${w * .16}"/><circle cx="${x - w * .16}" cy="${y - w * .08}" r="${w * .15}"/><circle cx="${x + w * .08}" cy="${y - w * .13}" r="${w * .2}"/><circle cx="${x + w * .3}" cy="${y - w * .03}" r="${w * .12}"/></g>`;
+      const sp = edgeSpots(W, H, 26, 31, .2, .18);
+      const stars = sp.map(([x, y, r], i) => i % 3 === 2 ? sternRand(x, y, s * (.012 + r * .012), G, r * 40) : stern(x, y, s * (.01 + r * .016), i % 4 ? G : "#f3d27a", r * 30)).join("");
+      // Ast mit Eule unten links
+      const by = H - s * .13, bx = s * .5;
+      const ast = `<path d="M${-s * .02} ${by + s * .03}C${bx * .3} ${by - s * .01} ${bx * .6} ${by + s * .02} ${bx} ${by - s * .03}" stroke="#a07c5c" stroke-width="${s * .02}" stroke-linecap="round" fill="none"/>
+        <path d="M${bx * .72} ${by}q${s * .05} ${-s * .03} ${s * .09} ${-s * .08}" stroke="#a07c5c" stroke-width="${s * .01}" stroke-linecap="round" fill="none"/>
+        ${[[.2, .02, -30], [.38, -.005, 25], [.62, .012, -15], [.86, -.035, 30], [.95, -.07, -40]].map(([t, dy, rot], i) => `<ellipse cx="${bx * t}" cy="${by + s * dy - s * .03}" rx="${s * .022}" ry="${s * .045}" fill="${i % 2 ? "#a5cf98" : "#8fbf7f"}" transform="rotate(${rot} ${bx * t} ${by + s * dy - s * .03})" opacity=".9"/>`).join("")}`;
+      const ox = bx * .48, oy = by - s * .1, u = s * .01;
+      const eule = `<g>
+        <path d="M${ox - 6.5 * u} ${oy - 7 * u}l${-1.5 * u} ${-5 * u}l${4.5 * u} ${3 * u}zM${ox + 6.5 * u} ${oy - 7 * u}l${1.5 * u} ${-5 * u}l${-4.5 * u} ${3 * u}z" fill="#a8916f"/>
+        <ellipse cx="${ox}" cy="${oy}" rx="${8 * u}" ry="${9.5 * u}" fill="#c4ae8c"/>
+        <ellipse cx="${ox - 7.2 * u}" cy="${oy + 2 * u}" rx="${2.6 * u}" ry="${6 * u}" fill="#a8916f" transform="rotate(12 ${ox - 7.2 * u} ${oy + 2 * u})"/>
+        <ellipse cx="${ox + 7.2 * u}" cy="${oy + 2 * u}" rx="${2.6 * u}" ry="${6 * u}" fill="#a8916f" transform="rotate(-12 ${ox + 7.2 * u} ${oy + 2 * u})"/>
+        <ellipse cx="${ox}" cy="${oy + 3 * u}" rx="${5 * u}" ry="${5.5 * u}" fill="#f1e6d2"/>
+        ${[[-2, 1.5], [1.5, 2], [-1, 4.5], [2.5, 5], [0, 7]].map(([dx, dy]) => `<path d="M${ox + dx * u - u} ${oy + dy * u}q${u} ${u} ${2 * u} 0" stroke="#c4ae8c" stroke-width="${u * .5}" fill="none" stroke-linecap="round"/>`).join("")}
+        <circle cx="${ox - 3.2 * u}" cy="${oy - 4 * u}" r="${3.4 * u}" fill="#fff" stroke="${G}" stroke-width="${u * .6}"/><circle cx="${ox + 3.2 * u}" cy="${oy - 4 * u}" r="${3.4 * u}" fill="#fff" stroke="${G}" stroke-width="${u * .6}"/>
+        <circle cx="${ox - 2.8 * u}" cy="${oy - 3.8 * u}" r="${1.7 * u}" fill="#2b2f2c"/><circle cx="${ox + 2.8 * u}" cy="${oy - 3.8 * u}" r="${1.7 * u}" fill="#2b2f2c"/>
+        <circle cx="${ox - 2.3 * u}" cy="${oy - 4.4 * u}" r="${.55 * u}" fill="#fff"/><circle cx="${ox + 3.3 * u}" cy="${oy - 4.4 * u}" r="${.55 * u}" fill="#fff"/>
+        <path d="M${ox - 1.1 * u} ${oy - 1.6 * u}h${2.2 * u}l${-1.1 * u} ${2 * u}z" fill="#e0a43b"/>
+        <path d="M${ox - 3 * u} ${oy + 9.2 * u}v${1.6 * u}M${ox - 1.6 * u} ${oy + 9.2 * u}v${1.6 * u}M${ox + 1.6 * u} ${oy + 9.2 * u}v${1.6 * u}M${ox + 3 * u} ${oy + 9.2 * u}v${1.6 * u}" stroke="#e0a43b" stroke-width="${u * .7}" stroke-linecap="round"/></g>`;
+      return softBlobs(W, H, [[0, 1, .28, .32, "#bfe0f7", .6], [1, 0, .26, .3, "#cfe8fb", .55], [1, 1, .22, .26, "#f8e6b8", .45], [0, 0, .2, .22, "#e3f0e0", .45]]) +
+        cloud(W * .1, H * .14, s * .2, .9) + cloud(W * .86, H * .78, s * .24, .85) + cloud(W * .9, H * .12, s * .14, .7) +
+        stars + ast + eule;
+    } },
+  sterne: { name: "Goldsterne", base: "radial-gradient(ellipse at 50% 45%,#fffefa,#f8f3e6)", fill: "#fbf7ec",
+    theme: { title: "#b5852a", blobs: ["#f3d27a", "#9fd0f3", "#eba7a0", "#a5cf98", "#c4a9e2", "#f3b37c"], cal: ["#c99a3b", "#fbf3dc"] },
+    draw(W, H){
+      const s = Math.min(W, H), C = ["#d6ad45", "#f3d27a", "#e2b84e", "#9fc8ea"];
+      const sag = s * .045, y0 = s * .005, n = Math.max(11, Math.round(W / (s * .09)));
+      const yAt = t => y0 + 4 * sag * t * (1 - t);
+      let g = `<path d="M0 ${y0}Q${W / 2} ${y0 + 2 * sag} ${W} ${y0}" stroke="#c9b48a" stroke-width="2.5" fill="none"/>`;
+      for (let i = 0; i < n; i++) { const t = (i + .5) / n, x = t * W, y = yAt(t), L = s * (.025 + ((i * 37) % 5) * .011), r = s * (.012 + ((i * 53) % 3) * .005), c = C[i % C.length];
+        g += `<path d="M${x} ${y}v${L}" stroke="#c9b48a" stroke-width="1.5"/>` + (i % 4 === 3 ? sternRand(x, y + L + r, r, "#d6ad45", 0) : stern(x, y + L + r, r, c, 0)); }
+      const sp = edgeSpots(W, H, 20, 57, .2, .3).filter(p => p[1] > H * .3);
+      const deko = sp.map(([x, y, r], i) => i % 2 ? sternRand(x, y, s * (.01 + r * .012), "#d6ad45", r * 40) : stern(x, y, s * (.008 + r * .012), i % 3 ? "#e9c768" : "#9fc8ea", r * 30)).join("");
+      return softBlobs(W, H, [[0, 1, .28, .3, "#f6e3b5", .6], [1, 1, .26, .3, "#d6e9f8", .55], [1, .3, .18, .25, "#f3d6d0", .4], [0, .35, .16, .22, "#e3efdc", .45]]) + g + deko;
     } },
   klassenrat: { name: "Klassenrat", base: "radial-gradient(ellipse at 50% 40%,#fffefb,#f5f1f7)", fill: "#f8f5f8",
     theme: { title: "#8a6fb8", blobs: ["#c4a9e2", "#efc75e", "#8fb8e2", "#eba7a0", "#a5cf98", "#f3b37c"], cal: ["#8a6fb8", "#efe8f8"] },
@@ -1132,7 +1195,7 @@ function widgetInner(w){
   const d = w.data, T = theme();
   switch (w.type) {
     case "title": return `<div class="t-title" style="--title:${d.color === "auto" ? T.title : d.color}" contenteditable="true" spellcheck="false" data-f="text" data-ph="Titel">${esc(d.text)}</div>`;
-    case "date": { const n = new Date(), [c1, c2] = d.color === "auto" ? T.cal : (CAL_COLORS[d.color] || CAL_COLORS.rose);
+    case "date": { const n = new Date(), [c1, c2] = d.color === "auto" ? T.cal : (CAL_COLORS[d.color] || calHex(d.color) || CAL_COLORS.rose);
       return `<div class="cal-rings"><i></i><i></i></div><div class="cal-sheet" style="--c1:${c1};--c2:${c2}"><div class="cal-top">${WD[n.getDay()].toUpperCase()}</div><div class="cal-body" data-today>${String(n.getDate()).padStart(2,"0")}.${String(n.getMonth()+1).padStart(2,"0")}.${n.getFullYear()}</div></div>`; }
     case "clock": return `<div class="t-clock" data-clock>${clockNow(d.sec)}</div>`;
     case "timer": { const left = timerLeft(d), run = !!d.endAt;
@@ -1496,6 +1559,62 @@ function openLib(targetId){
   });
   bg.addEventListener("keydown", e => { if (e.key !== "Enter") return; if (e.target.matches("[data-newchip]") || e.target.id === "newcat") e.target.nextElementSibling.click(); });
 }
+// ---------- Farbkreis (eulenstil.py) ----------
+const FK_ATTR = ["data-tc", "data-cc", "data-icc", "data-col", "data-ncol"];
+const fkHex = (h, s, l) => { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return "#" + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, "0")).join(""); };
+const fkLast = { get(){ try { return JSON.parse(localStorage.getItem("kn_farbkreis") || "[]"); } catch { return []; } },
+  add(c){ try { const l = [c].concat(this.get().filter(x => x !== c)).slice(0, 8); localStorage.setItem("kn_farbkreis", JSON.stringify(l)); } catch {} } };
+function fkAdd(row){
+  if (row.querySelector(".fk-btn")) return;
+  const attr = FK_ATTR.find(a => row.querySelector(`[${a}]`)); if (!attr) return;
+  const b = document.createElement("button"); b.type = "button"; b.className = "fk-btn" + (row.classList.contains("colors") ? " big" : "");
+  b.title = "Eigene Farbe aus dem Farbkreis"; b.setAttribute("aria-label", "Eigene Farbe aus dem Farbkreis"); b.textContent = "+";
+  row.appendChild(b);
+  b.addEventListener("click", e => { e.stopPropagation(); fkOpen(row, attr); });
+}
+function fkOpen(row, attr){
+  const holder = row.parentElement.classList.contains("switem") ? row.parentElement : row;
+  const old = document.querySelector(".fk-panel"); if (old) { const same = old.previousElementSibling === holder; old.remove(); if (same) return; }
+  const P = { h: 200, s: 60, l: 62 };
+  const p = document.createElement("div"); p.className = "fk-panel";
+  p.innerHTML = `<div class="fk-wheel" role="slider" aria-label="Farbton und Stärke" tabindex="0"><span class="fk-dot"></span></div>
+    <div class="fk-side"><div class="fk-prev"></div>
+      <label class="fk-lab">hell – dunkel<input type="range" min="18" max="92" value="62" class="fk-l" aria-label="Helligkeit"></label>
+      <div class="fk-last"></div>
+      <button type="button" class="sbtn rose fk-ok">Diese Farbe nehmen</button></div>`;
+  holder.after(p);
+  const wh = p.querySelector(".fk-wheel"), dot = p.querySelector(".fk-dot"), prev = p.querySelector(".fk-prev");
+  const cur = () => fkHex(P.h, P.s, P.l);
+  const paint = () => {
+    wh.style.background = `radial-gradient(closest-side, hsl(0 0% ${P.l}%), hsl(0 0% ${P.l}% / 0)), conic-gradient(from 90deg, ${[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360].map(h => `hsl(${h} 100% ${P.l}%)`).join(",")})`;
+    const r = P.s / 100 * 50, a = P.h * Math.PI / 180;
+    dot.style.left = (50 + r * Math.cos(a)) + "%"; dot.style.top = (50 + r * Math.sin(a)) + "%"; dot.style.background = cur();
+    prev.style.background = cur(); prev.textContent = cur().toUpperCase();
+    prev.style.color = P.l > 60 ? "#1f2421" : "#fff";
+  };
+  const last = fkLast.get();
+  p.querySelector(".fk-last").innerHTML = last.length ? `<span>Zuletzt gewählt</span><div>${last.map(c => `<button type="button" class="fk-old" data-fk="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>` : "";
+  const pick = e => { const r = wh.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    P.h = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360; P.s = Math.min(100, Math.hypot(dx, dy) / (r.width / 2) * 100); paint(); };
+  wh.addEventListener("pointerdown", e => { e.preventDefault(); wh.setPointerCapture(e.pointerId); pick(e); });
+  wh.addEventListener("pointermove", e => { if (wh.hasPointerCapture(e.pointerId)) pick(e); });
+  wh.addEventListener("keydown", e => { const k = { ArrowLeft: [-10, 0], ArrowRight: [10, 0], ArrowUp: [0, 8], ArrowDown: [0, -8] }[e.key]; if (!k) return; e.preventDefault(); P.h = (P.h + k[0] + 360) % 360; P.s = Math.max(0, Math.min(100, P.s + k[1])); paint(); });
+  p.querySelector(".fk-l").addEventListener("input", e => { P.l = +e.target.value; paint(); });
+  const use = c => {
+    fkLast.add(c);
+    const t = document.createElement("button"); t.hidden = true; t.setAttribute(attr, c);
+    const iid = row.querySelector("[data-iid]")?.dataset.iid; if (iid) t.dataset.iid = iid;
+    p.remove(); row.appendChild(t); t.click(); t.remove();
+  };
+  p.addEventListener("click", e => { e.stopPropagation();
+    const o = e.target.closest("[data-fk]"); if (o) { use(o.dataset.fk); return; }
+    if (e.target.closest(".fk-ok")) use(cur()); });
+  paint(); p.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+new MutationObserver(() => document.querySelectorAll(".sheet .swrow, .sheet .colors").forEach(fkAdd)).observe(document.body, { childList: true, subtree: true });
+// Kalenderblatt in eigener Farbe: kräftige Farbe oben, ganz helle unten
+const calHex = c => /^#[0-9a-f]{6}$/i.test(c || "") ? [c, "#" + [1, 3, 5].map(i => Math.round(parseInt(c.substr(i, 2), 16) * .12 + 255 * .88).toString(16).padStart(2, "0")).join("")] : null;
 function openColors(title, list, current, apply){
   sheet(title, `<p class="hint">«Auto» nimmt die Farbe aus dem Hintergrund.</p><div class="colors" style="padding-bottom:18px">${list.map(([k, c]) => `<button data-col="${k}" class="${k === current ? "on" : ""} ${k === "auto" ? "auto-sw" : ""}" style="${c ? `background:${c}` : ""}" aria-label="${k === "auto" ? "Automatisch aus dem Hintergrund" : "Farbe"}"></button>`).join("")}</div>`, (e, bg) => {
     const c = e.target.dataset.col; if (c) { apply(c); save(); closeSheet(bg); }
