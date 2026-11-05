@@ -30,12 +30,22 @@ assert "'#fdebd8'" in FRAME
 
 SPIELE = []
 
+
+# Rundes Logo (mit Goldrand im Bild) statt Emoji im Kreis der Startseite, aus logos/<name>.webp
+def logo(name):
+    import base64
+    with open(os.path.join(HIER, 'logos', name + '.webp'), 'rb') as f:
+        return '<img class="logo" alt="" src="data:image/webp;base64,' + base64.b64encode(f.read()).decode() + '">'
+
+LOGO_CSS = ".ring{width:150px;height:150px;background:none;border:0;padding:0;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}\n" \
+    "@media (max-height:640px){.ring{width:100px;height:100px}}\n"
+
 def spiel(**s):
     SPIELE.append(s)
 
 
 # ================================================================== Rechen-Rakete
-spiel(id='rechen-rakete', titel='Rechen-Rakete', icon='🚀', fach='Mathematik', thema='Kopfrechnen', stufe='1.–6. Klasse', sort=1, n=10,
+spiel(id='rechen-rakete', titel='Rechen-Rakete', icon=logo('rechen-rakete'), fach='Mathematik', thema='Kopfrechnen', stufe='1.–6. Klasse', sort=1, n=10,
       sterne={'modus': 'runde', 'n': 10},
       kurz='Rechnen und mit der Rakete zum Mond fliegen.',
       intro='Tippe auf das richtige Ergebnis. Bei jeder Rechnung fliegt die Rakete ein Stück höher, bis zum Mond!',
@@ -44,7 +54,7 @@ spiel(id='rechen-rakete', titel='Rechen-Rakete', icon='🚀', fach='Mathematik',
               dict(name='Mittel', info='Einmaleins', t=2),
               dict(name='Schwer', info='Plus und Minus bis 100', t=3),
               dict(name='Profi', info='Mal, geteilt und bis 1000', t=4)],
-      css=r"""
+      css=LOGO_CSS + r"""
 .rk{display:flex;gap:22px;align-items:center;justify-content:center;width:100%;max-width:860px}
 .all{position:relative;flex:none;width:150px;height:min(58vh,470px);border-radius:28px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--sch);
   background:radial-gradient(2px 2px at 20% 30%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 70% 15%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 60%,#fff 50%,transparent 51%),
@@ -398,7 +408,7 @@ G.play = function (lv, api) {
 
 
 # ================================================================== Eulen-Weg (Programmieren)
-spiel(id='eulen-weg', titel='Eulen-Weg', icon='🦉', fach='Knobeln', thema='Programmieren', stufe='1.–6. Klasse', sort=2, n=5,
+spiel(id='eulen-weg', titel='Eulen-Weg', icon=logo('eulen-weg'), fach='Knobeln', thema='Programmieren', stufe='1.–6. Klasse', sort=2, n=5,
       sterne={'modus': 'runde', 'n': 5},
       kurz='Pfeile legen, damit die Eule nach Hause findet.',
       intro='Lege Pfeil-Karten hintereinander. Dann tippe auf «▶ Los!» und die Eule läuft genau so, wie du es programmiert hast. Findet sie nach Hause?',
@@ -407,7 +417,7 @@ spiel(id='eulen-weg', titel='Eulen-Weg', icon='🦉', fach='Knobeln', thema='Pro
               dict(name='Mittel', info='Pfeile, Nüsse sammeln', s=5, rel=False, o=4, nuts=2, min=7, max=11, umweg=False),
               dict(name='Schwer', info='Vorwärts und drehen', s=5, rel=True, o=4, nuts=0, min=5, max=9, umweg=False),
               dict(name='Profi', info='Drehen, Nüsse, wenige Karten', s=6, rel=True, o=7, nuts=1, min=8, max=13, umweg=False, knapp=True)],
-      css=r"""
+      css=LOGO_CSS + r"""
 .ew{display:flex;gap:22px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%;max-width:1000px}
 .wald{position:relative;background:#e9f1e3;border:3px solid #9cc28a;border-radius:20px;box-shadow:var(--sch);flex:none}
 .wald .fd{position:absolute;display:grid;place-items:center;line-height:1}
