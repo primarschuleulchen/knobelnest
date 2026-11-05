@@ -365,9 +365,15 @@ function gegen(a, b) {
   if (a.row === b.row || a.row === 'O' || b.row === 'O' || a.back || b.back) return false;
   return Math.min(a.x + a.b, b.x + b.b) - Math.max(a.x, b.x) >= .6 * Math.min(a.b, b.b);
 }
+// Räume auf einer Seite in Gehrichtung. Jeder Raum zählt, von dem noch ein Stück vor einem liegt
+// (auch einer schräg gegenüber, z. B. der music room, wenn man aus dem Raum gegenüber kommt).
+// Der Raum, aus dem man kommt, zählt nicht.
 function seite(S, g, side) {
-  return S.rooms.filter(function (r) { return r.row === side && !r.back && (r.x + r.b / 2 - g.x0) * g.dir > 0; })
-    .sort(function (a, b) { return (a.x - b.x) * g.dir; });
+  var weg = g.aus ? [g.aus, g.aus.vor, g.aus.hinten] : [];
+  return S.rooms.filter(function (r) {
+    if (r.row !== side || r.back || weg.indexOf(r) >= 0) return false;
+    return (g.dir > 0 ? r.x + r.b - g.x0 : g.x0 - r.x) >= 15;
+  }).sort(function (a, b) { return (a.x - b.x) * g.dir; });
 }
 function outI(S, i) { return S.rooms.filter(function (r) { return r.row === 'O' && r.i === i; })[0]; }
 // geher: von wo aus gezählt wird (first/second … room on your left); ohne Angabe von den Eingängen
@@ -729,31 +735,43 @@ var SCHRITT = ['First,', 'Then', 'After that,', 'Finally,'];
 function spielWeg(api) {
   var P = neueSchule(), R = P.R, bekannt = {}, k = 0, lock = false, tippe = null, leute = shuffle(LEUTE), wo = null, start = null;
   var U = huelle(api, P.svg, WOERTER), raum = U.raum, karte = U.karte, my = (YC + YC2) / 2, gx = P.gang.x + P.gang.b / 2;
-  U.svg.insertAdjacentHTML('beforeend', '<g class="wege"></g><g class="eule" pointer-events="none" style="opacity:0"><circle r="20" fill="#fff" stroke="#d6ad45" stroke-width="3"/><text y="10" font-size="28" text-anchor="middle">🦉</text></g>');
+  U.svg.insertAdjacentHTML('beforeend', '<g class="wege"></g><g class="eule" pointer-events="none" style="opacity:0"><circle r="17" fill="#fff" stroke="#d6ad45" stroke-width="3"/><text y="8" font-size="22" text-anchor="middle">🦉</text></g>');
   var wege = U.svg.querySelector('.wege'), eule = U.svg.querySelector('.eule');
   function lab(x) { return !!(x.fest || bekannt[x.id]); }
   function beschriften() { P.slots.forEach(function (x) { beschrifte(U.svg, R[x], bekannt[x] ? 'voll' : 'leer'); raum(x).classList.toggle('ok', !!bekannt[x]); }); }
   // Punkte vom Gang zum Ort: [x im Gang, [Punkte vom Gang bis zum Ort]]
+  // Punkte vom Gang bis zur Tür des Orts: [x im Gang, [Punkte]]. Der Weg endet an der Tür, nicht über dem Namen.
   function innen(o) {
-    if (o.e) return o.end ? [o.gx, [[o.ox, my]]] : [gx, [[gx, YB + 12]]];
-    if (o.row === 'O') return [gx, [[gx, 393], [o.x + o.b / 2, 393], [o.x + o.b / 2, o.y + o.h / 2]]];
-    if (o.back) { var v = o.vor, vx = v.x + v.b / 2; return [vx, [[vx, v.y + v.h / 2], [vx, o.y + o.h / 2]]]; }
-    var dx = o.x + o.b / 2; return [dx, [[dx, o.y + o.h / 2]]];
+    if (o.e) return o.end ? [o.ix, [[o.ix, my]]] : [gx, [[gx, YB - 22]]];
+    if (o.row === 'O') return [gx, [[gx, 402], [o.x + o.b / 2, 402]]];
+    if (o.back) { var v = o.vor, vx = v.x + v.b / 2, sx = v.x + 14; return [vx, [[vx, YC], [sx, YC - 14], [sx, v.y + 12], [vx, v.y]]]; }
+    var dx = o.x + o.b / 2; return [dx, [[dx, o.row === 'T' ? YC : YC2]]];
   }
   function weg(A, B) {
-    if (A.row === 'O' && B.row === 'O') { var ax = A.x + A.b / 2, bx = B.x + B.b / 2; return [[ax, A.y + A.h / 2], [ax, 393], [bx, 393], [bx, B.y + B.h / 2]]; }
+    if (A.row === 'O' && B.row === 'O') return [[A.x + A.b / 2, 402], [B.x + B.b / 2, 402]];
     var a = innen(A), b = innen(B);
-    if (A.e && !A.end && B.row === 'O') return [[gx, YB + 12]].concat(b[1]);
+    if (A.e && !A.end && B.row === 'O') return [[gx, YB - 22]].concat(b[1]);
     return a[1].slice().reverse().concat([[a[0], my], [b[0], my]], b[1]);
+  }
+  // Wo die Eule wartet: im Gang vor der Tür (draussen über dem Gebäude), damit sie keinen Namen verdeckt
+  function eulePlatz(o) {
+    if (o.e) return innen(o)[1][0];
+    if (o.row === 'O') return [o.x + o.b / 2, 402];
+    return [innen(o)[0], my];
+  }
+  function setzeEule(o, sofort) {
+    var e = eulePlatz(o);
+    if (sofort) { eule.style.transition = 'none'; }
+    eule.style.opacity = 1; eule.style.transform = 'translate(' + e[0] + 'px,' + e[1] + 'px)';
+    if (sofort) { void eule.getBoundingClientRect(); eule.style.transition = ''; }
   }
   function zeichne(pts) {
     var o = []; pts.forEach(function (p) { var l = o[o.length - 1]; if (!l || l[0] !== p[0] || l[1] !== p[1]) o.push(p); });
     wege.insertAdjacentHTML('beforeend', '<polyline points="' + o.map(function (p) { return p.join(','); }).join(' ') + '"/>');
-    var e = o[o.length - 1]; eule.style.opacity = 1; eule.style.transform = 'translate(' + e[0] + 'px,' + e[1] + 'px)';
   }
   function eingang() {
     var g = pick(P.geher.slice(0, 2), 1)[0];
-    return g.turn ? { e: true, end: false, name: g.e } : { e: true, end: true, name: g.e, gx: P.endL ? X0 : X1, ox: P.endL ? X0 - 26 : X1 + 26 };
+    return g.turn ? { e: true, end: false, name: g.e } : { e: true, end: true, name: g.e, ix: P.endL ? X0 + 20 : X1 - 20 };
   }
   P.slots.forEach(function (x) { raum(x).addEventListener('click', function () { if (tippe && !lock) tippe(x); }); });
   // Von wo aus wird gezählt? Vom Eingang, durch den die Person kam, oder vom Raum, in dem sie gerade ist.
@@ -773,8 +791,7 @@ function spielWeg(api) {
     var nr = k % 4, wer = leute[Math.floor(k / 4) % leute.length];
     if (nr === 0) {
       Array.prototype.forEach.call(wege.children, function (l) { l.classList.add('alt'); });
-      wo = start = eingang(); eule.style.transition = 'none'; eule.style.transform = 'translate(' + innen(wo)[1][0].join('px,') + 'px)'; eule.style.opacity = 1;
-      void eule.offsetWidth; eule.style.transition = '';
+      wo = start = eingang(); setzeEule(wo, true);
     }
     var w = naechstes(), ziel = w[0], r = R[ziel], d = waehle(w[1]);
     var satz = SCHRITT[nr] + ' ' + (nr === 0 ? wer[0] : wer[1]) + ' goes to the ' + r.name.n + '. ' + satzTxt(satzAus(d, r));
@@ -787,7 +804,7 @@ function spielWeg(api) {
       tippe = null; U.plan.classList.remove('tippen'); lock = true;
       var ok = x === ziel;
       if (!ok) { raum(x).classList.add('no'); raum(ziel).classList.add('zeig'); api.later(function () { raum(x).classList.remove('no'); raum(ziel).classList.remove('zeig'); }, 2400); }
-      zeichne(weg(wo, r)); wo = r; bekannt[ziel] = true; beschriften();
+      zeichne(weg(wo, r)); wo = r; setzeEule(r); bekannt[ziel] = true; beschriften();
       api.msg(ok ? lob() + ' <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : '<span class="em">💡</span> ' + h(wer[0]) + ' geht hierhin: <b>' + h(r.name.n) + '</b> <small>(' + h(hinweis(d)) + ')</small>');
       if (api.answer(ok)) U.weiter(function () { k++; lock = false; aufgabe(); }, ok ? (nr === 3 ? 1800 : 1200) : 2800);
     };
