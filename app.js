@@ -291,7 +291,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '11'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var KS_VER = '34'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '16'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
@@ -307,8 +307,8 @@
     f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media');
     f.title = title;
     var url = gameUrl(html);
-    // Kleiderschrank (Stufe «Sprechen»): Mikrofon für die Spracherkennung erlauben (eigene Datei aus dem Repo)
-    if (url && /^knobelspiele\/kleiderschrank\.html/.test(url)) { f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media; microphone'); f.setAttribute('sandbox', f.getAttribute('sandbox') + ' allow-same-origin'); }
+    // Kleiderschrank und Vokabelkiste (Übung «Sprechen»): Mikrofon für die Spracherkennung erlauben (eigene Dateien aus dem Repo)
+    if (url && /^(knobelspiele\/kleiderschrank\.html|vokabelkiste\/)/.test(url)) { f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media; microphone'); f.setAttribute('sandbox', f.getAttribute('sandbox') + ' allow-same-origin'); }
     if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : /^gedaechtnis\//.test(url) ? GD_VER : /^knobelspiele\//.test(url) ? KS_VER : /^englisch\//.test(url) ? EN_VER : ZR_VER);
     else f.srcdoc = prepare(html, seed);
     if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken

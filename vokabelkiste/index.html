@@ -2,9 +2,6 @@
 </style></head><body>
 <title>Vokabelkiste</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Amatic+SC:wght@700&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">
 <style id="vk-css">
 /* Layout: wie Tagesfolien und Hausaufgabentafel. Aquarellpapier im Hintergrund, oben die Sprach-Pillen, darunter eine Spalte:
    Ordner -> Portion -> Übungen. Die Kärtchen sind Karteikarten mit rosa Linie und gepunkteten Zeilen, der Karteikasten hat den grünen Agenda-Einband.
@@ -403,6 +400,149 @@ textarea.inp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;
 .inner>.face.back,.inner>.face.open{transform:rotateY(180deg) translateZ(1px);visibility:hidden}
 .flipped>.inner>.face{visibility:hidden}
 .flipped>.inner>.face.back,.flipped>.inner>.face.open{visibility:visible}
+/* ---------- Knobelnest: Bilder, «Bild & Wort», «Sprechen» ---------- */
+.pic{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none}
+.pic.emo{font-size:40px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.pic.none{color:var(--muted);font-size:30px}
+.pic.big{width:120px;height:120px}
+.pic.emo.big{font-size:76px}
+.picb{width:46px;height:46px;border-radius:50%;border:2px solid var(--gold);background:#fff;padding:0;display:grid;place-items:center;overflow:hidden}
+.picb .pic{width:42px;height:42px}
+.picb .pic.emo{font-size:26px}
+.picb.auto{border-style:dashed;border-color:var(--gold-l)}
+.picb .plus{color:var(--muted);font-size:22px}
+.picb:hover{box-shadow:0 0 0 4px var(--sky-soft)}
+.etab{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto auto}
+.picdlg{top:8%;width:min(520px,calc(100% - 32px));max-height:84vh;overflow:auto}
+.pdnow{display:flex;align-items:center;gap:14px}
+.pdnow .pic{border:3px solid var(--gold);background:#fff}
+.pdnow p{margin:0;color:var(--muted);font-size:15px}
+.pdgrid{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow:auto;padding:2px}
+.pdo{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:28px;padding:0;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.pdo:hover{background:var(--sky-soft)}
+.pdact{flex-wrap:wrap;align-items:center}
+.pdact label.pill{cursor:pointer}
+.face.back .cpic{position:absolute;right:.7rem;bottom:.6rem;z-index:1}
+.face.back .cpic .pic{width:54px;height:54px}
+.face.back .cpic .pic.emo{font-size:36px}
+.bq{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bbig .pic{width:150px;height:150px;border:4px solid var(--gold);background:#fff;box-shadow:var(--shadow)}
+.bbig .pic.emo{font-size:96px}
+.bword{display:flex;align-items:center;gap:10px;font-family:var(--word);font-size:clamp(30px,6vw,42px);color:var(--navy);background:var(--sheet);border-radius:18px;padding:10px 22px;box-shadow:var(--shadow)}
+.bopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(360px,100%)}
+.bopt{position:relative;aspect-ratio:1/1;border-radius:22px;border:3px solid var(--line);background:#fff;display:grid;place-items:center;padding:8px;box-shadow:var(--shadow)}
+.bopt:hover{border-color:var(--sky)}
+.bopt kbd{position:absolute;top:8px;left:10px;font-size:12px;border-radius:999px;background:var(--sky-soft);color:var(--navy);padding:1px 8px}
+.bopt .pic{width:72%;height:72%}
+.bopt .pic.emo{font-size:clamp(48px,13vw,84px)}
+.bopt.right{border-color:var(--ok);background:var(--leaf-soft)}
+.bopt.wrong{border-color:var(--rose);background:var(--rose-soft)}
+.talkq{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(460px,100%)}
+.talkq .word{font-family:var(--word);font-size:clamp(28px,6vw,42px);line-height:1.15}
+.talkq .tpic .pic{width:84px;height:84px}
+.talkq .tpic .pic.emo{font-size:56px}
+.play.mic{background:var(--gold);box-shadow:0 6px 0 var(--gold-d),var(--shadow)}
+.play.mic.on{background:#d9625a;box-shadow:0 6px 0 #b04a43,0 0 0 0 rgba(217,98,90,.5);animation:micp 1.2s infinite}
+.play.mic.okm{background:var(--ok);box-shadow:0 6px 0 #4a7e38}
+.play.mic:disabled{opacity:.5}
+@keyframes micp{0%{box-shadow:0 6px 0 #b04a43,0 0 0 0 rgba(217,98,90,.45)}100%{box-shadow:0 6px 0 #b04a43,0 0 0 22px rgba(217,98,90,0)}}
+#tact .judge{width:min(460px,100%)}
+
+/* ---------- Knobelnest: Stil der Eulenkiste ----------
+   Schrift Patrick Hand (lokal), heller Himmel-Hintergrund, Gold-Akzente, Blau statt Rosa, ✦ beim Titel. */
+@font-face{font-family:"Patrick Hand";src:url(../schriften/patrick-hand.woff2) format("woff2");font-display:swap}
+:root{
+  --paper:#f4f9fd; --ink:#1f2421; --muted:#5f6963; --line:#dbe7f1; --rule:#c5d8e8; --sheet:#fffefa;
+  --gold:#d6ad45; --gold-d:#c4952f; --gold-l:#ecd9a4; --ok:#5f9a4a;
+  --rose:#e9a49c; --rose-deep:#d9766c; --rose-ink:#b5524a; --rose-soft:#fcefed;
+  --leaf:#7fae68; --leaf-deep:#4f7f3d; --leaf-soft:#e9f1e3;
+  --sky:#9cc8ea; --sky-deep:#3f78a8; --sky-soft:#dcf0fd; --navy:#2f5f8f; --bubble:#3f78a8;
+  --cover:#8dbde4; --cover2:#5f97c6; --nut:#b07a3a; --nut-soft:#fbf3dc;
+  --shadow:0 10px 26px rgba(63,120,168,.16),0 2px 6px rgba(63,120,168,.08); --shadow-up:0 16px 34px rgba(63,120,168,.24),0 3px 8px rgba(63,120,168,.12);
+  --ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive; --hand:var(--ui); --label:var(--ui); --bub:var(--ui); --word:var(--ui);
+}
+body{font-size:18px;line-height:1.35}
+body *{font-weight:400!important;letter-spacing:normal}
+.bg{background:radial-gradient(1200px 600px at 0% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 600px at 110% 100%,#fbf3dc 0%,transparent 60%),radial-gradient(700px 500px at 100% 0%,#e9f1e3 0%,transparent 60%),#f4f9fd}
+/* Titel: dunkle Schrift mit goldenem Stern statt Bubble-Schrift */
+.big{color:var(--ink);text-shadow:none!important;font-size:clamp(34px,6vw,50px)}
+.big.mid{font-size:clamp(28px,4.6vw,38px)}
+h1.big::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.big.brandtxt{font-size:28px;color:var(--ink)}
+.brand img{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--gold);background:#fff;object-fit:cover;box-shadow:0 3px 10px rgba(63,120,168,.18)}
+.lbl{font-size:32px;color:var(--ink)}
+.lbl::after{content:" ✧";color:var(--gold);font-size:.55em}
+.sh .hand,.hand{color:var(--muted);font-size:19px}
+.gname,.cpg>b{color:var(--sky-deep)}
+/* Knöpfe */
+.pill{border:1.5px solid var(--rule);font-size:17px;min-height:38px;box-shadow:0 2px 0 var(--line)}
+.pill:hover:not(:disabled){background:var(--sky-soft)}
+.pill.on,.pill.rose{background:var(--sky-deep);border-color:var(--sky-deep);color:#fff;box-shadow:0 3px 0 var(--navy)}
+.pill.on:hover,.pill.rose:hover{background:var(--navy)}
+.pill.go{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 3px 0 var(--gold-d)}
+.pill.go:hover:not(:disabled){background:var(--gold-d)}
+.pill.sm{font-size:15px}
+.seg{border:1.5px solid var(--rule)}
+.seg button{font-size:16px}
+.seg button[aria-pressed="true"]{background:var(--sky-deep);color:#fff}
+.crumb{font-size:16px;background:#fff;border:1px solid var(--line)}
+.tbanner{background:var(--nut-soft);border-color:var(--gold);font-size:16px}
+/* Kacheln */
+.tile{border-radius:24px;border:1.5px solid #fff}
+.tile h3{font-size:22px}
+.tile p{font-size:16px}
+.tile .go{color:var(--sky-deep);font-size:17px}
+.num{color:var(--gold-d);font-size:22px;width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;background:#fff;top:12px;right:12px}
+.ico{width:42px;height:42px;border:2px solid var(--gold);background:var(--sky-soft);color:var(--sky-deep)}
+.ico.rose{background:var(--rose-soft);color:var(--rose-ink)}
+.ico.nut{background:var(--nut-soft);color:var(--nut)}
+.ico.leaf{background:var(--leaf-soft);color:var(--leaf-deep)}
+.fold{--fc:#e9f1e3}.fold.l1{--fc:#dcf0fd}.fold.l2{--fc:#fbf3dc}
+.fname{font-size:21px}
+.fmeta{font-size:15px}
+.portion::before,.face::before,.sheet::before{background:var(--gold-l)}
+.minibox span,.stack i{border-top-color:var(--gold)}
+.chip.cur{border-color:var(--gold)}
+.steps span.on{background:var(--sky-deep);border-color:var(--sky-deep)}
+.badge{background:var(--gold)}
+.due{background:var(--gold-d)}
+.timer span,.bar i{background:var(--gold)}
+.closedn .fmain{opacity:.55}
+.fold.closedn,.portion.closedn{outline-color:var(--rose)}
+/* Übungen */
+.eyebrow{font-size:15px;color:var(--sky-deep)}
+.prog{font-size:17px}
+.face,.sheet{box-shadow:var(--shadow)}
+.word{font-size:clamp(32px,7vw,48px)}
+.lang{font-size:14px}
+.opt{border-radius:18px;font-size:23px;box-shadow:0 3px 0 var(--line)}
+.opt.right{border-color:var(--ok)}
+.write input{font-size:23px}
+.judge button{font-size:20px}
+.judge .yes{border-color:var(--ok)}
+.fb .ok{color:var(--ok);font-size:20px}
+.fb .no{font-size:20px}
+.fb .sol{font-size:28px}
+.stamp{border-color:var(--gold);color:var(--gold-d)}
+.summary{border:1.5px solid #fff}
+.play{background:var(--sky-deep);box-shadow:0 6px 0 var(--navy),var(--shadow)}
+.keys{font-size:15px}
+.toast{font-size:17px}
+.pub{border:1.5px solid var(--gold)}
+.ltile,.slot{font-size:28px}
+.drop{border-top-color:var(--gold);font-size:21px}
+.rain::after{background:var(--gold)}
+.etab .th{font-size:15px;text-transform:none;letter-spacing:0}
+.kbx{font-size:15px}
+.ehint,.import p,.note{font-size:15px}
+.inp{font-size:17px}
+textarea.inp{font-family:var(--ui);font-size:16px}
+.voice select{font-size:16px}
+@media (max-width:620px){
+  .etab{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto}
+  .etab .kbxs{grid-column:2/4}
+  .big.brandtxt{font-size:22px}
+}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -416,11 +556,11 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const uid=()=>Math.random().toString(36).slice(2,10);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const hashStr=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)+'.'+s.length};
-const lsGet=k=>{try{const t=localStorage.getItem(k);return t?JSON.parse(t):null}catch(e){return null}};
-const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
-const ssGet=k=>{try{const t=sessionStorage.getItem(k);return t?JSON.parse(t):null}catch(e){return null}};
-const ssSet=(k,v)=>{try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const lsGet=k=>{try{if(window.parent!==window)return null;const t=localStorage.getItem(k);return t?JSON.parse(t):null}catch(e){return null}};
+const lsSet=(k,v)=>{try{if(window.parent!==window)return;localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const lsDel=k=>{try{if(window.parent!==window)return;localStorage.removeItem(k)}catch(e){}};
+const ssGet=k=>{try{if(window.parent!==window)return null;const t=sessionStorage.getItem(k);return t?JSON.parse(t):null}catch(e){return null}};
+const ssSet=(k,v)=>{try{if(window.parent!==window)return;sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const ssDel=k=>{try{sessionStorage.removeItem(k)}catch(e){}};
 
 /* ---------- Inhalt (von der Lehrperson, in der Seite gespeichert) ---------- */
@@ -604,7 +744,7 @@ function knLog(){if(!KN||!knMode)return null;P.log=P.log||{};const a=P.log[knMod
 function knStart(key,mode){knMode={key:String(key||'?'),mode};const lg=knLog();if(lg){lg.n++;lg.t=Date.now();saveP()}}
 function knWord(id,ok){if(!KN)return;P.wc=P.wc||{};const x=P.wc[id]=P.wc[id]||[0,0];x[ok?0:1]++;const lg=knLog();if(lg){lg.a++;if(ok)lg.c++;lg.t=Date.now()}}
 const KIDS=KN&&KNI.settings&&Array.isArray(KNI.settings.kids)?KNI.settings.kids:[];
-const MODE_NAMES={karte:'Kärtchen',drei:'3er',merken:'Merken',salat:'Salat',schreiben:'Schreiben',hoeren:'Hören',luecke:'Lücke',pairs:'Paare',regen:'Wortregen'};
+const MODE_NAMES={karte:'Kärtchen',drei:'3er',merken:'Merken',salat:'Salat',schreiben:'Schreiben',hoeren:'Hören',luecke:'Lücke',pairs:'Paare',regen:'Wortregen',bild:'Bild',sprechen:'Sprechen'};
 const minTxt=x=>x?(x<60?'<1':Math.round(x/60))+' Min.':'–';
 const pct=v=>v&&v.a?Math.round(v.c/v.a*100)+' %':'';
 const dShort=t=>new Date(t).toLocaleDateString('de-CH',{day:'numeric',month:'numeric'});
@@ -762,7 +902,7 @@ const stage=$('#stage');
 
 function renderTop(){
   const s=SUB();
-  $('#top').innerHTML=`${KN?'<button class="pill" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="../bilder/eule.webp" alt="" width="34" height="34"></button>':''}<button class="brand" id="brand" aria-label="Zur Übersicht">${BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
+  $('#top').innerHTML=`${KN?'<button class="pill" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="../bilder/eule.webp" alt="" width="34" height="34"></button>':''}<button class="brand" id="brand" aria-label="Zur Übersicht">${KN?'<img src="../bilder/kacheln/vokabelkiste.webp" alt="">':BOX_SVG}<span class="big brandtxt">Vokabelkiste</span></button>
     <nav class="subs" aria-label="Sprache">${C.subjects.map(x=>`<button class="pill ${x.id===s.id?'on':''}" data-sub="${x.id}">${esc(x.name)}</button>`).join('')}</nav>
     <span class="sp"></span>
     <div class="seg" role="group" aria-label="Abfragerichtung"><button data-dir="de-f" aria-pressed="${P.dir==='de-f'}">DE → ${CODE(s)}</button><button data-dir="f-de" aria-pressed="${P.dir==='f-de'}">${CODE(s)} → DE</button></div>
@@ -937,13 +1077,13 @@ function practiceHTML(){
     ['salat','Buchstabensalat',salN?`Setz die durcheinandergewürfelten Buchstaben richtig zusammen. ${salN} ${salN===1?'Wort':'Wörter'} (höchstens zwei Wörter lang).`:'Hier gibt es keine Wörter, die kurz genug sind (höchstens zwei Wörter).',salN],
     ['schreiben','Schreiben',`${qLang()} wird angezeigt, du schreibst ${aLang()}.`,n],
     ['hoeren','Hören & Schreiben',canSpeak?'Das Wort wird vorgelesen, du schreibst es auf.':'Dieser Browser kann leider nicht vorlesen.',nW&&canSpeak],
-    ['luecke','Lückensatz',gapN?`Setz das fehlende Wort in den Satz ein. ${gapN} ${gapN===1?'Satz':'Sätze'}.`:'Zu diesen Wörtern gibt es noch keine Beispielsätze.',gapN]].filter(m=>!(m[0]==='luecke'&&noSent()));
+    ['luecke','Lückensatz',gapN?`Setz das fehlende Wort in den Satz ein. ${gapN} ${gapN===1?'Satz':'Sätze'}.`:'Zu diesen Wörtern gibt es noch keine Beispielsätze.',gapN]].filter(m=>!(m[0]==='luecke'&&noSent()));knMoreModes(MODES,ws);
   const GAMES=[['pairs','Paare finden','Memory mit höchstens 8 Wortpaaren.',n>=2],['regen','Wortregen','Tipp die Übersetzung, bevor die Wörter unten ankommen.',nW]];
   const tile=([m,t,d,ok],i)=>`<button class="tile" data-mode="${m}" ${ok?'':'disabled'}>${i!=null?`<span class="num">${i+1}</span>`:''}<h3><span class="ico ${i==null?'rose':''}">${ICONS[m]}</span>${t}</h3><p>${d}</p>${m==='regen'&&best?`<span class="rec">Rekord: ${best} Punkte</span>`:''}<span class="go">Starten →</span></button>`;
   return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
     <div class="sh"><h2 class="lbl">Spiele</h2></div><div class="tiles">${GAMES.map(m=>tile(m,null)).join('')}</div>`;
 }
-const MODE_FN=()=>({karte:modeCards,drei:modeThree,merken:modeMerken,salat:modeScramble,schreiben:modeWrite,hoeren:modeListen,luecke:modeGap,pairs:modePairs,regen:modeRain});
+const MODE_FN=()=>({karte:modeCards,drei:modeThree,merken:modeMerken,salat:modeScramble,schreiben:modeWrite,hoeren:modeListen,luecke:modeGap,pairs:modePairs,regen:modeRain,bild:modeBild,sprechen:modeTalk});
 function reviewGaps(){
   const ws=SET.words.slice();if(!ws.length)return;const body=shell('Lückensätze prüfen');let i=0;
   const show=()=>{const w=ws[i],g=gapOf(w),has=!!(w.s&&w.s.trim());
@@ -983,7 +1123,7 @@ function editorHTML(node){
   return `<section class="editor"><div class="sh"><h2 class="lbl">Wörter eintragen</h2>${noSent()?'':'<p class="hand">Der Beispielsatz ist freiwillig und wird für den Lückensatz gebraucht.</p>'}</div>
     <div class="etab" id="etab"></div>
     <form class="addrow" id="addf" autocomplete="off"><input class="inp" id="nde" placeholder="Deutsch" aria-label="Neues Wort Deutsch"><input class="inp" id="nfx" placeholder="${esc(SUB().name)}" aria-label="Neues Wort ${esc(SUB().name)}"><button class="pill go">Hinzufügen</button>${noSent()?'':`<input class="inp sin" id="nsn" placeholder="Beispielsatz auf ${esc(SUB().name)} (freiwillig)" aria-label="Beispielsatz">`}</form>
-    <p class="ehint">${noSent()?'':'Rot umrandet heisst: Das Wort kommt im Beispielsatz nicht vor. '}«Kasten» weg = das Wort kommt nicht in den Karteikasten. «nur verstehen» = Zusatzwort: Die Kinder müssen es nicht schreiben können. Beim Schreiben wird es von ${esc(SUB().name)} auf Deutsch gefragt. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommt es nicht vor.</p>
+    <p class="ehint">${noSent()?'':'Rot umrandet heisst: Das Wort kommt im Beispielsatz nicht vor. '}Tippe auf das runde Bild, um es zu ändern (gestrichelt = automatisch gewählt). «Kasten» weg = das Wort kommt nicht in den Karteikasten. «nur verstehen» = Zusatzwort: Die Kinder müssen es nicht schreiben können. Beim Schreiben wird es von ${esc(SUB().name)} auf Deutsch gefragt. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommt es nicht vor.</p>
     <details class="import"><summary>Viele Wörter auf einmal einfügen</summary>
       <p>Eine Zeile pro Wort, getrennt durch <b>=</b>, <b>;</b> oder einen Tabulator (z. B. aus Excel kopiert): zuerst Deutsch, dann ${esc(SUB().name)}${noSent()?'':', optional der Beispielsatz'}. Mehrere richtige Antworten mit <b>/</b> trennen.</p>
       <textarea class="inp" id="imp" rows="7" placeholder="${SUB().lang==='fr'?'die Mutter = la mère&#10;der Vater = le père':'der Apfel = apple = I eat an apple every day.&#10;laufen = to run'}"></textarea>
@@ -994,15 +1134,15 @@ function bindEditor(node){
   const warnOf=w=>!!(w.s&&w.s.trim())&&!gapOf(w);
   const table=()=>{
     const ex=new Set(s.excl);
-    $('#etab').innerHTML=`<span class="th">Deutsch</span><span class="th">${esc(s.name)}</span><span class="th k">Optionen</span><span></span>`+node.words.map(w=>
-      `<input class="inp" data-id="${w.id}" data-f="de" value="${esc(w.de)}" aria-label="Deutsch"><input class="inp" data-id="${w.id}" data-f="f" value="${esc(w.f)}" aria-label="${esc(s.name)}">
+    $('#etab').innerHTML=`<span class="th">Bild</span><span class="th">Deutsch</span><span class="th">${esc(s.name)}</span><span class="th k">Optionen</span><span></span>`+node.words.map(w=>
+      `${picCell(w)}<input class="inp" data-id="${w.id}" data-f="de" value="${esc(w.de)}" aria-label="Deutsch"><input class="inp" data-id="${w.id}" data-f="f" value="${esc(w.f)}" aria-label="${esc(s.name)}">
        <span class="kbxs"><label class="kbx"><input type="checkbox" data-kx="${w.id}" ${ex.has(w.id)?'':'checked'}> Kasten</label><label class="kbx" title="Muss man nicht schreiben können. Beim Schreiben wird von ${esc(s.name)} auf Deutsch gefragt."><input type="checkbox" data-xx="${w.id}" ${w.x?'checked':''}> nur verstehen</label></span><button class="del" data-del="${w.id}" aria-label="Wort löschen">✕</button>
        ${noSent()?'':`<input class="inp sin ${warnOf(w)?'warn':''}" data-id="${w.id}" data-f="s" value="${esc(w.s||'')}" placeholder="Beispielsatz (freiwillig)" aria-label="Beispielsatz">`}`).join('');
     $$('#etab [data-f]').forEach(inp=>inp.addEventListener('input',()=>{const w=node.words.find(x=>x.id===inp.dataset.id);if(!w)return;w[inp.dataset.f]=inp.value;touch();
       const si=$(`#etab [data-f="s"][data-id="${w.id}"]`);if(si)si.classList.toggle('warn',warnOf(w))}));
     $$('#etab [data-xx]').forEach(cb=>cb.onchange=()=>{const w=node.words.find(x=>x.id===cb.dataset.xx);if(!w)return;if(cb.checked)w.x=true;else delete w.x;touch()});
     $$('#etab [data-kx]').forEach(cb=>cb.onchange=()=>{const id=cb.dataset.kx;s.excl=s.excl.filter(x=>x!==id);if(!cb.checked)s.excl.push(id);touch()});
-    $$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filter(x=>x.id!==b.dataset.del);touch();table()});
+    $$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filter(x=>x.id!==b.dataset.del);touch();table()});bindPics(node,table);
   };table();
   $('#addf').onsubmit=e=>{e.preventDefault();const de=$('#nde').value.trim(),f=$('#nfx').value.trim();
     if(!de||!f){toast(`Bitte Deutsch und ${s.name} ausfüllen`);return}
@@ -1028,7 +1168,7 @@ function cardHTML(w,{flip=true,badge=''}={}){
   return `<div class="card ${flip?'':'static'}" id="card" ${flip?'tabindex="0" role="button" aria-label="Kärtchen umdrehen"':''}><div class="inner">
     <div class="face front"><div class="lang"><span>${esc(qLang())}</span>${badge?`<span class="badge">${badge}</span>`:''}${qIsF?spkBtn(w.f):''}</div>
       <div class="word">${esc(Q(w))}</div>${flip?'<div class="hint">tippen zum Umdrehen</div>':''}</div>
-    ${flip?`<div class="face back"><div class="lang"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div><div class="word">${esc(A(w))}</div><div class="sub">${esc(Q(w))}</div></div>`:''}
+    ${flip?`<div class="face back"><div class="lang"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>${picOf(w)?`<div class="cpic">${picHTML(picOf(w))}</div>`:''}<div class="word">${esc(A(w))}</div><div class="sub">${esc(Q(w))}</div></div>`:''}
   </div></div>`;
 }
 function summary(body,{title,lines,actions}){
@@ -1261,6 +1401,222 @@ function modeRain(){
   $('#rf',body).onsubmit=e=>{e.preventDefault();if(inp.value.trim())tryHit(true);inp.select()};
   $('#go',body).onclick=()=>{$('#rstart',body).remove();inp.disabled=false;inp.focus();running=true;lastT=0;raf=requestAnimationFrame(tick)};
   session.cleanup=()=>{running=false;cancelAnimationFrame(raf);clearTimeout(pend)};
+}
+
+/* ---------- Knobelnest: Bilder zu den Wörtern ---------- */
+/* w.img = Emoji (Text) oder eigenes Bild (data:image/…), '-' = bewusst kein Bild. Ohne Eintrag sucht die Kiste ein Emoji
+   aus EMO (Liste in werkstatt/einbau/vokabelkiste/vk_emoji.txt), zuerst mit dem deutschen Wort, dann mit dem Fremdwort. */
+const EMO=new Map([["schule", "🏫"], ["schulhaus", "🏫"], ["school", "🏫"], ["école", "🏫"], ["ecole", "🏫"], ["buch", "📕"], ["book", "📕"], ["livre", "📕"], ["bücher", "📚"], ["books", "📚"], ["livres", "📚"], ["bibliothek", "📚"], ["library", "📚"], ["bibliothèque", "📚"], ["lineal", "📏"], ["ruler", "📏"], ["règle", "📏"], ["ordner", "🗂️"], ["folder", "🗂️"], ["classeur", "🗂️"], ["heft", "📓"], ["notebook", "📓"], ["exercise book", "📓"], ["cahier", "📓"], ["bleistift", "✏️"], ["pencil", "✏️"], ["crayon", "✏️"], ["kugelschreiber", "🖊️"], ["kuli", "🖊️"], ["pen", "🖊️"], ["stylo", "🖊️"], ["schultasche", "🎒"], ["schulsack", "🎒"], ["rucksack", "🎒"], ["school bag", "🎒"], ["schoolbag", "🎒"], ["backpack", "🎒"], ["cartable", "🎒"], ["sac à dos", "🎒"], ["schere", "✂️"], ["scissors", "✂️"], ["ciseaux", "✂️"], ["stuhl", "🪑"], ["chair", "🪑"], ["chaise", "🪑"], ["agenda", "📅"], ["kalender", "📅"], ["calendar", "📅"], ["calendrier", "📅"], ["datum", "📅"], ["stundenplan", "🗓️"], ["timetable", "🗓️"], ["emploi du temps", "🗓️"], ["lehrer", "🧑‍🏫"], ["lehrerin", "🧑‍🏫"], ["lehrperson", "🧑‍🏫"], ["teacher", "🧑‍🏫"], ["professeur", "🧑‍🏫"], ["maître", "🧑‍🏫"], ["maîtresse", "🧑‍🏫"], ["enseignant", "🧑‍🏫"], ["schüler", "🧒"], ["schülerin", "🧒"], ["de:kind", "🧒"], ["pupil", "🧒"], ["student", "🧒"], ["child", "🧒"], ["kid", "🧒"], ["enfant", "🧒"], ["élève", "🧒"], ["musik", "🎵"], ["music", "🎵"], ["musique", "🎵"], ["chor", "🎶"], ["lied", "🎶"], ["song", "🎶"], ["choir", "🎶"], ["chanson", "🎶"], ["chorale", "🎶"], ["kunst", "🎨"], ["zeichnen", "🎨"], ["malen", "🎨"], ["art", "🎨"], ["arts", "🎨"], ["draw", "🎨"], ["paint", "🎨"], ["dessin", "🎨"], ["dessiner", "🎨"], ["peindre", "🎨"], ["bg", "🎨"], ["naturwissenschaft", "🔬"], ["naturwissenschaften", "🔬"], ["science", "🔬"], ["sciences", "🔬"], ["sciences de la nature", "🔬"], ["geografie", "🗺️"], ["geographie", "🗺️"], ["landkarte", "🗺️"], ["karte", "🗺️"], ["geography", "🗺️"], ["map", "🗺️"], ["géographie", "🗺️"], ["géo", "🗺️"], ["carte", "🗺️"], ["mathe", "🧮"], ["mathematik", "🧮"], ["rechnen", "🧮"], ["maths", "🧮"], ["math", "🧮"], ["mathematics", "🧮"], ["calculate", "🧮"], ["mathématiques", "🧮"], ["calculer", "🧮"], ["sport", "🤸"], ["turnen", "🤸"], ["sportunterricht", "🤸"], ["physical education", "🤸"], ["pe", "🤸"], ["gymnastique", "🤸"], ["gym", "🤸"], ["museum", "🏛️"], ["geschichte", "🏛️"], ["history", "🏛️"], ["musée", "🏛️"], ["histoire", "🏛️"], ["gedicht", "📜"], ["poem", "📜"], ["poème", "📜"], ["stricken", "🧶"], ["wolle", "🧶"], ["knit", "🧶"], ["tricoter", "🧶"], ["laine", "🧶"], ["basteln", "🛠️"], ["werken", "🛠️"], ["handarbeit und werken", "🛠️"], ["do crafts", "🛠️"], ["bricoler", "🛠️"], ["acm", "🛠️"], ["experimentieren", "🧪"], ["experiment", "🧪"], ["expérimenter", "🧪"], ["wecker", "⏰"], ["alarm clock", "⏰"], ["réveil", "⏰"], ["uhr", "🕒"], ["uhrzeit", "🕒"], ["clock", "🕒"], ["heure", "🕒"], ["horloge", "🕒"], ["schreiben", "✍️"], ["unterschrift", "✍️"], ["write", "✍️"], ["signature", "✍️"], ["écrire", "✍️"], ["lesen", "📖"], ["read", "📖"], ["lire", "📖"], ["farbstift", "🖍️"], ["farbstifte", "🖍️"], ["wachsmalstift", "🖍️"], ["crayon de couleur", "🖍️"], ["computer", "💻"], ["laptop", "💻"], ["ordinateur", "💻"], ["handy", "📱"], ["smartphone", "📱"], ["mobile phone", "📱"], ["phone", "📱"], ["téléphone portable", "📱"], ["telefon", "📞"], ["anrufen", "📞"], ["call", "📞"], ["telephone", "📞"], ["téléphone", "📞"], ["téléphoner", "📞"], ["appeler", "📞"], ["de:brief", "✉️"], ["letter", "✉️"], ["lettre", "✉️"], ["glocke", "🔔"], ["bell", "🔔"], ["cloche", "🔔"], ["sonnerie", "🔔"], ["pokal", "🏆"], ["preis", "🏆"], ["trophy", "🏆"], ["prize", "🏆"], ["coupe", "🏆"], ["gewinnen", "🥇"], ["sieger", "🥇"], ["win", "🥇"], ["winner", "🥇"], ["gagner", "🥇"], ["mutter", "👩"], ["mama", "👩"], ["mother", "👩"], ["mum", "👩"], ["mom", "👩"], ["mère", "👩"], ["maman", "👩"], ["frau", "👩"], ["woman", "👩"], ["femme", "👩"], ["vater", "👨"], ["papa", "👨"], ["father", "👨"], ["dad", "👨"], ["père", "👨"], ["mann", "👨"], ["man", "👨"], ["homme", "👨"], ["familie", "👪"], ["eltern", "👪"], ["family", "👪"], ["parents", "👪"], ["famille", "👪"], ["schwester", "👧"], ["mädchen", "👧"], ["tochter", "👧"], ["sister", "👧"], ["girl", "👧"], ["daughter", "👧"], ["sœur", "👧"], ["soeur", "👧"], ["fille", "👧"], ["bruder", "👦"], ["junge", "👦"], ["knabe", "👦"], ["sohn", "👦"], ["brother", "👦"], ["boy", "👦"], ["son", "👦"], ["frère", "👦"], ["frere", "👦"], ["garçon", "👦"], ["fils", "👦"], ["grossmutter", "👵"], ["grosi", "👵"], ["oma", "👵"], ["grandmother", "👵"], ["grandma", "👵"], ["granny", "👵"], ["grand-mère", "👵"], ["grossvater", "👴"], ["grospi", "👴"], ["opa", "👴"], ["grandfather", "👴"], ["grandpa", "👴"], ["grand-père", "👴"], ["baby", "👶"], ["kleinkind", "👶"], ["bébé", "👶"], ["freunde", "👫"], ["friends", "👫"], ["amis", "👫"], ["copains", "👫"], ["freund", "🧑‍🤝‍🧑"], ["freundin", "🧑‍🤝‍🧑"], ["beste freund", "🧑‍🤝‍🧑"], ["bester freund", "🧑‍🤝‍🧑"], ["best friend", "🧑‍🤝‍🧑"], ["friend", "🧑‍🤝‍🧑"], ["ami", "🧑‍🤝‍🧑"], ["amie", "🧑‍🤝‍🧑"], ["copain", "🧑‍🤝‍🧑"], ["copine", "🧑‍🤝‍🧑"], ["baum", "🌳"], ["stammbaum", "🌳"], ["tree", "🌳"], ["family tree", "🌳"], ["arbre", "🌳"], ["arbre généalogique", "🌳"], ["könig", "👑"], ["king", "👑"], ["roi", "👑"], ["krone", "👑"], ["crown", "👑"], ["couronne", "👑"], ["prinzessin", "👸"], ["königin", "👸"], ["princess", "👸"], ["queen", "👸"], ["princesse", "👸"], ["reine", "👸"], ["zauberer", "🧙"], ["wizard", "🧙"], ["magicien", "🧙"], ["polizist", "👮"], ["polizistin", "👮"], ["police officer", "👮"], ["policeman", "👮"], ["policier", "👮"], ["ärztin", "👩‍⚕️"], ["arzt", "👩‍⚕️"], ["doctor", "👩‍⚕️"], ["médecin", "👩‍⚕️"], ["docteur", "👩‍⚕️"], ["koch", "👨‍🍳"], ["köchin", "👨‍🍳"], ["cuisinier", "👨‍🍳"], ["feuerwehr", "👩‍🚒"], ["feuerwehrmann", "👩‍🚒"], ["firefighter", "👩‍🚒"], ["pompier", "👩‍🚒"], ["bauer", "🧑‍🌾"], ["bäuerin", "🧑‍🌾"], ["farmer", "🧑‍🌾"], ["fermier", "🧑‍🌾"], ["held", "🦸"], ["heldin", "🦸"], ["mutig", "🦸"], ["tapfer", "🦸"], ["hero", "🦸"], ["brave", "🦸"], ["héros", "🦸"], ["courageux", "🦸"], ["glücklich", "😊"], ["froh", "😊"], ["fröhlich", "😊"], ["happy", "😊"], ["glad", "😊"], ["heureux", "😊"], ["heureuse", "😊"], ["content", "😊"], ["traurig", "😢"], ["sad", "😢"], ["triste", "😢"], ["wütend", "😠"], ["verärgert", "😠"], ["böse", "😠"], ["angry", "😠"], ["mad", "😠"], ["fâché", "😠"], ["en colère", "😠"], ["müde", "😴"], ["schlafen", "😴"], ["tired", "😴"], ["sleep", "😴"], ["sleepy", "😴"], ["fatigué", "😴"], ["dormir", "😴"], ["überrascht", "😲"], ["erstaunt", "😲"], ["surprised", "😲"], ["surpris", "😲"], ["ängstlich", "😨"], ["angst", "😨"], ["afraid", "😨"], ["scared", "😨"], ["frightened", "😨"], ["peur", "😨"], ["schüchtern", "🙈"], ["shy", "🙈"], ["timide", "🙈"], ["cool", "😎"], ["lässig", "😎"], ["verrückt", "🤪"], ["crazy", "🤪"], ["fou", "🤪"], ["folle", "🤪"], ["denken", "🤔"], ["nachdenken", "🤔"], ["think", "🤔"], ["penser", "🤔"], ["réfléchir", "🤔"], ["neugierig", "🧐"], ["curious", "🧐"], ["curieux", "🧐"], ["genervt", "😒"], ["annoyed", "😒"], ["énervé", "😒"], ["enttäuscht", "😞"], ["disappointed", "😞"], ["déçu", "😞"], ["zufrieden", "😌"], ["ruhig", "😌"], ["calm", "😌"], ["satisfied", "😌"], ["calme", "😌"], ["lustig", "😄"], ["witzig", "😄"], ["funny", "😄"], ["drôle", "😄"], ["rigolo", "😄"], ["faul", "🦥"], ["träge", "🦥"], ["lazy", "🦥"], ["paresseux", "🦥"], ["grinsend", "😁"], ["grinsen", "😁"], ["grinning", "😁"], ["grin", "😁"], ["lächelnd", "🙂"], ["lächeln", "🙂"], ["freundlich", "🙂"], ["smiling", "🙂"], ["smile", "🙂"], ["friendly", "🙂"], ["sourire", "🙂"], ["gentil", "🙂"], ["aimable", "🙂"], ["langweilig", "🥱"], ["gelangweilt", "🥱"], ["boring", "🥱"], ["bored", "🥱"], ["ennuyeux", "🥱"], ["stolz", "😤"], ["proud", "😤"], ["fier", "😤"], ["helfen", "🤝"], ["hilfsbereit", "🤝"], ["help", "🤝"], ["helpful", "🤝"], ["aider", "🤝"], ["serviable", "🤝"], ["lieben", "🫶"], ["liebe", "🫶"], ["love", "🫶"], ["aimer", "🫶"], ["amour", "🫶"], ["herz", "❤️"], ["heart", "❤️"], ["cœur", "❤️"], ["coeur", "❤️"], ["lecker", "😋"], ["fein", "😋"], ["delicious", "😋"], ["tasty", "😋"], ["délicieux", "😋"], ["krank", "🤒"], ["sick", "🤒"], ["ill", "🤒"], ["malade", "🤒"], ["stark", "💪"], ["strong", "💪"], ["fort", "💪"], ["langsam", "🐢"], ["slow", "🐢"], ["lent", "🐢"], ["schnell", "⚡"], ["blitz", "⚡"], ["fast", "⚡"], ["quick", "⚡"], ["lightning", "⚡"], ["rapide", "⚡"], ["éclair", "⚡"], ["brav", "😇"], ["lieb", "😇"], ["good", "😇"], ["sage", "😇"], ["leise", "🤫"], ["still", "🤫"], ["quiet", "🤫"], ["silence", "🤫"], ["laut", "📣"], ["loud", "📣"], ["t-shirt", "👕"], ["tshirt", "👕"], ["hemd", "👕"], ["shirt", "👕"], ["chemise", "👕"], ["krawatte", "👔"], ["tie", "👔"], ["cravate", "👔"], ["hose", "👖"], ["jeans", "👖"], ["trousers", "👖"], ["pants", "👖"], ["pantalon", "👖"], ["kleid", "👗"], ["dress", "👗"], ["robe", "👗"], ["jacke", "🧥"], ["mantel", "🧥"], ["jacket", "🧥"], ["coat", "🧥"], ["veste", "🧥"], ["manteau", "🧥"], ["pullover", "🧶"], ["pulli", "🧶"], ["jumper", "🧶"], ["sweater", "🧶"], ["fl:pull", "🧶"], ["schuh", "👟"], ["schuhe", "👟"], ["turnschuh", "👟"], ["turnschuhe", "👟"], ["shoe", "👟"], ["shoes", "👟"], ["trainers", "👟"], ["sneakers", "👟"], ["chaussure", "👟"], ["chaussures", "👟"], ["basket", "👟"], ["baskets", "👟"], ["stiefel", "👢"], ["fl:boot", "👢"], ["boots", "👢"], ["botte", "👢"], ["bottes", "👢"], ["mütze", "🧢"], ["kappe", "🧢"], ["cap", "🧢"], ["hat", "🧢"], ["casquette", "🧢"], ["bonnet", "🧢"], ["hut", "🎩"], ["top hat", "🎩"], ["chapeau", "🎩"], ["socke", "🧦"], ["socken", "🧦"], ["sock", "🧦"], ["socks", "🧦"], ["chaussette", "🧦"], ["chaussettes", "🧦"], ["handschuh", "🧤"], ["handschuhe", "🧤"], ["glove", "🧤"], ["gloves", "🧤"], ["gant", "🧤"], ["gants", "🧤"], ["schal", "🧣"], ["scarf", "🧣"], ["écharpe", "🧣"], ["brille", "👓"], ["glasses", "👓"], ["lunettes", "👓"], ["band", "🎀"], ["schleife", "🎀"], ["ribbon", "🎀"], ["bow", "🎀"], ["ruban", "🎀"], ["nœud", "🎀"], ["kurze hose", "🩳"], ["shorts", "🩳"], ["short", "🩳"], ["bikini", "👙"], ["badeanzug", "🩱"], ["swimsuit", "🩱"], ["maillot de bain", "🩱"], ["rettungsweste", "🦺"], ["schwimmweste", "🦺"], ["lifejacket", "🦺"], ["life jacket", "🦺"], ["gilet de sauvetage", "🦺"], ["handtasche", "👜"], ["tasche", "👜"], ["bag", "👜"], ["handbag", "👜"], ["sac", "👜"], ["armbanduhr", "⌚"], ["montre", "⌚"], ["regenschirm", "☂️"], ["schirm", "☂️"], ["umbrella", "☂️"], ["parapluie", "☂️"], ["hund", "🐕"], ["dog", "🐕"], ["chien", "🐕"], ["katze", "🐈"], ["cat", "🐈"], ["chat", "🐈"], ["maus", "🐁"], ["mouse", "🐁"], ["souris", "🐁"], ["hamster", "🐹"], ["hase", "🐰"], ["kaninchen", "🐰"], ["rabbit", "🐰"], ["bunny", "🐰"], ["hare", "🐰"], ["lapin", "🐰"], ["lièvre", "🐰"], ["vogel", "🐦"], ["bird", "🐦"], ["oiseau", "🐦"], ["fisch", "🐟"], ["fish", "🐟"], ["poisson", "🐟"], ["pferd", "🐴"], ["horse", "🐴"], ["cheval", "🐴"], ["kuh", "🐄"], ["cow", "🐄"], ["vache", "🐄"], ["schwein", "🐖"], ["pig", "🐖"], ["cochon", "🐖"], ["schaf", "🐑"], ["sheep", "🐑"], ["mouton", "🐑"], ["ziege", "🐐"], ["geiss", "🐐"], ["goat", "🐐"], ["chèvre", "🐐"], ["huhn", "🐔"], ["henne", "🐔"], ["chicken", "🐔"], ["hen", "🐔"], ["poule", "🐔"], ["hahn", "🐓"], ["rooster", "🐓"], ["coq", "🐓"], ["ente", "🦆"], ["duck", "🦆"], ["canard", "🦆"], ["eule", "🦉"], ["owl", "🦉"], ["hibou", "🦉"], ["chouette", "🦉"], ["frosch", "🐸"], ["frog", "🐸"], ["grenouille", "🐸"], ["schildkröte", "🐢"], ["turtle", "🐢"], ["tortoise", "🐢"], ["tortue", "🐢"], ["schlange", "🐍"], ["snake", "🐍"], ["serpent", "🐍"], ["löwe", "🦁"], ["lion", "🦁"], ["tiger", "🐯"], ["tigre", "🐯"], ["elefant", "🐘"], ["elephant", "🐘"], ["éléphant", "🐘"], ["affe", "🐒"], ["monkey", "🐒"], ["singe", "🐒"], ["giraffe", "🦒"], ["girafe", "🦒"], ["zebra", "🦓"], ["zèbre", "🦓"], ["bär", "🐻"], ["bear", "🐻"], ["ours", "🐻"], ["panda", "🐼"], ["koala", "🐨"], ["fuchs", "🦊"], ["fox", "🦊"], ["renard", "🦊"], ["wolf", "🐺"], ["loup", "🐺"], ["hirsch", "🦌"], ["reh", "🦌"], ["deer", "🦌"], ["cerf", "🦌"], ["biche", "🦌"], ["eichhörnchen", "🐿️"], ["squirrel", "🐿️"], ["écureuil", "🐿️"], ["igel", "🦔"], ["hedgehog", "🦔"], ["hérisson", "🦔"], ["fledermaus", "🦇"], ["bat", "🦇"], ["chauve-souris", "🦇"], ["biene", "🐝"], ["bee", "🐝"], ["abeille", "🐝"], ["schmetterling", "🦋"], ["butterfly", "🦋"], ["papillon", "🦋"], ["marienkäfer", "🐞"], ["ladybird", "🐞"], ["ladybug", "🐞"], ["coccinelle", "🐞"], ["ameise", "🐜"], ["ant", "🐜"], ["fourmi", "🐜"], ["spinne", "🕷️"], ["spider", "🕷️"], ["araignée", "🕷️"], ["schnecke", "🐌"], ["snail", "🐌"], ["escargot", "🐌"], ["raupe", "🐛"], ["wurm", "🐛"], ["caterpillar", "🐛"], ["worm", "🐛"], ["chenille", "🐛"], ["ver", "🐛"], ["delfin", "🐬"], ["delphin", "🐬"], ["dolphin", "🐬"], ["dauphin", "🐬"], ["wal", "🐳"], ["whale", "🐳"], ["baleine", "🐳"], ["hai", "🦈"], ["shark", "🦈"], ["requin", "🦈"], ["tintenfisch", "🐙"], ["krake", "🐙"], ["octopus", "🐙"], ["pieuvre", "🐙"], ["krebs", "🦀"], ["krabbe", "🦀"], ["crab", "🦀"], ["crabe", "🦀"], ["pinguin", "🐧"], ["penguin", "🐧"], ["pingouin", "🐧"], ["manchot", "🐧"], ["papagei", "🦜"], ["parrot", "🦜"], ["perroquet", "🦜"], ["krokodil", "🐊"], ["crocodile", "🐊"], ["dinosaurier", "🦖"], ["dino", "🦖"], ["dinosaur", "🦖"], ["dinosaure", "🦖"], ["drache", "🐉"], ["dragon", "🐉"], ["einhorn", "🦄"], ["unicorn", "🦄"], ["licorne", "🦄"], ["kamel", "🐪"], ["camel", "🐪"], ["chameau", "🐪"], ["känguru", "🦘"], ["kangaroo", "🦘"], ["kangourou", "🦘"], ["springen", "🦘"], ["hüpfen", "🦘"], ["jump", "🦘"], ["hop", "🦘"], ["sauter", "🦘"], ["mäuschen", "🐭"], ["tier", "🐾"], ["tiere", "🐾"], ["animal", "🐾"], ["animals", "🐾"], ["animaux", "🐾"], ["apfel", "🍎"], ["apple", "🍎"], ["pomme", "🍎"], ["birne", "🍐"], ["pear", "🍐"], ["poire", "🍐"], ["banane", "🍌"], ["banana", "🍌"], ["orange", "🍊"], ["mandarine", "🍊"], ["tangerine", "🍊"], ["zitrone", "🍋"], ["lemon", "🍋"], ["citron", "🍋"], ["erdbeere", "🍓"], ["strawberry", "🍓"], ["fraise", "🍓"], ["kirsche", "🍒"], ["cherry", "🍒"], ["cerise", "🍒"], ["traube", "🍇"], ["trauben", "🍇"], ["grapes", "🍇"], ["grape", "🍇"], ["raisin", "🍇"], ["wassermelone", "🍉"], ["melone", "🍉"], ["watermelon", "🍉"], ["melon", "🍉"], ["pastèque", "🍉"], ["ananas", "🍍"], ["pineapple", "🍍"], ["kiwi", "🥝"], ["pfirsich", "🍑"], ["peach", "🍑"], ["pêche", "🍑"], ["karotte", "🥕"], ["rüebli", "🥕"], ["möhre", "🥕"], ["carrot", "🥕"], ["carotte", "🥕"], ["kartoffel", "🥔"], ["potato", "🥔"], ["pomme de terre", "🥔"], ["tomate", "🍅"], ["tomato", "🍅"], ["gurke", "🥒"], ["cucumber", "🥒"], ["concombre", "🥒"], ["brokkoli", "🥦"], ["broccoli", "🥦"], ["brocoli", "🥦"], ["mais", "🌽"], ["corn", "🌽"], ["maïs", "🌽"], ["zwiebel", "🧅"], ["onion", "🧅"], ["oignon", "🧅"], ["salat", "🥗"], ["salad", "🥗"], ["salade", "🥗"], ["pilz", "🍄"], ["mushroom", "🍄"], ["champignon", "🍄"], ["brot", "🍞"], ["bread", "🍞"], ["pain", "🍞"], ["gipfeli", "🥐"], ["croissant", "🥐"], ["käse", "🧀"], ["cheese", "🧀"], ["fromage", "🧀"], ["ei", "🥚"], ["egg", "🥚"], ["œuf", "🥚"], ["oeuf", "🥚"], ["milch", "🥛"], ["milk", "🥛"], ["lait", "🥛"], ["butter", "🧈"], ["beurre", "🧈"], ["honig", "🍯"], ["honey", "🍯"], ["miel", "🍯"], ["pizza", "🍕"], ["spaghetti", "🍝"], ["nudeln", "🍝"], ["teigwaren", "🍝"], ["pasta", "🍝"], ["pâtes", "🍝"], ["reis", "🍚"], ["rice", "🍚"], ["riz", "🍚"], ["hamburger", "🍔"], ["burger", "🍔"], ["pommes frites", "🍟"], ["de:pommes", "🍟"], ["chips", "🍟"], ["fries", "🍟"], ["frites", "🍟"], ["wurst", "🌭"], ["hotdog", "🌭"], ["hot dog", "🌭"], ["sausage", "🌭"], ["saucisse", "🌭"], ["poulet", "🍗"], ["chicken leg", "🍗"], ["fleisch", "🥩"], ["meat", "🥩"], ["viande", "🥩"], ["kuchen", "🍰"], ["torte", "🍰"], ["cake", "🍰"], ["gâteau", "🍰"], ["geburtstag", "🎂"], ["geburtstagstorte", "🎂"], ["birthday", "🎂"], ["anniversaire", "🎂"], ["guetzli", "🍪"], ["keks", "🍪"], ["cookie", "🍪"], ["biscuit", "🍪"], ["schokolade", "🍫"], ["chocolate", "🍫"], ["chocolat", "🍫"], ["bonbon", "🍬"], ["süssigkeit", "🍬"], ["sweet", "🍬"], ["sweets", "🍬"], ["candy", "🍬"], ["glace", "🍦"], ["eis", "🍦"], ["ice cream", "🍦"], ["donut", "🍩"], ["doughnut", "🍩"], ["beignet", "🍩"], ["pfannkuchen", "🥞"], ["crêpe", "🥞"], ["pancake", "🥞"], ["pancakes", "🥞"], ["müesli", "🥣"], ["cornflakes", "🥣"], ["cereal", "🥣"], ["céréales", "🥣"], ["tee", "🍵"], ["tea", "🍵"], ["thé", "🍵"], ["kaffee", "☕"], ["coffee", "☕"], ["café", "☕"], ["saft", "🧃"], ["juice", "🧃"], ["jus", "🧃"], ["wasser", "💧"], ["water", "💧"], ["eau", "💧"], ["tropfen", "💧"], ["drop", "💧"], ["goutte", "💧"], ["essen", "🍽️"], ["mittagessen", "🍽️"], ["zu mittag essen", "🍽️"], ["eat", "🍽️"], ["eat lunch", "🍽️"], ["lunch", "🍽️"], ["dinner", "🍽️"], ["meal", "🍽️"], ["manger", "🍽️"], ["repas", "🍽️"], ["déjeuner", "🍽️"], ["kochen", "🍳"], ["cook", "🍳"], ["cuisiner", "🍳"], ["faire la cuisine", "🍳"], ["sandwich", "🥪"], ["sandwichs", "🥪"], ["grüner apfel", "🍏"], ["green apple", "🍏"], ["augen", "👀"], ["auge", "👀"], ["eye", "👀"], ["eyes", "👀"], ["œil", "👀"], ["yeux", "👀"], ["ohr", "👂"], ["ohren", "👂"], ["ear", "👂"], ["ears", "👂"], ["oreille", "👂"], ["oreilles", "👂"], ["hören", "👂"], ["zuhören", "👂"], ["listen", "👂"], ["hear", "👂"], ["écouter", "👂"], ["entendre", "👂"], ["nase", "👃"], ["nose", "👃"], ["nez", "👃"], ["mund", "👄"], ["mouth", "👄"], ["bouche", "👄"], ["zahn", "🦷"], ["zähne", "🦷"], ["tooth", "🦷"], ["teeth", "🦷"], ["dent", "🦷"], ["dents", "🦷"], ["zunge", "👅"], ["tongue", "👅"], ["langue", "👅"], ["hand", "✋"], ["hände", "✋"], ["hands", "✋"], ["main", "✋"], ["mains", "✋"], ["fuss", "🦶"], ["füsse", "🦶"], ["foot", "🦶"], ["feet", "🦶"], ["pied", "🦶"], ["pieds", "🦶"], ["bein", "🦵"], ["beine", "🦵"], ["leg", "🦵"], ["legs", "🦵"], ["jambe", "🦵"], ["jambes", "🦵"], ["arm", "💪"], ["arme", "💪"], ["arms", "💪"], ["bras", "💪"], ["haar", "💇"], ["haare", "💇"], ["hair", "💇"], ["cheveux", "💇"], ["kopf", "🧠"], ["gehirn", "🧠"], ["head", "🧠"], ["brain", "🧠"], ["tête", "🧠"], ["cerveau", "🧠"], ["finger", "👆"], ["doigt", "👆"], ["zeigen", "👆"], ["knochen", "🦴"], ["bone", "🦴"], ["os", "🦴"], ["sonne", "☀️"], ["sonnig", "☀️"], ["sommer", "☀️"], ["sun", "☀️"], ["sunny", "☀️"], ["summer", "☀️"], ["soleil", "☀️"], ["été", "☀️"], ["regen", "🌧️"], ["regnen", "🌧️"], ["rain", "🌧️"], ["rainy", "🌧️"], ["pluie", "🌧️"], ["pleuvoir", "🌧️"], ["schnee", "❄️"], ["schneien", "❄️"], ["snow", "❄️"], ["neige", "❄️"], ["neiger", "❄️"], ["winter", "⛄"], ["schneemann", "⛄"], ["snowman", "⛄"], ["hiver", "⛄"], ["bonhomme de neige", "⛄"], ["frühling", "🌷"], ["tulpe", "🌷"], ["spring", "🌷"], ["tulip", "🌷"], ["printemps", "🌷"], ["tulipe", "🌷"], ["herbst", "🍂"], ["blatt", "🍂"], ["blätter", "🍂"], ["autumn", "🍂"], ["leaf", "🍂"], ["leaves", "🍂"], ["automne", "🍂"], ["feuille", "🍂"], ["feuilles", "🍂"], ["wolke", "☁️"], ["bewölkt", "☁️"], ["cloud", "☁️"], ["cloudy", "☁️"], ["nuage", "☁️"], ["nuageux", "☁️"], ["wind", "🌬️"], ["windig", "🌬️"], ["windy", "🌬️"], ["vent", "🌬️"], ["gewitter", "⛈️"], ["sturm", "⛈️"], ["storm", "⛈️"], ["thunderstorm", "⛈️"], ["orage", "⛈️"], ["tempête", "⛈️"], ["regenbogen", "🌈"], ["rainbow", "🌈"], ["arc-en-ciel", "🌈"], ["mond", "🌙"], ["nacht", "🌙"], ["in der nacht", "🌙"], ["moon", "🌙"], ["night", "🌙"], ["at night", "🌙"], ["lune", "🌙"], ["nuit", "🌙"], ["stern", "⭐"], ["star", "⭐"], ["étoile", "⭐"], ["morgen", "🌅"], ["am morgen", "🌅"], ["sonnenaufgang", "🌅"], ["morning", "🌅"], ["in the morning", "🌅"], ["sunrise", "🌅"], ["matin", "🌅"], ["mittag", "🕛"], ["am mittag", "🕛"], ["midday", "🕛"], ["noon", "🕛"], ["at midday", "🕛"], ["midi", "🕛"], ["nachmittag", "🌇"], ["am nachmittag", "🌇"], ["afternoon", "🌇"], ["in the afternoon", "🌇"], ["après-midi", "🌇"], ["abend", "🌆"], ["am abend", "🌆"], ["evening", "🌆"], ["in the evening", "🌆"], ["soir", "🌆"], ["welt", "🌍"], ["erde", "🌍"], ["land", "🌍"], ["world", "🌍"], ["earth", "🌍"], ["country", "🌍"], ["monde", "🌍"], ["terre", "🌍"], ["pays", "🌍"], ["meer", "🌊"], ["welle", "🌊"], ["sea", "🌊"], ["ocean", "🌊"], ["wave", "🌊"], ["mer", "🌊"], ["océan", "🌊"], ["vague", "🌊"], ["de:see", "🏞️"], ["lake", "🏞️"], ["lac", "🏞️"], ["strand", "🏖️"], ["ufer", "🏖️"], ["küste", "🏖️"], ["beach", "🏖️"], ["shore", "🏖️"], ["coast", "🏖️"], ["plage", "🏖️"], ["côte", "🏖️"], ["rive", "🏖️"], ["berg", "🏔️"], ["berge", "🏔️"], ["mountain", "🏔️"], ["mountains", "🏔️"], ["montagne", "🏔️"], ["wald", "🌲"], ["tanne", "🌲"], ["forest", "🌲"], ["wood", "🌲"], ["woods", "🌲"], ["fir", "🌲"], ["forêt", "🌲"], ["sapin", "🌲"], ["blume", "🌸"], ["blüte", "🌸"], ["flower", "🌸"], ["blossom", "🌸"], ["fleur", "🌸"], ["sonnenblume", "🌻"], ["sunflower", "🌻"], ["tournesol", "🌻"], ["kaktus", "🌵"], ["cactus", "🌵"], ["glück", "🍀"], ["kleeblatt", "🍀"], ["luck", "🍀"], ["clover", "🍀"], ["chance", "🍀"], ["trèfle", "🍀"], ["feuer", "🔥"], ["fire", "🔥"], ["feu", "🔥"], ["vulkan", "🌋"], ["volcano", "🌋"], ["volcan", "🌋"], ["insel", "🏝️"], ["island", "🏝️"], ["île", "🏝️"], ["stein", "🪨"], ["felsen", "🪨"], ["stone", "🪨"], ["pierre", "🪨"], ["rocher", "🪨"], ["pflanze", "🌱"], ["plant", "🌱"], ["plante", "🌱"], ["park", "🌳"], ["garten", "🌳"], ["garden", "🌳"], ["jardin", "🌳"], ["parc", "🌳"], ["haus", "🏠"], ["zuhause", "🏠"], ["house", "🏠"], ["home", "🏠"], ["maison", "🏠"], ["bett", "🛏️"], ["schlafzimmer", "🛏️"], ["bed", "🛏️"], ["bedroom", "🛏️"], ["lit", "🛏️"], ["chambre", "🛏️"], ["sofa", "🛋️"], ["wohnzimmer", "🛋️"], ["living room", "🛋️"], ["salon", "🛋️"], ["canapé", "🛋️"], ["tür", "🚪"], ["türe", "🚪"], ["door", "🚪"], ["porte", "🚪"], ["fenster", "🪟"], ["window", "🪟"], ["fenêtre", "🪟"], ["badewanne", "🛁"], ["badezimmer", "🛁"], ["bathroom", "🛁"], ["bath", "🛁"], ["bain", "🛁"], ["salle de bains", "🛁"], ["dusche", "🚿"], ["duschen", "🚿"], ["shower", "🚿"], ["douche", "🚿"], ["toilette", "🚽"], ["wc", "🚽"], ["toilet", "🚽"], ["toilets", "🚽"], ["toilettes", "🚽"], ["schlüssel", "🔑"], ["key", "🔑"], ["clé", "🔑"], ["lampe", "💡"], ["licht", "💡"], ["idee", "💡"], ["lamp", "💡"], ["light", "💡"], ["idea", "💡"], ["lumière", "💡"], ["idée", "💡"], ["fernseher", "📺"], ["fernsehen", "📺"], ["tv", "📺"], ["television", "📺"], ["watch tv", "📺"], ["télé", "📺"], ["télévision", "📺"], ["teddy", "🧸"], ["teddybär", "🧸"], ["spielzeug", "🧸"], ["toy", "🧸"], ["teddy bear", "🧸"], ["jouet", "🧸"], ["nounours", "🧸"], ["fussball", "⚽"], ["ball", "⚽"], ["football", "⚽"], ["soccer", "⚽"], ["ballon", "⚽"], ["basketball", "🏀"], ["tennis", "🎾"], ["volleyball", "🏐"], ["velo", "🚲"], ["fahrrad", "🚲"], ["bike", "🚲"], ["bicycle", "🚲"], ["vélo", "🚲"], ["trottinett", "🛴"], ["scooter", "🛴"], ["trottinette", "🛴"], ["skateboard", "🛹"], ["eislaufen", "⛸️"], ["schlittschuh", "⛸️"], ["ice skating", "⛸️"], ["skate", "⛸️"], ["patin", "⛸️"], ["patiner", "⛸️"], ["skifahren", "⛷️"], ["ski", "⛷️"], ["skiing", "⛷️"], ["faire du ski", "⛷️"], ["schwimmen", "🏊"], ["swim", "🏊"], ["swimming", "🏊"], ["nager", "🏊"], ["natation", "🏊"], ["rennen", "🏃"], ["laufen", "🏃"], ["joggen", "🏃"], ["run", "🏃"], ["running", "🏃"], ["jog", "🏃"], ["courir", "🏃"], ["tanzen", "💃"], ["dance", "💃"], ["danser", "💃"], ["singen", "🎤"], ["mikrofon", "🎤"], ["sing", "🎤"], ["singer", "🎤"], ["microphone", "🎤"], ["chanter", "🎤"], ["chanteur", "🎤"], ["gitarre", "🎸"], ["guitar", "🎸"], ["guitare", "🎸"], ["klavier", "🎹"], ["piano", "🎹"], ["trommel", "🥁"], ["schlagzeug", "🥁"], ["drum", "🥁"], ["drums", "🥁"], ["tambour", "🥁"], ["batterie", "🥁"], ["geige", "🎻"], ["violine", "🎻"], ["violin", "🎻"], ["violon", "🎻"], ["trompete", "🎺"], ["trumpet", "🎺"], ["trompette", "🎺"], ["würfel", "🎲"], ["spiel", "🎲"], ["spielen", "🎲"], ["dice", "🎲"], ["game", "🎲"], ["play", "🎲"], ["dé", "🎲"], ["jeu", "🎲"], ["jouer", "🎲"], ["puzzle", "🧩"], ["rätsel", "🧩"], ["riddle", "🧩"], ["énigme", "🧩"], ["geschenk", "🎁"], ["present", "🎁"], ["gift", "🎁"], ["cadeau", "🎁"], ["luftballon", "🎈"], ["balloon", "🎈"], ["party", "🎉"], ["fest", "🎉"], ["feiern", "🎉"], ["celebrate", "🎉"], ["fête", "🎉"], ["faire la fête", "🎉"], ["weihnachten", "🎄"], ["christmas", "🎄"], ["noël", "🎄"], ["ostern", "🐣"], ["easter", "🐣"], ["pâques", "🐣"], ["halloween", "🎃"], ["kürbis", "🎃"], ["pumpkin", "🎃"], ["citrouille", "🎃"], ["kerze", "🕯️"], ["candle", "🕯️"], ["bougie", "🕯️"], ["fotoapparat", "📷"], ["kamera", "📷"], ["foto", "📷"], ["camera", "📷"], ["photo", "📷"], ["appareil photo", "📷"], ["bild", "🖼️"], ["picture", "🖼️"], ["image", "🖼️"], ["tableau", "🖼️"], ["hammer", "🔨"], ["marteau", "🔨"], ["besen", "🧹"], ["putzen", "🧹"], ["broom", "🧹"], ["clean", "🧹"], ["balai", "🧹"], ["nettoyer", "🧹"], ["zahnbürste", "🪥"], ["zähne putzen", "🪥"], ["toothbrush", "🪥"], ["brush teeth", "🪥"], ["brosse à dents", "🪥"], ["seife", "🧼"], ["waschen", "🧼"], ["soap", "🧼"], ["wash", "🧼"], ["savon", "🧼"], ["laver", "🧼"], ["geld", "💰"], ["money", "💰"], ["argent", "💰"], ["einkaufen", "🛒"], ["einkaufswagen", "🛒"], ["shopping", "🛒"], ["go shopping", "🛒"], ["faire les courses", "🛒"], ["laden", "🏪"], ["geschäft", "🏪"], ["shop", "🏪"], ["store", "🏪"], ["magasin", "🏪"], ["spital", "🏥"], ["krankenhaus", "🏥"], ["hospital", "🏥"], ["hôpital", "🏥"], ["kirche", "⛪"], ["church", "⛪"], ["église", "⛪"], ["schloss", "🏰"], ["burg", "🏰"], ["castle", "🏰"], ["château", "🏰"], ["stadion", "🏟️"], ["stadium", "🏟️"], ["stade", "🏟️"], ["fahne", "🚩"], ["flagge", "🚩"], ["flag", "🚩"], ["drapeau", "🚩"], ["sprechen", "🗣️"], ["sprache", "🗣️"], ["speak", "🗣️"], ["language", "🗣️"], ["talk", "🗣️"], ["parler", "🗣️"], ["hallo", "👋"], ["tschüss", "👋"], ["grüezi", "👋"], ["hello", "👋"], ["hi", "👋"], ["goodbye", "👋"], ["bye", "👋"], ["bonjour", "👋"], ["salut", "👋"], ["au revoir", "👋"], ["bitte", "🙏"], ["danke", "🙏"], ["please", "🙏"], ["thank you", "🙏"], ["thanks", "🙏"], ["merci", "🙏"], ["s'il te plaît", "🙏"], ["s'il vous plaît", "🙏"], ["ja", "✅"], ["yes", "✅"], ["oui", "✅"], ["richtig", "✅"], ["right", "✅"], ["correct", "✅"], ["juste", "✅"], ["nein", "❌"], ["no", "❌"], ["non", "❌"], ["falsch", "❌"], ["wrong", "❌"], ["faux", "❌"], ["fehler", "❌"], ["mistake", "❌"], ["fault", "❌"], ["erreur", "❌"], ["auto", "🚗"], ["wagen", "🚗"], ["car", "🚗"], ["voiture", "🚗"], ["bus", "🚌"], ["autobus", "🚌"], ["zug", "🚆"], ["train", "🚆"], ["lokomotive", "🚂"], ["eisenbahn", "🚂"], ["locomotive", "🚂"], ["flugzeug", "✈️"], ["fliegen", "✈️"], ["plane", "✈️"], ["airplane", "✈️"], ["fly", "✈️"], ["avion", "✈️"], ["voler", "✈️"], ["rakete", "🚀"], ["rocket", "🚀"], ["fusée", "🚀"], ["schiff", "🚢"], ["ship", "🚢"], ["bateau", "🚢"], ["navire", "🚢"], ["segelboot", "⛵"], ["de:boot", "⛵"], ["sailing boat", "⛵"], ["boat", "⛵"], ["voilier", "⛵"], ["helikopter", "🚁"], ["hubschrauber", "🚁"], ["helicopter", "🚁"], ["hélicoptère", "🚁"], ["feuerwehrauto", "🚒"], ["fire engine", "🚒"], ["camion de pompiers", "🚒"], ["krankenwagen", "🚑"], ["ambulanz", "🚑"], ["ambulance", "🚑"], ["polizeiauto", "🚓"], ["police car", "🚓"], ["voiture de police", "🚓"], ["traktor", "🚜"], ["tractor", "🚜"], ["tracteur", "🚜"], ["ampel", "🚦"], ["traffic lights", "🚦"], ["feux", "🚦"], ["reise", "🗺️"], ["ausflug", "🗺️"], ["trip", "🗺️"], ["journey", "🗺️"], ["voyage", "🗺️"], ["klettern", "🧗"], ["climb", "🧗"], ["climbing", "🧗"], ["grimper", "🧗"], ["escalader", "🧗"], ["schlaf", "💤"]]);
+const EMO_PRE=/^(?:(?:am|im|um|in der|in the|at|on|to|der|die|das|den|dem|des|ein|eine|einen|the|a|an|le|la|les|un|une|des|du|el|il|lo)\s+)+/;
+function emoKeys(t){t=String(t||'').toLowerCase().normalize('NFC').replace(/[’‘ʼ`´]/g,"'").replace(/\([^)]*\)/g,' ').replace(/\*(?:in|e|r)\b|\*/g,'');
+  return t.split(/\s*[\/,;]\s*|\s+oder\s+|\s+or\s+|\s+ou\s+/).map(x=>x.replace(/[.!?…]+/g,' ').replace(/\s+/g,' ').trim().replace(EMO_PRE,'').replace(/^l'/,'').trim()).filter(Boolean)}
+function autoEmo(w){for(const k of emoKeys(w.de)){const e=EMO.get('de:'+k)||EMO.get(k);if(e)return e}
+  for(const k of emoKeys(w.f)){const e=EMO.get('fl:'+k)||EMO.get(k);if(e)return e}return null}
+const isImgUrl=v=>/^data:image\//.test(v||'');
+const picOf=w=>!w||w.img==='-'?null:(w.img||autoEmo(w));
+const bildOK=w=>!!picOf(w);
+const picHTML=(v,cls='')=>!v?'':isImgUrl(v)?`<img class="pic ${cls}" src="${esc(v)}" alt="" draggable="false">`:`<span class="pic emo ${cls}" aria-hidden="true">${esc(v)}</span>`;
+/* Emoji-Suche für die Lehrperson: alle Bilder, deren Stichwort mit dem Suchwort beginnt */
+function emoFind(q){q=String(q||'').toLowerCase().trim();const out=[];if(!q)return out;
+  for(const [k,e] of EMO){const kk=k.replace(/^(de|fl):/,'');if((kk.startsWith(q)||kk.split(' ').some(x=>x.startsWith(q)))&&!out.includes(e))out.push(e);if(out.length>=40)break}return out}
+const EMO_GRUND=['🍎','🐕','🐈','🏫','📕','✏️','🎒','👩','👨','👧','👦','👪','😊','😢','😠','😴','☀️','🌧️','❄️','🍂','🌷','🏠','🚲','⚽','🎵','🎨','🍕','🧀','🍞','🥛','👕','👖','👟','🧢','🎁','⭐','❤️','✅','❌','🗣️'];
+
+/* Eigenes Bild: quadratisch zuschneiden, 200 px, als webp (sonst jpeg). Klein genug für die Klassenkiste. */
+function picFromFile(file){return new Promise((res,rej)=>{
+  if(!file||!/^image\//.test(file.type)){rej(new Error('Das ist kein Bild.'));return}
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{try{const S=200,c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');
+      const m=Math.min(img.naturalWidth,img.naturalHeight),sx=(img.naturalWidth-m)/2,sy=(img.naturalHeight-m)/2;
+      g.imageSmoothingQuality='high';g.drawImage(img,sx,sy,m,m,0,0,S,S);URL.revokeObjectURL(url);
+      let d=c.toDataURL('image/webp',.78);
+      if(!/^data:image\/webp/.test(d)){const c2=document.createElement('canvas');c2.width=S;c2.height=S;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,S,S);g2.drawImage(c,0,0);d=c2.toDataURL('image/jpeg',.8)}
+      res(d)}catch(e){rej(e)}};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Das Bild lässt sich nicht öffnen.'))};img.src=url})}
+
+/* Bild-Auswahl für ein Wort (Lehrperson) */
+function picDialog(w,onDone){
+  const L=$('#layer');let cur=w.img;
+  const now=()=>cur==='-'?null:(cur||autoEmo(w));
+  const draw=()=>{const v=now(),auto=!cur&&!!v;
+    L.innerHTML=`<div class="scrim"></div><div class="dlg picdlg" role="dialog" aria-label="Bild wählen">
+      <h2 class="lbl">Bild für «${esc(w.de)} = ${esc(w.f)}»</h2>
+      <div class="pdnow">${v?picHTML(v,'big'):'<span class="pic none big">–</span>'}<p>${auto?'Automatisch gewählt. Passt es nicht? Such unten ein anderes oder lade ein eigenes Bild hoch.':cur==='-'?'Dieses Wort hat kein Bild. Es kommt bei «Bild &amp; Wort» nicht vor.':v?'Dieses Bild hast du gewählt.':'Noch kein Bild gefunden. Such unten eines oder lade ein eigenes hoch.'}</p></div>
+      <input class="inp" id="pdq" placeholder="Bild suchen (z. B. Hund, apple) oder Emoji einfügen" aria-label="Bild suchen" autocomplete="off">
+      <div class="pdgrid" id="pdgrid"></div>
+      <div class="dact pdact"><label class="pill"><input type="file" accept="image/*" id="pdfile" hidden>📷 Eigenes Bild</label>
+        ${cur?'<button class="pill" id="pdauto">Automatisch</button>':''}${cur!=='-'?'<button class="pill" id="pdnone">Kein Bild</button>':''}<span class="sp"></span><button class="pill go" id="pdok">Fertig</button></div></div>`;
+    const grid=$('#pdgrid',L),q=$('#pdq',L);
+    const fill=()=>{const t=q.value.trim();let list=t?emoFind(t):[...new Set([...emoKeys(w.de).flatMap(emoFind),...EMO_GRUND])].slice(0,40);
+      const own=t&&/\p{Extended_Pictographic}/u.test(t)?[t.replace(/[\p{L}\p{N}\s]/gu,'')].filter(Boolean):[];
+      list=[...own,...list.filter(e=>!own.includes(e))];
+      grid.innerHTML=list.length?list.map(e=>`<button class="pdo" data-e="${esc(e)}">${esc(e)}</button>`).join(''):'<p class="note">Nichts gefunden. Versuch ein anderes Wort oder lade ein eigenes Bild hoch.</p>';
+      $$('[data-e]',grid).forEach(b=>b.onclick=()=>{cur=b.dataset.e;draw()})};
+    q.oninput=fill;fill();
+    const close=()=>{L.innerHTML='';onDone()};
+    $('.scrim',L).onclick=close;$('#pdok',L).onclick=()=>{if(cur)w.img=cur;else delete w.img;close()};
+    const pa=$('#pdauto',L);if(pa)pa.onclick=()=>{cur=undefined;draw()};
+    const pn=$('#pdnone',L);if(pn)pn.onclick=()=>{cur='-';draw()};
+    $('#pdfile',L).onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+      try{cur=await picFromFile(f);draw()}catch(x){toast(x.message||'Das Bild ging nicht.')}};
+  };draw();
+}
+function bindPics(node,redraw){$$('#etab [data-pic]').forEach(b=>b.onclick=()=>{const w=node.words.find(x=>x.id===b.dataset.pic);if(!w)return;
+  const before=w.img;picDialog(w,()=>{if(w.img!==before){touch();redraw()}})})}
+const picCell=w=>{const v=picOf(w);return `<button type="button" class="picb ${v&&!w.img?'auto':''}" data-pic="${w.id}" title="Bild wählen" aria-label="Bild für ${esc(w.de)} wählen">${v?picHTML(v):'<span class="plus">+</span>'}</button>`};
+
+/* ---------- Knobelnest: neue Übungen «Bild & Wort» und «Sprechen» ---------- */
+ICONS.bild=I('<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>');
+ICONS.sprechen=I('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>');
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+const canRecord=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+const sprechOK=w=>!w.x;
+function knMoreModes(MODES,ws){
+  const bilN=ws.filter(bildOK).length,spN=ws.filter(sprechOK).length;
+  const bild=['bild','Bild & Wort',bilN>=2?`Zu jedem Bild das richtige Wort finden und umgekehrt. ${bilN} ${bilN===1?'Wort':'Wörter'} mit Bild.`:'Hier gibt es noch zu wenige Wörter mit Bild.',bilN>=2];
+  const spr=['sprechen','Sprechen',`Deutsch wird angezeigt, du sagst es auf ${esc(SUB().name)}. ${SR?'Die Kiste hört zu.':'Du nimmst dich auf und vergleichst.'}`,spN];
+  const ia=MODES.findIndex(m=>m[0]==='karte');if(bilN>=2||T)MODES.splice(ia+1,0,bild);
+  const ib=MODES.findIndex(m=>m[0]==='hoeren');MODES.splice(ib+1,0,spr);
+}
+
+/* Bild & Wort: abwechselnd Bild -> Wort wählen und Wort (vorgelesen) -> Bild wählen */
+function modeBild(subset){
+  const all=SET.words.filter(bildOK);
+  const list=subset?shuffle(subset):freshOrder(all.map(w=>w.id),(SET.key||'')+':bild'),total=list.length;
+  const body=shell('Bild &amp; Wort');let queue=list.slice(),done=0,tries=0,turn=Math.random()<.5?0:1;const hard=new Set();
+  const others=w=>{const inf=IDX.get(w.id),own=inf&&inf.portion&&inf.portion.words?inf.portion.words.filter(x=>valid(x)&&bildOK(x)):[];
+    const out=[],sp=new Set([picOf(w)]),sw=new Set([norm(w.f)]);
+    for(const src of [own,all,subWords(SUB()).filter(bildOK)]){for(const o of shuffle(src)){if(out.length>=3)break;if(o.id===w.id)continue;
+      const p=picOf(o),k=norm(o.f);if(sp.has(p)||sw.has(k))continue;sp.add(p);sw.add(k);out.push(o)}if(out.length>=3)break}
+    return out};
+  const next=()=>{setProg(`${done} von ${total} richtig`,done/total);
+    if(!queue.length)return summary(body,{title:'Alle Bilder erkannt!',lines:[`${total} Wörter, ${tries} Versuche.`,hard.size?`${hard.size} ${hard.size===1?'Wort war':'Wörter waren'} zuerst falsch.`:'Fehlerfrei!'],actions:endActions(hard,modeBild)});
+    const id=queue.shift(),w=WD(id),opts=shuffle([w,...others(w)]),kind=turn++%2;
+    body.innerHTML=(kind===0
+      ?`<div class="bq"><div class="bbig">${picHTML(picOf(w))}</div><p class="hand">Welches Wort passt zum Bild?</p></div>
+        <div class="opts">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(o.f)}</span></button>`).join('')}</div>`
+      :`<div class="bq"><div class="bword">${esc(w.f)}${spkBtn(w.f)}</div><p class="hand">Welches Bild passt?</p></div>
+        <div class="bopts">${opts.map((o,i)=>`<button class="bopt" data-i="${i}" aria-label="Bild ${i+1}"><kbd>${i+1}</kbd>${picHTML(picOf(o))}</button>`).join('')}</div>`)
+      +`<div class="fb" id="fb"></div><p class="keys">Tasten 1 – ${opts.length}</p>`;
+    bindSpeak(body);if(kind===1)speak(w.f);
+    let fin=false;
+    const pick=i=>{if(fin||!opts[i])return;fin=true;const ok=opts[i].id===w.id;tries++;
+      $$('[data-i]',body).forEach((b,j)=>{if(opts[j].id===w.id)b.classList.add('right');else if(j===i)b.classList.add('wrong')});
+      $('#fb',body).innerHTML=ok?`<span class="ok">✓ Richtig!</span><span class="sub">${esc(w.f)} = ${esc(w.de)}</span>`:`<span class="no">✗ Leider falsch. Richtig ist:</span><span class="sub">${esc(w.f)} = ${esc(w.de)}</span>`;
+      speak(w.f);rec(id,ok);if(ok)done++;else{hard.add(id);reins(queue,id)}
+      later(next,ok?1300:2400)};
+    $$('[data-i]',body).forEach(b=>b.onclick=()=>pick(+b.dataset.i));
+    session.key=e=>{const n=parseInt(e.key,10);if(n>=1&&n<=opts.length){e.preventDefault();pick(n-1)}};
+  };next();
+}
+
+/* Sprechen: Das Kind sieht das deutsche Wort und sagt es in der Fremdsprache.
+   Mit Spracherkennung (Chrome, Edge, Safari) prüft die Kiste selbst (der Ton geht dafür an Google bzw. Apple).
+   Sonst: aufnehmen, anhören, mit der Vorlese-Stimme vergleichen und selbst entscheiden. */
+const SR_LANG={en:'en-GB',fr:'fr-FR',it:'it-IT',es:'es-ES',de:'de-CH'};
+const CONTR=[[/\bit's\b/g,'it is'],[/\bthat's\b/g,'that is'],[/\bwhat's\b/g,'what is'],[/\bhe's\b/g,'he is'],[/\bshe's\b/g,'she is'],[/\bthere's\b/g,'there is'],
+  [/\bi'm\b/g,'i am'],[/\byou're\b/g,'you are'],[/\bwe're\b/g,'we are'],[/\bthey're\b/g,'they are'],[/\bcan't\b/g,'cannot'],[/\bcan not\b/g,'cannot'],[/\bdon't\b/g,'do not'],
+  [/\bdoesn't\b/g,'does not'],[/\bisn't\b/g,'is not'],[/\baren't\b/g,'are not'],[/\bi've\b/g,'i have'],[/\bwe've\b/g,'we have'],[/\blet's\b/g,'let us'],[/\bo'clock\b/g,'oclock'],[/\bo clock\b/g,'oclock']];
+function spN(s){s=String(s||'').toLowerCase().normalize('NFC').replace(/[’‘ʼ`´]/g,"'");s=deacc(s);
+  CONTR.forEach(([a,b])=>{s=s.replace(a,b)});
+  return s.replace(/[-–]/g,' ').replace(/[^\p{L}\p{N}' ]/gu,' ').replace(/\s+/g,' ').trim()}
+const SP_ART=/^(?:(?:the|a|an|to|le|la|les|un|une|des|du|il|lo|el|los|las|der|die|das)\s+|l')/;
+function sayTargets(f){
+  let t=String(f||'').replace(/[’‘ʼ`´]/g,"'").replace(NOTE_RE,'');
+  const alts=t.split(/\s*[\/;]\s*|\s+or\s+|\s+ou\s+|\s*,\s*/).map(x=>x.trim()).filter(Boolean);if(!alts.length)alts.push(t);
+  const out=new Set();
+  alts.concat([t]).forEach(a=>{
+    const forms=[a.replace(/[()]/g,''),a.replace(/\([^)]*\)/g,' ')];
+    forms.forEach(x=>{x=x.replace(/…|\.\.\./g,' ');const n=spN(x);if(n){out.add(n);out.add(n.replace(SP_ART,''))}})});
+  return [...out].filter(Boolean)}
+/* «…» im Wort (z. B. «at … o'clock») = hier darf etwas Beliebiges stehen */
+function sayRx(f){return String(f||'').replace(/[’‘ʼ`´]/g,"'").replace(NOTE_RE,'').split(/\s*[\/;]\s*/).filter(a=>/…|\.\.\./.test(a)).map(a=>{
+  const parts=a.split(/…|\.\.\./).map(x=>spN(x.replace(/\([^)]*\)/g,' '))).filter(Boolean);
+  return parts.length?new RegExp('^(?:.* )?'+parts.map(escRe).join(' (?:.* )?')+'(?: .*)?$'):null}).filter(Boolean)}
+function sayMatch(heard,f){const T2=sayTargets(f),RX=sayRx(f);
+  return heard.some(h=>{const a=spN(h),b=a.replace(SP_ART,'');if(!a)return false;if(RX.some(r=>r.test(a)))return true;
+    return T2.some(t=>{if(t===a||t===b||t.replace(SP_ART,'')===b)return true;
+      const tol=t.length>=10?2:t.length>=5?1:0;return tol&&(lev(a,t)<=tol||lev(b,t.replace(SP_ART,''))<=tol)})})}
+const MIC_SVG='<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>';
+let talkWay=null;/* 'sr' = Spracherkennung, 'rec' = aufnehmen, 'self' = laut sagen und selbst prüfen */
+function modeTalk(subset){
+  if(!talkWay)talkWay=SR?'sr':canRecord?'rec':'self';
+  const list=subset?shuffle(subset):freshOrder(SET.words.filter(sprechOK).map(w=>w.id),(SET.key||'')+':sprechen'),total=list.length;
+  const body=shell('Sprechen');let queue=list.slice(),done=0,tries=0;const hard=new Set();
+  let rcg=null,mrec=null,stream=null,audio=null;
+  const stopAll=()=>{try{if(rcg){rcg.onend=null;rcg.onresult=null;rcg.onerror=null;rcg.abort()}}catch(e){}rcg=null;
+    try{if(mrec&&mrec.state!=='inactive')mrec.stop()}catch(e){}mrec=null;
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+    if(audio){try{audio.pause()}catch(e){}if(audio.src)URL.revokeObjectURL(audio.src);audio=null}};
+  session.cleanup=stopAll;
+  const lang=SUB().name;
+  const next=()=>{stopAll();setProg(`${done} von ${total} richtig gesagt`,done/total);
+    if(!queue.length)return summary(body,{title:'Super gesprochen!',lines:[`${total} Wörter, ${tries} Versuche.`,hard.size?`${hard.size} ${hard.size===1?'Wort brauchte':'Wörter brauchten'} mehrere Anläufe.`:'Alles beim ersten Mal!'],actions:endActions(hard,modeTalk)});
+    const id=queue.shift(),w=WD(id),p=picOf(w);let fails=0,helped=false,fin=false,counted=false;
+    body.innerHTML=`<div class="sheet talkq"><div class="lang"><span>Deutsch</span></div>${p?`<div class="tpic">${picHTML(p)}</div>`:''}<div class="word">${esc(w.de)}</div><div class="sub">Sag es auf ${esc(lang)}.</div></div>
+      <div class="listen"><button type="button" class="play mic" id="mic" aria-label="${talkWay==='sr'?'Sprechen':talkWay==='rec'?'Aufnehmen':'Lösung zeigen'}">${talkWay==='self'?'👁':MIC_SVG}</button></div>
+      <p class="hand" id="mict">${talkWay==='sr'?'Tippe aufs Mikrofon und sag das Wort.':talkWay==='rec'?'Tippe aufs Mikrofon, sag das Wort und tippe nochmals.':'Sag das Wort laut. Dann tippe auf das Auge.'}</p>
+      <div class="fb" id="fb"></div>
+      <div class="actions" id="tact"><button class="pill sm" id="hear">👂 Vorsagen</button><button class="pill sm" id="skip">Überspringen</button></div>
+      <p class="keys">Leertaste: ${talkWay==='self'?'Lösung zeigen':'sprechen'}</p>`;
+    const mic=$('#mic',body),mt=$('#mict',body),fb=$('#fb',body);
+    const sol=()=>`<span class="sol">${esc(w.f)}</span>${spkBtn(w.f)}`;
+    const finish=ok=>{if(fin)return;fin=true;stopAll();tries++;if(!counted){rec(id,ok);counted=true}
+      if(ok)done++;else{hard.add(id);reins(queue,id)}};
+    const right=heard=>{finish(!helped&&!fails);mic.classList.remove('on');mic.classList.add('okm');
+      fb.innerHTML=`<span class="ok">✓ Richtig!${heard?` Ich habe gehört: «${esc(heard)}»`:''}</span><span class="sub">${sol()}</span>`;bindSpeak(fb);
+      later(()=>speak(w.f),350);later(next,2000)};
+    const wrong=heard=>{fails++;if(!counted){rec(id,false);counted=true}hard.add(id);mic.classList.remove('on');
+      fb.innerHTML=heard?`<span class="no">Ich habe «${esc(heard)}» gehört.</span>`:`<span class="no">Ich habe nichts verstanden.</span>`;
+      if(fails>=2)fb.innerHTML+=`<span class="sub">So heisst es: ${sol()}</span>`;
+      fb.innerHTML+=`<span class="sub">Versuch es nochmal!</span>`;bindSpeak(fb);mt.textContent='Tippe aufs Mikrofon und versuch es nochmal.'};
+    /* Spracherkennung */
+    const listen=()=>{if(fin)return;if(rcg){try{rcg.stop()}catch(e){}return}
+      let r;try{r=new SR()}catch(e){talkWay=canRecord?'rec':'self';return next0()}
+      rcg=r;r.lang=SR_LANG[fl()]||fl();r.interimResults=true;r.maxAlternatives=5;r.continuous=false;
+      let heard=[],shown='',errd=false;
+      mic.classList.add('on');mt.textContent='Ich höre zu …';fb.innerHTML='';
+      const tm=later(()=>{try{r.stop()}catch(e){}},8000);
+      r.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const res=e.results[i];shown=res[0].transcript;
+          if(res.isFinal)for(let k=0;k<res.length;k++)heard.push(res[k].transcript)}
+        mt.textContent='«'+shown.trim()+'»';
+        if(heard.length&&sayMatch(heard,w.f)){try{r.stop()}catch(x){}}};
+      r.onerror=e=>{errd=true;clearTimeout(tm);
+        if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='network'||e.error==='audio-capture'){rcg=null;mic.classList.remove('on');
+          talkWay=canRecord&&e.error!=='audio-capture'&&e.error!=='not-allowed'?'rec':'self';
+          toast(e.error==='network'?'Die Spracherkennung ist nicht erreichbar. Du kannst dich stattdessen aufnehmen.':'Das Mikrofon ist gesperrt. Sag die Wörter laut und prüfe selbst.');
+          later(next0,400)}};
+      r.onend=()=>{clearTimeout(tm);if(rcg!==r)return;rcg=null;if(fin)return;
+        if(!heard.length&&shown)heard.push(shown);
+        if(heard.length&&sayMatch(heard,w.f))right(heard.find(h=>sayMatch([h],w.f))||heard[0]);
+        else if(heard.length)wrong(heard[0]);
+        else{mic.classList.remove('on');mt.textContent='Tippe aufs Mikrofon und sag das Wort.';if(!errd||!talkWay||talkWay==='sr')fb.innerHTML='<span class="no">Ich habe nichts gehört. Sprich etwas lauter und versuch es nochmal.</span>'}};
+      try{r.start()}catch(e){rcg=null;mic.classList.remove('on')}
+    };
+    /* Aufnehmen und selbst vergleichen */
+    const judge=()=>{$('#tact',body).innerHTML=`<div class="judge"><button class="no" id="tno">✗ Nochmal üben</button><button class="yes" id="tyes">✓ Klang gleich</button></div>`;
+      $('#tno',body).onclick=()=>{if(fin)return;finish(false);next()};$('#tyes',body).onclick=()=>{if(fin)return;finish(!helped);next()}};
+    const recStart=async()=>{if(fin)return;
+      if(mrec&&mrec.state==='recording'){mrec.stop();return}
+      try{stream=stream||await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){talkWay='self';toast('Das Mikrofon ist gesperrt. Sag die Wörter laut und prüfe selbst.');return next0()}
+      const chunks=[];mrec=new MediaRecorder(stream);mrec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+      mrec.onstop=()=>{mic.classList.remove('on');if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+        if(audio&&audio.src)URL.revokeObjectURL(audio.src);
+        audio=new Audio(URL.createObjectURL(new Blob(chunks,{type:chunks[0]&&chunks[0].type||'audio/webm'})));
+        mt.textContent='Hör dich an und vergleiche mit der richtigen Aussprache.';
+        fb.innerHTML=`<div class="actions"><button class="pill" id="me">▶ Ich</button><button class="pill" id="model">🔊 So klingt es richtig</button></div><span class="sub">${sol()}</span>`;bindSpeak(fb);
+        $('#me',fb).onclick=()=>{try{audio.currentTime=0;audio.play()}catch(e){}};$('#model',fb).onclick=()=>speak(w.f);
+        try{audio.play()}catch(e){}later(()=>speak(w.f),1600);judge()};
+      mrec.start();mic.classList.add('on');mt.textContent='Ich nehme auf … Tippe nochmals, wenn du fertig bist.';fb.innerHTML='';
+      later(()=>{if(mrec&&mrec.state==='recording')mrec.stop()},6000)};
+    /* Ohne Mikrofon: Lösung zeigen und selbst entscheiden */
+    const selfShow=()=>{if(fin)return;fb.innerHTML=`<span class="sub">${sol()}</span>`;bindSpeak(fb);speak(w.f);mic.disabled=true;mt.textContent='Hast du es richtig gesagt?';judge()};
+    const go=()=>talkWay==='sr'?listen():talkWay==='rec'?recStart():selfShow();
+    const next0=()=>{queue.unshift(id);next()};
+    mic.onclick=go;
+    $('#hear',body).onclick=()=>{helped=true;speak(w.f)};
+    $('#skip',body).onclick=()=>{if(fin)return;fin=true;stopAll();if(!counted){rec(id,false);counted=true}hard.add(id);reins(queue,id);next()};
+    session.key=e=>{if(e.code==='Space'){e.preventDefault();go()}};
+  };next();
 }
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
