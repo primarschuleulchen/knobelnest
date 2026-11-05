@@ -62,5 +62,14 @@ rep('''    <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>''',
 rep('$("#fsBtn").addEventListener("click", async () => {', '''if (KN) { const b = $("#knBack"); b.style.display = ""; b.addEventListener("click", () => KN.back()); }
 $("#fsBtn").addEventListener("click", async () => {''')
 exec(open(__file__.replace('patch.py','patch2.py'), encoding='utf-8').read())
+# 19) Stil der Eulenkiste (gemeinsam mit der Eulenkiste, siehe eulenstil.py) und Schriften lokal statt von Google
+import os as _os, re as _re
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from eulenstil import eulenstil
+eulenstil(rep)
+rep('<link rel="preconnect" href="https://fonts.googleapis.com">\n', '')
+_g = _re.findall(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com/css2\?[^"]*">', s)
+assert len(_g) == 1, 'Google-Schriften: ' + str(len(_g))
+rep(_g[0], '<link rel="stylesheet" href="schriften/schriften.css">\n<meta name="referrer" content="no-referrer">')
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

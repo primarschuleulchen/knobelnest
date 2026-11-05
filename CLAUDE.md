@@ -146,12 +146,12 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=177`).
-- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=178`).
+- **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('40')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
 
-- **Klassenkiste und Eulenkiste zusammen:** Die Lehrerin will, dass Änderungen an einem Werkzeug, das es in beiden gibt (Tagesfolie, Glücksrad, Lautstärkeregler, Pinnwand), immer in beiden gemacht werden. Die Eulenkiste ist das Repo `primarschuleulchen/lernkompass` (ohne Daten, eigenes `werkstatt/bauen.py`); dort direkt online stellen. Pinnwand: Original `werkstatt/originale/klassen-pinnwand.html` (Version 6), Einbau `werkstatt/einbau/pinnwand/pin6_patch.py`, gemeinsame Korrekturen in `pin_fixes.py` (dieselben Abschnitte stehen in der Eulenkiste).
+- **Klassenkiste und Eulenkiste zusammen:** Die Lehrerin will, dass Änderungen an einem Werkzeug, das es in beiden gibt (Tagesfolie, Glücksrad, Lautstärkeregler, Pinnwand), immer in beiden gemacht werden. Die Eulenkiste ist das Repo `primarschuleulchen/lernkompass` (ohne Daten, eigenes `werkstatt/bauen.py`); dort direkt online stellen. Tagesfolie: Stil der Eulenkiste für Leisten, Menüs und Fenster in `werkstatt/einbau/tagesfolie/eulenstil.py` (gleiche Datei in der Eulenkiste als `werkstatt/eulenstil_tagesfolie.py`), Schriften lokal aus `schriften/schriften.css`. Pinnwand: Original `werkstatt/originale/klassen-pinnwand.html` (Version 6), Einbau `werkstatt/einbau/pinnwand/pin6_patch.py`, gemeinsame Korrekturen in `pin_fixes.py` (dieselben Abschnitte stehen in der Eulenkiste).
 
 Die Lehrerin entwickelt ihre Werkzeuge oft in anderen Chats weiter und schickt dann die neue HTML-Datei. So baust du sie ein:
 
