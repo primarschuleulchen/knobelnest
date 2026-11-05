@@ -94,7 +94,7 @@ def logo():
 def alle(spiel):
     items = [dict(w) for w in WORT]
     spiel(id='kleiderschrank', titel='Kleiderschrank', icon=logo(), fach='Englisch', thema='Clothes', stufe='3.–6. Klasse', sort=1, n=10,
-          sterne={'modus': 'runde', 'n': 10},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 10
           kurz='Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»',
           intro='Im Schrank hängen viele Kleider. Wie heissen sie auf Englisch? Hör gut zu und sprich nach!',
           levels=[dict(name='Entdecken', info='Antippen, hören und finden', t=0),
@@ -111,6 +111,42 @@ def alle(spiel):
 
 CSS = r"""
 .ks{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+/* Stern in der Aufgabe */
+.fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
+.fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}
+.stern{width:20px;height:20px;display:block;flex:none}.stern.gross{width:32px;height:32px}
+.stern .leer{fill:#f3ead2;stroke:#d6ad45;stroke-width:1.4;stroke-linejoin:round}
+.stern .voll{fill:#f0c24b;stroke:#c4952f;stroke-width:1.4;stroke-linejoin:round;transition:clip-path .6s ease}
+.fort.pop .stern{animation:sternpop .9s}
+@keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
+/* Stufen-Menü als Pfad */
+@media (max-height:820px) and (min-width:641px){
+  body .pf-kopf{margin-top:-46px}body .pf-kopf .ring{width:66px;height:66px}body .pf-kopf h1{font-size:32px}body .pf-kopf p{font-size:16px;margin-top:2px}
+  body .pfad{padding:6px 20px 8px}body .pfad::before{top:40px;bottom:30px}body .pf-wahl{margin-bottom:0;font-size:14px}
+  body .pf-reihe{margin:5px 0}body .pf-karte{min-height:56px;padding:6px 14px}body .pf-tx b{font-size:21px}body .pf-tx span{font-size:15px}
+  body .pf-n{width:42px;height:42px;font-size:20px}body .pf-n.zwei{width:54px;font-size:18px}body .pf-n.pokal{font-size:20px}
+}
+.pf-kopf{display:flex;align-items:center;gap:16px;justify-content:center;margin:0 0 6px;text-align:left;max-width:760px}
+.pf-kopf .ring{width:96px;height:96px;flex:none}.pf-kopf h1{margin:0;font-size:42px;font-weight:400;line-height:1}
+.pf-kopf h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}.pf-kopf p{margin:4px 0 0;color:var(--soft);font-size:19px}
+.pfad{position:relative;width:100%;max-width:980px;background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:12px 22px 14px;box-shadow:var(--sch)}
+.pfad::before{content:"";position:absolute;left:50%;top:52px;bottom:40px;border-left:3px dotted var(--gold);transform:translateX(-50%)}
+.pf-wahl{text-align:center;color:var(--sky-d);letter-spacing:.12em;font-size:16px;text-transform:uppercase;margin-bottom:6px}
+.pf-reihe{display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;gap:12px;margin:8px 0;position:relative}
+.pf-n{justify-self:center;width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid var(--gold);box-shadow:inset 0 0 0 3px #fff,var(--sch-k);display:grid;place-items:center;font-size:24px;z-index:1}
+.pf-n i{font-style:normal}
+.pf-n.zwei{width:64px;border-radius:26px;display:flex;gap:2px;justify-content:center;font-size:21px}.pf-n.zwei i+i::before{content:"·";color:var(--gold);margin-right:2px}
+.pf-n.pokal{border-style:dashed;font-size:24px}
+.pf-karte{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid var(--line);border-radius:22px;padding:10px 16px;min-height:70px;box-shadow:var(--sch-k);transition:transform .15s,box-shadow .15s}
+.pf-karte:hover{transform:translateY(-3px);box-shadow:var(--sch)}.pf-karte:active{transform:translateY(1px)}
+.pf-tx{flex:1;min-width:0}.pf-tx b{display:block;font-weight:400;font-size:24px;line-height:1.1}.pf-tx span{color:var(--soft);font-size:17px;line-height:1.2;display:block}
+.pf-st{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}.pf-st .stern{width:26px;height:26px}.pf-st small{font-size:15px;color:var(--soft);white-space:nowrap}
+@media (max-width:640px){.pf-kopf .ring{width:70px;height:70px}.pf-kopf h1{font-size:32px}.pf-kopf p{font-size:16px}.pfad{padding:10px 8px;border-radius:22px}
+  .pf-reihe{grid-template-columns:1fr 44px 1fr;gap:6px}.pf-n{width:40px;height:40px;font-size:19px}.pf-n.zwei{width:46px;font-size:16px}
+  .pf-karte{padding:8px 10px;min-height:62px;border-radius:16px;flex-direction:column;align-items:flex-start;gap:4px}.pf-tx b{font-size:19px}.pf-tx span{font-size:14px}
+  .pf-st{flex-direction:row;gap:5px}.pf-st .stern{width:18px;height:18px}.pf-st small{font-size:13px}
+  .top .t{display:none}.top .pill{white-space:nowrap}
+  .fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}}
 .schrank{position:relative;width:min(100%,640px,calc((100vh - 250px) * 1.13))}
 .schrank .bg{display:block;width:100%;height:100%;pointer-events:none}
 .schrank .it{position:absolute;padding:0;border:0;background:none;cursor:pointer;transform-origin:center;transition:transform .15s,filter .15s;outline:none}
@@ -642,8 +678,57 @@ function stufeSchreibPr(api, satz) {
   frage();
 }
 
-G.play = function (lv, api) {
+// ---------- Stufen-Menü als Pfad (wie «Zeit & Uhr»): 1–4 abwechselnd links/rechts, 5+6 und 7+8 nebeneinander
+var STERN = 'M12 2.2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.3 1.3-6.6L2.5 9.1l6.6-.8z';
+function sternBild(p, cls) {
+  return '<svg class="' + (cls || 'stern') + '" viewBox="0 0 24 24" aria-hidden="true"><path class="leer" d="' + STERN + '"/><path class="voll" d="' + STERN + '" style="clip-path:inset(' + Math.round((1 - p) * 100) + '% 0 0 0)"/></svg>';
+}
+G.menu = function () {
+  var reihen = [[0], [1], [2], [3], [4, 5], [6, 7]], rechts = [true, false, true, false];
+  function karte(i) {
+    var lv = G.levels[i], s = KN.sterne('Stufe ' + (i + 1)), mx = +AW.max || 10, have = Math.min(s.have, mx);
+    return '<button class="pf-karte" data-lv="' + i + '" style="background:linear-gradient(180deg,#fff 0%,' + LV_COL[i] + ' 100%)"><span class="pf-tx"><b>' + h(lv.name) + '</b><span>' + h(lv.info) + '</span></span>' +
+      '<span class="pf-st">' + sternBild(have / mx) + '<small>' + have + ' von ' + mx + '</small></span></button>';
+  }
+  var o = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="pf-kopf"><span class="ring">' + G.icon + '</span><div><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p></div></div>' +
+    '<div class="pfad"><div class="pf-wahl">Wähle eine Stufe</div>';
+  reihen.forEach(function (r, ri) {
+    if (r.length === 2) o += '<div class="pf-reihe"><div class="pf-l">' + karte(r[0]) + '</div><div class="pf-n zwei"><i>' + (r[0] + 1) + '</i><i>' + (r[1] + 1) + '</i></div><div class="pf-r">' + karte(r[1]) + '</div></div>';
+    else o += '<div class="pf-reihe"><div class="pf-l">' + (rechts[ri] ? '' : karte(r[0])) + '</div><div class="pf-n"><i>' + (r[0] + 1) + '</i></div><div class="pf-r">' + (rechts[ri] ? karte(r[0]) : '') + '</div></div>';
+  });
+  app.innerHTML = o + '<div class="pf-reihe"><div></div><div class="pf-n pokal">🏆</div><div></div></div></div>';
+  Array.prototype.forEach.call(app.querySelectorAll('[data-lv]'), function (b) { b.onclick = function () { tone(520, 0.08); start(+b.dataset.lv); }; });
+};
+// ---------- Stern in der Aufgabe: füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern
+function sternFortschritt(api, li) {
+  var k = 'Stufe ' + (li + 1), per = +AW.per || 10, max = +AW.max || 10;
+  AW.lv = AW.lv || {}; AW.box = AW.box || {};
+  var el = document.createElement('div'); el.className = 'fort'; el.setAttribute('aria-live', 'polite');
+  el.innerHTML = sternBild(0, 'stern gross') + '<span class="fz"></span>';
+  var top = app.querySelector('.top'); if (top) top.insertBefore(el, top.querySelector('[data-snd]'));
+  var voll = el.querySelector('.voll'), fz = el.querySelector('.fz');
+  function zeig() {
+    var have = +AW.lv[k] || 0, n = +AW.box[k] || 0, fertig = have >= max;
+    voll.style.clipPath = 'inset(' + Math.round((1 - (fertig ? 1 : n / per)) * 100) + '% 0 0 0)';
+    fz.innerHTML = fertig ? 'Alle ' + max + ' Sterne!' : '<b>' + n + '</b> von ' + per + (have ? ' <span class="fz-st">· ★ ' + have + '</span>' : '');
+  }
+  zeig();
+  var alt = api.answer;
+  api.answer = function (ok, quiet) {
+    if (ok && (+AW.lv[k] || 0) < max) {
+      AW.box[k] = (+AW.box[k] || 0) + 1;
+      if (AW.box[k] >= per) {
+        AW.box[k] = per; zeig(); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+        api.later(function () { AW.box[k] = 0; AW.lv[k] = (+AW.lv[k] || 0) + 1; zeig(); }, 900);
+      } else zeig();
+    }
+    return alt(ok, quiet);
+  };
+}
+
+G.play = function (lv, api, li) {
   try { speechSynthesis.cancel(); } catch (e) {}
+  sternFortschritt(api, li);
   [stufeSchrank, stufeWahl, stufeSchreiben, stufeSprechen, stufeBegleiter, function (x) { stufeSchreibPr(x, false); }, stufeSaetze,
    function (x) { stufeSchreibPr(x, true); }][lv.t](api);
 };
