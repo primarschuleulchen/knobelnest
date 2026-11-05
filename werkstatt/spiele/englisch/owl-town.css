@@ -1,0 +1,80 @@
+
+#app{padding:8px 10px 10px}
+.stage{max-width:1500px}
+.msg{min-height:0;font-size:19px;margin:0 0 6px}
+.msg .em{font-size:30px}
+.lv.frei{border:2px dashed var(--line2);background:#fff}
+.owbox{position:relative;width:100%;height:calc(100vh - 112px);min-height:380px;border-radius:22px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--sch);background:#bfe3f7;user-select:none;-webkit-user-select:none;touch-action:none}
+.ow{position:absolute;inset:0}.ow canvas{display:block;width:100%;height:100%}
+.owbox .cardw{position:absolute;left:12px;top:12px;width:min(410px,44%);z-index:2}
+.owbox .card{position:relative;width:100%;max-height:calc(100vh - 260px);overflow:auto;aspect-ratio:auto;display:block;place-items:initial;
+  background:rgba(255,255,255,.95);border:2px solid var(--line);border-radius:20px;padding:10px 16px 12px;box-shadow:var(--sch);font-size:21px;text-align:left;line-height:1.3}
+.owbox .card .hd{font-size:24px;margin-bottom:4px}.owbox .card .hd small{color:var(--soft);font-size:18px}
+.owbox .card b{font-weight:400;color:var(--sky-d)}
+.owbox .de{font-size:18px;color:var(--soft);margin:6px 0}
+.steps{margin:6px 0 8px;padding-left:28px}
+.steps li{font-size:22px;margin:3px 0;cursor:pointer;border-radius:10px;padding:1px 6px}
+.steps li:hover{background:var(--sky)}
+.steps li.q{list-style:none;margin-left:-22px;color:var(--soft);font-style:italic;cursor:default}
+.steps li.q:hover{background:none}
+.steps.rv li.ok::marker{color:var(--ok)}.steps.rv li.ok{color:#2f5a22}
+.steps.rv li.no{background:#fbe5e2;border:2px solid var(--no)}
+.why{font-size:18px;color:#8a2a22;margin-top:3px;line-height:1.3}
+.owbox .row{justify-content:flex-start;gap:8px;margin-top:6px}
+.owbox .go{font-size:20px;min-height:46px;padding:6px 14px}
+.leg{font-size:17px;color:var(--soft);margin:8px 0 2px}.leg span{display:inline-block;width:26px;height:8px;border-radius:4px;vertical-align:middle;margin-right:4px}
+.leg .r{background:#e0362c}.leg .b{background:#2f6fd0}
+.tools{position:absolute;right:12px;top:12px;display:flex;gap:8px}
+.tools .pill{font-size:19px;min-height:42px;padding:4px 12px;background:rgba(255,255,255,.95)}
+.tools .pill.on{background:var(--sun);border-color:var(--gold-d)}
+.pad{position:absolute;left:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,64px);gap:6px}
+.pad button{background:rgba(255,255,255,.92);border:2px solid var(--ink);border-radius:16px;font-size:30px;box-shadow:var(--sch-k);touch-action:none}
+.pad button:active{background:var(--sun);transform:scale(.95)}
+.mark{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:var(--sun);border:2px solid var(--ink);border-radius:18px;font-size:24px;padding:8px 20px;min-height:58px;box-shadow:var(--sch);white-space:nowrap}
+.mark:active{transform:translateX(-50%) scale(.96)}
+.mini{position:absolute;right:12px;bottom:12px;width:216px;height:144px;border-radius:14px;border:3px solid #fff;box-shadow:var(--sch-k)}
+.mini.aus{display:none}
+.near{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(31,36,33,.78);color:#fff;border-radius:14px;padding:4px 16px;font-size:20px;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.near.on{opacity:1}
+.toast{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);background:#fff;border:2px solid var(--gold);border-radius:18px;padding:10px 18px;font-size:22px;box-shadow:var(--sch);opacity:0;transition:all .25s;pointer-events:none;text-align:center;max-width:80%}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.pop{position:absolute;inset:0;background:rgba(20,40,60,.35);display:grid;place-items:center;z-index:5}
+.pop[hidden]{display:none}
+.pp{background:#fff;border:2px solid var(--line);border-radius:24px;padding:14px 20px;max-width:min(620px,94%);max-height:92%;overflow:auto;box-shadow:var(--sch);text-align:center}
+.pp h3{font-weight:400;font-size:28px;margin:4px 0 10px}
+.pp table{border-collapse:collapse;text-align:left;font-size:19px;margin:0 auto}
+.pp td{padding:3px 8px;border-bottom:1px solid var(--line)}.pp td.ic{font-size:24px;text-align:center}
+.pp td b{font-weight:400;color:var(--sky-d);cursor:pointer}
+.pp .kl{font-size:17px;color:var(--soft)}
+.pp .row{justify-content:center}.pp .go small{font-size:18px;color:var(--soft)}
+.owbox.review .pad,.owbox.review .mark,.owbox.review .near{display:none}
+@media (max-width:760px){
+  .owbox{height:calc(100vh - 100px)}
+  .owbox .cardw{left:8px;right:8px;top:8px;width:auto}
+  .owbox .card{max-height:34vh;padding:6px 12px 8px;font-size:17px}
+  .owbox .card .de{font-size:15px;margin:3px 0}.owbox .go{font-size:17px;min-height:38px;padding:4px 10px}
+  .owbox .card .hd{font-size:19px;padding-right:30px}.steps li{font-size:17px}
+  .owbox.review .card{max-height:55vh}
+  .tools{top:auto;bottom:118px;right:8px;flex-direction:column}
+  .pad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);left:8px;bottom:8px}
+  .mini{width:132px;height:88px;right:8px;bottom:8px}
+  .mark{bottom:122px;font-size:20px;min-height:48px;padding:6px 14px}
+  .near{bottom:224px;font-size:16px;max-width:calc(100% - 20px)}
+}
+/* Logo statt Emoji im Kreis oben (das Bild hat den Goldrand schon) */
+.ring{width:150px;height:150px;background:none;border:none;box-shadow:0 8px 18px rgba(63,120,168,.18)}.ring .logo{width:100%;height:100%;display:block;border-radius:50%}
+.pls{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pl{position:absolute;left:0;top:0;visibility:hidden;white-space:nowrap;background:rgba(31,36,33,.85);color:#fff;border:2px solid var(--gold);border-radius:12px;padding:1px 9px;font-size:17px;line-height:1.3;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+@media (max-width:760px){.pl{font-size:14px;padding:0 7px}}
+/* bis 10 Sterne pro Stufe: rechts in zwei Reihen à 5 */
+.lv .stars{flex:none;width:5.3em;font-size:19px;letter-spacing:0;line-height:1.15;white-space:normal;word-break:break-all;text-align:left}
+.owbox .card img.jb{float:right;height:118px;margin:-2px -4px 4px 10px}
+@media (max-width:760px){.owbox .card img.jb{height:80px}}
+/* Aufgabe einklappen: nur die erste Zeile bleibt */
+.cmin{position:absolute;right:8px;top:8px;z-index:3;width:34px;height:34px;border-radius:50%;background:#fff;border:2px solid var(--line2);font-size:16px;line-height:1;box-shadow:var(--sch-k)}
+.owbox .card .hd{padding-right:34px}
+.owbox.kz:not(.review) .card > :not(.hd){display:none}
+.owbox.kz:not(.review) .card .hd{margin:0;font-size:19px}
+.owbox.kz:not(.review) .card img.jb{display:none}
+.ow canvas{cursor:grab}.ow canvas:active{cursor:grabbing}
+@media (max-width:760px){.mark{left:8px;transform:none}.mark:active{transform:scale(.96)}}

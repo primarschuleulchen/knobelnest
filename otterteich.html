@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data:; media-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: 'self'; media-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
 <title>Otterteich</title>
@@ -178,6 +178,7 @@ html.embed .scard{zoom:.6}
 html.embed .actions{opacity:0;transition:opacity .3s}
 html.embed body:hover .actions{opacity:1}
 html.embed #knResume button{font-size:1rem;padding:10px 20px}
+/* kn-back */#knBack,.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}#knBack:not([hidden]),.kn-back{display:inline-flex}#knBack:hover,.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}#knBack img,.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
 </style>
 </head>
 <body>
@@ -2797,7 +2798,7 @@ if(KN){
   }
   // Zurück ins Knobelnest
   if(!EMBED&&KN.back){
-    const b=document.createElement('button'); b.className='ab'; b.id='knBack'; b.type='button'; b.textContent='← Klassenkiste'; b.style.padding='0 14px';
+    const b=document.createElement('button'); b.className='ab'; b.id='knBack'; b.type='button'; b.innerHTML='<span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34">';b.setAttribute('aria-label','Zurück zur Klassenkiste'); b.style.padding='0 14px';
     b.onclick=()=>{try{if(isFs())(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){} knKeep(); KN.back()};
     $('actions').insertBefore(b,$('actions').firstChild);
   }

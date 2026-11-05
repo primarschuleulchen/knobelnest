@@ -1,0 +1,188 @@
+
+<!-- ===== Klassenkiste-Look (weiche Farben, Goldakzente, kleine Bewegungen) ===== -->
+<style id="kk-look">
+  :root{ --kk-gold:#D6AD45; --kk-gold-soft:#FBF3DC; --kk-ink:#1F3550; --kk-soft:#5F7590; --kk-sky:#E6F1FB; --kk-sky2:#CFE3F6;
+    --kk-blue:#4A86BD; --kk-blue-d:#356A9C; --kk-mint:#DDF3E7; --kk-mint-d:#2F8A66; --kk-rose:#FBE3E6; --kk-rose-d:#B84A62;
+    --kk-sun:#FFF3CC; --kk-lila:#ECE6FA; --kk-shadow:0 10px 28px -14px rgba(31,53,80,.38); }
+  html body{ background:
+      radial-gradient(900px 520px at 8% -8%, #D7E9FA 0%, transparent 62%),
+      radial-gradient(800px 480px at 105% 4%, #FFF0D2 0%, transparent 58%),
+      radial-gradient(700px 520px at 50% 115%, #E3F3EA 0%, transparent 60%), #F3F8FD !important; color:var(--kk-ink) !important; }
+  /* schwebende Sternchen im Hintergrund */
+  .kk-deko{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .kk-deko i{ position:absolute; font-style:normal; color:var(--kk-gold); opacity:.35; animation:kkFloat 9s ease-in-out infinite; }
+  .stage{ position:relative; z-index:1; }
+  @keyframes kkFloat{ 0%,100%{ transform:translateY(0) rotate(0) } 50%{ transform:translateY(-14px) rotate(20deg) } }
+
+  /* Titel mit Goldsternen */
+  html body .title{ color:var(--kk-ink) !important; letter-spacing:.01em; }
+  html body .title .accent{ color:var(--kk-ink) !important; }
+  html body .title::after{ content:"✦ ✧ ✦"; display:block; font-size:.42em; letter-spacing:.35em; color:var(--kk-gold); margin-top:2px; animation:kkTwinkle 3s ease-in-out infinite; }
+  @keyframes kkTwinkle{ 50%{ opacity:.45 } }
+  html body .subtitle{ color:var(--kk-soft) !important; opacity:1 !important; }
+
+  /* Karten: weiss, rund, weicher Schatten, gleiten herein */
+  html body .card{ background:#fff !important; border-radius:28px !important; border:1.5px solid #E1EDF7; box-shadow:var(--kk-shadow) !important; }
+  html body .card:not(.hidden){ animation:kkIn .45s cubic-bezier(.2,.9,.3,1.2) both; }
+  @keyframes kkIn{ from{ opacity:0; transform:translateY(18px) scale(.97) } to{ opacity:1; transform:none } }
+  html body .prompt-label{ color:var(--kk-blue) !important; letter-spacing:.06em; text-transform:uppercase; font-size:.72rem !important; }
+
+  /* Level-Pfad */
+  html body .path::before{ border-left:3px dotted var(--kk-gold) !important; opacity:.7; }
+  html body .path .level-btn{ background:#fff !important; border:2px solid #E1EDF7 !important; box-shadow:0 6px 16px -10px rgba(31,53,80,.45) !important;
+    border-radius:20px !important; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease !important; animation:kkIn .5s cubic-bezier(.2,.9,.3,1.2) both; }
+  html body .path .level-btn:nth-of-type(1){ animation-delay:.05s } html body .path .level-btn:nth-of-type(2){ animation-delay:.1s }
+  html body .path .level-btn:nth-of-type(3){ animation-delay:.15s } html body .path .level-btn:nth-of-type(4){ animation-delay:.2s }
+  html body .path .level-btn:nth-of-type(5){ animation-delay:.25s } html body .path .level-btn:nth-of-type(6){ animation-delay:.3s }
+  html body .path .level-btn:nth-of-type(7){ animation-delay:.35s }
+  html body .path .level-btn[data-level="theory"]{ background:var(--kk-gold-soft) !important; border-color:#EED9A0 !important; }
+  html body .path .level-btn[data-level="1"]{ background:#FFF8E1 !important; }
+  html body .path .level-btn[data-level="2a"]{ background:#EAF4FD !important; }
+  html body .path .level-btn[data-level="2b"]{ background:#EAF7F0 !important; }
+  html body .path .level-btn[data-level="3"]{ background:#F3EFFC !important; }
+  html body .path .level-btn[data-level="4"]{ background:#FDEFF1 !important; }
+  html body .path .level-btn[data-level="5"]{ background:#FFF4E6 !important; }
+  html body .path .level-btn:hover{ transform:translateY(-3px) !important; border-color:var(--kk-gold) !important; box-shadow:0 12px 22px -12px rgba(31,53,80,.5) !important; }
+  html body .path .level-btn:active{ transform:translateY(1px) scale(.98) !important; }
+  html body .path .level-btn::after{ border-top:3px dotted var(--kk-gold) !important; opacity:.7; }
+  html body .lt{ color:var(--kk-ink) !important; }
+  html body .ls{ color:var(--kk-soft) !important; opacity:1 !important; }
+  html body .node{ background:#fff !important; border:3px solid var(--kk-gold) !important; color:var(--kk-ink) !important;
+    box-shadow:0 0 0 3px #fff, 0 6px 12px -6px rgba(31,53,80,.4); animation:kkPop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  html body .node.part{ background:#FFF3CC !important; }
+  html body .node.full{ background:linear-gradient(145deg,#FFD873,#F2BE3C) !important; border-color:#D69E14 !important; }
+  html body .node.trophy{ border-style:dashed !important; }
+  html body .node.trophy.full{ border-style:solid !important; animation:kkPop .5s both, kkGlow 2.4s ease-in-out infinite .5s; }
+  @keyframes kkPop{ from{ transform:scale(0) } to{ transform:scale(1) } }
+  @keyframes kkGlow{ 50%{ box-shadow:0 0 0 3px #fff, 0 0 18px 4px rgba(242,190,60,.6) } }
+  html body .cs .st i.on, html body .pst i.on{ color:#F2B632 !important; text-shadow:0 1px 0 #D69E14; }
+
+  /* schmale Bildschirme (Handy): der Pfad passt in die Breite */
+  html body .path{ grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr) !important; }
+  html body .path .level-btn{ min-width:0; }
+  @media (max-width:560px){ html body .path .ls{ display:none; } html body .path .level-btn{ grid-template-columns:1fr !important; padding:4px 10px !important; }
+    html body .path .cs{ grid-column:1 !important; grid-row:2 !important; text-align:left; } html body .path .cs .sc{ display:none; } html body .path .cs .st{ font-size:.85rem; }
+    html body .lt{ font-size:.98rem !important; -webkit-hyphens:auto; hyphens:auto; } }
+  /* Aufgaben-Schild */
+  html body .tag{ background:linear-gradient(180deg,#FFFBEC,#FFF3CC) !important; border:2px solid #F1DC9C; border-radius:20px !important; color:var(--kk-ink) !important;
+    box-shadow:inset 0 -3px 0 rgba(214,173,69,.18); }
+  html body .tag.kk-neu{ animation:kkWobble .45s ease; }
+  @keyframes kkWobble{ 0%{ transform:scale(.94) } 55%{ transform:scale(1.03) } 100%{ transform:scale(1) } }
+  html body .prompt{ color:var(--kk-ink) !important; }
+
+  /* Knöpfe: rund, mit «Boden», drücken sich ein */
+  html body button{ border-radius:999px !important; transition:transform .12s ease, box-shadow .12s ease, background-color .15s ease !important; }
+  html body #setActionBtn, html body #actionBtn, html body #flashNextBtn{ background:var(--kk-blue) !important; color:#fff !important; border:0 !important;
+    box-shadow:0 4px 0 var(--kk-blue-d), 0 10px 18px -10px rgba(31,53,80,.6) !important; font-family:'Fredoka','Andika',sans-serif !important; font-size:1.08rem !important; letter-spacing:.02em; }
+  html body #setActionBtn:hover, html body #actionBtn:hover, html body #flashNextBtn:hover{ background:#5A95CB !important; transform:translateY(-1px); }
+  html body #setActionBtn:active, html body #actionBtn:active, html body #flashNextBtn:active{ transform:translateY(3px) !important; box-shadow:0 1px 0 var(--kk-blue-d) !important; }
+  html body input[type="text"]{ border-radius:999px !important; border:2px solid var(--kk-sky2) !important; background:#fff !important; padding-left:18px !important; transition:border-color .15s, box-shadow .15s; }
+  html body input[type="text"]:focus-visible{ outline:none !important; border-color:var(--kk-gold) !important; box-shadow:0 0 0 4px rgba(214,173,69,.22); }
+  html body input.kk-falsch{ animation:kkShake .4s ease; border-color:#E6A3B0 !important; }
+
+  /* Antwort-Knöpfe (Zuordnen) */
+  html body .mc-btn{ background:#fff !important; color:var(--kk-ink) !important; border:2px solid #DCE8F4 !important; border-radius:18px !important;
+    box-shadow:0 3px 0 #DCE8F4 !important; padding-left:18px !important; position:relative; }
+  html body .mc-btn:not(:disabled):hover{ border-color:var(--kk-blue) !important; transform:translateY(-2px); box-shadow:0 5px 0 #C5D9EE !important; }
+  html body .mc-btn:not(:disabled):active{ transform:translateY(2px); box-shadow:0 1px 0 #C5D9EE !important; }
+  html body .mc-btn.mc-correct{ background:var(--kk-mint) !important; border-color:#8FD1AF !important; color:#1B4D38 !important; box-shadow:0 3px 0 #8FD1AF !important; animation:kkBounce .5s ease; }
+  html body .mc-btn.mc-correct::after{ content:"✓"; position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:1.2rem; color:var(--kk-mint-d); }
+  html body .mc-btn.mc-wrong{ background:var(--kk-rose) !important; border-color:#E6A3B0 !important; color:#7A2333 !important; box-shadow:0 3px 0 #E6A3B0 !important; animation:kkShake .4s ease; }
+  @keyframes kkBounce{ 0%{ transform:scale(1) } 35%{ transform:scale(1.04) } 65%{ transform:scale(.99) } 100%{ transform:scale(1) } }
+  @keyframes kkShake{ 0%,100%{ transform:translateX(0) } 20%{ transform:translateX(-7px) } 40%{ transform:translateX(6px) } 60%{ transform:translateX(-4px) } 80%{ transform:translateX(3px) } }
+
+  /* Rückmeldung */
+  html body .feedback{ border-radius:999px !important; }
+  html body .feedback.correct{ background:var(--kk-mint) !important; color:#1F6B4C !important; animation:kkBounce .5s ease; }
+  html body .feedback.wrong{ background:var(--kk-rose) !important; color:#8A2C3E !important; border-radius:18px !important; animation:kkShake .4s ease; }
+
+  /* Vokabelkärtchen */
+  html body .flip-face{ border-radius:24px !important; border:2px solid #F1DC9C; box-shadow:0 10px 22px -14px rgba(31,53,80,.5); }
+  html body .flip-front{ background:linear-gradient(160deg,#FFFDF3,#FFF3CC) !important; color:var(--kk-ink) !important; }
+  html body .flip-back{ background:linear-gradient(160deg,#F2FBF6,#DDF3E7) !important; color:#1B4D38 !important; border-color:#A9DCC1; }
+  html body .flip-card{ transition:transform .2s ease; }
+  html body .flip-card:hover{ transform:rotate(-1deg) translateY(-2px); }
+  html body .flip-inner{ transition:transform .6s cubic-bezier(.3,1.4,.5,1) !important; }
+  html body .flip-hint{ color:var(--kk-soft) !important; }
+
+  /* Uhr zum Einstellen: Goldrand und Ziffern wie in der Klassenkiste */
+  html body .clock-set-face{ background:radial-gradient(circle at 50% 40%,#fff 0%,#F6FAFE 70%,#EAF3FC 100%) !important;
+    box-shadow:inset 0 0 0 5px var(--kk-gold), inset 0 0 0 9px #fff, inset 0 0 0 11px #E8F0F8, 0 12px 26px -14px rgba(31,53,80,.55) !important; }
+  html body .clock-num{ font-family:'Fredoka','Andika',sans-serif !important; font-size:.95rem !important; color:var(--kk-ink) !important; }
+  html body .clock-tick{ background:var(--kk-gold) !important; opacity:.8 !important; }
+  html body .hour-hand{ background:#E07A5F !important; border-radius:6px !important; }
+  html body .minute-hand{ background:var(--kk-ink) !important; border-radius:6px !important; }
+  html body .hand-center{ background:var(--kk-gold) !important; box-shadow:0 0 0 3px #fff; }
+  html body .hand-handle{ animation:kkPuls 2.2s ease-in-out infinite; }
+  html body .hand-handle.hour-handle{ background:rgba(224,122,95,.18) !important; border-color:#E07A5F !important; }
+  html body .hand-handle.minute-handle{ background:rgba(31,53,80,.10) !important; border-color:var(--kk-ink) !important; animation-delay:1.1s; }
+  html body .clock-set:active .hand-handle{ animation:none; }
+  @keyframes kkPuls{ 0%,100%{ box-shadow:0 0 0 0 rgba(214,173,69,0) } 50%{ box-shadow:0 0 0 7px rgba(214,173,69,.25) } }
+  html body .clock-face{ filter:drop-shadow(0 4px 6px rgba(31,53,80,.15)); }
+
+  /* Fortschritt */
+  html body .scorebar{ opacity:1 !important; color:var(--kk-soft); }
+  html body .pdots{ gap:4px !important; }
+  html body .pdots b{ width:11px !important; height:11px !important; border:2px solid #D7E3EF !important; background:#fff; transition:background .3s, transform .3s; }
+  html body .pdots b.on{ background:var(--kk-gold) !important; border-color:#C99A2E !important; animation:kkPop .35s cubic-bezier(.2,1.6,.4,1); }
+  html body .switch-level{ background:#fff !important; border:1.5px solid #DCE8F4 !important; border-radius:999px !important; padding:4px 12px !important;
+    text-decoration:none !important; color:var(--kk-soft) !important; opacity:1 !important; min-height:0 !important; }
+  html body .switch-level:hover{ border-color:var(--kk-gold) !important; color:var(--kk-ink) !important; }
+
+  /* Theorie */
+  html body .theory-btn{ border:2px solid #EED9A0 !important; background:var(--kk-gold-soft) !important; color:#6B5418 !important; }
+  html body .theory-btn:hover{ background:#F7E7B9 !important; }
+  html body .theory-panel{ border-radius:28px !important; border:2px solid #EED9A0; animation:kkIn .35s ease both; }
+  html body .theory-head h2{ color:var(--kk-ink) !important; }
+  html body .theory-head h2::after{ content:" ✦"; color:var(--kk-gold); }
+
+  /* Konfetti-Sterne bei richtigen Antworten */
+  .kk-funke{ position:fixed; z-index:99; pointer-events:none; font-style:normal; font-size:18px; color:var(--kk-gold); will-change:transform,opacity;
+    animation:kkFunke .9s cubic-bezier(.2,.8,.3,1) forwards; }
+  @keyframes kkFunke{ 0%{ transform:translate(0,0) scale(.4) rotate(0); opacity:1 } 100%{ transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(160deg); opacity:0 } }
+  .kk-stern-gross{ position:fixed; left:50%; top:42%; z-index:100; pointer-events:none; font-size:84px; transform:translate(-50%,-50%); animation:kkGross 1.4s cubic-bezier(.2,1.3,.4,1) forwards;
+    filter:drop-shadow(0 6px 12px rgba(214,173,69,.6)); }
+  @keyframes kkGross{ 0%{ transform:translate(-50%,-50%) scale(0) rotate(-40deg); opacity:0 } 30%{ transform:translate(-50%,-50%) scale(1.15) rotate(8deg); opacity:1 }
+    70%{ transform:translate(-50%,-50%) scale(1) rotate(0); opacity:1 } 100%{ transform:translate(-50%,-80%) scale(.8); opacity:0 } }
+  @media (prefers-reduced-motion: reduce){ .kk-deko i, html body .card, html body .node, html body .hand-handle, .kk-funke, .kk-stern-gross{ animation:none !important; } }
+</style>
+<script id="kk-fx">
+(function(){
+  var ruhig = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ein paar ruhige Sternchen im Hintergrund
+  var d = document.createElement('div'); d.className = 'kk-deko'; d.setAttribute('aria-hidden', 'true');
+  [['6%','12%',14,0],['90%','18%',18,2],['12%','78%',12,4],['84%','70%',16,1],['50%','92%',12,3]].forEach(function(s){
+    var i = document.createElement('i'); i.textContent = s[2] > 15 ? '✦' : '✧'; i.style.left = s[0]; i.style.top = s[1]; i.style.fontSize = s[2] + 'px'; i.style.animationDelay = s[3] + 's'; d.appendChild(i); });
+  document.body.insertBefore(d, document.body.firstChild);
+  function funken(el, n){
+    if (ruhig || !el) return; var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var k = 0; k < (n || 12); k++){
+      var f = document.createElement('i'); f.className = 'kk-funke'; f.textContent = k % 3 ? '✦' : '★';
+      var a = Math.random() * Math.PI * 2, dist = 50 + Math.random() * 80;
+      f.style.left = cx + 'px'; f.style.top = cy + 'px'; f.style.setProperty('--dx', Math.cos(a) * dist + 'px'); f.style.setProperty('--dy', Math.sin(a) * dist - 20 + 'px');
+      f.style.color = ['#D6AD45','#F2BE3C','#4A86BD','#8FD1AF','#E07A5F'][k % 5]; f.style.animationDelay = (Math.random() * .12) + 's';
+      document.body.appendChild(f); setTimeout(function(x){ return function(){ x.remove(); }; }(f), 1200);
+    }
+  }
+  function grosserStern(){
+    if (ruhig) return; var s = document.createElement('div'); s.className = 'kk-stern-gross'; s.textContent = '⭐'; document.body.appendChild(s); setTimeout(function(){ s.remove(); }, 1500);
+  }
+  function neu(el){ if (!el) return; el.classList.remove('kk-neu'); void el.offsetWidth; el.classList.add('kk-neu'); }
+  // Rückmeldungen beobachten: richtig = Funken, neuer Stern = grosser Stern, falsch = Eingabe wackelt
+  document.querySelectorAll('.feedback').forEach(function(fb){
+    var zuletzt = '', t = 0;
+    new MutationObserver(function(){ clearTimeout(t); t = setTimeout(function(){
+      var jetzt = fb.className + '|' + fb.textContent; if (jetzt === zuletzt) return; zuletzt = jetzt;
+      if (fb.classList.contains('correct')){ funken(fb, 12); if (/Stern/.test(fb.textContent)) grosserStern(); }
+      else if (fb.classList.contains('wrong')){ var inp = fb.parentNode && fb.parentNode.querySelector('input[type="text"]'); if (inp){ inp.classList.remove('kk-falsch'); void inp.offsetWidth; inp.classList.add('kk-falsch'); } }
+    }, 30); }).observe(fb, { attributes: true, attributeFilter: ['class'], childList: true, characterData: true, subtree: true });
+  });
+  // Neue Aufgabe: Schild hüpft kurz
+  document.querySelectorAll('.prompt').forEach(function(p){
+    new MutationObserver(function(){ neu(p.closest('.tag')); }).observe(p, { childList: true, characterData: true, subtree: true });
+  });
+  // Karte umdrehen: kleiner Funke
+  var fc = document.getElementById('flipCard');
+  if (fc) new MutationObserver(function(){ if (fc.classList.contains('flipped')) funken(fc, 6); }).observe(fc, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>

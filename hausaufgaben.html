@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* kn-back */#knBack,.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}#knBack:not([hidden]),.kn-back{display:inline-flex}#knBack:hover,.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}#knBack img,.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
+</style></head><body>
 <title>Hausaufgabenheft</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -325,7 +326,7 @@ textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:
 <div class="app" id="app">
   <div class="bg"></div>
   <div class="top" id="top">
-    <button class="pill" id="knBack" hidden>← Klassenkiste</button>
+    <button class="pill" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste" hidden><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>
     <button class="pill ic" id="prev" aria-label="Vorherige Woche">‹</button>
     <div class="wk" id="wk"></div>
     <button class="pill ic" id="next" aria-label="Nächste Woche">›</button>

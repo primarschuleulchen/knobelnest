@@ -1,0 +1,122 @@
+{
+ "format": "knobelnest-spielpaket",
+ "games": [
+  {
+   "title": "Rechen-Rakete",
+   "description": "Rechnen und mit der Rakete zum Mond fliegen.",
+   "fach": "Mathematik",
+   "thema": "Kopfrechnen",
+   "stufe": "1.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/rechen-rakete.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Rechen-Rakete</title></head><body><p>Rechen-Rakete: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Wort-Raten",
+   "description": "Ein geheimes Wort in sechs Versuchen erraten.",
+   "fach": "Deutsch",
+   "thema": "Wörter",
+   "stufe": "2.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wort-raten.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Wort-Raten</title></head><body><p>Wort-Raten: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Bilderrätsel",
+   "description": "Felder nach Zahlen ausmalen, bis ein Bild erscheint.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/bilderraetsel.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Bilderrätsel</title></head><body><p>Bilderrätsel: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Eulen-Weg",
+   "description": "Pfeile legen, damit die Eule nach Hause findet.",
+   "fach": "Knobeln",
+   "thema": "Programmieren",
+   "stufe": "1.–6. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/eulen-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Eulen-Weg</title></head><body><p>Eulen-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Wie spät ist es?",
+   "description": "Die Uhr lesen: volle Stunden bis genaue Minuten.",
+   "fach": "Mathematik",
+   "thema": "Zeit",
+   "stufe": "1.–4. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/uhr-lesen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Wie spät ist es?</title></head><body><p>Wie spät ist es?: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kiosk",
+   "description": "Mit Franken und Rappen genau bezahlen.",
+   "fach": "Mathematik",
+   "thema": "Geld",
+   "stufe": "1.–4. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kiosk.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Kiosk</title></head><body><p>Kiosk: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Der, die, das",
+   "description": "Nomen in die richtige Artikel-Kiste legen.",
+   "fach": "Deutsch",
+   "thema": "Wortarten",
+   "stufe": "1.–5. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/der-die-das.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Der, die, das</title></head><body><p>Der, die, das: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Silben-Puzzle",
+   "description": "Silben in die richtige Reihenfolge bringen.",
+   "fach": "Deutsch",
+   "thema": "Lesen",
+   "stufe": "1.–4. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/silben-puzzle.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Silben-Puzzle</title></head><body><p>Silben-Puzzle: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Bilder-Sudoku",
+   "description": "Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/bilder-sudoku.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Bilder-Sudoku</title></head><body><p>Bilder-Sudoku: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Wasser-Weg",
+   "description": "Röhren drehen, bis das Wasser zur Blume fliesst.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 4,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wasser-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Wasser-Weg</title></head><body><p>Wasser-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kleiderschrank",
+   "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»",
+   "fach": "Englisch",
+   "thema": "Clothes",
+   "stufe": "3.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kleiderschrank.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Kleiderschrank</title></head><body><p>Kleiderschrank: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Im Museum",
+   "description": "Bilder im Museum auf Englisch beschreiben, lesen und malen.",
+   "fach": "Englisch",
+   "thema": "Describing pictures",
+   "stufe": "3.–6. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/im-museum.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 10, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Im Museum</title></head><body><p>Im Museum: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Im Schulhaus",
+   "description": "Englische Sätze über ein Schulhaus lesen und die Räume auf dem Plan finden.",
+   "fach": "Englisch",
+   "thema": "Places in school (Lesen)",
+   "stufe": "4.–6. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/im-schulhaus.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 12}\"><title>Im Schulhaus</title></head><body><p>Im Schulhaus: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  }
+ ]
+}
