@@ -78,3 +78,5 @@
 .owbox.kz:not(.review) .card img.jb{display:none}
 .ow canvas{cursor:grab}.ow canvas:active{cursor:grabbing}
 @media (max-width:760px){.mark{left:8px;transform:none}.mark:active{transform:scale(.96)}}
+.pl.wk{background:rgba(255,255,255,.94);color:var(--ink);border-color:var(--gold);font-size:16px;padding:0 8px}
+@media (max-width:760px){.pl.wk{font-size:13px}}
