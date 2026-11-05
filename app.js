@@ -3936,9 +3936,12 @@
   }
 
   K.view_code = function () {
-    return K.shell('<form class="kid-card" data-a="kCode"><h1>Hallo!</h1><p class="lead">Gib den Code ein, den deine Lehrerin oder dein Lehrer an die Wandtafel geschrieben hat.</p>' +
-      '<label class="sr" for="kCode">Klassencode</label><input class="kid-input" id="kCode" name="code" placeholder="FUCHS 123" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
-      '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go">Weiter</button></form>');
+    // Startfeld im Stil der Eulenkiste: Eulen-Bild, Handschrift, goldener Code-Rahmen
+    return K.shell('<form class="kid-card kc-code" data-a="kCode"><span class="kc-sterne" aria-hidden="true">✦ ✧ ✦</span>' +
+      '<img class="kc-bild" src="bilder/klassenkiste.webp" alt="" width="150" height="150" draggable="false"><h1>Hallo!</h1>' +
+      '<p class="lead">Gib den Code ein, den deine Lehrerin oder dein Lehrer an die Wandtafel geschrieben hat.</p>' +
+      '<label class="sr" for="kCode">Klassencode</label><input class="kid-input kc-in" id="kCode" name="code" placeholder="FUCHS 123" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
+      '<p class="err" style="font-size:18px">' + h(K.err) + '</p><button class="kid-go kc-go">Los geht’s <span aria-hidden="true">✦</span></button></form>');
   };
   K.view_names = function () {
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.cls.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Wer bist du?</h1><p class="lead">Klasse ' + h(K.cls.class_name) + ' · Tippe auf deinen Namen.</p></div></div>' +
