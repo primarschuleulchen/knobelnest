@@ -731,6 +731,36 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .face.back .cpic{position:relative;right:auto;bottom:auto}
 .face.back .cpic .pic{width:clamp(64px,22vw,120px);height:clamp(64px,22vw,120px)}
 .face.back .cpic .pic.emo{font-size:clamp(44px,14vw,78px);width:auto;height:auto}
+/* Heft, Runde 3: Abzeichen in gleich hohen Reihen, sauberer Goldrand (vom CSS), Reiter mit Bildern, liebevoller Umschlag */
+.badges{align-items:start;gap:22px 12px}
+.bdg{display:grid;grid-template-rows:124px auto auto;justify-items:center;align-items:start}
+.bdg .bi{align-self:center;border-radius:50%}
+.bdg.t0 .bi{box-shadow:0 0 0 3px #fff,0 0 0 5px #e1e5e8!important}
+.bdg.t1 .bi{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--gold-l),0 5px 12px rgba(63,120,168,.18)!important}
+.bdg.t2 .bi{box-shadow:0 0 0 3px #fff,0 0 0 6px #c9d2d9,0 0 0 8px #fff,0 6px 14px rgba(63,120,168,.2)!important}
+.bdg.t3 .bi{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--gold),0 0 0 9px #fff3c9,0 6px 18px rgba(196,149,47,.4)!important}
+.bdg.t4 .bi{box-shadow:0 0 0 3px #fff,0 0 0 7px var(--gold-d),0 0 0 11px #ffe7a0,0 0 26px rgba(214,173,69,.75)!important}
+.bdg .bn{margin-top:4px}
+.htab{display:inline-flex;align-items:center;gap:8px}
+.htab .rt{width:30px;height:30px;border-radius:50%;flex:none}
+.htab:not(.on) .rt{opacity:.85}
+.hcover{min-height:190px;background:radial-gradient(circle at 18% 30%,rgba(255,255,255,.14),transparent 40%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.08),transparent 45%),repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.05) 0 2px,transparent 2px 5px),linear-gradient(135deg,#5a95c6,#33679a 60%,#2c5a86)}
+.hstich{position:absolute;inset:10px 96px 10px 30px;border:2px dashed rgba(255,248,225,.55);border-radius:10px 18px 18px 10px;pointer-events:none}
+.hband{right:70px;width:16px}
+.hband i{position:absolute;left:-5px;top:50%;width:26px;height:16px;margin-top:-8px;border-radius:5px;background:linear-gradient(180deg,#f3dc9a,#c4952f);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.hribbon{position:absolute;right:120px;bottom:-2px;width:18px;height:46px;background:linear-gradient(90deg,#e9a49c,#d9766c);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.hdoo{position:absolute;color:rgba(255,243,201,.85);font-size:20px;pointer-events:none;text-shadow:0 0 6px rgba(255,255,255,.25)}
+.hdoo.d1{left:22%;top:16%;font-size:24px}.hdoo.d2{left:30%;bottom:16%}.hdoo.d3{right:28%;top:14%;font-size:18px;color:rgba(252,239,237,.8)}
+.hdoo.d4{right:22%;bottom:18%;font-size:16px}.hdoo.d5{left:14%;bottom:24%;font-size:16px}.hdoo.d6{right:33%;bottom:30%;font-size:14px}
+.hlabel{transform:rotate(-1.2deg);padding:16px 40px 14px;
+  background:linear-gradient(transparent 0 calc(100% - 22px),rgba(63,120,168,.0) 0),repeating-linear-gradient(transparent 0 25px,rgba(63,120,168,.10) 25px 26px),#fffdf5}
+.htape{position:absolute;top:-12px;width:74px;height:24px;background:repeating-linear-gradient(45deg,rgba(233,164,156,.75) 0 6px,rgba(252,239,237,.75) 6px 12px);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.htape.l{left:-18px;transform:rotate(-14deg)}
+.htape.r{right:-18px;transform:rotate(12deg);background:repeating-linear-gradient(45deg,rgba(156,200,234,.8) 0 6px,rgba(220,240,253,.8) 6px 12px)}
+.hk{letter-spacing:.06em}
+.hz{display:block;width:60%;height:10px;margin-top:4px;background:radial-gradient(circle,var(--gold) 1.6px,transparent 2.2px) 0 50%/14px 10px repeat-x;opacity:.7}
+.heule{left:auto;right:132px;top:auto;bottom:10px;transform:rotate(8deg);width:86px;height:86px;border:0;border-radius:50%;box-shadow:0 0 0 4px #fff,0 0 0 6px var(--gold),0 8px 16px rgba(0,0,0,.28)}
+@media (max-width:620px){.heule{width:56px;height:56px;right:96px;bottom:6px}.hstich{right:84px}.hlabel{padding:12px 22px;min-width:70%}.hribbon{right:84px}.hdoo{display:none}}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1961,7 +1991,7 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
         :`<div class="stslot zu" aria-label="Noch nicht gefunden"><div class="geheim">${FUNKEN(i+1)}<span class="fz">?</span></div></div>`}).join('')}</div>
     <p class="hfuss">Für jede geschaffte Portion klebst du einen neuen Sticker ein. Welcher es wird, ist eine Überraschung.</p>`;
   else if(tab==='bdg')body=`${prog(bn,BADGES.length,'Abzeichen')}
-    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><img src="abzeichen/${b[0]}.webp?v=1" alt="" draggable="false">${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
+    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><img src="abzeichen/${b[0]}.webp?v=2" alt="" draggable="false">${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
     <p class="hfuss">Viele Abzeichen bekommst du mehrmals. Ab 5, 10 und 25 werden sie grösser.</p>`;
   else body=`${prog(units.filter(u=>urkT(u)).length,units.length,'Urkunden')}
     <div class="urks">${units.length?units.map(u=>{const t=urkT(u);return `<button class="urk ${t?'':'leer'}" data-urk="${u.id}" ${t?'':'disabled'}>
@@ -1971,9 +2001,12 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
   const name=V?'Lena':KIDNAME;
   stage.innerHTML=`<div class="heft">
     ${CAN_EDIT?`<div class="hvor"><span>${V?'👁 Vorschau: So sieht ein volles Heft aus. Nichts davon wird gespeichert.':'Lehrperson: Möchtest du sehen, wie ein volles Heft aussieht?'}</span><button class="pill sm ${V?'rose':''}" id="hvorB">${V?'Vorschau beenden':'👁 Vorschau'}</button></div>`:''}
-    <div class="hcover"><div class="hband"></div><div class="hlabel"><span class="hk">Vokabelkiste · ${esc(SUB().name)}</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span></div><img src="../bilder/eule.webp" alt="" class="heule"></div>
+    <div class="hcover"><i class="hstich"></i><div class="hband"><i></i></div><i class="hribbon"></i>
+      <span class="hdoo d1">✦</span><span class="hdoo d2">✧</span><span class="hdoo d3">♡</span><span class="hdoo d4">✦</span><span class="hdoo d5">☆</span><span class="hdoo d6">✧</span>
+      <div class="hlabel"><i class="htape l"></i><i class="htape r"></i><span class="hk">✦ Vokabelkiste · ${esc(SUB().name)} ✦</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span><span class="hz"></span></div>
+      <img src="../bilder/eule.webp" alt="" class="heule" draggable="false"></div>
     ${vkZielHTML(false)}
-    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','🧩'],['bdg','Abzeichen','🏅'],['urk','Urkunden','📜']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><span class="emo">${e}</span> ${t}</button>`).join('')}</div>
+    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=1" alt="" draggable="false">${t}</button>`).join('')}</div>
     <div class="hpage">${body}</div></div></div>`;
   $$('[data-ht]').forEach(b=>b.onclick=()=>goHeft(b.dataset.ht));
   const vb=$('#hvorB');if(vb)vb.onclick=()=>{heftVor=!heftVor;goHeft(tab)};
