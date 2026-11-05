@@ -1498,7 +1498,7 @@ function modeRain(){
     const w=cand[Math.random()*cand.length|0];const el=document.createElement('div');forceFD=!!w.x;const dq=Q(w),da=A(w);forceFD=false;el.className='drop';el.textContent=dq;el.style.left=(4+Math.random()*56)+'%';rain.appendChild(el);
     drops.push({w,el,q:dq,a:da,y:-40,v:(rain.clientHeight+40)/Math.max(4200,10000-elapsed*.05)})};
   const remove=d=>{drops=drops.filter(x=>x!==d)};
-  const over=()=>{running=false;cancelAnimationFrame(raf);inp.disabled=true;const prev=P.rain[key]||0,isRec=score>prev;if(isRec){P.rain[key]=score;saveP()}
+  const over=()=>{running=false;cancelAnimationFrame(raf);inp.disabled=true;const prev=P.rain[key]||0,isRec=score>prev;if(isRec){P.rain[key]=score;if(score>=10){vkCount('regen');vkBadgeCheck()}saveP()}
     const miss=[...new Map(missed.map(w=>[w.id,w])).values()];
     later(()=>summary(body,{title:isRec&&score?'Neuer Rekord!':'Spiel vorbei',lines:[`${score} Punkte, ${hits} ${hits===1?'Wort':'Wörter'} erwischt.`,!isRec&&prev?`Rekord: ${prev} Punkte.`:'',miss.length?`Verpasst: ${miss.map(w=>`<b>${esc(Q(w))}</b> = ${esc(A(w))}`).join(', ')}`:''],actions:[{label:'Nochmal',primary:true,fn:modeRain},backAct()]}),1300)};
   const miss=d=>{remove(d);d.el.classList.add('miss');d.el.textContent=`${d.q} = ${d.a}`;missed.push(d.w);rec(d.w.id,false);setTimeout(()=>d.el.remove(),1500);lives--;$('#rl',body).innerHTML=lifeHTML();if(lives<=0)over()};
@@ -1845,6 +1845,7 @@ const BADGES=[
   ['sprech','🎤','Sprechprofi','je 20 Wörter richtig gesagt',()=>Math.floor(((P.cnt||{}).sag||0)/20)],
   ['schreib','✍️','Schreibprofi','je 50 Wörter richtig geschrieben',()=>Math.floor(((P.cnt||{}).schreib||0)/50)],
   ['ohr','👂','Gutes Ohr','«Hören & Schreiben» ohne Fehler',()=>(P.cnt||{}).ohr||0],
+  ['regen','🌧️','Regenmeister','eigenen Rekord im Wortregen geknackt (ab 10 Punkten)',()=>(P.cnt||{}).regen||0],
   ['bild','🖼️','Bilderblick','«Bild & Wort» ganz durch',()=>(P.cnt||{}).bild||0],
   ['kiste','📦','Kistenprofi','je 100 Wörter im letzten Fach',()=>Math.floor(knFach5()/100)],
   ['unit','📜','Unit geschafft','alle Portionen einer Unit',()=>Object.keys(P.urk||{}).length]];

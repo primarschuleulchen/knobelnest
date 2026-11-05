@@ -50,6 +50,7 @@ const BADGES=[
   ['sprech','🎤','Sprechprofi','je 20 Wörter richtig gesagt',()=>Math.floor(((P.cnt||{}).sag||0)/20)],
   ['schreib','✍️','Schreibprofi','je 50 Wörter richtig geschrieben',()=>Math.floor(((P.cnt||{}).schreib||0)/50)],
   ['ohr','👂','Gutes Ohr','«Hören & Schreiben» ohne Fehler',()=>(P.cnt||{}).ohr||0],
+  ['regen','🌧️','Regenmeister','eigenen Rekord im Wortregen geknackt (ab 10 Punkten)',()=>(P.cnt||{}).regen||0],
   ['bild','🖼️','Bilderblick','«Bild & Wort» ganz durch',()=>(P.cnt||{}).bild||0],
   ['kiste','📦','Kistenprofi','je 100 Wörter im letzten Fach',()=>Math.floor(knFach5()/100)],
   ['unit','📜','Unit geschafft','alle Portionen einer Unit',()=>Object.keys(P.urk||{}).length]];

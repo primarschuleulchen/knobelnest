@@ -376,5 +376,9 @@ rep("$('#impBtn').onclick=", "bindBulk(node,table);$('#impBtn').onclick=")
 # Start: Sticker, Urkunden und Abzeichen nachführen
 rep("  if(KN){setInterval(knTick,1000);knAward();}", "  if(KN){setInterval(knTick,1000);knAward();vkCheckAll(false);vkBadgeReady=true;}")
 
+
+# 16) Abzeichen «Regenmeister»: jedes Mal, wenn das Kind im Wortregen seinen eigenen Rekord knackt (ab 10 Punkten)
+rep("if(isRec){P.rain[key]=score;", "if(isRec){P.rain[key]=score;if(score>=10){vkCount('regen');vkBadgeCheck()}")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
