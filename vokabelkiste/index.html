@@ -725,7 +725,6 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .tile:has(.vkok) .go{order:6}
 /* Nur für Lehrpersonen: Lückensätze prüfen, unauffällig */
 #gapReview{background:#fff;border-color:var(--rule);color:var(--sky-deep);box-shadow:0 2px 0 var(--line)}
-#gapReview::before{content:"✏️ "}
 .sh .vkfort{order:9}
 .face.back .cpic{position:relative;right:auto;bottom:auto}
 .face.back .cpic .pic{width:clamp(64px,22vw,120px);height:clamp(64px,22vw,120px)}
@@ -833,6 +832,8 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
   body.wsdruck .wsp{zoom:1!important;width:auto;min-height:0;box-shadow:none;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.wsdruck .wsp:last-child{break-after:auto;page-break-after:auto}
 }
+.hact .pill.tool{background:#fff;border-color:var(--gold);color:var(--ink);box-shadow:0 2px 0 var(--gold-l)}
+.hact .pill.tool:hover{background:var(--nut-soft)}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1270,7 +1271,7 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
@@ -1352,7 +1353,7 @@ function goAll(id){
   nav={view:'all',node:id};const node=info.node,ws=wordsOf(node);
   const parts=(node.kids||[]).filter(n=>n.words&&vis(n)&&wordsOf(n).length);
   SET={key:id+':all',label:node.name+' · Gesamt',words:ws};
-  stage.innerHTML=crumbs(id,'Gesamt')+`<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>
+  stage.innerHTML=crumbs(id,'Gesamt')+`<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1>${T&&ws.length?`<div class="hact">${wsTools()}</div>`:''}</div>
     <p class="hand">Alle ${ws.length} Wörter aus ${parts.map(n=>'«'+esc(n.name)+'»').join(', ')} zusammen. Kommt ein neuer Teil dazu, ist er hier automatisch dabei.</p>`
     +(ws.length?practiceHTML()+wordListHTML(ws):'');
   bindNodes(stage);bindSpeak(stage);bindPractice(stage);window.scrollTo(0,0);
@@ -1371,7 +1372,7 @@ function practiceHTML(){
     ['luecke','Lückensatz',gapN?`Setz das fehlende Wort in den Satz ein. ${gapN} ${gapN===1?'Satz':'Sätze'}.`:'Zu diesen Wörtern gibt es noch keine Beispielsätze.',gapN]].filter(m=>!(m[0]==='luecke'&&noSent()));knMoreModes(MODES,ws);
   const GAMES=[['pairs','Paare finden','Memory mit höchstens 8 Wortpaaren.',n>=2],['regen','Wortregen','Tipp die Übersetzung, bevor die Wörter unten ankommen.',nW]];
   const tile=([m,t,d,ok],i)=>`<button class="tile" data-mode="${m}" ${ok?'':'disabled'}>${i!=null?`<span class="num">${i+1}</span>`:''}<h3><span class="ico ${i==null?'rose':''}">${ICONS[m]}</span>${t}</h3><p>${d}</p>${m==='regen'&&best?`<span class="rec">Rekord: ${best} Punkte</span>`:''}${vkTileMark(m)}<span class="go">Starten →</span></button>`;
-  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${wsBtn()}${vkHead()}${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
+  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
     <div class="sh"><h2 class="lbl">Spiele</h2></div><div class="tiles">${GAMES.map(m=>tile(m,null)).join('')}</div>`;
 }
 const MODE_FN=()=>({karte:modeCards,drei:modeThree,merken:modeMerken,salat:modeScramble,schreiben:modeWrite,hoeren:modeListen,luecke:modeGap,pairs:modePairs,regen:modeRain,bild:modeBild,sprechen:modeTalk});
@@ -2187,7 +2188,7 @@ const vkPage=sz=>{let st=document.getElementById('pgsz');if(!st){st=document.cre
 function wsRng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const wsMix=(arr,r)=>{const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const wsF=w=>String(w.f||'').replace(/\s*\[|\]\s*/g,' ').trim();
-function wsBtn(){return T?'<button class="pill sm" id="wsBtn">🖨 Arbeitsblatt / Test</button>':''}
+function wsTools(){return '<button class="pill tool" id="wsBtn">🖨 Arbeitsblatt / Test</button>'+(noSent()?'':'<button class="pill tool" id="gapReview">✏️ Lückensätze prüfen</button>')}
 function goWs(){
   const ws=SET.words.filter(valid);if(!ws.length){toast('Hier gibt es keine Wörter.');return}
   if(!WS||WS.key!==SET.key)WS={key:SET.key,typ:'blatt',titel:SET.label||'',bilder:ws.some(bildOK),ver:'A',n:10,loes:true,seed:Math.random()*1e9|0,
