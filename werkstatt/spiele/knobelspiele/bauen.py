@@ -662,6 +662,51 @@ def pruefen():
             assert ohne_raten(rows), ('Bild nicht ohne Raten lösbar', b[0])
 
 
+# Stern in der Aufgabe wie beim Kleiderschrank (oben neben dem Ton): füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern.
+# Nur in der Klassenkiste (MODE url/srcdoc), die Werte (lv, box, per, max) kommen vom Portal (S.view()).
+STERN_SPIELE = {'rechen-rakete', 'uhr-lesen', 'kiosk', 'wort-raten', 'der-die-das', 'silben-puzzle', 'bilderraetsel', 'eulen-weg', 'bilder-sudoku', 'wasser-weg'}
+STERN_CSS = r"""
+.fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
+.fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}
+.stern{width:20px;height:20px;display:block;flex:none}.stern.gross{width:32px;height:32px}
+.stern .leer{fill:#f3ead2;stroke:#d6ad45;stroke-width:1.4;stroke-linejoin:round}
+.stern .voll{fill:#f0c24b;stroke:#c4952f;stroke-width:1.4;stroke-linejoin:round;transition:clip-path .6s ease}
+.fort.pop .stern{animation:sternpop .9s}
+@keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
+.top .fort{margin-left:auto}
+@media (max-width:560px){.fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}.top .t{font-size:18px}}
+"""
+STERN_JS = r"""
+var STERN_D = 'M12 2.2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.3 1.3-6.6L2.5 9.1l6.6-.8z';
+function sternFort(api, li) {
+  var k = 'Stufe ' + (li + 1), per = +AW.per || 10, max = +AW.max || 3;
+  AW.lv = AW.lv || {}; AW.box = AW.box || {};
+  var el = document.createElement('div'); el.className = 'fort'; el.setAttribute('aria-live', 'polite');
+  el.innerHTML = '<svg class="stern gross" viewBox="0 0 24 24" aria-hidden="true"><path class="leer" d="' + STERN_D + '"/><path class="voll" d="' + STERN_D + '"/></svg><span class="fz"></span>';
+  var top = app.querySelector('.top'); if (top) top.insertBefore(el, top.querySelector('[data-snd]'));
+  var voll = el.querySelector('.voll'), fz = el.querySelector('.fz');
+  function zeig() {
+    var have = +AW.lv[k] || 0, n = +AW.box[k] || 0, fertig = have >= max;
+    voll.style.clipPath = 'inset(' + Math.round((1 - (fertig ? 1 : n / per)) * 100) + '% 0 0 0)';
+    fz.innerHTML = fertig ? 'Alle ' + max + ' Sterne!' : '<b>' + n + '</b> von ' + per + (have ? ' <span class="fz-st">· ★ ' + have + '</span>' : '');
+  }
+  zeig();
+  var alt = api.answer;
+  api.answer = function (ok, quiet) {
+    if (ok && (+AW.lv[k] || 0) < max) {
+      AW.box[k] = (+AW.box[k] || 0) + 1;
+      if (AW.box[k] >= per) {
+        AW.box[k] = per; zeig(); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+        api.later(function () { AW.box[k] = 0; AW.lv[k] = (+AW.lv[k] || 0) + 1; zeig(); }, 900);
+      } else zeig();
+    }
+    return alt(ok, quiet);
+  };
+}
+(function () { var spiel = G.play; G.play = function (lv, api, li) { if (showStars) sternFort(api, li); return spiel(lv, api, li); }; })();
+"""
+
+
 def game_html(s):
     meta = json.dumps(s['sterne'], ensure_ascii=False).replace('"', '&quot;')
     g = {'title': s['titel'], 'icon': s['icon'], 'intro': s['intro'], 'n': s['n'], 'levels': s['levels']}
@@ -669,8 +714,8 @@ def game_html(s):
     return ('<!doctype html>\n<html lang="de-CH">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
             f'<meta name="knobelnest-sterne" content="{meta}">\n'
-            f'<title>{s["titel"]}</title>\n<style>{GD.CSS.replace("__SCHRIFT__", GD.schrift())}{s.get("css", "")}</style>\n</head>\n<body>\n<div id="app"></div>\n'
-            f'<script>\n{GD.POOL}\n{daten}var G = {json.dumps(g, ensure_ascii=False)};\n{s["js"]}\n{FRAME}\n</script>\n</body>\n</html>\n')
+            f'<title>{s["titel"]}</title>\n<style>{GD.CSS.replace("__SCHRIFT__", GD.schrift())}{s.get("css", "")}{STERN_CSS if s["id"] in STERN_SPIELE else ""}</style>\n</head>\n<body>\n<div id="app"></div>\n'
+            f'<script>\n{GD.POOL}\n{daten}var G = {json.dumps(g, ensure_ascii=False)};\n{s["js"]}\n{(STERN_JS + chr(10)) if s["id"] in STERN_SPIELE else ""}{FRAME}\n</script>\n</body>\n</html>\n')
 
 
 def stub_html(s):

@@ -281,7 +281,7 @@
   var ZR_VER = '1';
   var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
-  var KS_VER = '25'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
+  var KS_VER = '26'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '14'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
@@ -3927,6 +3927,8 @@
   //   <meta name="knobelnest-sterne" content='{"modus":"eigene"}'>                              das Spiel zählt selbst (knobelnest.award)
   function starCfg(html) {
     if (/<script[^>]*id=["']vk-content["']/i.test(html || '')) return { modus: 'eigene' }; // Vokabelkiste: Tagessterne zählt sie selbst
+    // Die 10 Knobelspiele: immer je 10 richtige 1 Stern, bis 3 pro Stufe (auch wenn der Eintrag in «games» noch die alte Regel hat)
+    if (STERN_IM_SPIEL.test(gameUrl(html) || '') && !/kleiderschrank/.test(gameUrl(html))) return { modus: 'sammeln', pro: 10, max: 3, proLevel: true, proFuer: {}, proTag: false };
     var m = /<meta\s+name=["']knobelnest-sterne["']\s+content=(["'])([\s\S]*?)\1/i.exec(html || ''), c = null;
     if (m) try { c = JSON.parse(m[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')); } catch (e) {}
     c = c || { modus: 'runde' };
@@ -3937,6 +3939,8 @@
     if (c.modus === 'eigene' || c.modus === 'aus') return { modus: c.modus };
     return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
   }
+  // Spiele mit eigenem Stern in der Aufgabe: Kleiderschrank und die 10 Knobelspiele der Knobelkiste
+  var STERN_IM_SPIEL = /^knobelspiele\/(kleiderschrank|rechen-rakete|uhr-lesen|kiosk|wort-raten|der-die-das|silben-puzzle|bilderraetsel|eulen-weg|bilder-sudoku|wasser-weg)\.html/;
   function starMax(c) { return c.modus === 'sammeln' ? c.max : c.modus === 'runde' ? 3 : 0; }
   // Wie viele richtige braucht es für einen Stern? (pro Level verschieden möglich, z. B. "Zeichnen": 1)
   function starPer(c, k) { var n = c.pro; Object.keys(c.proFuer || {}).forEach(function (p) { if (String(k).indexOf(p) === 0) n = c.proFuer[p]; }); return n; }
@@ -3997,6 +4001,7 @@
     }
     S.render = function () {
       if (!PL || cfg.modus === 'eigene' || cfg.modus === 'aus') return;
+      if (PL.url && STERN_IM_SPIEL.test(PL.url)) { PL.bar.hidden = true; return; } // zeigt den Stern selbst (wie der Kleiderschrank), kein Balken oben
       var b = PL.bar, k = key(), max = maxFor(), have = Math.min(max, +a.lv[k] || 0), name = S.level || '', body;
       if (!S.shown) return;
       if (cfg.modus === 'runde') {
