@@ -52,11 +52,11 @@ spiel(id='rechen-rakete', titel='Rechen-Rakete', icon=logo('rechen-rakete'), fac
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Rechnen und mit der Rakete zum Mond fliegen.',
       intro='Tippe auf das richtige Ergebnis. Bei jeder Rechnung fliegt die Rakete ein Stück höher, bis zum Mond!',
-      levels=[dict(name='Leicht', info='Plus und Minus bis 10', t=0),
-              dict(name='Gut', info='Plus und Minus bis 20', t=1),
-              dict(name='Mittel', info='Einmaleins', t=2),
-              dict(name='Schwer', info='Plus und Minus bis 100', t=3),
-              dict(name='Profi', info='Mal, geteilt und bis 1000', t=4)],
+      levels=[dict(name='Plus und Minus bis 10', info='z. B. 7 − 3', t=0),
+              dict(name='Plus und Minus bis 20', info='Über den Zehner, z. B. 8 + 6', t=1),
+              dict(name='Einmaleins', info='z. B. 6 · 7', t=2),
+              dict(name='Plus und Minus bis 100', info='z. B. 47 + 25', t=3),
+              dict(name='Mal, geteilt und bis 1000', info='z. B. 56 : 8 oder 450 + 230', t=4)],
       css=LOGO_CSS + r"""
 .rk{display:flex;gap:22px;align-items:center;justify-content:center;width:100%;max-width:860px}
 .all{position:relative;flex:none;width:150px;height:min(58vh,470px);border-radius:28px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--sch);
@@ -183,11 +183,11 @@ spiel(id='wort-raten', titel='Wort-Raten', icon=logo('wort-raten'), fach='Deutsc
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Ein geheimes Wort in sechs Versuchen erraten.',
       intro='Errate das geheime Wort! Nach jedem Versuch zeigen die Farben: <b style="color:#4c8a37">grün</b> = richtiger Platz, <b style="color:#b8892a">gelb</b> = kommt vor, aber an einem anderen Platz.',
-      levels=[dict(name='Leicht', info='4 Buchstaben, mit Bild', L=4, bild=True),
-              dict(name='Gut', info='4 Buchstaben', L=4, bild=False),
-              dict(name='Mittel', info='5 Buchstaben, mit Bild', L=5, bild=True),
-              dict(name='Schwer', info='5 Buchstaben', L=5, bild=False),
-              dict(name='Profi', info='6 Buchstaben', L=6, bild=False)],
+      levels=[dict(name='4 Buchstaben mit Bild', info='Ein Bild hilft beim Raten', L=4, bild=True),
+              dict(name='4 Buchstaben', info='Ohne Bild-Tipp', L=4, bild=False),
+              dict(name='5 Buchstaben mit Bild', info='Ein Bild hilft beim Raten', L=5, bild=True),
+              dict(name='5 Buchstaben', info='Ohne Bild-Tipp', L=5, bild=False),
+              dict(name='6 Buchstaben', info='Lange Wörter ohne Tipp', L=6, bild=False)],
       daten={'W4': W4, 'W4X': W4X, 'W5': W5, 'W5X': W5X, 'W6': W6},
       css=LOGO_CSS + r"""
 .wr{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
@@ -293,11 +293,11 @@ spiel(id='bilderraetsel', titel='Bilderrätsel', icon=logo('bilderraetsel'), fac
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Felder nach Zahlen ausmalen, bis ein Bild erscheint.',
       intro='Die Zahlen sagen, wie viele Felder in einer Reihe nebeneinander ausgemalt sind. «2 1» heisst: zuerst 2 Felder, dann eine Lücke, dann 1 Feld. Male so lange, bis ein Bild erscheint!',
-      levels=[dict(name='Leicht', info='5 × 5 Felder', s=5, hilfe=True, bilder=nono_level(5)),
-              dict(name='Gut', info='6 × 6 Felder', s=6, hilfe=True, bilder=nono_level(6)),
-              dict(name='Mittel', info='8 × 8 Felder', s=8, hilfe=True, bilder=nono_level(8)),
-              dict(name='Schwer', info='10 × 10 Felder', s=10, hilfe=True, bilder=nono_level(10)),
-              dict(name='Profi', info='10 × 10 Felder, ohne Hilfe', s=10, hilfe=False, bilder=nono_level(10))],
+      levels=[dict(name='5 × 5 Felder', info='Kleine Bilder', s=5, hilfe=True, bilder=nono_level(5)),
+              dict(name='6 × 6 Felder', info='Etwas grössere Bilder', s=6, hilfe=True, bilder=nono_level(6)),
+              dict(name='8 × 8 Felder', info='Mittlere Bilder', s=8, hilfe=True, bilder=nono_level(8)),
+              dict(name='10 × 10 Felder', info='Grosse Bilder', s=10, hilfe=True, bilder=nono_level(10)),
+              dict(name='10 × 10 ohne Hilfe', info='Kreuzchen setzt du selbst', s=10, hilfe=False, bilder=nono_level(10))],
       css=LOGO_CSS + r"""
 .nn-werk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .nn-werk .go{min-height:50px;font-size:21px;padding:4px 18px}
@@ -415,11 +415,11 @@ spiel(id='eulen-weg', titel='Eulen-Weg', icon=logo('eulen-weg'), fach='Knobeln',
       sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Pfeile legen, damit die Eule nach Hause findet.',
       intro='Lege Pfeil-Karten hintereinander. Dann tippe auf «▶ Los!» und die Eule läuft genau so, wie du es programmiert hast. Findet sie nach Hause?',
-      levels=[dict(name='Leicht', info='Pfeile, kleiner Wald', s=4, rel=False, o=2, nuts=0, min=3, max=5, umweg=False),
-              dict(name='Gut', info='Pfeile, um Bäume herum', s=5, rel=False, o=6, nuts=0, min=5, max=8, umweg=True),
-              dict(name='Mittel', info='Pfeile, Nüsse sammeln', s=5, rel=False, o=4, nuts=2, min=7, max=11, umweg=False),
-              dict(name='Schwer', info='Vorwärts und drehen', s=5, rel=True, o=4, nuts=0, min=5, max=9, umweg=False),
-              dict(name='Profi', info='Drehen, Nüsse, wenige Karten', s=6, rel=True, o=7, nuts=1, min=8, max=13, umweg=False, knapp=True)],
+      levels=[dict(name='Pfeile legen', info='Kurze Wege im kleinen Wald', s=4, rel=False, o=2, nuts=0, min=3, max=5, umweg=False),
+              dict(name='Um Bäume herum', info='Der Weg macht einen Umweg', s=5, rel=False, o=6, nuts=0, min=5, max=8, umweg=True),
+              dict(name='Nüsse sammeln', info='Zuerst alle Nüsse, dann nach Hause', s=5, rel=False, o=4, nuts=2, min=7, max=11, umweg=False),
+              dict(name='Vorwärts und drehen', info='Die Eule dreht sich links oder rechts', s=5, rel=True, o=4, nuts=0, min=5, max=9, umweg=False),
+              dict(name='Drehen mit wenig Karten', info='Nüsse sammeln, Karten sparen', s=6, rel=True, o=7, nuts=1, min=8, max=13, umweg=False, knapp=True)],
       css=LOGO_CSS + r"""
 .ew{display:flex;gap:22px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%;max-width:1000px}
 .wald{position:relative;background:#e9f1e3;border:3px solid #9cc28a;border-radius:20px;box-shadow:var(--sch);flex:none}

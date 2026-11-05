@@ -54,11 +54,11 @@ def alle(spiel, logo=None, LOGO_CSS=''):
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Die Uhr lesen: volle Stunden bis genaue Minuten.',
           intro='Der kurze Zeiger zeigt die Stunde, der lange Zeiger die Minuten. Schau genau hin!',
-          levels=[dict(name='Leicht', info='Volle Stunden', t=0),
-                  dict(name='Gut', info='Halbe Stunden', t=1),
-                  dict(name='Mittel', info='Viertelstunden', t=2),
-                  dict(name='Schwer', info='Alle 5 Minuten', t=3),
-                  dict(name='Profi', info='Genaue Minuten, auch am Nachmittag', t=4)],
+          levels=[dict(name='Volle Stunden', info='z. B. 3 Uhr', t=0),
+                  dict(name='Halbe Stunden', info='z. B. halb vier', t=1),
+                  dict(name='Viertelstunden', info='Viertel nach und Viertel vor', t=2),
+                  dict(name='Alle 5 Minuten', info='z. B. 7:25', t=3),
+                  dict(name='Genaue Minuten', info='Auch am Nachmittag, z. B. 15:43', t=4)],
           css=LOGO_CSS + r"""
 .uh{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
 .uh .frage{display:grid;place-items:center;background:#fff;border:2px solid var(--line);border-radius:28px;padding:12px 26px;box-shadow:var(--sch);min-height:120px}
@@ -152,11 +152,11 @@ G.play = function (lv, api) {
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Mit Franken und Rappen genau bezahlen.',
           intro='Im Kiosk kostet alles etwas. Lege genau so viel Geld hin, wie es kostet. Tippe auf eine Münze, um sie hinzulegen, und auf eine Münze auf der Theke, um sie wieder wegzunehmen.',
-          levels=[dict(name='Leicht', info='Bis 10 Franken', t=0),
-                  dict(name='Gut', info='Bis 50 Franken, mit Noten', t=1),
-                  dict(name='Mittel', info='Franken und 50 Rappen', t=2),
-                  dict(name='Schwer', info='Mit 10 und 20 Rappen', t=3),
-                  dict(name='Profi', info='Wie viel Rückgeld?', t=4)],
+          levels=[dict(name='Bezahlen bis 10 Franken', info='Mit 1-, 2- und 5-Fränklern', t=0),
+                  dict(name='Bezahlen bis 50 Franken', info='Auch mit 10er- und 20er-Noten', t=1),
+                  dict(name='Franken und 50 Rappen', info='z. B. Fr. 3.50', t=2),
+                  dict(name='Mit 10 und 20 Rappen', info='z. B. Fr. 4.70', t=3),
+                  dict(name='Rückgeld rechnen', info='Wie viel bekommst du zurück?', t=4)],
           css=LOGO_CSS + r"""
 .ki{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:860px}
 .ki .ware{display:flex;align-items:center;gap:16px;background:#fff;border:2px solid var(--line);border-radius:26px;padding:10px 22px;box-shadow:var(--sch)}
@@ -258,11 +258,11 @@ G.play = function (lv, api) {
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Nomen in die richtige Artikel-Kiste legen.',
           intro='Heisst es <b style="color:#3f78a8">der</b>, <b style="color:#c8574e">die</b> oder <b style="color:#4c8a37">das</b>? Tippe auf die richtige Kiste.',
-          levels=[dict(name='Leicht', info='Mit Bildern', t=0),
-                  dict(name='Gut', info='Mit Bildern, mehr Wörter', t=1),
-                  dict(name='Mittel', info='Ohne Bilder', t=2),
-                  dict(name='Schwer', info='Knifflige Wörter', t=3),
-                  dict(name='Profi', info='Zusammengesetzte Wörter', t=4)],
+          levels=[dict(name='Nomen mit Bild', info='Bekannte Wörter', t=0),
+                  dict(name='Mehr Nomen mit Bild', info='Tiere, Essen und Sachen', t=1),
+                  dict(name='Nomen ohne Bild', info='Schule, Wetter, Zeit', t=2),
+                  dict(name='Knifflige Nomen', info='z. B. das Mädchen, die Butter', t=3),
+                  dict(name='Zusammengesetzte Nomen', info='z. B. die Haustür', t=4)],
           daten={'DER': DER_BILD, 'DIE': DIE_BILD, 'DAS': DAS_BILD, 'WORT': DDD_WORT, 'SCHWER': DDD_SCHWER, 'ZUS': DDD_ZUS},
           css=LOGO_CSS + r"""
 .dd{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
@@ -321,11 +321,11 @@ G.play = function (lv, api) {
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Silben in die richtige Reihenfolge bringen.',
           intro='Die Silben sind durcheinander geraten. Tippe sie der Reihe nach an, damit das Wort entsteht. Klatsch die Silben dazu!',
-          levels=[dict(name='Leicht', info='2 Silben, mit Bild', t=0),
-                  dict(name='Gut', info='3 Silben, mit Bild', t=1),
-                  dict(name='Mittel', info='3 bis 5 Silben, mit Bild', t=2),
-                  dict(name='Schwer', info='Ohne Bild', t=3),
-                  dict(name='Profi', info='Lange Wörter und eine Silbe zu viel', t=4)],
+          levels=[dict(name='2 Silben mit Bild', info='z. B. Ap-fel', t=0),
+                  dict(name='3 Silben mit Bild', info='z. B. Ba-na-ne', t=1),
+                  dict(name='Lange Wörter mit Bild', info='3 bis 5 Silben, z. B. Re-gen-bo-gen', t=2),
+                  dict(name='Wörter ohne Bild', info='Wochentage, Schule, Jahreszeiten', t=3),
+                  dict(name='Eine Silbe zu viel', info='Lange Wörter, eine Silbe passt nicht', t=4)],
           daten={'S2': SIL2, 'S3': SIL3, 'S4': SIL4, 'SW': SIL_WORT},
           css=LOGO_CSS + r"""
 .si{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
@@ -393,11 +393,11 @@ G.play = function (lv, api) {
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.',
           intro='Fülle die leeren Felder. In jeder Zeile, jeder Spalte und jedem dicken Kästchen kommt jedes Bild genau einmal vor.',
-          levels=[dict(name='Leicht', info='4 × 4 mit Früchten', n=4, weg=6, bild=True),
-                  dict(name='Gut', info='4 × 4 mit Zahlen', n=4, weg=9, bild=False),
-                  dict(name='Mittel', info='6 × 6 mit Tieren', n=6, weg=16, bild=True),
-                  dict(name='Schwer', info='6 × 6 mit Zahlen', n=6, weg=22, bild=False),
-                  dict(name='Profi', info='9 × 9 mit Zahlen', n=9, weg=44, bild=False)],
+          levels=[dict(name='4 × 4 mit Früchten', info='Jede Frucht einmal', n=4, weg=6, bild=True),
+                  dict(name='4 × 4 mit Zahlen', info='Zahlen 1 bis 4', n=4, weg=9, bild=False),
+                  dict(name='6 × 6 mit Tieren', info='Jedes Tier einmal', n=6, weg=16, bild=True),
+                  dict(name='6 × 6 mit Zahlen', info='Zahlen 1 bis 6', n=6, weg=22, bild=False),
+                  dict(name='9 × 9 mit Zahlen', info='Das grosse Sudoku', n=9, weg=44, bild=False)],
           css=LOGO_CSS + r"""
 .su{display:flex;gap:22px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}
 .su .feld{display:grid;background:#1f2421;border:3px solid #1f2421;border-radius:14px;overflow:hidden;gap:1px;box-shadow:var(--sch)}
@@ -512,11 +512,11 @@ G.play = function (lv, api) {
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Röhren drehen, bis das Wasser zur Blume fliesst.',
           intro='Tippe auf eine Röhre, dann dreht sie sich. Baue einen Weg vom Wasserhahn bis zur Blume. Blaue Röhren haben schon Wasser.',
-          levels=[dict(name='Leicht', info='4 × 4 Felder', s=4, min=5),
-                  dict(name='Gut', info='5 × 5 Felder', s=5, min=7),
-                  dict(name='Mittel', info='6 × 6 Felder', s=6, min=9),
-                  dict(name='Schwer', info='7 × 7 Felder', s=7, min=12),
-                  dict(name='Profi', info='8 × 8 Felder, langer Weg', s=8, min=16)],
+          levels=[dict(name='4 × 4 Röhren', info='Kurzer Weg', s=4, min=5),
+                  dict(name='5 × 5 Röhren', info='Etwas längerer Weg', s=5, min=7),
+                  dict(name='6 × 6 Röhren', info='Mittlerer Weg', s=6, min=9),
+                  dict(name='7 × 7 Röhren', info='Langer Weg', s=7, min=12),
+                  dict(name='8 × 8 Röhren', info='Sehr langer Weg', s=8, min=16)],
           css=LOGO_CSS + r"""
 .ww{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
 .ww .rahmen{display:flex;align-items:stretch}
