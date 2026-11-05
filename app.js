@@ -3962,14 +3962,14 @@
   };
   K.view_pw = function () {
     var full = K.pw.length >= 3;
-    return K.shell('<div class="kid-card"><h1>Hallo ' + h(K.kid.name) + '!</h1><p class="lead">Tippe deine drei Bilder in der richtigen Reihenfolge an.</p>' +
+    return K.shell('<div class="kid-card kc-code kc-pw"><span class="kc-sterne" aria-hidden="true">✦ ✧ ✦</span><h1>Hallo ' + h(K.kid.name) + '!</h1><p class="lead">Tippe deine drei Bilder in der richtigen Reihenfolge an.</p>' +
       '<div class="slots" aria-label="' + K.pw.length + ' von 3 Bildern gewählt">' + [0, 1, 2].map(function (i) {
         return '<span class="slot' + (i < K.pw.length ? ' on' : '') + '">' + (i < K.pw.length ? ic(I.check, 30, '#fff', 3) : '') + '</span>'; }).join('') + '</div>' +
       '<div class="syms">' + SYM_IDS.map(function (id) {
         return '<button class="sym" style="background:' + SYM[id].bg + '" aria-label="' + SYM[id].label + '" data-a="kSym" data-s="' + id + '"' + (full ? ' disabled' : '') + '>' + symSvg(id, 54) + '</button>';
       }).join('') + '</div><p class="err" style="font-size:18px">' + h(K.err) + '</p>' +
-      '<div class="row" style="flex-wrap:nowrap"><button class="kid-btn" style="flex:1;height:62px;background:#fff" data-a="kClear">Nochmals</button>' +
-      '<button class="kid-go" style="flex:2;height:62px" data-a="kLogin"' + (full && !K.busy ? '' : ' disabled') + '>Einloggen</button></div>' +
+      '<div class="row kc-knoepfe" style="flex-wrap:nowrap"><button class="kid-btn kc-nochmal" data-a="kClear">↺ Nochmals</button>' +
+      '<button class="kid-go kc-go" data-a="kLogin"' + (full && !K.busy ? '' : ' disabled') + '>Einloggen <span aria-hidden="true">✦</span></button></div>' +
       '<p class="muted">Bilder vergessen? Frag deine Lehrperson.</p></div>', 'Zurück');
   };
   K.view_home = function () {

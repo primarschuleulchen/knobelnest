@@ -1354,3 +1354,22 @@ body.kidv .kk-tile{background:#F6E7C8}
 .kc-go:active{transform:translateY(4px);box-shadow:0 1px 0 #c99a2e,0 6px 12px rgba(214,173,69,.3)!important}
 .kc-code .err:empty{display:none}
 @media (prefers-reduced-motion:reduce){.kc-bild,.kc-sterne{animation:none}}
+/* ===== Bilder-Passwort im Stil der Eulenkiste ===== */
+.kc-pw{max-width:640px}
+.kc-pw .slots{gap:14px;margin:4px 0 6px}
+.kc-pw .slot{width:72px;height:72px;border-radius:50%;border:3px dashed #d6ad45;background:linear-gradient(180deg,#fffdf6,#fbf3dc);box-shadow:inset 0 2px 6px rgba(150,110,20,.08);display:grid;place-items:center;transition:transform .2s}
+.kc-pw .slot.on{border-style:solid;background:linear-gradient(180deg,#ffd873,#f2be3c);box-shadow:0 0 0 4px #fff,0 6px 14px rgba(214,173,69,.4);animation:kcPop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes kcPop{from{transform:scale(.5)}to{transform:scale(1)}}
+.kc-pw .syms{gap:16px;width:100%}
+.kc-pw .sym{border:0!important;border-radius:26px!important;min-height:120px;box-shadow:0 0 0 3px #fff,0 0 0 5px rgba(214,173,69,.55),0 10px 22px rgba(63,120,168,.18)!important;transition:transform .15s,box-shadow .15s}
+.kc-pw .sym:hover:not(:disabled){transform:translateY(-3px) rotate(-1deg);box-shadow:0 0 0 3px #fff,0 0 0 5px #d6ad45,0 14px 26px rgba(63,120,168,.24)!important}
+.kc-pw .sym:active:not(:disabled){transform:scale(.95)}
+.kc-pw .sym:disabled{opacity:.55}
+.kc-pw .sym svg{filter:drop-shadow(0 2px 0 rgba(255,255,255,.7))}
+.kc-knoepfe{width:100%;gap:12px;margin-top:6px}
+.kc-nochmal{flex:1;min-height:66px;font-family:inherit!important;font-size:24px!important;font-weight:400!important;border-radius:999px!important;border:2px solid #ecdcae!important;background:#fff!important;color:#5f4b1e!important;box-shadow:0 6px 14px rgba(63,120,168,.12)}
+.kc-pw .kc-go{flex:2;min-height:66px;width:auto}
+.kc-pw .kc-go:disabled{background:linear-gradient(180deg,#f3ead2,#e9dcb8)!important;color:#a8977a!important;box-shadow:none!important;cursor:default;transform:none}
+.kc-pw .muted{font-family:inherit;font-size:19px;color:#7a6a55}
+@media (max-width:480px){.kc-pw .sym{min-height:96px}.kc-pw .slot{width:58px;height:58px}}
+.kc-pw .lead{max-width:540px;text-wrap:balance}
