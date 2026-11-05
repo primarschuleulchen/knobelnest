@@ -34,7 +34,8 @@ FRAME = rep(FRAME, "x.store && x.store.gd", "x.store && x.store.en")
 FRAME = rep(FRAME, "localStorage.getItem('gd')", "localStorage.getItem('en')")
 FRAME = rep(FRAME, "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#e3f4f1'];")
 FRAME = rep(FRAME, "function stopAll() { TM.forEach(clearTimeout); TM = []; }", "function stopAll() { TM.forEach(clearTimeout); TM = []; if (typeof stopSay === 'function') stopSay(); }")  # Vorlesen stoppen bei Stufen, Ende, Zurück
-FRAME = rep(FRAME, "app.innerHTML = o + '</div>';", "app.innerHTML = o + '</div>'; if (G.extra) G.extra();")
+# Eigenes Stufen-Menü als Pfad (G.menu, wie der Kleiderschrank)
+FRAME = rep(FRAME, "function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);", "function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);\n  if (G.menu) { G.menu(); return; }")
 
 def logo(name):
     # Logo des Spiels (rund, durchsichtige Ecken, eigener Goldrand) direkt eingebettet, damit es auch als Artefakt läuft
@@ -43,8 +44,8 @@ def logo(name):
 
 
 SPIELE = [dict(
-    id='owl-town', titel='Owl Town', icon=logo('owl-town'), fach='Englisch', thema='Town, jobs & directions', stufe='4.–6. Klasse', sort=1, n=5,
-    sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige Aufgaben 1 Stern, pro Stufe bis 10
+    id='owl-town', titel='Owl Town', icon=logo('owl-town'), fach='Englisch', thema='Town, jobs & directions', stufe='4.–6. Klasse', sort=1, n=10,
+    sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige Aufgaben 1 Stern, pro Stufe bis 3
     kurz='3D-Stadt: Gebäude und Berufe finden, Wegbeschreibungen laufen.',
     intro='Lauf mit der Eule durch die Stadt! Mit den Pfeiltasten ⬆ ⬅ ➡ ⬇ gehst und drehst du dich. Am Ziel drückst du 📍.',
     levels=[

@@ -1318,6 +1318,7 @@ function askMark(cb) {
 var GAME = { run: 0 };
 G.play = function (lv, api, li) {
   var run = ++GAME.run;
+  if (li >= 0) sternFortschritt(api, li);
   api.msg('<span class="em">🦉</span> Die Stadt wird gebaut …');
   loadThree(function (err) {
     if (run !== GAME.run) return;
@@ -1503,12 +1504,55 @@ function explain(r, kid, L) {
 function hdOf(a, b, end) { var e = EMAP[a + '>' + b]; if (!e) { var A = NODES[a], B = NODES[b]; return Math.atan2(B.z - A.z, B.x - A.x); } return end ? e.h1 : e.h0; }
 
 // Knopf «Frei spazieren» im Stufen-Menü
-G.extra = function () {
-  var lvs = app.querySelector('.lvs'); if (!lvs) return;
-  var b = document.createElement('button'); b.className = 'lv frei'; b.innerHTML = '<span class="n" style="background:#fff">🚶</span><span class="tx"><b>Free walk</b><span>Frei durch die Stadt spazieren und Wörter hören</span></span>';
-  b.onclick = function () { tone(520, .08); freeWalk(); };
-  lvs.appendChild(b);
+// ---------- Stufen-Menü als Pfad (wie der Kleiderschrank): Free walk oben, 1+2 nebeneinander, dann abwechselnd
+var STERN = 'M12 2.2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.3 1.3-6.6L2.5 9.1l6.6-.8z';
+function sternBild(p, cls) {
+  return '<svg class="' + (cls || 'stern') + '" viewBox="0 0 24 24" aria-hidden="true"><path class="leer" d="' + STERN + '"/><path class="voll" d="' + STERN + '" style="clip-path:inset(' + Math.round((1 - p) * 100) + '% 0 0 0)"/></svg>';
+}
+G.menu = function () {
+  var reihen = [[0, 1], [2], [3], [4], [5]], rechts = [null, true, false, true, false];
+  function karte(i) {
+    var lv = G.levels[i], s = KN.sterne('Stufe ' + (i + 1)), mx = +AW.max || 3, have = Math.min(s.have, mx);
+    return '<button class="pf-karte" data-lv="' + i + '" style="background:linear-gradient(180deg,#fff 0%,' + LV_COL[i] + ' 100%)"><span class="pf-tx"><b>' + h(lv.name) + '</b><span>' + h(lv.info) + '</span></span>' +
+      stars(have, mx) + '</button>';
+  }
+  var o = '<div class="top pf-top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="kopf"><span class="ring">' + G.icon + '</span><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p><div class="deko">✦ ✧ ✦</div></div>' +
+    '<div class="pfad"><div class="pf-wahl">Wähle eine Stufe</div>' +
+    '<div class="pf-reihe frei"><button class="pf-karte" data-frei><span class="pf-ic">🚶</span><span class="pf-tx"><b>Free walk</b><span>Frei durch die Stadt spazieren und Wörter hören</span></span></button></div>';
+  reihen.forEach(function (r, ri) {
+    if (r.length === 2) o += '<div class="pf-reihe"><div class="pf-l">' + karte(r[0]) + '</div><div class="pf-n zwei"><i>' + (r[0] + 1) + '</i><i>' + (r[1] + 1) + '</i></div><div class="pf-r">' + karte(r[1]) + '</div></div>';
+    else o += '<div class="pf-reihe"><div class="pf-l">' + (rechts[ri] ? '' : karte(r[0])) + '</div><div class="pf-n"><i>' + (r[0] + 1) + '</i></div><div class="pf-r">' + (rechts[ri] ? karte(r[0]) : '') + '</div></div>';
+  });
+  app.innerHTML = o + '<div class="pf-reihe"><div></div><div class="pf-n pokal">🏆</div><div></div></div></div>';
+  Array.prototype.forEach.call(app.querySelectorAll('[data-lv]'), function (b) { b.onclick = function () { tone(520, 0.08); start(+b.dataset.lv); }; });
+  app.querySelector('[data-frei]').onclick = function () { tone(520, .08); freeWalk(); };
 };
+// ---------- Stern in der Aufgabe: füllt sich mit jeder richtigen Aufgabe, 10 richtige = 1 Stern (wie der Kleiderschrank)
+function sternFortschritt(api, li) {
+  var k = 'Stufe ' + (li + 1), per = +AW.per || 10, max = +AW.max || 3;
+  AW.lv = AW.lv || {}; AW.box = AW.box || {};
+  var el = document.createElement('div'); el.className = 'fort'; el.setAttribute('aria-live', 'polite');
+  el.innerHTML = sternBild(0, 'stern gross') + '<span class="fz"></span>';
+  var top = app.querySelector('.top'); if (top) top.insertBefore(el, top.querySelector('[data-snd]'));
+  var voll = el.querySelector('.voll'), fz = el.querySelector('.fz');
+  function zeig() {
+    var have = +AW.lv[k] || 0, n = +AW.box[k] || 0, fertig = have >= max;
+    voll.style.clipPath = 'inset(' + Math.round((1 - (fertig ? 1 : n / per)) * 100) + '% 0 0 0)';
+    fz.innerHTML = fertig ? 'Alle ' + max + ' Sterne!' : '<b>' + n + '</b> von ' + per + (have ? ' <span class="fz-st">· ★ ' + have + '</span>' : '');
+  }
+  zeig();
+  var alt = api.answer;
+  api.answer = function (ok, quiet) {
+    if (ok && (+AW.lv[k] || 0) < max) {
+      AW.box[k] = (+AW.box[k] || 0) + 1;
+      if (AW.box[k] >= per) {
+        AW.box[k] = per; zeig(); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+        api.later(function () { AW.box[k] = 0; AW.lv[k] = (+AW.lv[k] || 0) + 1; zeig(); }, 900);
+      } else zeig();
+    }
+    return alt(ok, quiet);
+  };
+}
 function freeWalk() {
   stopAll(); RUN++; CUR = -1; KN.level(null);
   app.innerHTML = '<div class="top"><button class="pill" data-back>← Stufen</button><span class="t">Free walk</span>' + sndBtn() + '</div><div class="msg" id="msg"></div><div class="stage" id="stage"></div>';
