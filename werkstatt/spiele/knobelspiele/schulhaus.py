@@ -332,7 +332,8 @@ function seite(S, g, side) {
     .sort(function (a, b) { return (a.x - b.x) * g.dir; });
 }
 function outI(S, i) { return S.rooms.filter(function (r) { return r.row === 'O' && r.i === i; })[0]; }
-function aussagen(S, r, lab) {
+// geher: von wo aus gezählt wird (first/second … room on your left); ohne Angabe von den Eingängen
+function aussagen(S, r, lab, geher) {
   var A = [];
   function add(typ, test, d) { d.typ = typ; d.test = test; A.push(d); }
   if (r.row === 'O') {
@@ -359,7 +360,7 @@ function aussagen(S, r, lab) {
   });
   if (nb.length === 2 && lab(nb[0]) && lab(nb[1])) { var n0 = nb[0], n1 = nb[1]; add('zw', function (x) { return adj(x, n0) && adj(x, n1); }, { a: n0, b: n1 }); }
   S.rooms.forEach(function (a) { if (lab(a) && gegen(a, r)) add('gegen', function (x) { return gegen(x, a); }, { a: a }); });
-  S.geher.forEach(function (g) {
+  (geher || S.geher).forEach(function (g) {
     ['left', 'right'].forEach(function (s) {
       var side = s === 'left' ? g.links : (g.links === 'T' ? 'B' : 'T'), L = seite(S, g, side), p = L.indexOf(r);
       if (p < 0) return;
@@ -383,6 +384,10 @@ var TX = {
   ordE: ['Come in through the {e} and walk down the corridor. The {k} room on your {s} is the {n}.', 'When you come in through the {e}, the {n} {is} the {k} room on the {s}.', 'Walk in through the {e}. The {k} door on the {s} is the {n}.'],
   ordT: ['Come in through the {e} and turn {t}. The {k} room on your {s} is the {n}.', 'Walk in through the {e} and turn {t}. The {n} {is} the {k} room on the {s}.', 'Go in through the {e}, turn {t} and walk down the corridor. The {k} door on your {s} is the {n}.'],
   letztE: ['Come in through the {e}. At the very end of the corridor on the {s} side you can see the {n}.', 'Walk in through the {e} and go to the end of the corridor. The last room on your {s} is the {n}.'],
+  ordR: ['Come out of the {from} and turn {t}. The {k} room on your {s} is the {n}.', 'Leave the {from} and turn {t}. The {n} {is} the {k} room on the {s}.', 'Walk out of the {from} and turn {t}. The {k} door on your {s} is the {n}.'],
+  letztR: ['Come out of the {from} and turn {t}. Walk to the end of the corridor. The last room on your {s} is the {n}.', 'Leave the {from}, turn {t} and go to the very end of the corridor. On the {s} side there is the {n}.'],
+  ordO: ['Go back into the school through the {e} and turn {t}. The {k} room on your {s} is the {n}.', 'Walk back in through the {e} and turn {t}. The {n} {is} the {k} room on the {s}.'],
+  letztO: ['Go back into the school through the {e} and turn {t}. The last room on your {s} is the {n}.'],
   letztT: ['Come in through the {e} and turn {t}. At the end of the corridor on the {s} side there is the {n}.', 'Walk in through the {e} and turn {t}. The last room on the {s} is the {n}.']
 };
 var HINT = { nb: 'next to = neben', links: 'to the left of = links von', rechts: 'to the right of = rechts von', zw: 'between = zwischen', gegen: 'opposite / across from = gegenüber',
@@ -390,9 +395,9 @@ var HINT = { nb: 'next to = neben', links: 'to the left of = links von', rechts:
   ord: 'first, second, third = erste, zweite, dritte; on your left = links von dir', letzt: 'last = letzte; at the end = am Ende' };
 function hinweis(d) { return HINT[d.typ] + (d.g && d.g.turn ? '; turn ' + d.g.turn + ' = ' + (d.g.turn === 'left' ? 'links' : 'rechts') + ' abbiegen' : ''); }
 function satzAus(d, r) {
-  var key = d.typ === 'ord' || d.typ === 'letzt' ? d.typ + (d.g.turn ? 'T' : 'E') : d.typ;
+  var key = d.typ === 'ord' || d.typ === 'letzt' ? d.typ + (d.g.aus ? 'R' : d.g.raus ? 'O' : d.g.turn ? 'T' : 'E') : d.typ;
   return pick(TX[key], 1)[0].replace('{is}', r.name.p ? 'are' : 'is').replace('{a}', d.a ? d.a.name.n : '').replace('{b}', d.b ? d.b.name.n : '')
-    .replace('{e}', d.g ? d.g.e : '').replace('{t}', d.g && d.g.turn || '').replace('{s}', d.s || '').replace('{k}', d.k != null ? ORD[d.k] : '')
+    .replace('{from}', d.g && d.g.aus ? d.g.aus.name.n : '').replace('{e}', d.g ? d.g.e : '').replace('{t}', d.g && d.g.turn || '').replace('{s}', d.s || '').replace('{k}', d.k != null ? ORD[d.k] : '')
     .replace('{f}', d.f || '').replace('{n}', '\u0001' + r.name.n + '\u0002');
 }
 // erst eine Art Satz zufällig wählen, dann einen Satz dieser Art (damit es abwechslungsreich bleibt)
@@ -713,9 +718,17 @@ function spielWeg(api) {
     return g.turn ? { e: true, end: false, name: g.e } : { e: true, end: true, name: g.e, gx: P.endL ? X0 : X1, ox: P.endL ? X0 - 26 : X1 + 26 };
   }
   P.slots.forEach(function (x) { raum(x).addEventListener('click', function () { if (tippe && !lock) tippe(x); }); });
+  // Von wo aus wird gezählt? Vom Eingang, durch den die Person kam, oder vom Raum, in dem sie gerade ist.
+  function geherVon(o) {
+    if (o.e) return o.end ? [P.geher[0]] : [P.geher[1], P.geher[2]];
+    if (o.row === 'O') return [P.geher[1], P.geher[2]].map(function (g) { return Object.assign({}, g, { raus: true }); });
+    var v = o.back ? o.vor : o, x0 = v.x + v.b / 2, oben = v.row === 'T';
+    // aus einem oberen Raum schaut man nach unten: links = nach rechts im Plan; aus einem unteren umgekehrt
+    return [['left', oben ? 1 : -1], ['right', oben ? -1 : 1]].map(function (w) { return { x0: x0, dir: w[1], links: w[1] === 1 ? 'T' : 'B', turn: w[0], aus: o }; });
+  }
   function naechstes() {
-    var offen = P.slots.filter(function (id) { return !bekannt[id]; }), C = offen.map(function (id) { return R[id]; }), moegl = [];
-    offen.forEach(function (id) { var A = aussagen(P, R[id], lab).filter(function (d) { return C.filter(d.test).length === 1; }); if (A.length) moegl.push([id, A]); });
+    var offen = P.slots.filter(function (id) { return !bekannt[id]; }), C = offen.map(function (id) { return R[id]; }), moegl = [], gh = geherVon(wo);
+    offen.forEach(function (id) { var A = aussagen(P, R[id], lab, gh).filter(function (d) { return C.filter(d.test).length === 1; }); if (A.length) moegl.push([id, A]); });
     return pick(moegl, 1)[0];
   }
   function aufgabe() {
