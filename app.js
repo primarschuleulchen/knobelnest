@@ -3887,31 +3887,41 @@
   };
   ACT.kKnobel = function () { K.step = 'knobel'; K.render(); window.scrollTo(0, 0); };
   ACT.kkArt = function (el) { K.kkArt = el.dataset.k; K.render(); };
+  // Themen und Spiele eines Fachs im Stil der Knobelkiste (Kopf mit Bild, runde Karten)
+  function kkKopf(f, titel, text) {
+    var bild = fachBild(f);
+    return '<div class="kk-kopf">' + (bild ? '<span class="kk-bild kk-fbild">' + bild + '</span>' : '<span class="kk-bild kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>') +
+      '<h1>' + h(titel) + '</h1>' + (text ? '<p>' + text + '</p>' : '') + '</div>';
+  }
+  function kkIc(f) {
+    var bild = fachBild(f);
+    return bild ? '<span class="kk-ic kk-fbild">' + bild + '</span>' : '<span class="kk-ic kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>';
+  }
   K.view_thema = function () {
     var games = kidGames().filter(function (g) { return g.fach === K.fach; });
     var themen = uniq(games.map(function (g) { return g.thema; }));
-    return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + '</p><h1>Wähle ein Thema</h1></div><div class="big-tiles">' + themen.map(function (t) {
+    return K.shell('<div class="kk">' + kkKopf(K.fach, K.fach, 'Wähle ein Thema.') + '<div class="kk-spiele">' + themen.map(function (t) {
       var gs = games.filter(function (g) { return g.thema === t; });
       var played = gs.filter(function (g) { return g.plays; }).length;
       var stars = gs.reduce(function (n, g) { var a = g.award || {}; return n + (typeof a.stars === 'number' ? a.stars : awardSum(a)); }, 0);
-      return '<button class="big-tile" style="min-height:150px" data-a="kThema" data-t="' + h(t) + '"><b style="font-size:30px">' + h(t) + '</b><span>' + plural(gs.length, 'Spiel', 'Spiele') + '</span>' +
-        '<span style="margin-top:auto;font-size:17px;font-weight:400">' + (played ? 'Schon gespielt: ' + played + ' von ' + gs.length : 'Noch nichts gespielt') + '</span>' + (stars ? '<span class="kaward">⭐ ' + stars + '</span>' : '') + '</button>';
-    }).join('') + '</div>', 'Zurück');
+      return '<article class="kk-karte">' + kkIc(K.fach) + '<span class="kk-fach">Thema</span><b>' + h(t) + '</b><p>' + plural(gs.length, 'Spiel', 'Spiele') + ' · ' +
+        (played ? 'schon gespielt: ' + played + ' von ' + gs.length : 'noch nichts gespielt') + '</p>' + (stars ? '<span class="kk-stand">⭐ ' + stars + ' Sterne</span>' : '') +
+        '<button class="kk-los" data-a="kThema" data-t="' + h(t) + '">Öffnen</button></article>';
+    }).join('') + '</div></div>', 'Zurück');
   };
   K.view_games = function () {
     var games = kidGames().filter(function (g) { return g.fach === K.fach && g.thema === K.thema; });
-    return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + ' › ' + h(K.thema) + '</p><h1>Wähle ein Spiel</h1></div><div class="big-tiles">' + games.map(function (g) {
+    return K.shell('<div class="kk">' + kkKopf(K.fach, K.thema, h(K.fach) + ' · Wähle ein Spiel.') + '<div class="kk-spiele">' + games.map(function (g) {
       var p = pct(g), l = lvlInfo(g)[0];
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
         g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
-      var extra = /zusatz/i.test(g.stufe || '');
-      return '<article class="big-tile' + (extra ? ' extra' : '') + '" style="cursor:default;padding:0;overflow:hidden;gap:0"><div style="width:100%;padding:14px 22px;background:' + fachColor(g.fach) + ';border-bottom:3px solid var(--ink);font-family:var(--h);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px">' + h(g.thema) +
-        (extra ? '<span class="zusatz">★ Zusatz</span>' : '') + '</div>' +
-        '<div class="stack" style="padding:20px 22px 24px;width:100%;flex:1"><b style="font-size:28px">' + h(g.title) + '</b>' +
-        (awardText(g.award) ? '<span class="kaward">' + h(awardText(g.award)) + '</span>' : '') + vbHTML(g.award) +
-        (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span style="font-size:17px">' + h(label) + '</span>' +
-        '<button class="kid-go" style="margin-top:auto;height:60px;font-size:22px;' + fachBtn(g.fach) + '" data-a="kPlay" data-id="' + g.id + '">' + (g.plays ? 'Weiterspielen' : 'Starten') + '</button></div></article>';
-    }).join('') + '</div>', 'Zurück');
+      var extra = /zusatz/i.test(g.stufe || ''), st = awardText(g.award);
+      return '<article class="kk-karte' + (extra ? ' extra' : '') + '">' + kkIc(g.fach) + '<span class="kk-fach">' + h(g.thema) + (extra ? ' · ★ Zusatz' : '') + '</span>' +
+        '<b>' + h(g.title) + '</b>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
+        (st ? '<span class="kk-stand">' + h(st) + '</span>' : '') + vbHTML(g.award) +
+        (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span class="kk-info">' + h(label) + '</span>' +
+        '<button class="kk-los" data-a="kPlay" data-id="' + g.id + '">▶ ' + (g.plays ? 'Weiterspielen' : 'Spielen') + '</button></article>';
+    }).join('') + '</div></div>', 'Zurück');
   };
   K.view_heft = function () {
     var kid = K.home && K.home.kid; if (!kid) { K.step = 'home'; return K.view_home(); }
