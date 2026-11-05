@@ -891,6 +891,8 @@
     var saved = LS.get('kn_cls');
     T.cls = (T.classes.filter(function (c) { return c.id === saved; })[0] || T.classes[0] || {}).id || null;
     T.games = await DB.listGames();
+    await wdtSync();
+    wdtVorne(T.games);
     await T.loadClass();
     T.render();
   };
@@ -1293,6 +1295,37 @@
   // Die Wörter kommen der Reihe nach dran, eines pro Schultag ab «start» (Samstag/Sonntag gilt das Wort vom Freitag).
   // Danach: 'eigene' = wieder von vorne, sonst die eingebauten Wörter des Spiels.
   function isWdt(g) { return /wort des tages/i.test(g.title || ''); }
+  // «Wort des Tages» steht in seinem Fach immer zuoberst (sein Thema zuerst, darin das Spiel zuerst). Sortiert die Liste an Ort und Stelle.
+  function wdtVorne(list) {
+    var fi = {}, ti = {}, wt = {};
+    list.forEach(function (g, i) {
+      if (fi[g.fach] == null) fi[g.fach] = i;
+      if (ti[g.fach + '|' + g.thema] == null) ti[g.fach + '|' + g.thema] = i;
+      if (isWdt(g)) wt[g.fach + '|' + g.thema] = 1;
+    });
+    var key = list.map(function (g, i) { var t = g.fach + '|' + g.thema; return [fi[g.fach], wt[t] ? 0 : 1, ti[t], isWdt(g) ? 0 : 1, i]; });
+    var idx = list.map(function (g, i) { return i; }).sort(function (a, b) { for (var j = 0; j < 5; j++) if (key[a][j] !== key[b][j]) return key[a][j] - key[b][j]; return 0; });
+    var copy = idx.map(function (i) { return list[i]; }); list.length = 0; Array.prototype.push.apply(list, copy);
+    return list;
+  }
+  // Admin: «Wort des Tages» aus spiele/wort-des-tages.html anlegen (Fach Knobelkiste, für alle Lehrpersonen)
+  // oder auf die neue Version bringen. Eine selbst hochgeladene Fassung ohne Versionsnummer kommt dabei ins Fach Knobelkiste.
+  var WDT_VER = 2; // gleich wie <meta name="wdt-version"> in spiele/wort-des-tages.html
+  async function wdtSync() {
+    if (!T.me || !T.me.is_admin) return;
+    try {
+      var g = T.games.filter(isWdt)[0], alt = g ? await DB.gameHtml(g.id) : '';
+      var m = /<meta\s+name=["']wdt-version["']\s+content=["'](\d+)/i.exec(alt || ''), v = m ? +m[1] : 0;
+      if (g && v >= WDT_VER) return;
+      var res = await fetch('spiele/wort-des-tages.html?v=' + WDT_VER), html = res.ok ? await res.text() : '';
+      if (!/name=["']wdt-version["']/.test(html)) return;
+      var kf = T.games.filter(function (x) { return /knobelkiste/i.test(x.fach) && !isWdt(x); }).sort(gameCmp)[0];
+      var fach = kf ? kf.fach : 'Knobelkiste', thema = kf ? kf.thema : 'Wort des Tages';
+      await DB.saveGame(g ? { id: g.id, title: g.title, description: g.description, fach: v ? g.fach : fach, thema: v ? g.thema : thema, stufe: g.stufe, for_all: g.for_all, sort: g.sort, html: html }
+        : { title: 'Wort des Tages', description: 'Finde jeden Tag das geheime Wort. Du hast 6 Versuche.', fach: fach, thema: thema, for_all: true, sort: 0, html: html });
+      T.games = await DB.listGames();
+    } catch (e) { console.warn('Wort des Tages:', e); }
+  }
   function wdtWords(txt) {
     var ok = [], bad = [];
     String(txt || '').split(/[\s,;.]+/).forEach(function (w) {
@@ -1446,9 +1479,9 @@
     var by = {}; T.games.forEach(function (g) { by[g.id] = g; });
     var old = ids.map(function (id) { return by[id].sort || 0; });
     ids.forEach(function (id, i) { by[id].sort = i + 1; });
-    T.games.sort(gameCmp); T.render();
+    wdtVorne(T.games.sort(gameCmp)); T.render();
     try { await DB.setGameOrder(ids); toast('Reihenfolge gespeichert'); }
-    catch (e) { ids.forEach(function (id, i) { by[id].sort = old[i]; }); T.games.sort(gameCmp); T.render(); throw e; }
+    catch (e) { ids.forEach(function (id, i) { by[id].sort = old[i]; }); wdtVorne(T.games.sort(gameCmp)); T.render(); throw e; }
   }
   function sorterIds(list) { return Array.prototype.map.call(list.querySelectorAll('.srow'), function (r) { return r.dataset.id; }); }
   ACT.sMove = function (el) {
@@ -2126,7 +2159,7 @@
           }
         } catch (e) { failed++; console.error(e); }
       }
-      A.importing = null; T.games = await DB.listGames(); T.render();
+      A.importing = null; T.games = wdtVorne(await DB.listGames()); T.render();
       toast(plural(added, 'Spiel', 'Spiele') + ' neu' + (updated ? ', ' + updated + ' aktualisiert' : '') + (skipped ? ', ' + skipped + ' schon vorhanden' : '') + (failed ? ', ' + failed + ' fehlgeschlagen' : '') + '.');
     };
     r.readAsText(file, 'utf-8');
@@ -2139,7 +2172,7 @@
     await DB.saveGame({ id: F.id, title: F.title.trim(), description: F.description.trim(), fach: F.fach.trim(), thema: F.thema.trim() || 'Allgemein',
       stufe: F.stufe.trim(), for_all: F.for_all, html: F.html });
     toast(F.id ? 'Spiel gespeichert.' : 'Spiel hochgeladen.');
-    T.admin.form = blankForm(); T.games = await DB.listGames(); T.render();
+    T.admin.form = blankForm(); T.games = wdtVorne(await DB.listGames()); T.render();
   };
   ACT.gEdit = function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
@@ -2149,7 +2182,7 @@
   ACT.gCancel = function () { T.admin.form = blankForm(); T.render(); };
   ACT.gDel = async function (el) {
     if (!armed('game:' + el.dataset.id)) return T.render();
-    await DB.deleteGame(el.dataset.id); T.games = await DB.listGames(); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
+    await DB.deleteGame(el.dataset.id); T.games = wdtVorne(await DB.listGames()); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();
   };
   ACT.gSel = function (el) { var s = T.admin.sel; if (el.checked) s[el.dataset.id] = 1; else delete s[el.dataset.id]; T.render(); };
   function adminGames() {
@@ -2268,7 +2301,7 @@
     K.step = 'code'; K.render();
   };
   K.loadHome = async function () {
-    try { K.home = await DB.kidHome(K.sess.token); }
+    try { K.home = await DB.kidHome(K.sess.token); if (K.home && K.home.games) wdtVorne(K.home.games); }
     catch (e) { return K.sessionLost(e); }
     K.kl = await DB.kidKlasse(K.sess.token); setTafelCols(K.kl && K.kl.cols);
     K.render(); K.checkRace(); K.checkHeft();
