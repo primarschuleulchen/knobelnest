@@ -97,6 +97,8 @@ button.card:active{transform:scale(.96)}
 .fort.pop .stern{animation:sternpop .9s}
 @keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
 .top .fort{margin-left:auto}
+.kk-zur{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 13px;border-radius:999px;background:#fff;color:#1f2421;font:700 19px/1 system-ui,-apple-system,sans-serif;box-shadow:0 4px 14px rgba(63,120,168,.2);flex:none;min-height:0}
+.kk-zur:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)}.kk-zur img{width:34px;height:34px;display:block;border-radius:50%}
 @media (max-width:560px){.fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}.top .t{font-size:18px}}
 </style>
 </head>
@@ -169,7 +171,7 @@ G.play = function (lv, api) {
     var feld = box.querySelector('.feld'), her = box.querySelector('.herzen');
     function herzen() { var x = ''; for (var i = 0; i < 3; i++) x += i < 3 - fehler ? '❤️' : '🤍'; her.textContent = x; }
     herzen();
-    api.msg('<span class="em">🧩</span> Rätsel ' + (idx + 1) + ' von ' + G.n + ': Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
+    api.msg('<span class="em">🧩</span> Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
     function markiere() {
       var r = Math.floor(sel / n), c = sel % n, br = Math.floor(r / bm[0]), bc = Math.floor(c / bm[1]);
       Array.prototype.forEach.call(feld.children, function (z, k) {
@@ -376,6 +378,21 @@ if (MODE === 'url') {
   if (MODE === 'srcdoc') window.addEventListener('knobelnest-sterne', function () { if (CUR < 0) menu(); });
   boot();
 }
+
+
+// In der Klassenkiste zeigt das Portal keinen dunklen Balken: auf der Stufen-Seite oben links «←» mit Eule zurück zur Klassenkiste
+(function () {
+  if (MODE !== 'url') return;
+  var stufen = menu;
+  menu = function () {
+    stufen();
+    var top = app.querySelector('.top'); if (!top || top.querySelector('.kk-zur')) return;
+    var b = document.createElement('button'); b.className = 'kk-zur'; b.setAttribute('aria-label', 'Zurück zur Klassenkiste'); b.title = 'Zurück zur Klassenkiste';
+    b.innerHTML = '<span aria-hidden="true">←</span><img src="../bilder/eule.webp" alt="" width="34" height="34">';
+    b.onclick = function () { send({ type: 'close' }); };
+    top.insertBefore(b, top.firstChild);
+  };
+})();
 
 </script>
 </body>
