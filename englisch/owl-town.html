@@ -153,6 +153,8 @@ button.card:active{transform:scale(.96)}
 @media (max-width:760px){.mark{left:8px;transform:none}.mark:active{transform:scale(.96)}}
 .pl.wk{background:rgba(255,255,255,.94);color:var(--ink);border-color:var(--gold);font-size:16px;padding:0 8px}
 @media (max-width:760px){.pl.wk{font-size:13px}}
+.owbox .go small{font-size:.75em;color:var(--soft)}
+.steps li.jetzt{background:var(--sun);outline:2px solid var(--gold)}
 </style>
 </head>
 <body>
@@ -509,22 +511,33 @@ function utter(t, rate) {
 }
 function say(t, rate) { return sayList([t], rate, 0); }
 // Mehrere Sätze nacheinander, mit Pause dazwischen (Stufe «Listening»)
-function sayList(list, rate, pause) {
+// Stand des Vorlesens: welcher Satz, ob es läuft oder pausiert (für «⏸ Pause» / «▶ Weiter»)
+var SAY = { list: [], k: 0, st: 'idle', cb: null };
+function sayState(st) { SAY.st = st; if (SAY.cb) try { SAY.cb(SAY); } catch (e) {} }
+function sayList(list, rate, pause, from, cb) {
   if (!canSay()) return false;
   if (typeof ST !== 'undefined' && ST.mute) { stopSay(); return true; } // Ton aus: ganz still
-  var run = ++SAYRUN, k = 0;
+  var run = ++SAYRUN, k = from || 0;
+  if (SAY.cb && SAY.cb !== cb) { SAY.st = 'idle'; try { SAY.cb(SAY); } catch (e) {} }
+  SAY.list = list; SAY.rate = rate; SAY.pause = pause; SAY.cb = cb || null; SAY.k = k;
   try { var ss = speechSynthesis; if (ss.speaking || ss.pending) ss.cancel(); if (ss.paused) ss.resume(); } catch (e) { return false; }
+  sayState('play');
   function next() {
-    if (run !== SAYRUN || k >= list.length) return;
+    if (run !== SAYRUN) return;
+    if (k >= list.length) { SAY.k = 0; sayState('idle'); return; }
+    SAY.k = k; sayState('play');
     var t = list[k++], done = false, u = utter(t, rate);
-    function fin() { if (done) return; done = true; setTimeout(next, pause || 0); }
+    function fin() { if (done) return; done = true; if (run === SAYRUN) SAY.k = k; setTimeout(next, pause || 0); }
     u.onend = fin; u.onerror = fin;
     setTimeout(fin, 1500 + t.split(' ').length * 650 / (rate || .9)); // falls «onend» nicht kommt
     try { speechSynthesis.speak(u); } catch (e) {}
   }
   next(); return true;
 }
-function stopSay() { SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} }
+function stopSay() { SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} if (SAY.st !== 'idle') { SAY.k = 0; sayState('idle'); } SAY.cb = null; }
+// Anhalten mitten im Satz: beim Weiterhören beginnt dieser Satz nochmals von vorne
+function pauseSay() { if (SAY.st !== 'play') return; SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} sayState('pause'); }
+function resumeSay() { if (SAY.st !== 'pause') return; sayList(SAY.list, SAY.rate, SAY.pause, SAY.k, SAY.cb); }
 // Still sein, wenn die Übung verlassen wird, das Fenster zugeht oder der Ton ausgeschaltet wird
 ['pagehide', 'beforeunload', 'unload'].forEach(function (ev) { window.addEventListener(ev, stopSay); });
 document.addEventListener('visibilitychange', function () { if (document.hidden) stopSay(); });
@@ -1535,7 +1548,7 @@ function play(lv, api, li, run) {
       o = '<div class="hd">🧭 Route ' + (k + 1) + ' <small>of ' + N + '</small></div>';
       if (hide) o += '<p class="de">🎧 Hör gut zu und lauf den Weg. Du kannst so oft hören, wie du willst.</p>';
       else { o += '<ol class="steps">'; st.forEach(function (s, i) { o += '<li data-i="' + i + '">' + h(s.text) + '</li>'; }); o += '<li class="q">Now you are at the …?</li></ol>'; }
-      o += '<div class="row"><button class="go sun" data-x="say">🔊 ' + (hide ? 'Anhören' : 'Vorlesen') + '</button>' + (lv.listen ? '<button class="go alt" data-x="show">' + (task.show ? 'Text verstecken' : '📄 Text zeigen') + '</button>' : '') + '</div>';
+      o += '<div class="row"><button class="go sun" data-x="say">🔊 ' + (hide ? 'Anhören' : 'Vorlesen') + '</button><button class="go alt" data-x="pz" hidden>⏸ Pause</button>' + (lv.listen ? '<button class="go alt" data-x="show">' + (task.show ? 'Text verstecken' : '📄 Text zeigen') + '</button>' : '') + '</div>';
       o += '<p class="de">Lauf mit den Pfeiltasten. Am Ziel: <b>📍</b> drücken (oder Leertaste).</p>';
     } else if (task.typ === 'job') {
       var J = task.job;
@@ -1550,6 +1563,7 @@ function play(lv, api, li, run) {
       if (li2 && task.typ === 'weg') { say(task.r.steps[+li2.dataset.i].text); return; }
       if (!b) return;
       if (b.dataset.x === 'say') sayTask();
+      if (b.dataset.x === 'pz') { if (SAY.st === 'play') pauseSay(); else resumeSay(); }
       if (b.dataset.x === 'show') { task.show = !task.show; showTask(); }
       if (b.dataset.x === 'tipp') { var T = LOTS.filter(function (L) { return L.place === task.place; })[0]; WD.miniStar = { x: T.x, z: T.z }; WD.mini.classList.remove('aus'); toast('⭐ Schau auf den kleinen Plan unten rechts.'); }
       if (b.dataset.x === 'next') { if (!alive()) return; var more = api.answer(task.ok, true); k++; if (more) nextTask(); else { U.card.innerHTML = '<div class="hd">🏁 Fertig!</div>'; OW.lock = true; } }
@@ -1560,7 +1574,13 @@ function play(lv, api, li, run) {
   function sayTask() {
     if (task.typ === 'weg') {
       var sent = task.r.steps.map(function (s) { return s.text; }).concat(['Where are you?']);
-      if (!(lv.listen ? sayList(sent, .78, 1600) : sayList(sent, .88, 600))) { task.show = true; showTask(); toast('Vorlesen geht auf diesem Gerät nicht – lies den Text.'); }
+      var zeig = function (S) { // Knopf «Pause/Weiter» und Satz-Zähler nachführen
+        if (!alive()) return; var pb = U.card.querySelector('[data-x=pz]'); if (!pb) return;
+        pb.hidden = S.st === 'idle';
+        pb.innerHTML = S.st === 'pause' ? '▶ Weiter <small>(Satz ' + (S.k + 1) + ' von ' + S.list.length + ')</small>' : '⏸ Pause <small>(Satz ' + (S.k + 1) + ' von ' + S.list.length + ')</small>';
+        U.card.querySelectorAll('li[data-i]').forEach(function (li) { li.classList.toggle('jetzt', S.st !== 'idle' && +li.dataset.i === S.k); });
+      };
+      if (!(lv.listen ? sayList(sent, .78, 1600, 0, zeig) : sayList(sent, .88, 600, 0, zeig))) { task.show = true; showTask(); toast('Vorlesen geht auf diesem Gerät nicht – lies den Text.'); }
     }
     else if (task.typ === 'job') say('Where does the ' + task.job[0] + ' work?');
     else say('Walk to the ' + PLACES[task.place].en + '.');
