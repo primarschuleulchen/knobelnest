@@ -12,6 +12,9 @@
 #                        jeder Satz passt nur auf genau einen der noch nicht gefundenen Räume.
 #   5 Hören und finden   wie 4, der Satz wird nur vorgelesen (Text kann man aufdecken)
 #   6 Welcher Satz?      Neues Schulhaus, alles beschriftet, ein Raum leuchtet: welcher von drei Sätzen stimmt?
+#   7 Wege               Neues Schulhaus, drei Kinder gehen je 4 Stationen ab (spielWeg). Die Kinder tippen die Räume
+#                        der Reihe nach an, der Weg wird durch den Gang eingezeichnet (weg()).
+# Stufe 3 hat drei Wege zur Auswahl (WEGE): Weg 1 = Text vom Arbeitsblatt, Weg 2 und 3 = eigene Texte zum selben Plan.
 #
 # Plan (SVG 760 × 515): Gebäude mit langem Gang, draussen drei Gebäude (rund, klein, lang).
 
@@ -35,10 +38,11 @@ def alle(spiel):
           intro='Lies, wo die Räume sind, und finde sie auf dem Plan: <b>next to</b>, <b>opposite</b>, <b>to the left of</b>, <b>in the middle</b> …',
           levels=[dict(name='Wo ist was?', info='next to, opposite, to the left …', t='praep'),
                   dict(name='Die Räume', info='Wie heissen die Räume auf Englisch?', t='wort'),
-                  dict(name='Green Park School', info='Der Text vom Arbeitsblatt', t='text'),
+                  dict(name='Green Park School', info='Weg 1, 2 oder 3 lesen', t='text'),
                   dict(name='Lesen und finden', info='Immer ein neues Schulhaus', t='lesen'),
                   dict(name='Hören und finden', info='Nur anhören und finden', t='hoeren'),
-                  dict(name='Welcher Satz stimmt?', info='Genau lesen: einer von drei', t='satz')],
+                  dict(name='Welcher Satz stimmt?', info='Genau lesen: einer von drei', t='satz'),
+                  dict(name='Wege durchs Schulhaus', info='Lesen und den Weg einzeichnen', t='weg')],
           css=CSS, js=JS)
 
 
@@ -89,6 +93,10 @@ CSS = r"""
   .plan{width:100%;max-width:calc((100vh - 130px) * 760 / 515)}.karte{font-size:22px}
   .opts{grid-template-columns:1fr}.hilfe{columns:1}}
 .links,.rechts{display:contents}
+.wahl3{display:grid;gap:10px;width:100%}.wahl3 button{text-align:left}.wahl3 small{display:block;color:var(--soft);font-size:16px}
+.plan .wege polyline{fill:none;stroke:#d6ad45;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 13}
+.plan .wege polyline.alt{stroke:#9fb7cc;opacity:.55}
+.plan .eule{transition:transform .9s ease}
 @media (min-width:900px) and (max-height:900px){.links,.rechts{display:flex}}
 """
 
@@ -177,20 +185,47 @@ var BLATT = {
   s10: { n: 'teacher’s room', e: '☕', de: 'Lehrerzimmer' }, s11: { n: 'computer rooms', e: '💻', de: 'Computerräume', p: 1 },
   s12: { n: 'library', e: '📚', de: 'Bibliothek' }
 };
-// Der Text vom Arbeitsblatt, Satz für Satz (in dieser Reihenfolge)
-var TEXT = [
-  ['s12', 'The main entrance of Green Park School is on the left side of the building, next to the {n}.'],
-  ['s11', 'When you walk into the building and turn left, you can see some {n}.'],
-  ['s10', 'On the right, next to the changing rooms, there is the {n}.'],
-  ['s9', 'When you walk down the corridor, the third room on the right is the {n}.'],
-  ['s8', 'Opposite the music room you find the {n}.'],
-  ['s7', 'At the very end of the long corridor on the left side you can see the {n}.'],
-  ['s6', 'Across the children’s bathrooms there is the {n}.'],
-  ['s5', 'Right behind that and next to the music room there is the {n}.'],
-  ['s4', 'At the end of the corridor on the right side there is a big {n}.'],
-  ['s3', 'If you walk out of the building through the side entrance you can see our {n}. It’s that round building.'],
-  ['s2', 'The smaller building next to it is our {n}'],
-  ['s1', 'and in the long building is our {n}.']
+// Green Park School: drei Wege durch dasselbe Schulhaus. Weg 1 = Text vom Arbeitsblatt (Satz für Satz).
+var WEGE = [
+  { titel: 'Weg 1', info: 'Der Text vom Arbeitsblatt', s: [
+    ['s12', 'The main entrance of Green Park School is on the left side of the building, next to the {n}.'],
+    ['s11', 'When you walk into the building and turn left, you can see some {n}.'],
+    ['s10', 'On the right, next to the changing rooms, there is the {n}.'],
+    ['s9', 'When you walk down the corridor, the third room on the right is the {n}.'],
+    ['s8', 'Opposite the music room you find the {n}.'],
+    ['s7', 'At the very end of the long corridor on the left side you can see the {n}.'],
+    ['s6', 'Across the children’s bathrooms there is the {n}.'],
+    ['s5', 'Right behind that and next to the music room there is the {n}.'],
+    ['s4', 'At the end of the corridor on the right side there is a big {n}.'],
+    ['s3', 'If you walk out of the building through the side entrance you can see our {n}. It’s that round building.'],
+    ['s2', 'The smaller building next to it is our {n}'],
+    ['s1', 'and in the long building is our {n}.']] },
+  { titel: 'Weg 2', info: 'Durch den Seiteneingang hinein', s: [
+    ['s4', 'This time you come into Green Park School through the side entrance. On your right there is a big {n}.'],
+    ['s7', 'Opposite the kitchen, at the very end of the corridor, you can see the {n}.'],
+    ['s5', 'Walk into the little corridor next to the classroom. The second door on the right is the {n}.'],
+    ['s6', 'The first door in this little corridor is the {n}. It is across from the children’s bathrooms.'],
+    ['s8', 'Go back to the long corridor and turn left. The room next to the children’s bathrooms is the {n}.'],
+    ['s9', 'Walk past the music room. The next room on the left is the {n}.'],
+    ['s10', 'Next to it, between the teacher’s bathroom and the changing rooms, you find the {n}.'],
+    ['s11', 'Opposite the teacher’s room there are the {n}.'],
+    ['s12', 'Walk to the main entrance. The big room in the corner next to it is the {n}.'],
+    ['s1', 'Now go out through the main entrance and walk around the school. The long building is the {n}.'],
+    ['s3', 'Far away from the swimming pool, at the other end, there is a round building. It is the {n}.'],
+    ['s2', 'And between the assembly hall and the swimming pool there is the {n}.']] },
+  { titel: 'Weg 3', info: 'Noah zeigt dir seine Schule', s: [
+    ['s2', 'Hi, I’m Noah! Let me show you my school. We start outside. The small building is our {n}.'],
+    ['s3', 'To the left of the gym there is a round building. It is our {n}.'],
+    ['s1', 'To the right of the gym you can see a long building. That is our {n}.'],
+    ['s12', 'Now we go to the main entrance. The room in the corner next to it is the {n}.'],
+    ['s10', 'We walk into the building and turn right. The second room on the right is the {n}.'],
+    ['s11', 'Across the corridor from the teacher’s room there are the {n}.'],
+    ['s9', 'Next to the teacher’s room, on the right, there is the {n}.'],
+    ['s8', 'Opposite the music room, on the left side of the corridor, you find the {n}.'],
+    ['s6', 'On the other side of the corridor, across from the children’s bathrooms, there is the {n}.'],
+    ['s5', 'Behind the headmaster’s office there is the {n}.'],
+    ['s7', 'Now walk down the long corridor to the very end. On the left side you can see the {n}.'],
+    ['s4', 'On the right side, opposite the history classrooms, there is a big {n}. Thank you for visiting!']] }
 ];
 function greenParkSvg() {
   var o = '<svg viewBox="0 0 760 515" font-family="Patrick Hand, sans-serif">';
@@ -504,8 +539,9 @@ function spielPraep(api) {
 G.play = function (lv, api) {
   var t = lv.t;
   if (t === 'praep') return spielPraep(api);
+  if (t === 'weg') return spielWeg(api);
   var P = t === 'wort' || t === 'text' ? greenPark() : neueSchule(), R = P.R, bekannt = {}, k = 0, lock = false, tippe = null;
-  var reihe = t === 'text' ? TEXT.map(function (x) { return x[0]; }) : shuffle(P.slots.slice());
+  var TEXT = null, reihe = t === 'text' ? [] : shuffle(P.slots.slice());
   var U = huelle(api, P.svg, WOERTER), plan = U.plan, karte = U.karte, opts = U.opts, svg = U.svg, raum = U.raum;
   function lab(x) { return !!(x.fest || bekannt[x.id]); }
   function klassen() { P.slots.forEach(function (x) { raum(x).classList.remove('ziel', 'no', 'zeig'); }); }
@@ -611,7 +647,7 @@ G.play = function (lv, api) {
     if (t === 'text') {
       ziel = reihe[k]; r = R[ziel];
       satz = TEXT[k][1].replace('{n}', '\u0001' + r.name.n + '\u0002');
-      var vor = k > 0 && (k === 7 || k >= 10) ? '<span class="vor">' + h(TEXT[k - 1][1].replace('{n}', R[TEXT[k - 1][0]].name.n)) + '</span>' : '';
+      var vor = k > 0 ? '<span class="vor">' + h(TEXT[k - 1][1].replace('{n}', R[TEXT[k - 1][0]].name.n)) + '</span>' : '';
       karte.innerHTML = vor + '<div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag">🔊</button></div>';
       api.msg('<span class="em">📖</span> Lies den Satz. Wo ist der Raum? Tippe ihn an.');
     } else {
@@ -631,6 +667,81 @@ G.play = function (lv, api) {
     findenAuf(ziel, satz, hilfeTxt, t);
   }
   alleBeschriften();
-  aufgabe();
+  if (t !== 'text') return aufgabe();
+  // Green Park School: zuerst einen der drei Wege wählen
+  karte.innerHTML = '<div class="zeile"><span class="tx">Welchen Weg möchtest du lesen?</span></div>';
+  api.msg('<span class="em">🗺️</span> Wähle einen Weg durch die Green Park School.');
+  opts.className = 'opts wahl3';
+  WEGE.forEach(function (w) {
+    var b = document.createElement('button'); b.innerHTML = '<b style="font-weight:400">' + h(w.titel) + '</b><small>' + h(w.info) + '</small>';
+    b.onclick = function () { TEXT = w.s; reihe = TEXT.map(function (x) { return x[0]; }); aufgabe(); };
+    opts.appendChild(b);
+  });
 };
+
+// =====================================================================  Stufe 7: Wege durchs Schulhaus
+// Drei Kinder gehen nacheinander je 4 Stationen ab. Die Kinder tippen jede Station an, der Weg wird eingezeichnet.
+var LEUTE = [['Mia', 'she'], ['Noah', 'he'], ['Lena', 'she'], ['David', 'he']];
+var SCHRITT = ['First,', 'Then', 'After that,', 'Finally,'];
+function spielWeg(api) {
+  var P = neueSchule(), R = P.R, bekannt = {}, k = 0, lock = false, tippe = null, leute = shuffle(LEUTE), wo = null, start = null;
+  var U = huelle(api, P.svg, WOERTER), raum = U.raum, karte = U.karte, my = (YC + YC2) / 2, gx = P.gang.x + P.gang.b / 2;
+  U.svg.insertAdjacentHTML('beforeend', '<g class="wege"></g><g class="eule" pointer-events="none" style="opacity:0"><circle r="20" fill="#fff" stroke="#d6ad45" stroke-width="3"/><text y="10" font-size="28" text-anchor="middle">🦉</text></g>');
+  var wege = U.svg.querySelector('.wege'), eule = U.svg.querySelector('.eule');
+  function lab(x) { return !!(x.fest || bekannt[x.id]); }
+  function beschriften() { P.slots.forEach(function (x) { beschrifte(U.svg, R[x], bekannt[x] ? 'voll' : 'leer'); raum(x).classList.toggle('ok', !!bekannt[x]); }); }
+  // Punkte vom Gang zum Ort: [x im Gang, [Punkte vom Gang bis zum Ort]]
+  function innen(o) {
+    if (o.e) return o.end ? [o.gx, [[o.ox, my]]] : [gx, [[gx, YB + 12]]];
+    if (o.row === 'O') return [gx, [[gx, 393], [o.x + o.b / 2, 393], [o.x + o.b / 2, o.y + o.h / 2]]];
+    if (o.back) { var v = o.vor, vx = v.x + v.b / 2; return [vx, [[vx, v.y + v.h / 2], [vx, o.y + o.h / 2]]]; }
+    var dx = o.x + o.b / 2; return [dx, [[dx, o.y + o.h / 2]]];
+  }
+  function weg(A, B) {
+    if (A.row === 'O' && B.row === 'O') { var ax = A.x + A.b / 2, bx = B.x + B.b / 2; return [[ax, A.y + A.h / 2], [ax, 393], [bx, 393], [bx, B.y + B.h / 2]]; }
+    var a = innen(A), b = innen(B);
+    if (A.e && !A.end && B.row === 'O') return [[gx, YB + 12]].concat(b[1]);
+    return a[1].slice().reverse().concat([[a[0], my], [b[0], my]], b[1]);
+  }
+  function zeichne(pts) {
+    var o = []; pts.forEach(function (p) { var l = o[o.length - 1]; if (!l || l[0] !== p[0] || l[1] !== p[1]) o.push(p); });
+    wege.insertAdjacentHTML('beforeend', '<polyline points="' + o.map(function (p) { return p.join(','); }).join(' ') + '"/>');
+    var e = o[o.length - 1]; eule.style.opacity = 1; eule.style.transform = 'translate(' + e[0] + 'px,' + e[1] + 'px)';
+  }
+  function eingang() {
+    var g = pick(P.geher.slice(0, 2), 1)[0];
+    return g.turn ? { e: true, end: false, name: g.e } : { e: true, end: true, name: g.e, gx: P.endL ? X0 : X1, ox: P.endL ? X0 - 26 : X1 + 26 };
+  }
+  P.slots.forEach(function (x) { raum(x).addEventListener('click', function () { if (tippe && !lock) tippe(x); }); });
+  function naechstes() {
+    var offen = P.slots.filter(function (id) { return !bekannt[id]; }), C = offen.map(function (id) { return R[id]; }), moegl = [];
+    offen.forEach(function (id) { var A = aussagen(P, R[id], lab).filter(function (d) { return C.filter(d.test).length === 1; }); if (A.length) moegl.push([id, A]); });
+    return pick(moegl, 1)[0];
+  }
+  function aufgabe() {
+    var nr = k % 4, wer = leute[Math.floor(k / 4) % leute.length];
+    if (nr === 0) {
+      Array.prototype.forEach.call(wege.children, function (l) { l.classList.add('alt'); });
+      wo = start = eingang(); eule.style.transition = 'none'; eule.style.transform = 'translate(' + innen(wo)[1][0].join('px,') + 'px)'; eule.style.opacity = 1;
+      void eule.offsetWidth; eule.style.transition = '';
+    }
+    var w = naechstes(), ziel = w[0], r = R[ziel], d = waehle(w[1]);
+    var satz = SCHRITT[nr] + ' ' + (nr === 0 ? wer[0] : wer[1]) + ' goes to the ' + r.name.n + '. ' + satzTxt(satzAus(d, r));
+    var intro = wer[0] + ' comes in through the ' + start.name + '.';
+    karte.innerHTML = '<span class="vor">' + h(intro) + ' (' + (nr + 1) + '/4)</span><div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag">🔊</button></div>';
+    karte.querySelector('[data-x="sag"]').onclick = function () { sag((nr === 0 ? intro + ' ' : '') + satzTxt(satz)); };
+    api.msg('<span class="em">👣</span> Lies, wohin ' + h(wer[0]) + ' geht, und tippe den Raum an. Der Weg wird eingezeichnet.');
+    U.plan.classList.add('tippen');
+    tippe = function (x) {
+      tippe = null; U.plan.classList.remove('tippen'); lock = true;
+      var ok = x === ziel;
+      if (!ok) { raum(x).classList.add('no'); raum(ziel).classList.add('zeig'); api.later(function () { raum(x).classList.remove('no'); raum(ziel).classList.remove('zeig'); }, 2400); }
+      zeichne(weg(wo, r)); wo = r; bekannt[ziel] = true; beschriften();
+      api.msg(ok ? lob() + ' <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : '<span class="em">💡</span> ' + h(wer[0]) + ' geht hierhin: <b>' + h(r.name.n) + '</b> <small>(' + h(hinweis(d)) + ')</small>');
+      if (api.answer(ok)) U.weiter(function () { k++; lock = false; aufgabe(); }, ok ? (nr === 3 ? 1800 : 1200) : 2800);
+    };
+  }
+  beschriften();
+  aufgabe();
+}
 """
