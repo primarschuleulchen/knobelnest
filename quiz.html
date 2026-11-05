@@ -400,7 +400,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
 
   function kopf(rechts, zurueck) {
     return '<header class="top">' + (zurueck ? '<button class="btn sm quiet" data-a="' + zurueck + '">← Zurück</button>' : '<button class="kn-back" data-a="back" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste"><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>') +
-      '<span class="marke"><img src="bilder/kacheln/live-quiz.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span><span class="grow"></span>' + (rechts || '') + '</header>';
+      '<span class="marke"><img src="bilder/kacheln/quiz-buzzer.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span><span class="grow"></span>' + (rechts || '') + '</header>';
   }
   ACT.back = function () { B.back(); };
 
@@ -448,7 +448,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     var bar = '<div class="ordner" role="tablist">' + chips.map(function (c) {
       return '<button class="chip" role="tab" data-a="view" data-v="' + h(c[0]) + '" aria-selected="' + (L.view === c[0]) + '">' + (c[3] ? '<span class="dot" style="background:' + c[3] + '"></span>' : '') + h(c[1]) + (c[2] != null ? ' <small>' + c[2] + '</small>' : '') + '</button>'; }).join('') +
       '<button class="chip plus" data-a="oNeu">+ Ordner</button></div>';
-    var hero = L.view === 'alle' ? '<div class="hero"><img class="eule-wackel" src="bilder/kacheln/live-quiz.webp" alt="" width="110" height="110" style="border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 3px var(--gold),var(--schatten)">' +
+    var hero = L.view === 'alle' ? '<div class="hero"><img class="eule-wackel" src="bilder/kacheln/quiz-buzzer.webp" alt="" width="110" height="110" style="border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 3px var(--gold),var(--schatten)">' +
       '<div class="stack" style="gap:6px;flex:1 1 320px"><span class="sterne">✦ ✧ ✦</span><h1>Live-Quiz mit der ganzen Klasse</h1>' +
       '<p>Fragen erstellen, an der Wandtafel starten, die Kinder scannen den QR-Code und spielen alle gleichzeitig mit.</p></div></div>' : '';
     app.innerHTML = kopf() + '<div class="main">' + hero + bar + (L.view === 'kinder' ? kidHTML() : ownHTML()) + '</div>';
@@ -605,7 +605,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   }
   function kidListRender() {
     var d = L.kl || { quizzes: [] }, me = B.name || '';
-    var hero = '<div class="hero"><img class="eule-wackel" src="bilder/kacheln/live-quiz.webp" alt="" width="110" height="110" style="border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 3px var(--gold),var(--schatten)">' +
+    var hero = '<div class="hero"><img class="eule-wackel" src="bilder/kacheln/quiz-buzzer.webp" alt="" width="110" height="110" style="border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 3px var(--gold),var(--schatten)">' +
       '<div class="stack" style="gap:6px;flex:1 1 300px"><span class="sterne">✦ ✧ ✦</span><h1>Mein Quiz</h1><p>Bau dein eigenes Quiz. Deine Lehrperson kann es dann mit der ganzen Klasse spielen.</p></div></div>';
     if (!d.on) { app.innerHTML = kopf() + '<div class="main">' + hero + '<div class="card"><p>Deine Lehrperson hat das Quiz-Erstellen gerade ausgeschaltet.</p></div></div>'; return; }
     app.innerHTML = kopf() + '<div class="main">' + hero + '<div class="qlist"><button class="new" data-a="kidNeu"><span>+</span>Neues Quiz</button>' + d.quizzes.map(function (q) {
@@ -846,7 +846,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   }
   function vorRender() {
     var q = V.qs[V.i], n = V.qs.length, res = V.res[V.i], rf = q && q.typ === 'rf';
-    var kopfz = '<div class="bhead"><button class="btn sm" data-a="vorX">✕ Vorschau beenden</button><span class="marke"><img src="bilder/kacheln/live-quiz.webp" alt="" width="46" height="46"><b>' + h(V.Q.titel || 'Quiz') + '<i>✦</i></b></span>' +
+    var kopfz = '<div class="bhead"><button class="btn sm" data-a="vorX">✕ Vorschau beenden</button><span class="marke"><img src="bilder/kacheln/quiz-buzzer.webp" alt="" width="46" height="46"><b>' + h(V.Q.titel || 'Quiz') + '<i>✦</i></b></span>' +
       '<span class="grow"></span><span class="vor-tag">👁 Vorschau</span>' + (V.i < n ? '<span style="font-size:22px">Frage ' + (V.i + 1) + ' von ' + n + '</span>' : '') + '</div>';
     if (V.i >= n) {
       var ok = Object.keys(V.res).filter(function (k) { return V.res[k].ok; }).length;
@@ -979,7 +979,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
       '<div class="row" style="margin-top:6px"><button class="btn sm" data-a="qDup">⧉ Duplizieren</button><button class="btn sm danger" data-a="qDel"' + (Q.fragen.length > 1 ? '' : ' disabled') + '>Löschen</button></div>' +
       '<div class="row"><button class="btn sm quiet" data-a="qMove" data-d="-1"' + (L.sel ? '' : ' disabled') + '>↑ nach vorne</button><button class="btn sm quiet" data-a="qMove" data-d="1"' + (L.sel < Q.fragen.length - 1 ? '' : ' disabled') + '>↓ nach hinten</button></div>' +
       (fehler(q) ? '<p class="small" style="color:#9a3b33">⚠ ' + h(fehler(q)) + '</p>' : '') + '</div>';
-    app.innerHTML = '<header class="top"><button class="btn sm quiet" data-a="edBack">← ' + (Q.src === 'kid' && B.mode !== 'kid' ? 'Von den Kindern' : 'Meine Quiz') + '</button><span class="marke"><img src="bilder/kacheln/live-quiz.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span>' +
+    app.innerHTML = '<header class="top"><button class="btn sm quiet" data-a="edBack">← ' + (Q.src === 'kid' && B.mode !== 'kid' ? 'Von den Kindern' : 'Meine Quiz') + '</button><span class="marke"><img src="bilder/kacheln/quiz-buzzer.webp" alt="" width="46" height="46"><b>Quiz<i>✦</i></b></span>' +
       '<input class="input" id="titel" data-in="fTitel" maxlength="80" placeholder="Titel des Quiz" value="' + h(Q.titel) + '" style="flex:1 1 220px;max-width:460px"><span class="grow"></span>' + rechts + '</header>' +
       '<div class="ed"><nav class="side" aria-label="Fragen">' + Q.fragen.map(thumb).join('') +
       '<div class="addq"><button class="btn primary" data-a="qAdd" data-t="quiz">+ Frage</button><button class="btn sm" data-a="qAdd" data-t="rf">+ Richtig / falsch</button>' + (B.mode === 'kid' ? '' : '<button class="btn sm" data-a="kiOpen">✨ Fragen mit KI</button>') + '</div></nav>' +
@@ -1148,7 +1148,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     if (left <= 0 && !H.stepping && H.deadline - performance.now() <= -300) step('aufloesung', s.q);
   }
   function bhead(extra) {
-    return '<div class="bhead"><button class="btn sm quiet" data-a="hEnde">✕ Beenden</button><span class="marke"><img src="bilder/kacheln/live-quiz.webp" alt="" width="46" height="46"><b>' + h(H.quiz.titel || 'Quiz') + '<i>✦</i></b></span>' +
+    return '<div class="bhead"><button class="btn sm quiet" data-a="hEnde">✕ Beenden</button><span class="marke"><img src="bilder/kacheln/quiz-buzzer.webp" alt="" width="46" height="46"><b>' + h(H.quiz.titel || 'Quiz') + '<i>✦</i></b></span>' +
       '<span class="grow"></span>' + (extra || '') + '<div class="pinbox"><span class="muted small">Nummer</span><b>' + h(H.live.pin) + '</b></div><button class="btn sm" data-a="voll" title="Vollbild">⛶</button></div>';
   }
   function playerChips(s, kick) {
@@ -1270,7 +1270,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     joinRender();
   }
   function joinRender() {
-    app.innerHTML = '<div class="pw"><div class="box"><img class="eule eule-wackel" src="bilder/kacheln/live-quiz.webp" alt=""><h1>Mitspielen <span class="sterne" style="font-size:24px">✦</span></h1>' +
+    app.innerHTML = '<div class="pw"><div class="box"><img class="eule eule-wackel" src="bilder/kacheln/quiz-buzzer.webp" alt=""><h1>Mitspielen <span class="sterne" style="font-size:24px">✦</span></h1>' +
       '<label class="stack" style="gap:4px"><span class="lbl">Nummer</span><input class="input nummerin" id="pin" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="123456" value="' + h(P.pin) + '"></label>' +
       '<label class="stack" style="gap:4px"><span class="lbl">Dein Name</span><input class="input" id="pname" maxlength="20" autocomplete="off" placeholder="z. B. Lena" value="' + h(P.name) + '" style="font-size:28px;min-height:60px"></label>' +
       '<div class="stack" style="gap:4px"><span class="lbl">Wähle dein Tier</span><div class="tiere">' + TIERE.map(function (t) { return '<button data-a="pTier" data-t="' + t[0] + '" aria-pressed="' + (P.av === t[0]) + '" aria-label="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
@@ -1317,10 +1317,10 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
   function pRender() {
     var s = P.st, q = s.question, html = pKopf(s);
     if (s.phase === 'lobby') {
-      html += '<div class="box" style="align-items:center;text-align:center"><img class="eule eule-wackel" src="bilder/kacheln/live-quiz.webp" alt=""><h1>Du bist dabei!</h1><p class="gross">Schau zur Wandtafel. Gleich geht es los.</p>' +
+      html += '<div class="box" style="align-items:center;text-align:center"><img class="eule eule-wackel" src="bilder/kacheln/quiz-buzzer.webp" alt=""><h1>Du bist dabei!</h1><p class="gross">Schau zur Wandtafel. Gleich geht es los.</p>' +
         '<p class="muted">' + (s.players === 1 ? 'Bis jetzt bist nur du da.' : s.players + ' Kinder sind dabei') + '</p></div>';
     } else if (s.phase === 'frage' && q) {
-      if (s.mine || P.sent) html += '<div class="box" style="align-items:center;text-align:center"><img class="eule eule-wackel" src="bilder/kacheln/live-quiz.webp" alt=""><h1>Antwort abgegeben ✦</h1><p class="gross">Warte, bis alle fertig sind …</p></div>';
+      if (s.mine || P.sent) html += '<div class="box" style="align-items:center;text-align:center"><img class="eule eule-wackel" src="bilder/kacheln/quiz-buzzer.webp" alt=""><h1>Antwort abgegeben ✦</h1><p class="gross">Warte, bis alle fertig sind …</p></div>';
       else html += pFrage(q, s);
     } else if (s.phase === 'aufloesung' && q) {
       var m = s.mine;
