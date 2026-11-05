@@ -543,6 +543,18 @@ textarea.inp{font-family:var(--ui);font-size:16px}
   .etab .kbxs{grid-column:2/4}
   .big.brandtxt{font-size:22px}
 }
+/* Knobelnest: Anzeige «geschafft» */
+.vkfort{flex-basis:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border-radius:999px;padding:6px 16px;box-shadow:0 2px 0 var(--line);width:fit-content;max-width:100%}
+.vkfort.ganz{background:var(--nut-soft);box-shadow:0 0 0 2px var(--gold)}
+.vkf-t{font-size:18px;color:var(--sky-deep)}
+.vkfort.ganz .vkf-t{color:var(--gold-d)}
+.vkf-dots{display:flex;gap:5px}
+.vkf-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold);background:#fff}
+.vkf-dots i.on{background:var(--gold)}
+.vkok{position:absolute;left:18px;top:-11px;background:var(--ok);color:#fff;border-radius:999px;padding:0 10px;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.tile:has(.vkok){box-shadow:0 0 0 2px var(--ok),var(--shadow)}
+.vkcm{font-size:14px;color:var(--sky-deep)}
+.vkcm.ganz{color:var(--ok)}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1034,7 +1046,7 @@ function folderGrid(kids,pid,depth){
   let h='<div class="fgrid">';
   kids.forEach((n,i)=>{if(!vis(n))return;const isP=!!n.words,ws=wordsOf(n),op=isOpen(n);
     const meta=isP?`${ws.length} ${ws.length===1?'Wort':'Wörter'}`:`${portionsIn(n)} ${portionsIn(n)===1?'Portion':'Portionen'} · ${ws.length} Wörter`;
-    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
+    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${vkCardMark(n)?' · '+vkCardMark(n):''}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
       ${T?`<div class="cact"><button class="ib" data-mv="-1" data-id="${n.id}" ${i?'':'disabled'} aria-label="Nach vorne">‹</button><button class="ib" data-mv="1" data-id="${n.id}" ${i<kids.length-1?'':'disabled'} aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="relb ${op?'on':''}" data-rel="${n.id}">${op?'✓ Freigegeben':'Freigeben'}</button></div>`:''}</div>`});
   const parent=pid?NODES.get(pid).node:null,direct=kids.filter(n=>n.words&&vis(n)&&wordsOf(n).length);
   if(parent&&direct.length){const all=wordsOf(parent);h+=`<div class="portion total"><button class="fmain" data-all="${pid}"><span class="fname">${esc(parent.name)} · Gesamt</span><span class="fmeta">Alle Teile zusammen · ${all.length} Wörter</span><span class="pv">${direct.map(n=>esc(n.name)).join(' + ')}</span></button></div>`}
@@ -1079,8 +1091,8 @@ function practiceHTML(){
     ['hoeren','Hören & Schreiben',canSpeak?'Das Wort wird vorgelesen, du schreibst es auf.':'Dieser Browser kann leider nicht vorlesen.',nW&&canSpeak],
     ['luecke','Lückensatz',gapN?`Setz das fehlende Wort in den Satz ein. ${gapN} ${gapN===1?'Satz':'Sätze'}.`:'Zu diesen Wörtern gibt es noch keine Beispielsätze.',gapN]].filter(m=>!(m[0]==='luecke'&&noSent()));knMoreModes(MODES,ws);
   const GAMES=[['pairs','Paare finden','Memory mit höchstens 8 Wortpaaren.',n>=2],['regen','Wortregen','Tipp die Übersetzung, bevor die Wörter unten ankommen.',nW]];
-  const tile=([m,t,d,ok],i)=>`<button class="tile" data-mode="${m}" ${ok?'':'disabled'}>${i!=null?`<span class="num">${i+1}</span>`:''}<h3><span class="ico ${i==null?'rose':''}">${ICONS[m]}</span>${t}</h3><p>${d}</p>${m==='regen'&&best?`<span class="rec">Rekord: ${best} Punkte</span>`:''}<span class="go">Starten →</span></button>`;
-  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
+  const tile=([m,t,d,ok],i)=>`<button class="tile" data-mode="${m}" ${ok?'':'disabled'}>${i!=null?`<span class="num">${i+1}</span>`:''}<h3><span class="ico ${i==null?'rose':''}">${ICONS[m]}</span>${t}</h3><p>${d}</p>${m==='regen'&&best?`<span class="rec">Rekord: ${best} Punkte</span>`:''}${vkTileMark(m)}<span class="go">Starten →</span></button>`;
+  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
     <div class="sh"><h2 class="lbl">Spiele</h2></div><div class="tiles">${GAMES.map(m=>tile(m,null)).join('')}</div>`;
 }
 const MODE_FN=()=>({karte:modeCards,drei:modeThree,merken:modeMerken,salat:modeScramble,schreiben:modeWrite,hoeren:modeListen,luecke:modeGap,pairs:modePairs,regen:modeRain,bild:modeBild,sprechen:modeTalk});
@@ -1171,7 +1183,7 @@ function cardHTML(w,{flip=true,badge=''}={}){
     ${flip?`<div class="face back"><div class="lang"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>${picOf(w)?`<div class="cpic">${picHTML(picOf(w))}</div>`:''}<div class="word">${esc(A(w))}</div><div class="sub">${esc(Q(w))}</div></div>`:''}
   </div></div>`;
 }
-function summary(body,{title,lines,actions}){
+function summary(body,{title,lines,actions}){vkMark();
   session.key=null;const b=$('#barI');if(b)b.style.width='100%';
   body.innerHTML=`<div class="summary"><div class="stamp">✓</div><h2 class="big mid">${title}</h2>${lines.filter(Boolean).map(l=>`<p>${l}</p>`).join('')}
     <div class="actions">${actions.map((a,i)=>`<button class="pill ${a.primary?'rose':''}" data-i="${i}">${a.label}</button>`).join('')}</div></div>`;
@@ -1618,6 +1630,31 @@ function modeTalk(subset){
     session.key=e=>{if(e.code==='Space'){e.preventDefault();go()}};
   };next();
 }
+
+/* ---------- Knobelnest: Was habe ich in dieser Portion schon geschafft? ----------
+   Eine Übung gilt als geschafft, wenn das Kind sie bis zur Schluss-Seite durchgemacht hat (summary).
+   P.done[Portion] = {Übung: Zeit}. Die Portion ist geschafft, wenn alle Übungen geschafft sind, die es in ihr gibt
+   (vkReq: ohne Lückensatz, wenn es keine Sätze gibt, ohne «Bild & Wort» bei weniger als 2 Bildern usw.); dann P.ganz[Portion] = Zeit.
+   Die Spiele (Paare, Wortregen), der Karteikasten und die Knacknüsse zählen nicht. */
+function vkReq(ws){ws=ws||[];if(!ws.length)return[];const nW=ws.filter(w=>!w.x).length;
+  return [['karte',1],['bild',ws.filter(bildOK).length>=2],['drei',1],['merken',1],['salat',ws.some(salatOK)],['schreiben',1],
+    ['hoeren',canSpeak&&nW],['sprechen',ws.some(sprechOK)],['luecke',!noSent()&&ws.some(gapOK)]].filter(x=>x[1]).map(x=>x[0])}
+const vkDoneOf=key=>((P.done||{})[key])||{};
+function vkMark(){
+  if(!knMode||!knMode.key||knMode.key==='box'||knMode.key==='nuts'||knMode.key==='?')return;
+  const key=knMode.key,mode=knMode.mode;if(!vkReq(SET.words).includes(mode))return;
+  P.done=P.done||{};const d=P.done[key]=P.done[key]||{};const neu=!d[mode];d[mode]=Date.now();
+  const req=vkReq(SET.words),n=req.filter(m=>d[m]).length;
+  P.ganz=P.ganz||{};
+  if(n>=req.length&&!P.ganz[key]){P.ganz[key]=Date.now();later(()=>toast('🎉 Portion geschafft! Du hast alle Übungen gemacht.'),400)}
+  else if(neu)later(()=>toast('✓ '+(MODE_NAMES[mode]||mode)+' geschafft · '+n+' von '+req.length+' Übungen'),400);
+  saveP()}
+function vkHead(){if(!SET.key||SET.key==='box'||SET.key==='nuts')return'';const req=vkReq(SET.words),d=vkDoneOf(SET.key),n=req.filter(m=>d[m]).length;
+  if(!req.length)return'';const ganz=n>=req.length;
+  return `<div class="vkfort ${ganz?'ganz':''}"><span class="vkf-t">${ganz?'🎉 Portion geschafft!':n+' von '+req.length+' Übungen geschafft'}</span><span class="vkf-dots">${req.map(m=>`<i class="${d[m]?'on':''}" title="${esc(MODE_NAMES[m]||m)}"></i>`).join('')}</span></div>`}
+const vkTileMark=m=>{const d=vkDoneOf(SET.key);return d[m]&&vkReq(SET.words).includes(m)?'<span class="vkok" title="geschafft">✓ geschafft</span>':''};
+function vkCardMark(n){if(!n.words)return'';const ws=wordsOf(n),req=vkReq(ws),d=vkDoneOf(n.id),k=req.filter(m=>d[m]).length;
+  if(!req.length||!k)return'';return k>=req.length?'<span class="vkcm ganz">✓ geschafft</span>':`<span class="vkcm">${k}/${req.length} Übungen</span>`}
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
 const INTERVALS=[1,2,7,14,30],INT_LABEL=['jeden Tag','alle 2 Tage','jede Woche','alle 2 Wochen','jeden Monat'],ROUND=20;

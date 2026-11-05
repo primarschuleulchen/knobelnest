@@ -141,3 +141,15 @@ textarea.inp{font-family:var(--ui);font-size:16px}
   .etab .kbxs{grid-column:2/4}
   .big.brandtxt{font-size:22px}
 }
+/* Knobelnest: Anzeige «geschafft» */
+.vkfort{flex-basis:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border-radius:999px;padding:6px 16px;box-shadow:0 2px 0 var(--line);width:fit-content;max-width:100%}
+.vkfort.ganz{background:var(--nut-soft);box-shadow:0 0 0 2px var(--gold)}
+.vkf-t{font-size:18px;color:var(--sky-deep)}
+.vkfort.ganz .vkf-t{color:var(--gold-d)}
+.vkf-dots{display:flex;gap:5px}
+.vkf-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--gold);background:#fff}
+.vkf-dots i.on{background:var(--gold)}
+.vkok{position:absolute;left:18px;top:-11px;background:var(--ok);color:#fff;border-radius:999px;padding:0 10px;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.tile:has(.vkok){box-shadow:0 0 0 2px var(--ok),var(--shadow)}
+.vkcm{font-size:14px;color:var(--sky-deep)}
+.vkcm.ganz{color:var(--ok)}
