@@ -213,3 +213,28 @@ function modeTalk(subset){
     session.key=e=>{if(e.code==='Space'){e.preventDefault();go()}};
   };next();
 }
+
+/* ---------- Knobelnest: Was habe ich in dieser Portion schon geschafft? ----------
+   Eine Übung gilt als geschafft, wenn das Kind sie bis zur Schluss-Seite durchgemacht hat (summary).
+   P.done[Portion] = {Übung: Zeit}. Die Portion ist geschafft, wenn alle Übungen geschafft sind, die es in ihr gibt
+   (vkReq: ohne Lückensatz, wenn es keine Sätze gibt, ohne «Bild & Wort» bei weniger als 2 Bildern usw.); dann P.ganz[Portion] = Zeit.
+   Die Spiele (Paare, Wortregen), der Karteikasten und die Knacknüsse zählen nicht. */
+function vkReq(ws){ws=ws||[];if(!ws.length)return[];const nW=ws.filter(w=>!w.x).length;
+  return [['karte',1],['bild',ws.filter(bildOK).length>=2],['drei',1],['merken',1],['salat',ws.some(salatOK)],['schreiben',1],
+    ['hoeren',canSpeak&&nW],['sprechen',ws.some(sprechOK)],['luecke',!noSent()&&ws.some(gapOK)]].filter(x=>x[1]).map(x=>x[0])}
+const vkDoneOf=key=>((P.done||{})[key])||{};
+function vkMark(){
+  if(!knMode||!knMode.key||knMode.key==='box'||knMode.key==='nuts'||knMode.key==='?')return;
+  const key=knMode.key,mode=knMode.mode;if(!vkReq(SET.words).includes(mode))return;
+  P.done=P.done||{};const d=P.done[key]=P.done[key]||{};const neu=!d[mode];d[mode]=Date.now();
+  const req=vkReq(SET.words),n=req.filter(m=>d[m]).length;
+  P.ganz=P.ganz||{};
+  if(n>=req.length&&!P.ganz[key]){P.ganz[key]=Date.now();later(()=>toast('🎉 Portion geschafft! Du hast alle Übungen gemacht.'),400)}
+  else if(neu)later(()=>toast('✓ '+(MODE_NAMES[mode]||mode)+' geschafft · '+n+' von '+req.length+' Übungen'),400);
+  saveP()}
+function vkHead(){if(!SET.key||SET.key==='box'||SET.key==='nuts')return'';const req=vkReq(SET.words),d=vkDoneOf(SET.key),n=req.filter(m=>d[m]).length;
+  if(!req.length)return'';const ganz=n>=req.length;
+  return `<div class="vkfort ${ganz?'ganz':''}"><span class="vkf-t">${ganz?'🎉 Portion geschafft!':n+' von '+req.length+' Übungen geschafft'}</span><span class="vkf-dots">${req.map(m=>`<i class="${d[m]?'on':''}" title="${esc(MODE_NAMES[m]||m)}"></i>`).join('')}</span></div>`}
+const vkTileMark=m=>{const d=vkDoneOf(SET.key);return d[m]&&vkReq(SET.words).includes(m)?'<span class="vkok" title="geschafft">✓ geschafft</span>':''};
+function vkCardMark(n){if(!n.words)return'';const ws=wordsOf(n),req=vkReq(ws),d=vkDoneOf(n.id),k=req.filter(m=>d[m]).length;
+  if(!req.length||!k)return'';return k>=req.length?'<span class="vkcm ganz">✓ geschafft</span>':`<span class="vkcm">${k}/${req.length} Übungen</span>`}

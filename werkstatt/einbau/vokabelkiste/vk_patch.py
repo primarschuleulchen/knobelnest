@@ -345,5 +345,14 @@ rep("$$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filt
     "$$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filter(x=>x.id!==b.dataset.del);touch();table()});bindPics(node,table);")
 rep('«Kasten» weg = ', 'Tippe auf das runde Bild, um es zu ändern (gestrichelt = automatisch gewählt). «Kasten» weg = ')
 
+
+# 14) Anzeige «geschafft» (vk_ausbau.js: vkReq, vkMark, vkHead, vkTileMark, vkCardMark): Am Ende einer Übung (Schluss-Seite) wird sie
+#     für die Portion abgehakt. Über den Übungen steht «6 von 9 Übungen geschafft» mit Punkten, die Kacheln zeigen «✓ geschafft»,
+#     die Portions-Karten «6/9 Übungen» bzw. «✓ geschafft».
+rep("function summary(body,{title,lines,actions}){", "function summary(body,{title,lines,actions}){vkMark();")
+rep('Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>', 'Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}')
+rep('<span class="go">Starten →</span></button>`;', '${vkTileMark(m)}<span class="go">Starten →</span></button>`;')
+rep('<span class="fmeta">${meta}', '<span class="fmeta">${meta}${vkCardMark(n)?\' · \'+vkCardMark(n):\'\'}')
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
