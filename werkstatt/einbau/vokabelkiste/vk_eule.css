@@ -432,3 +432,5 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 }
 .hact .pill.tool{background:#fff;border-color:var(--gold);color:var(--ink);box-shadow:0 2px 0 var(--gold-l)}
 .hact .pill.tool:hover{background:var(--nut-soft)}
+.hact .hcol{display:inline-flex;flex-direction:column;gap:6px;align-items:stretch}
+.hact:has(.hcol){align-items:center}
