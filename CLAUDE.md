@@ -176,6 +176,8 @@ Wenn die Lehrerin Änderungen direkt im Knobelnest will, ändere auch das Einbau
 
 ## Veröffentlichen
 
+**Die Lehrerin hat erlaubt, Änderungen immer direkt online zu stellen** (wie in der Eulenkiste): nach dem Testen Pull Request erstellen und selbst zusammenführen, ohne nachzufragen. Ausnahme: Braucht die Änderung neues SQL, zuerst die Lehrerin das SQL ausführen lassen und auf ihr «fertig» warten, dann zusammenführen.
+
 Claude arbeitet in einer Cloud-Sitzung und darf nicht direkt auf `main` schreiben. Die Seite zeigt aber nur, was auf `main` liegt. Darum:
 
 1. **Commit und Push:** Jede Sitzung hat einen eigenen Arbeitszweig (z. B. `claude/…`, steht in den Sitzungsangaben). Dort committen (kurze deutsche Commit-Nachricht) und pushen. Online ist damit noch nichts.
