@@ -3645,6 +3645,23 @@
     paint(b);
     if (K.step === 'home') vkPlace();
   };
+  // Knobelkiste: die zehn Knobelspiele (knobelspiele/) als eine Kachel bei den Kindern, zwischen den Fächern und der Vokabelkiste.
+  // Innen Knöpfe nach Art (Mathematik, Deutsch, Knobeln) statt Unterordner. Erkannt am Titel; Bilder in bilder/knobelkiste/.
+  var KNOBEL = [
+    ['Rechen-Rakete', 'rechen-rakete', 'Mathematik', 'Rechnen und mit der Rakete zum Mond fliegen.'],
+    ['Wie spät ist es?', 'uhr-lesen', 'Mathematik', 'Die Uhr lesen, von vollen Stunden bis zur genauen Minute.'],
+    ['Kiosk', 'kiosk', 'Mathematik', 'Mit Franken und Rappen genau bezahlen und Rückgeld rechnen.'],
+    ['Wort-Raten', 'wort-raten', 'Deutsch', 'Ein geheimes Wort in sechs Versuchen erraten. Die Farben helfen.'],
+    ['Der, die, das', 'der-die-das', 'Deutsch', 'Nomen in die richtige Artikel-Kiste legen.'],
+    ['Silben-Puzzle', 'silben-puzzle', 'Deutsch', 'Silben in die richtige Reihenfolge bringen.'],
+    ['Bilderrätsel', 'bilderraetsel', 'Knobeln', 'Felder nach Zahlen ausmalen, bis ein Bild erscheint.'],
+    ['Eulen-Weg', 'eulen-weg', 'Knobeln', 'Pfeile legen, damit die Eule nach Hause findet.'],
+    ['Bilder-Sudoku', 'bilder-sudoku', 'Knobeln', 'Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.'],
+    ['Wasser-Weg', 'wasser-weg', 'Knobeln', 'Röhren drehen, bis das Wasser zur Blume fliesst.']];
+  var KNOBEL_ARTEN = ['Mathematik', 'Deutsch', 'Knobeln'];
+  function knobelOf(g) { var t = String((g && g.title) || '').trim().toLowerCase(); for (var i = 0; i < KNOBEL.length; i++) if (KNOBEL[i][0].toLowerCase() === t) return KNOBEL[i]; return null; }
+  function knobelIdx(g) { var k = knobelOf(g); return k ? KNOBEL.indexOf(k) : 99; }
+  function kidGames() { return K.home.games.filter(function (g) { return !knobelOf(g); }); }
   // Vokabelkiste-Kachel direkt unter «Mathematik» stellen (gleiche Spalte, nächste Reihe)
   var VK_SVG = '<svg width="50" height="42" viewBox="0 0 40 34" aria-hidden="true"><rect x="9" y="2" width="22" height="17" rx="2.5" fill="#fff" stroke="#c4c9c2"/><rect x="9" y="6.5" width="22" height="1.7" fill="#ec9d95"/><rect x="2" y="13" width="36" height="19" rx="6" fill="#87ad74"/><rect x="2" y="18" width="36" height="14" rx="6" fill="#6f9a5f"/></svg>';
   function vkPlace() {
@@ -3694,15 +3711,16 @@
   };
   K.view_home = function () {
     if (!K.home) return K.shell('<p class="lead">Wird geladen …</p>', 'Abmelden');
-    var games = K.home.games, fachs = uniq(games.map(function (g) { return g.fach; }));
+    var games = kidGames(), fachs = uniq(games.map(function (g) { return g.fach; })), kn = K.home.games.filter(knobelOf);
     var tiles = fachs.map(function (f) {
       var gs = games.filter(function (g) { return g.fach === f; }), n = gs.length;
       // Ein Fach, das nur aus der Vokabelkiste besteht: Kachel mit dem Kisten-Symbol, öffnet die Vokabelkiste direkt
       if (n === 1 && isVok(gs[0])) return '<button class="big-tile vk-tile" style="background:' + fachColor(f) + '" data-a="kPlay" data-id="' + gs[0].id + '"><span class="ic ic-bild"><img src="bilder/kacheln/vokabelkiste.webp" alt="" draggable="false"></span><b>' + h(f) + '</b><span>Wörter üben</span></button>';
       return '<button class="big-tile" style="background:' + fachColor(f) + '" data-a="kFach" data-f="' + h(f) + '">' + (fachBild(f) ? '<span class="ic ic-bild">' + fachBild(f) + '</span>' : '<span class="ic">' + h(f.charAt(0)) + '</span>') + '<b>' + h(f) + '</b><span>' + plural(n, 'Spiel', 'Spiele') + '</span></button>';
     }).join('');
+    if (kn.length) tiles += '<button class="big-tile kk-tile" data-a="kKnobel"><span class="ic ic-bild"><img src="bilder/kacheln/knobelkiste.webp" alt="" draggable="false"></span><b>Knobelkiste</b><span>' + plural(kn.length, 'Spiel', 'Spiele') + '</span></button>';
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
-    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
+    return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length || kn.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
       (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage-urne.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
@@ -3719,8 +3737,26 @@
       (K.atelierOk && toolOn(kt, 'atelier') ? '<button class="tafel-tile atelier-tile" data-a="kAtelier"><span class="ic ic-bild"><img src="bilder/kacheln/atelier.webp" alt="" draggable="false"></span>' +
       '<span><b>Atelier</b><span>Fahr mit deinem Velo dorthin, wo du gerade stehst.</span></span></button>' : '') + '</div>', null);
   };
+  K.view_knobel = function () {
+    var gs = K.home.games.filter(knobelOf).sort(function (a, b) { return knobelIdx(a) - knobelIdx(b); });
+    var arten = KNOBEL_ARTEN.filter(function (a) { return gs.some(function (g) { return knobelOf(g)[2] === a; }); });
+    if (arten.indexOf(K.kkArt) < 0) K.kkArt = 'alle';
+    var zeig = gs.filter(function (g) { return K.kkArt === 'alle' || knobelOf(g)[2] === K.kkArt; });
+    return K.shell('<div class="kk"><div class="kk-kopf"><img class="kk-bild" src="bilder/knobelkiste/knobelkiste.webp" alt=""><h1>Knobelkiste</h1>' +
+      '<p>Spiele zum Knobeln und Üben. Jedes hat fünf Stufen, von leicht bis Profi.</p></div>' +
+      (arten.length > 1 ? '<div class="kk-arten" role="group" aria-label="Welche Spiele?">' + ['alle'].concat(arten).map(function (a) {
+        return '<button class="kk-art' + (K.kkArt === a ? ' on' : '') + '" aria-pressed="' + (K.kkArt === a) + '" data-a="kkArt" data-k="' + h(a) + '">' + (a === 'alle' ? 'Alle' : h(a)) + '</button>'; }).join('') + '</div>' : '') +
+      '<div class="kk-spiele">' + zeig.map(function (g) {
+        var k = knobelOf(g), st = awardText(g.award);
+        return '<article class="kk-karte"><img class="kk-ic" src="bilder/knobelkiste/' + k[1] + '.webp" alt="" draggable="false"><span class="kk-fach">' + h(k[2]) + '</span>' +
+          '<b>' + h(g.title) + '</b><p>' + h(k[3]) + '</p>' + (st ? '<span class="kk-stand">' + h(st) + '</span>' : '') +
+          '<button class="kk-los" data-a="kPlay" data-id="' + g.id + '">▶ ' + (g.plays ? 'Weiterspielen' : 'Spielen') + '</button></article>';
+      }).join('') + '</div></div>', 'Zurück');
+  };
+  ACT.kKnobel = function () { K.step = 'knobel'; K.render(); window.scrollTo(0, 0); };
+  ACT.kkArt = function (el) { K.kkArt = el.dataset.k; K.render(); };
   K.view_thema = function () {
-    var games = K.home.games.filter(function (g) { return g.fach === K.fach; });
+    var games = kidGames().filter(function (g) { return g.fach === K.fach; });
     var themen = uniq(games.map(function (g) { return g.thema; }));
     return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + '</p><h1>Wähle ein Thema</h1></div><div class="big-tiles">' + themen.map(function (t) {
       var gs = games.filter(function (g) { return g.thema === t; });
@@ -3731,7 +3767,7 @@
     }).join('') + '</div>', 'Zurück');
   };
   K.view_games = function () {
-    var games = K.home.games.filter(function (g) { return g.fach === K.fach && g.thema === K.thema; });
+    var games = kidGames().filter(function (g) { return g.fach === K.fach && g.thema === K.thema; });
     return K.shell('<div class="stack" style="gap:6px"><p class="lead" style="font-weight:700">' + h(K.fach) + ' › ' + h(K.thema) + '</p><h1>Wähle ein Spiel</h1></div><div class="big-tiles">' + games.map(function (g) {
       var p = pct(g), l = lvlInfo(g)[0];
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
@@ -3856,7 +3892,7 @@
       LS.set('kn_kid', K.sess); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
     } finally { K.busy = false; }
   };
-  ACT.kFach = function (el) { K.fach = el.dataset.f; var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
+  ACT.kFach = function (el) { K.fach = el.dataset.f; var th = uniq(kidGames().filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
     if (th.length === 1) { K.thema = th[0]; K.step = 'games'; } else K.step = 'thema'; K.render(); };
   ACT.kThema = function (el) { K.thema = el.dataset.t; K.step = 'games'; K.render(); };
   ACT.kBack = async function () {
@@ -3868,7 +3904,7 @@
         if (K.sess) await DB.kidLogout(K.sess.token);
         LS.del('kn_kid'); K.sess = null; K.home = null; return K.start();
       case 'thema': K.step = 'home'; break;
-      case 'games': var th = uniq(K.home.games.filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
+      case 'games': var th = uniq(kidGames().filter(function (g) { return g.fach === K.fach; }).map(function (g) { return g.thema; }));
         K.step = th.length === 1 ? 'home' : 'thema'; break;
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
       case 'heft': K.step = 'home'; K.render(); break;
