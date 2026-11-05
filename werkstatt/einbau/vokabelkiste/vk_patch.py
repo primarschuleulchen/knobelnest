@@ -301,5 +301,49 @@ rep("${T&&!op?' · <span class=\"lock\">nicht freigegeben</span>':''}</span>", "
 rep("  const next=()=>{setProg(`${doneN} von ${total} fertig · ${up} weiter, ${down} zurück`,doneN/total);",
     "  const next=()=>{const once=queue.filter(id=>(b.hits[id]||0)===1).length;setProg(`${doneN} von ${total} fertig · ${once} schon 1× gewusst · ${up} weiter, ${down} zurück<br><small>Ein Kärtchen rutscht ins nächste Fach, wenn du es 2× gewusst hast.</small>`,(doneN+once/2)/total);")
 
+
+# 13) Ausbau (November 2026): Bilder zu den Wörtern, Übungen «Bild & Wort» und «Sprechen», Stil der Eulenkiste.
+#     Der Code steht in eigenen Dateien neben diesem Skript:
+#       vk_ausbau.js  = Bilder (w.img: Emoji, eigenes Bild als data:image oder '-' = kein Bild; sonst automatisch aus vk_emoji.txt),
+#                       Bild-Auswahl im Editor (picDialog), modeBild, modeTalk (Spracherkennung, sonst aufnehmen, sonst selbst prüfen)
+#       vk_eule.css   = Gestaltung der neuen Teile und Stil der Eulenkiste (Patrick Hand lokal, Gold, Blau)
+#       vk_emoji.txt  = Wörter -> Emoji (de: = nur deutsches Wort, fl: = nur Fremdwort)
+import os, json
+HIER = os.path.dirname(os.path.abspath(__file__))
+def datei(n): return open(os.path.join(HIER, n), encoding='utf-8').read()
+emo, schon = [], set()
+for z in datei('vk_emoji.txt').splitlines():
+    z = z.strip()
+    if not z or z.startswith('#') or '=' not in z: continue
+    e, ks = z.split('=', 1)
+    for k in ks.split('|'):
+        k = k.strip().lower()
+        if k and k not in schon: schon.add(k); emo.append([k, e.strip()])
+js = datei('vk_ausbau.js').replace('__EMOJI__', json.dumps(emo, ensure_ascii=False))
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", js + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+rep("@media (prefers-reduced-motion:reduce)", datei('vk_eule.css') + "@media (prefers-reduced-motion:reduce)")
+# Keine Schriften von Google (Patrick Hand kommt aus schriften/)
+rep('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Amatic+SC:wght@700&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">\n', '')
+# Logo der Vokabelkiste (rund mit Goldrand) statt der gezeichneten Kiste
+rep('id="brand" aria-label="Zur Übersicht">${BOX_SVG}', 'id="brand" aria-label="Zur Übersicht">${KN?\'<img src="../bilder/kacheln/vokabelkiste.webp" alt="">\':BOX_SVG}')
+# Im Knobelnest hat das Fenster Zugriff auf den Speicher der Klassenkiste (wegen des Mikrofons). Die Vokabelkiste soll dort
+# nichts ablegen (Entwürfe, Navigation): alles bleibt wie vorher in der Klassenkiste gespeichert.
+for a in ("const lsGet=k=>{try{", "const ssGet=k=>{try{"): rep(a, a + "if(window.parent!==window)return null;")
+for a in ("const lsSet=(k,v)=>{try{", "const lsDel=k=>{try{", "const ssSet=(k,v)=>{try{"): rep(a, a + "if(window.parent!==window)return;")
+# Neue Übungen in der Auswahl, im Start und in der Klassen-Übersicht
+rep("].filter(m=>!(m[0]==='luecke'&&noSent()));", "].filter(m=>!(m[0]==='luecke'&&noSent()));knMoreModes(MODES,ws);")
+rep("regen:modeRain});", "regen:modeRain,bild:modeBild,sprechen:modeTalk});")
+rep("regen:'Wortregen'};", "regen:'Wortregen',bild:'Bild',sprechen:'Sprechen'};")
+# Kärtchen: Bild klein auf der Rückseite
+rep("<div class=\"face back\"><div class=\"lang\"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>",
+    "<div class=\"face back\"><div class=\"lang\"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>${picOf(w)?`<div class=\"cpic\">${picHTML(picOf(w))}</div>`:''}")
+# Editor: Bild-Spalte vorne
+rep('<span class="th">Deutsch</span>', '<span class="th">Bild</span><span class="th">Deutsch</span>')
+rep("      `<input class=\"inp\" data-id=\"${w.id}\" data-f=\"de\"", "      `${picCell(w)}<input class=\"inp\" data-id=\"${w.id}\" data-f=\"de\"")
+rep("$$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filter(x=>x.id!==b.dataset.del);touch();table()});",
+    "$$('#etab [data-del]').forEach(b=>b.onclick=()=>{node.words=node.words.filter(x=>x.id!==b.dataset.del);touch();table()});bindPics(node,table);")
+rep('«Kasten» weg = ', 'Tippe auf das runde Bild, um es zu ändern (gestrichelt = automatisch gewählt). «Kasten» weg = ')
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

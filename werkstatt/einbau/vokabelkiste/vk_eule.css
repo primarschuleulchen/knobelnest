@@ -1,0 +1,143 @@
+/* ---------- Knobelnest: Bilder, «Bild & Wort», «Sprechen» ---------- */
+.pic{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none}
+.pic.emo{font-size:40px;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.pic.none{color:var(--muted);font-size:30px}
+.pic.big{width:120px;height:120px}
+.pic.emo.big{font-size:76px}
+.picb{width:46px;height:46px;border-radius:50%;border:2px solid var(--gold);background:#fff;padding:0;display:grid;place-items:center;overflow:hidden}
+.picb .pic{width:42px;height:42px}
+.picb .pic.emo{font-size:26px}
+.picb.auto{border-style:dashed;border-color:var(--gold-l)}
+.picb .plus{color:var(--muted);font-size:22px}
+.picb:hover{box-shadow:0 0 0 4px var(--sky-soft)}
+.etab{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto auto}
+.picdlg{top:8%;width:min(520px,calc(100% - 32px));max-height:84vh;overflow:auto}
+.pdnow{display:flex;align-items:center;gap:14px}
+.pdnow .pic{border:3px solid var(--gold);background:#fff}
+.pdnow p{margin:0;color:var(--muted);font-size:15px}
+.pdgrid{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow:auto;padding:2px}
+.pdo{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:28px;padding:0;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.pdo:hover{background:var(--sky-soft)}
+.pdact{flex-wrap:wrap;align-items:center}
+.pdact label.pill{cursor:pointer}
+.face.back .cpic{position:absolute;right:.7rem;bottom:.6rem;z-index:1}
+.face.back .cpic .pic{width:54px;height:54px}
+.face.back .cpic .pic.emo{font-size:36px}
+.bq{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bbig .pic{width:150px;height:150px;border:4px solid var(--gold);background:#fff;box-shadow:var(--shadow)}
+.bbig .pic.emo{font-size:96px}
+.bword{display:flex;align-items:center;gap:10px;font-family:var(--word);font-size:clamp(30px,6vw,42px);color:var(--navy);background:var(--sheet);border-radius:18px;padding:10px 22px;box-shadow:var(--shadow)}
+.bopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(360px,100%)}
+.bopt{position:relative;aspect-ratio:1/1;border-radius:22px;border:3px solid var(--line);background:#fff;display:grid;place-items:center;padding:8px;box-shadow:var(--shadow)}
+.bopt:hover{border-color:var(--sky)}
+.bopt kbd{position:absolute;top:8px;left:10px;font-size:12px;border-radius:999px;background:var(--sky-soft);color:var(--navy);padding:1px 8px}
+.bopt .pic{width:72%;height:72%}
+.bopt .pic.emo{font-size:clamp(48px,13vw,84px)}
+.bopt.right{border-color:var(--ok);background:var(--leaf-soft)}
+.bopt.wrong{border-color:var(--rose);background:var(--rose-soft)}
+.talkq{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(460px,100%)}
+.talkq .word{font-family:var(--word);font-size:clamp(28px,6vw,42px);line-height:1.15}
+.talkq .tpic .pic{width:84px;height:84px}
+.talkq .tpic .pic.emo{font-size:56px}
+.play.mic{background:var(--gold);box-shadow:0 6px 0 var(--gold-d),var(--shadow)}
+.play.mic.on{background:#d9625a;box-shadow:0 6px 0 #b04a43,0 0 0 0 rgba(217,98,90,.5);animation:micp 1.2s infinite}
+.play.mic.okm{background:var(--ok);box-shadow:0 6px 0 #4a7e38}
+.play.mic:disabled{opacity:.5}
+@keyframes micp{0%{box-shadow:0 6px 0 #b04a43,0 0 0 0 rgba(217,98,90,.45)}100%{box-shadow:0 6px 0 #b04a43,0 0 0 22px rgba(217,98,90,0)}}
+#tact .judge{width:min(460px,100%)}
+
+/* ---------- Knobelnest: Stil der Eulenkiste ----------
+   Schrift Patrick Hand (lokal), heller Himmel-Hintergrund, Gold-Akzente, Blau statt Rosa, ✦ beim Titel. */
+@font-face{font-family:"Patrick Hand";src:url(../schriften/patrick-hand.woff2) format("woff2");font-display:swap}
+:root{
+  --paper:#f4f9fd; --ink:#1f2421; --muted:#5f6963; --line:#dbe7f1; --rule:#c5d8e8; --sheet:#fffefa;
+  --gold:#d6ad45; --gold-d:#c4952f; --gold-l:#ecd9a4; --ok:#5f9a4a;
+  --rose:#e9a49c; --rose-deep:#d9766c; --rose-ink:#b5524a; --rose-soft:#fcefed;
+  --leaf:#7fae68; --leaf-deep:#4f7f3d; --leaf-soft:#e9f1e3;
+  --sky:#9cc8ea; --sky-deep:#3f78a8; --sky-soft:#dcf0fd; --navy:#2f5f8f; --bubble:#3f78a8;
+  --cover:#8dbde4; --cover2:#5f97c6; --nut:#b07a3a; --nut-soft:#fbf3dc;
+  --shadow:0 10px 26px rgba(63,120,168,.16),0 2px 6px rgba(63,120,168,.08); --shadow-up:0 16px 34px rgba(63,120,168,.24),0 3px 8px rgba(63,120,168,.12);
+  --ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive; --hand:var(--ui); --label:var(--ui); --bub:var(--ui); --word:var(--ui);
+}
+body{font-size:18px;line-height:1.35}
+body *{font-weight:400!important;letter-spacing:normal}
+.bg{background:radial-gradient(1200px 600px at 0% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 600px at 110% 100%,#fbf3dc 0%,transparent 60%),radial-gradient(700px 500px at 100% 0%,#e9f1e3 0%,transparent 60%),#f4f9fd}
+/* Titel: dunkle Schrift mit goldenem Stern statt Bubble-Schrift */
+.big{color:var(--ink);text-shadow:none!important;font-size:clamp(34px,6vw,50px)}
+.big.mid{font-size:clamp(28px,4.6vw,38px)}
+h1.big::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.big.brandtxt{font-size:28px;color:var(--ink)}
+.brand img{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--gold);background:#fff;object-fit:cover;box-shadow:0 3px 10px rgba(63,120,168,.18)}
+.lbl{font-size:32px;color:var(--ink)}
+.lbl::after{content:" ✧";color:var(--gold);font-size:.55em}
+.sh .hand,.hand{color:var(--muted);font-size:19px}
+.gname,.cpg>b{color:var(--sky-deep)}
+/* Knöpfe */
+.pill{border:1.5px solid var(--rule);font-size:17px;min-height:38px;box-shadow:0 2px 0 var(--line)}
+.pill:hover:not(:disabled){background:var(--sky-soft)}
+.pill.on,.pill.rose{background:var(--sky-deep);border-color:var(--sky-deep);color:#fff;box-shadow:0 3px 0 var(--navy)}
+.pill.on:hover,.pill.rose:hover{background:var(--navy)}
+.pill.go{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 3px 0 var(--gold-d)}
+.pill.go:hover:not(:disabled){background:var(--gold-d)}
+.pill.sm{font-size:15px}
+.seg{border:1.5px solid var(--rule)}
+.seg button{font-size:16px}
+.seg button[aria-pressed="true"]{background:var(--sky-deep);color:#fff}
+.crumb{font-size:16px;background:#fff;border:1px solid var(--line)}
+.tbanner{background:var(--nut-soft);border-color:var(--gold);font-size:16px}
+/* Kacheln */
+.tile{border-radius:24px;border:1.5px solid #fff}
+.tile h3{font-size:22px}
+.tile p{font-size:16px}
+.tile .go{color:var(--sky-deep);font-size:17px}
+.num{color:var(--gold-d);font-size:22px;width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;background:#fff;top:12px;right:12px}
+.ico{width:42px;height:42px;border:2px solid var(--gold);background:var(--sky-soft);color:var(--sky-deep)}
+.ico.rose{background:var(--rose-soft);color:var(--rose-ink)}
+.ico.nut{background:var(--nut-soft);color:var(--nut)}
+.ico.leaf{background:var(--leaf-soft);color:var(--leaf-deep)}
+.fold{--fc:#e9f1e3}.fold.l1{--fc:#dcf0fd}.fold.l2{--fc:#fbf3dc}
+.fname{font-size:21px}
+.fmeta{font-size:15px}
+.portion::before,.face::before,.sheet::before{background:var(--gold-l)}
+.minibox span,.stack i{border-top-color:var(--gold)}
+.chip.cur{border-color:var(--gold)}
+.steps span.on{background:var(--sky-deep);border-color:var(--sky-deep)}
+.badge{background:var(--gold)}
+.due{background:var(--gold-d)}
+.timer span,.bar i{background:var(--gold)}
+.closedn .fmain{opacity:.55}
+.fold.closedn,.portion.closedn{outline-color:var(--rose)}
+/* Übungen */
+.eyebrow{font-size:15px;color:var(--sky-deep)}
+.prog{font-size:17px}
+.face,.sheet{box-shadow:var(--shadow)}
+.word{font-size:clamp(32px,7vw,48px)}
+.lang{font-size:14px}
+.opt{border-radius:18px;font-size:23px;box-shadow:0 3px 0 var(--line)}
+.opt.right{border-color:var(--ok)}
+.write input{font-size:23px}
+.judge button{font-size:20px}
+.judge .yes{border-color:var(--ok)}
+.fb .ok{color:var(--ok);font-size:20px}
+.fb .no{font-size:20px}
+.fb .sol{font-size:28px}
+.stamp{border-color:var(--gold);color:var(--gold-d)}
+.summary{border:1.5px solid #fff}
+.play{background:var(--sky-deep);box-shadow:0 6px 0 var(--navy),var(--shadow)}
+.keys{font-size:15px}
+.toast{font-size:17px}
+.pub{border:1.5px solid var(--gold)}
+.ltile,.slot{font-size:28px}
+.drop{border-top-color:var(--gold);font-size:21px}
+.rain::after{background:var(--gold)}
+.etab .th{font-size:15px;text-transform:none;letter-spacing:0}
+.kbx{font-size:15px}
+.ehint,.import p,.note{font-size:15px}
+.inp{font-size:17px}
+textarea.inp{font-family:var(--ui);font-size:16px}
+.voice select{font-size:16px}
+@media (max-width:620px){
+  .etab{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto}
+  .etab .kbxs{grid-column:2/4}
+  .big.brandtxt{font-size:22px}
+}
