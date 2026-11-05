@@ -2482,13 +2482,16 @@
           ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live'],
           ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null]]
           .filter(function (x) { return T.tools[x[0]]; });
+        // Live-Quiz: Kinder dürfen eigene Quiz erstellen (kid_tools.quiz === true, fehlt = aus)
+        var quizFoot = function () { var on = !!(c.kid_tools && c.kid_tools.quiz === true);
+          return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="quiz">' + (on ? '✓ Kinder dürfen Quiz erstellen' : 'Quiz erstellen für Kinder gesperrt · freigeben') + '</button>'; };
         var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
         var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel">' + ttIcon('tafel', '🙋') + '<span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
           '<button class="tt-rel' + (T.rel.has(vkg.id) ? ' on' : '') + '" data-a="rel" data-id="' + vkg.id + '">' + (T.rel.has(vkg.id) ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button></div>' : '';
         var tiles = {};
-        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + (x[0] === 'quiz' ? '<span class="tt-only">Mitspielen per QR-Code</span>' : foot(x[5])) + '</div>'; });
+        t.forEach(function (x) { tiles[x[0]] = '<div class="tooltile tt-card' + (x[0] === 'folie' ? ' tt-main' : '') + '" data-tile="' + x[0] + '"><a class="tt-open" href="#/' + x[1] + '/' + T.cls + '">' + ttIcon(x[0], x[2]) + '<span><b>' + x[3] + '</b><small>' + x[4] + '</small></span></a>' + (x[0] === 'quiz' ? quizFoot() : foot(x[5])) + '</div>'; });
         if (T.tools.tafel) tiles.tafel = tafelTile.replace('<div class="tooltile tt-card">', '<div class="tooltile tt-card" data-tile="tafel">');
         if (vt && T.tools.vk) tiles.vk = vt.replace('<div class="tooltile tt-card tt-vk">', '<div class="tooltile tt-card tt-vk" data-tile="vk">');
         var keys = tileOrder().filter(function (k) { return tiles[k]; });
@@ -2859,8 +2862,8 @@
   document.addEventListener('dragstart', function (e) { if (e.target.closest && e.target.closest('.tooltiles')) e.preventDefault(); });
   ACT.toolRel = async function (el) {
     var c = T.cur(), k = el.dataset.k, kt = Object.assign({}, c.kid_tools || {}), before = c.kid_tools;
-    kt[k] = !toolOn(c, k); c.kid_tools = kt; T.render();
-    try { await DB.updateClass(c.id, { kid_tools: kt }); toast(kt[k] ? 'Für die Klasse freigegeben.' : 'Für die Klasse gesperrt.'); }
+    kt[k] = k === 'quiz' ? !(kt.quiz === true) : !toolOn(c, k); c.kid_tools = kt; T.render();
+    try { await DB.updateClass(c.id, { kid_tools: kt }); toast(k === 'quiz' ? (kt.quiz ? 'Die Kinder können jetzt eigene Quiz erstellen.' : 'Quiz erstellen ist für die Kinder gesperrt.') : kt[k] ? 'Für die Klasse freigegeben.' : 'Für die Klasse gesperrt.'); }
     catch (e) { c.kid_tools = before; T.render(); toast(sqlHint(e)); }
   };
   ACT.gRelAll = async function (el) {
