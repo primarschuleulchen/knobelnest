@@ -348,6 +348,7 @@ function say(t, rate) { return sayList([t], rate, 0); }
 // Mehrere Sätze nacheinander, mit Pause dazwischen (Stufe «Listening»)
 function sayList(list, rate, pause) {
   if (!canSay()) return false;
+  if (typeof ST !== 'undefined' && ST.mute) { stopSay(); return true; } // Ton aus: ganz still
   var run = ++SAYRUN, k = 0;
   try { var ss = speechSynthesis; if (ss.speaking || ss.pending) ss.cancel(); if (ss.paused) ss.resume(); } catch (e) { return false; }
   function next() {
@@ -361,6 +362,10 @@ function sayList(list, rate, pause) {
   next(); return true;
 }
 function stopSay() { SAYRUN++; try { speechSynthesis.cancel(); } catch (e) {} }
+// Still sein, wenn die Übung verlassen wird, das Fenster zugeht oder der Ton ausgeschaltet wird
+['pagehide', 'beforeunload', 'unload'].forEach(function (ev) { window.addEventListener(ev, stopSay); });
+document.addEventListener('visibilitychange', function () { if (document.hidden) stopSay(); });
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-snd]')) setTimeout(function () { if (ST.mute) stopSay(); }, 0); }, true);
 
 // ---------------------------------------------------------------------- 3D-Welt
 var WD = null; // die Welt (wird nur einmal gebaut)
