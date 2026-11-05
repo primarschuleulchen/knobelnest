@@ -1254,3 +1254,8 @@ body.kidv .kk-tile{background:#F6E7C8}
 .kk-stand{font-size:17px;color:#3f6b2e}
 .kk-los{margin-top:auto;align-self:stretch;font:inherit;font-size:22px;min-height:50px;border-radius:16px;border:2px solid #1f2421;background:#dcf0fd;color:#1f2421;cursor:pointer;box-shadow:0 4px 12px rgba(63,120,168,.14)}
 .kk-los:hover{transform:translateY(-1px)}
+/* Verwaltung: Fach und Thema direkt in der Spieleliste ändern */
+.ft-edit{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ft-in{font:inherit;color:inherit;background:transparent;border:1.5px dashed #d9e3ee;border-radius:10px;padding:4px 8px;width:9.5em;min-width:0;cursor:text}
+.ft-in:hover{border-color:var(--gold,#d6ad45);background:#fff}
+.ft-in:focus{outline:none;border-style:solid;border-color:var(--gold,#d6ad45);background:#fff;box-shadow:0 0 0 3px rgba(214,173,69,.2)}

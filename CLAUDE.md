@@ -104,7 +104,7 @@ So läuft ein Werkzeug im Portal:
 
 ### Spiele
 
-- **Speicherort:** Die Spiele liegen in Supabase (Tabelle `games`). Sie werden in der Verwaltung als HTML oder als «Spielpaket» (JSON) hochgeladen, nicht über GitHub.
+- **Speicherort:** Die Spiele liegen in Supabase (Tabelle `games`). In der Verwaltung lassen sich Fach und Thema direkt in der Spieleliste ändern (`ACT.gFtSet`, Felder `.ft-in` mit Vorschlägen aus `fachList`/`themaList`). Sie werden in der Verwaltung als HTML oder als «Spielpaket» (JSON) hochgeladen, nicht über GitHub.
 - **Spielstand und Fortschritt:** Ein Spiel meldet beides per `postMessage` (`{spielheft|knobelnest: 1, type: …}`). Das Portal speichert sie mit `kid_report` / `kid_save` / `kid_state` (siehe `ACT.kPlay`).
 - **Wenn die Lehrerin ein Spiel verbessert haben will:**
   - Du bearbeitest ihre HTML-Datei.
@@ -140,7 +140,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=153`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=154`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
