@@ -49,7 +49,7 @@ def spiel(**s):
 
 # ================================================================== Rechen-Rakete
 spiel(id='rechen-rakete', titel='Rechen-Rakete', icon=logo('rechen-rakete'), fach='Mathematik', thema='Kopfrechnen', stufe='1.–6. Klasse', sort=1, n=10,
-      sterne={'modus': 'runde', 'n': 10},
+      sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Rechnen und mit der Rakete zum Mond fliegen.',
       intro='Tippe auf das richtige Ergebnis. Bei jeder Rechnung fliegt die Rakete ein Stück höher, bis zum Mond!',
       levels=[dict(name='Leicht', info='Plus und Minus bis 10', t=0),
@@ -180,7 +180,7 @@ for _w in [x[0] for x in W4] + W4X + [x[0] for x in W5] + W5X + W6:
     assert 'ß' not in _w and _w.isupper(), _w
 
 spiel(id='wort-raten', titel='Wort-Raten', icon=logo('wort-raten'), fach='Deutsch', thema='Wörter', stufe='2.–6. Klasse', sort=1, n=5,
-      sterne={'modus': 'runde', 'n': 5},
+      sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Ein geheimes Wort in sechs Versuchen erraten.',
       intro='Errate das geheime Wort! Nach jedem Versuch zeigen die Farben: <b style="color:#4c8a37">grün</b> = richtiger Platz, <b style="color:#b8892a">gelb</b> = kommt vor, aber an einem anderen Platz.',
       levels=[dict(name='Leicht', info='4 Buchstaben, mit Bild', L=4, bild=True),
@@ -290,7 +290,7 @@ def nono_level(n):
     return [{'n': b[0], 'e': b[1], 'c': b[2], 'p': b[3].split('\n')} for b in BILDER[n]]
 
 spiel(id='bilderraetsel', titel='Bilderrätsel', icon=logo('bilderraetsel'), fach='Knobeln', thema='Logik', stufe='2.–6. Klasse', sort=1, n=3,
-      sterne={'modus': 'runde', 'n': 3},
+      sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Felder nach Zahlen ausmalen, bis ein Bild erscheint.',
       intro='Die Zahlen sagen, wie viele Felder in einer Reihe nebeneinander ausgemalt sind. «2 1» heisst: zuerst 2 Felder, dann eine Lücke, dann 1 Feld. Male so lange, bis ein Bild erscheint!',
       levels=[dict(name='Leicht', info='5 × 5 Felder', s=5, hilfe=True, bilder=nono_level(5)),
@@ -412,7 +412,7 @@ G.play = function (lv, api) {
 
 # ================================================================== Eulen-Weg (Programmieren)
 spiel(id='eulen-weg', titel='Eulen-Weg', icon=logo('eulen-weg'), fach='Knobeln', thema='Programmieren', stufe='1.–6. Klasse', sort=2, n=5,
-      sterne={'modus': 'runde', 'n': 5},
+      sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
       kurz='Pfeile legen, damit die Eule nach Hause findet.',
       intro='Lege Pfeil-Karten hintereinander. Dann tippe auf «▶ Los!» und die Eule läuft genau so, wie du es programmiert hast. Findet sie nach Hause?',
       levels=[dict(name='Leicht', info='Pfeile, kleiner Wald', s=4, rel=False, o=2, nuts=0, min=3, max=5, umweg=False),

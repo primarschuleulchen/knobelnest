@@ -51,7 +51,7 @@ SIL_WORT = ['Schu-le','Leh-re-rin','Pau-sen-platz','Fe-ri-en','Ge-burts-tag','Mo
 def alle(spiel, logo=None, LOGO_CSS=''):
     # ================================================================== Wie spät ist es?
     spiel(id='uhr-lesen', titel='Wie spät ist es?', icon=logo('uhr-lesen'), fach='Mathematik', thema='Zeit', stufe='1.–4. Klasse', sort=2, n=10,
-          sterne={'modus': 'runde', 'n': 10},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Die Uhr lesen: volle Stunden bis genaue Minuten.',
           intro='Der kurze Zeiger zeigt die Stunde, der lange Zeiger die Minuten. Schau genau hin!',
           levels=[dict(name='Leicht', info='Volle Stunden', t=0),
@@ -149,7 +149,7 @@ G.play = function (lv, api) {
 
     # ================================================================== Kiosk (Geld)
     spiel(id='kiosk', titel='Kiosk', icon=logo('kiosk'), fach='Mathematik', thema='Geld', stufe='1.–4. Klasse', sort=3, n=8,
-          sterne={'modus': 'runde', 'n': 8},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Mit Franken und Rappen genau bezahlen.',
           intro='Im Kiosk kostet alles etwas. Lege genau so viel Geld hin, wie es kostet. Tippe auf eine Münze, um sie hinzulegen, und auf eine Münze auf der Theke, um sie wieder wegzunehmen.',
           levels=[dict(name='Leicht', info='Bis 10 Franken', t=0),
@@ -255,7 +255,7 @@ G.play = function (lv, api) {
 
     # ================================================================== Der, die, das
     spiel(id='der-die-das', titel='Der, die, das', icon=logo('der-die-das'), fach='Deutsch', thema='Wortarten', stufe='1.–5. Klasse', sort=2, n=10,
-          sterne={'modus': 'runde', 'n': 10},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Nomen in die richtige Artikel-Kiste legen.',
           intro='Heisst es <b style="color:#3f78a8">der</b>, <b style="color:#c8574e">die</b> oder <b style="color:#4c8a37">das</b>? Tippe auf die richtige Kiste.',
           levels=[dict(name='Leicht', info='Mit Bildern', t=0),
@@ -318,7 +318,7 @@ G.play = function (lv, api) {
 
     # ================================================================== Silben-Puzzle
     spiel(id='silben-puzzle', titel='Silben-Puzzle', icon=logo('silben-puzzle'), fach='Deutsch', thema='Lesen', stufe='1.–4. Klasse', sort=3, n=8,
-          sterne={'modus': 'runde', 'n': 8},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Silben in die richtige Reihenfolge bringen.',
           intro='Die Silben sind durcheinander geraten. Tippe sie der Reihe nach an, damit das Wort entsteht. Klatsch die Silben dazu!',
           levels=[dict(name='Leicht', info='2 Silben, mit Bild', t=0),
@@ -390,7 +390,7 @@ G.play = function (lv, api) {
 
     # ================================================================== Bilder-Sudoku
     spiel(id='bilder-sudoku', titel='Bilder-Sudoku', icon=logo('bilder-sudoku'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=3, n=3,
-          sterne={'modus': 'runde', 'n': 3},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.',
           intro='Fülle die leeren Felder. In jeder Zeile, jeder Spalte und jedem dicken Kästchen kommt jedes Bild genau einmal vor.',
           levels=[dict(name='Leicht', info='4 × 4 mit Früchten', n=4, weg=6, bild=True),
@@ -509,7 +509,7 @@ G.play = function (lv, api) {
 
     # ================================================================== Wasser-Weg
     spiel(id='wasser-weg', titel='Wasser-Weg', icon=logo('wasser-weg'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=4, n=3,
-          sterne={'modus': 'runde', 'n': 3},
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Röhren drehen, bis das Wasser zur Blume fliesst.',
           intro='Tippe auf eine Röhre, dann dreht sie sich. Baue einen Weg vom Wasserhahn bis zur Blume. Blaue Röhren haben schon Wasser.',
           levels=[dict(name='Leicht', info='4 × 4 Felder', s=4, min=5),
