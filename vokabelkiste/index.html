@@ -761,6 +761,19 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .hz{display:block;width:60%;height:10px;margin-top:4px;background:radial-gradient(circle,var(--gold) 1.6px,transparent 2.2px) 0 50%/14px 10px repeat-x;opacity:.7}
 .heule{left:auto;right:132px;top:auto;bottom:10px;transform:rotate(8deg);width:86px;height:86px;border:0;border-radius:50%;box-shadow:0 0 0 4px #fff,0 0 0 6px var(--gold),0 8px 16px rgba(0,0,0,.28)}
 @media (max-width:620px){.heule{width:56px;height:56px;right:96px;bottom:6px}.hstich{right:84px}.hlabel{padding:12px 22px;min-width:70%}.hribbon{right:84px}.hdoo{display:none}}
+/* Reiter-Bilder der Lehrerin (freigestellt) */
+.htab .rt{width:34px;height:34px;border-radius:0;object-fit:contain}
+/* Kachel «Mein Heft» */
+.kt-heft{border:0;text-align:left;cursor:pointer;background:#fff;transition:transform .15s,box-shadow .15s}
+.kt-heft:hover{transform:translateY(-3px);box-shadow:var(--shadow-up)}
+.kt-heft .mh{position:relative;flex:none;width:62px;height:80px;border-radius:4px 10px 10px 4px;display:grid;place-items:center;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 2px,transparent 2px 5px),linear-gradient(135deg,#5a95c6,#2c5a86);box-shadow:inset 5px 0 0 rgba(0,0,0,.15),0 5px 10px rgba(44,90,134,.3);transform:rotate(-4deg)}
+.kt-heft .mhl{background:#fffdf5;border-radius:3px;font-size:10px;line-height:1.1;padding:4px 4px;width:44px;text-align:center;box-shadow:0 0 0 1.5px var(--gold)}
+.kt-heft .mh i{position:absolute;right:8px;top:0;bottom:0;width:5px;background:#1d3f5f}
+.kt-heft b{font-size:21px}
+.mhz{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:17px;color:var(--gold-d);font-variant-numeric:tabular-nums}
+.mhz span{display:inline-flex;align-items:center;gap:4px}
+.mhz img{width:22px;height:22px;object-fit:contain}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -931,8 +944,7 @@ function knTodayHTML(){
     <div class="kt kt-day ${ok?'on':''}"><span class="kts">⭐</span><div class="ktx"><b>${ok?'Tagesstern geschafft!':'Heute: '+mmss(sec)+' von 7 Minuten'}</b>
       <div class="bar"><i style="width:${Math.min(100,Math.round(sec/STAR_SEC*100))}%"></i></div><small>Es zählt nur die Zeit, in der du wirklich übst.</small></div></div>
     <div class="kt kt-fire ${st?'on':''}"><b class="ktn">${st}</b><div class="ktx"><span class="ktf">${fl||'Noch keine Flamme'}</span><small>${st===1?'Schultag':'Schultage'} hintereinander mit Tagesstern</small></div></div>
-    <div class="kt kt-badges">${bd('🏅','Wochenheld',wk>0,wk?(wk>1?wk+'× geschafft':'geschafft!'):'jeden Schultag einer Woche einen Tagesstern')}
-      ${bd('📦','Kistenprofi',f5>=PROFI,f5>=PROFI?'100 Wörter im letzten Fach!':f5+' von '+PROFI+' Wörtern im letzten Fach')}</div></div>`}
+    ${vkHeftCard()}</div>`}
 /* ---------- Knobelnest: Vorlagen für andere Lehrpersonen ---------- */
 const KN_ADMIN=KN&&!!KNI.admin,TPL=KN&&KNI.settings&&KNI.settings.tpl&&Array.isArray(KNI.settings.tpl.subjects)?KNI.settings.tpl:null;
 let knFresh=false;
@@ -1124,7 +1136,7 @@ function renderTop(){
     <nav class="subs" aria-label="Sprache">${C.subjects.map(x=>`<button class="pill ${x.id===s.id?'on':''}" data-sub="${x.id}">${esc(x.name)}</button>`).join('')}</nav>
     <span class="sp"></span>
     <div class="seg" role="group" aria-label="Abfragerichtung"><button data-dir="de-f" aria-pressed="${P.dir==='de-f'}">DE → ${CODE(s)}</button><button data-dir="f-de" aria-pressed="${P.dir==='f-de'}">${CODE(s)} → DE</button></div>
-    ${KN?`<button class="pill" id="heftBtn">📒 Mein Heft</button>`:''}${CAN_EDIT&&KN?`<button class="pill" id="clsbtn">📊 Klasse</button>`:''}${CAN_EDIT?`<button class="pill ${T?'rose':''}" id="tbtn">${T?'Lehrperson ✓':'Lehrperson'}</button>`:''}`;
+    ${CAN_EDIT&&KN?`<button class="pill" id="clsbtn">📊 Klasse</button>`:''}${CAN_EDIT?`<button class="pill ${T?'rose':''}" id="tbtn">${T?'Lehrperson ✓':'Lehrperson'}</button>`:''}`;
   $('#brand').onclick=()=>goNode(null);
   const kb=$('#knBack');if(kb)kb.onclick=()=>{saveP();knAward();knSend({type:'close'})};
   $$('[data-sub]').forEach(b=>b.onclick=()=>{P.sub=b.dataset.sub;saveP();renderTop();goNode(null)});
@@ -2004,9 +2016,9 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
     <div class="hcover"><i class="hstich"></i><div class="hband"><i></i></div><i class="hribbon"></i>
       <span class="hdoo d1">✦</span><span class="hdoo d2">✧</span><span class="hdoo d3">♡</span><span class="hdoo d4">✦</span><span class="hdoo d5">☆</span><span class="hdoo d6">✧</span>
       <div class="hlabel"><i class="htape l"></i><i class="htape r"></i><span class="hk">✦ Vokabelkiste · ${esc(SUB().name)} ✦</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span><span class="hz"></span></div>
-      <img src="../bilder/eule.webp" alt="" class="heule" draggable="false"></div>
+</div>
     ${vkZielHTML(false)}
-    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=1" alt="" draggable="false">${t}</button>`).join('')}</div>
+    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=2" alt="" draggable="false">${t}</button>`).join('')}</div>
     <div class="hpage">${body}</div></div></div>`;
   $$('[data-ht]').forEach(b=>b.onclick=()=>goHeft(b.dataset.ht));
   const vb=$('#hvorB');if(vb)vb.onclick=()=>{heftVor=!heftVor;goHeft(tab)};
@@ -2090,6 +2102,12 @@ function bindBulk(node,redraw){const inp=$('#bulkPic');if(!inp)return;inp.onchan
     ${miss.length?`<p>Diese passen zu keinem Wort dieser Portion. Der Dateiname muss gleich heissen wie das Wort:</p><ul class="miss">${miss.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'<p>Alle Bilder haben ein Wort gefunden.</p>'}
     ${ok?'<p class="note">Vergiss nicht: unten «Für die Klasse veröffentlichen».</p>':''}<div class="dact"><button class="pill go" id="bok">OK</button></div></div>`;
   $('#bok',L).onclick=()=>{L.innerHTML=''};$('.scrim',L).onclick=()=>{L.innerHTML=''}}}
+
+/* Kachel «Mein Heft» auf der Startseite der Sprache */
+function vkHeftCard(){const list=stkList(),st=list.filter(s=>(P.stk||{})[s.id]).length,bd=BADGES.filter(b=>b[4]()>0).length,ur=Object.keys(P.urk||{}).length;
+  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh"><span class="mhl">Mein Heft</span><i></i></span>
+    <span class="ktx"><b>Mein Heft</b><span class="mhz"><span><img src="abzeichen/reiter-sticker.webp?v=2" alt="">${st}/${list.length}</span><span><img src="abzeichen/reiter-abzeichen.webp?v=2" alt="">${bd}</span><span><img src="abzeichen/reiter-urkunden.webp?v=2" alt="">${ur}</span></span><small>Sticker, Abzeichen und Urkunden anschauen →</small></span></button>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#heftCard');if(b)goHeft()});
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
 const INTERVALS=[1,2,7,14,30],INT_LABEL=['jeden Tag','alle 2 Tage','jede Woche','alle 2 Wochen','jeden Monat'],ROUND=20;
