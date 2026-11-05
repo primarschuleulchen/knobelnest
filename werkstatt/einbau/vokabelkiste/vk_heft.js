@@ -40,7 +40,7 @@ function vkUnits(){const out=[];
     out.push({id,name:n.name,path:inf.path.map(x=>x.name),total:ps.length,done:ps.filter(k=>(P.ganz||{})[k.id]).length,words:wordsOf(n).length,sub:SUB().name})});
   return out}
 
-/* Abzeichen: [id, Symbol, Name, wofür, Zahl] */
+/* Abzeichen: [id, Symbol, Name, wofür, Zahl]. Bild im Heft: vokabelkiste/abzeichen/<id>.webp (gezeichnet von der Lehrerin, rund) */
 const BADGES=[
   ['stern','⭐','Tagesstern','7 Minuten an einem Tag geübt',()=>knStars()],
   ['serie','🔥','Dranbleiber','5 Schultage hintereinander geübt',()=>(P.cnt||{}).serie||0],
@@ -96,7 +96,7 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
         :`<div class="stslot zu" aria-label="Noch nicht gefunden"><div class="geheim">${FUNKEN(i+1)}<span class="fz">?</span></div></div>`}).join('')}</div>
     <p class="hfuss">Für jede geschaffte Portion klebst du einen neuen Sticker ein. Welcher es wird, ist eine Überraschung.</p>`;
   else if(tab==='bdg')body=`${prog(bn,BADGES.length,'Abzeichen')}
-    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><span class="emo">${b[1]}</span>${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
+    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><img src="abzeichen/${b[0]}.webp?v=1" alt="" draggable="false">${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
     <p class="hfuss">Viele Abzeichen bekommst du mehrmals. Ab 5, 10 und 25 werden sie grösser.</p>`;
   else body=`${prog(units.filter(u=>urkT(u)).length,units.length,'Urkunden')}
     <div class="urks">${units.length?units.map(u=>{const t=urkT(u);return `<button class="urk ${t?'':'leer'}" data-urk="${u.id}" ${t?'':'disabled'}>

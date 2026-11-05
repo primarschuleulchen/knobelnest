@@ -291,3 +291,9 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .stka{position:relative;width:76px}
 .stka .stk{width:76px;transform:none}
 .stka .del{position:absolute;top:-8px;right:-8px;background:#fff;box-shadow:var(--shadow)}
+/* Abzeichen mit den gezeichneten Bildern (vokabelkiste/abzeichen/) */
+.bdg .bi{border:0!important;background:none!important;padding:0}
+.bdg .bi img{width:100%;height:100%;border-radius:50%;display:block;-webkit-touch-callout:none;user-select:none}
+.bdg.t1 .bi{box-shadow:0 4px 10px rgba(63,120,168,.18)}
+.bdg.t2 .bi{box-shadow:0 0 0 4px #eef2f5,0 6px 12px rgba(63,120,168,.2)}
+.bdg.t0 .bi img{filter:grayscale(1)}
