@@ -716,7 +716,7 @@ G.play = function (lv, api) {
   api.msg('<span class="em">🗺️</span> Wähle einen Weg durch die Green Park School.');
   opts.className = 'opts wahl3';
   WEGE.forEach(function (w) {
-    var b = document.createElement('button'); b.innerHTML = '<b style="font-weight:400">' + h(w.titel) + '</b><small>' + h(w.info) + '</small>';
+    var b = document.createElement('button'); b.textContent = w.titel;
     b.onclick = function () { TEXT = w.s; reihe = TEXT.map(function (x) { return x[0]; }); aufgabe(); };
     opts.appendChild(b);
   });
