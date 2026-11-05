@@ -439,7 +439,7 @@
           return '<div class="mx-h c-' + c.id + '"' + colStyle(c) + '><span class="dot"' + dotStyle(c) + '>' + ic(c.ic, 18, '#fff', 2.4) + '</span><span class="lbl">' + c.label + '</span></div>'; }).join('');
       s.subjects.forEach(function (sub) {
         var inSub = s.entries.filter(function (e) { return e.subject_id === sub.id; });
-        out += '<div class="mx-subj"><i style="background:' + h(sub.color) + '"></i><span>' + h(sub.name) + '<small>' + (inSub.length === 1 ? '1 Kind' : inSub.length + ' Kinder') + '</small></span></div>';
+        out += '<div class="mx-subj">' + (fachBild(sub.name) ? '<span class="mx-bild" style="--fc:' + h(sub.color) + '">' + fachBild(sub.name) + '</span>' : '<i style="background:' + h(sub.color) + '"></i>') + '<span>' + h(sub.name) + '<small>' + (inSub.length === 1 ? '1 Kind' : inSub.length + ' Kinder') + '</small></span></div>';
         COLS.forEach(function (c) {
           var names = inSub.filter(function (e) { return e.col === c.id; });
           var here = mine && mine.subject_id === sub.id && mine.col === c.id;
@@ -2922,6 +2922,7 @@
   function fachBild(f) {
     var k = String(f || '').toLowerCase().replace(/[^a-zäöü]/g, '');
     if (/^knobel/.test(k)) return '<img src="bilder/kacheln/knobelkiste.webp" alt="" draggable="false">';
+    if (/^wandtafel/.test(k)) return '<img src="bilder/faecher/wandtafelspiele.webp" alt="" draggable="false">';
     var m = /^deutsch/.test(k) ? 'deutsch' : /^mathe/.test(k) ? 'mathematik' : /^englisch|^english/.test(k) ? 'englisch' : /^nmg|^natur|^mensch/.test(k) ? 'nmg' : '';
     return m ? '<img src="bilder/faecher/' + m + '.webp" alt="" draggable="false">' : '';
   }
@@ -4011,7 +4012,7 @@
   }
   // Eigene Bilder für einzelne Spiele: bilder/spiele/<Datei>.webp (rund, 160 px), Schlüssel = Spieltitel klein geschrieben.
   // Ohne Eintrag zeigt die Karte das Bild des Fachs.
-  var SPIEL_BILD = { 'zeit & uhr': 'zeit-und-uhr' };
+  var SPIEL_BILD = { 'zeit & uhr': 'zeit-und-uhr', 'nomen': 'nomen' };
   // Bilder für ganze Themen (Ordner), z. B. alle Spiele im 1×1
   function themaBild(t) { return /^\s*(1\s*[x×*·]\s*1|einmaleins)\b/i.test(String(t || '')) ? 'einmaleins' : ''; }
   function spielBild(g) {

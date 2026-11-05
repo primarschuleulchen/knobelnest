@@ -1301,3 +1301,36 @@ body.kidv .kk-tile{background:#F6E7C8}
 .sw-wahl{gap:10px;align-items:flex-end;flex-wrap:wrap;margin-left:auto}
 .sw-feld{flex:0 0 auto;min-width:150px}
 .sw-feld select{min-height:48px}
+/* ===== Arbeitsstand-Tafel im Stil der Eulenkiste: Aquarell, Patrick Hand, Goldakzente ===== */
+.board{font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  background:radial-gradient(900px 520px at 6% -6%,#d7e9fa 0%,transparent 62%),radial-gradient(800px 460px at 104% 6%,#fff0d2 0%,transparent 58%),radial-gradient(700px 520px at 50% 112%,#e3f3ea 0%,transparent 60%),#f4f9fd}
+.board .board-head h1,.board .board-head p,.board .mx-h,.board .mx-subj,.board .cell,.board .tag,.board .board-fehlt,.board .mine,.board .board-btn{font-family:inherit}
+.board .board-head h1{font-weight:400;letter-spacing:.01em}
+.board .board-head h1::after{content:" ✦";color:#d6ad45;font-size:.55em;vertical-align:super}
+.board .board-head .kick{font-family:system-ui,-apple-system,sans-serif}
+.board .board-head p{font-size:19px}
+.board .mx-h{background:#fff!important;border-width:2px!important;border-style:solid!important;font-size:clamp(17px,1.8vw,24px);font-weight:400;box-shadow:0 6px 16px rgba(63,120,168,.14);position:relative}
+.board .mx-h .dot{width:36px;height:36px;box-shadow:0 0 0 3px #fff,0 0 0 5px #d6ad45}
+.board .mx-subj{border:0;border-radius:24px;background:#fff;box-shadow:0 10px 24px rgba(63,120,168,.16),0 0 0 1.5px #ecdcae inset;font-weight:400;gap:12px;padding:8px 14px}
+.board .mx-subj small{font-family:inherit;font-size:.62em;color:#7a6a55}
+.mx-bild{flex:none;width:clamp(38px,8vh,72px);height:clamp(38px,8vh,72px);border-radius:50%;overflow:hidden;border:3px solid #d6ad45;box-shadow:0 0 0 3px #fff,0 6px 14px rgba(63,120,168,.2);background:#fff}
+.mx-bild img{width:100%;height:100%;display:block;border-radius:50%}
+.board .cell{border-width:2px;border-style:dashed;border-radius:26px;
+  background-image:radial-gradient(circle at 20% 15%,rgba(255,255,255,.75) 0%,rgba(255,255,255,0) 45%),radial-gradient(circle at 85% 90%,rgba(255,255,255,.5) 0%,rgba(255,255,255,0) 40%)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.8),0 8px 18px rgba(63,120,168,.1);padding:.45em}
+.board .cell.here{border-style:solid;box-shadow:inset 0 0 0 3px currentColor,0 8px 18px rgba(63,120,168,.14)}
+.board .tag{background:#fff;border:0;border-radius:999px;box-shadow:0 3px 8px rgba(31,36,33,.12),0 0 0 1.5px rgba(214,173,69,.45);padding:.1em .7em .1em .18em;animation:tafelPop .35s cubic-bezier(.2,1.5,.4,1) both}
+.board .tag .ini{box-shadow:0 0 0 2px #fff,0 0 0 3.5px #d6ad45;color:#1f2421;font-family:inherit}
+.board .tag.me{box-shadow:0 0 0 3px #d6ad45,0 4px 12px rgba(214,173,69,.45);background:#fffaf0}
+@keyframes tafelPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.board .cell .put{font-family:inherit;font-size:15px!important;font-weight:400;border-style:dashed;background:rgba(255,255,255,.85)}
+.board .board-fehlt{background:linear-gradient(180deg,#fffdf6,#fbf3dc);border:2px dashed #d6ad45;font-size:18px;color:#5f4b1e}
+.board .board-fehlt b{font-weight:400;font-size:20px}
+.board .board-fehlt b::before{content:"✦ ";color:#d6ad45}
+.board .board-fehlt .tag{animation:none}
+.board .mine{border-radius:26px;box-shadow:0 10px 24px rgba(63,120,168,.14),0 0 0 1.5px #ecdcae inset;font-size:19px}
+.board .board-btn{font-family:inherit;font-size:18px;font-weight:400}
+@media (prefers-reduced-motion:reduce){.board .tag{animation:none}}
+
+.board .mx-h.blank{background:none!important;border:0!important;box-shadow:none}
+.board .mx-h .lbl{font-size:clamp(17px,1.7vw,25px)!important;line-height:1.1}
