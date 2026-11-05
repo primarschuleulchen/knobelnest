@@ -469,7 +469,7 @@ G.play = function (lv, api) {
     var feld = box.querySelector('.feld'), her = box.querySelector('.herzen');
     function herzen() { var x = ''; for (var i = 0; i < 3; i++) x += i < 3 - fehler ? '❤️' : '🤍'; her.textContent = x; }
     herzen();
-    api.msg('<span class="em">🧩</span> Rätsel ' + (idx + 1) + ' von ' + G.n + ': Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
+    api.msg('<span class="em">🧩</span> Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
     function markiere() {
       var r = Math.floor(sel / n), c = sel % n, br = Math.floor(r / bm[0]), bc = Math.floor(c / bm[1]);
       Array.prototype.forEach.call(feld.children, function (z, k) {
@@ -616,7 +616,7 @@ G.play = function (lv, api) {
       return r.ziel;
     }
     male();
-    api.msg('<span class="em">💧</span> Rätsel ' + (idx + 1) + ' von ' + G.n + ': Bring das Wasser zur Blume!');
+    api.msg('<span class="em">💧</span> Bring das Wasser zur Blume!');
     netz.onclick = function (e) {
       var b = e.target.closest('.ro'); if (!b || fertig) return;
       var k = +b.dataset.k; P.ist[k] = dreh(P.ist[k]); rot[k]++; tipps++; tone(420 + rnd(0, 3) * 40, 0.04, 'square', 0.04);

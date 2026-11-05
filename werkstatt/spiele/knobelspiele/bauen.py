@@ -230,7 +230,7 @@ G.play = function (lv, api) {
     }
     tast.innerHTML = KEYS.map(function (row) { return '<div>' + row.split('').map(function (k) {
       return k === '⏎' ? '<button class="w" data-k="ok">Prüfen</button>' : k === '⌫' ? '<button class="w" data-k="del" aria-label="Löschen">⌫</button>' : '<button data-k="' + k + '">' + k + '</button>'; }).join('') + '</div>'; }).join('');
-    api.msg('<span class="em">🔎</span> Wort ' + (idx + 1) + ' von ' + G.n + ': Welches Wort mit ' + L + ' Buchstaben ist es?');
+    api.msg('<span class="em">🔎</span> Welches Wort mit ' + L + ' Buchstaben ist es?');
     function show() { var f = rows[v].children; for (var c = 0; c < L; c++) { f[c].textContent = cur[c] || ''; f[c].classList.toggle('voll', !!cur[c]); } }
     function score(g) {
       var res = [], rest = {};
@@ -353,7 +353,7 @@ G.play = function (lv, api) {
     }
     g.innerHTML = o;
     api.stage.appendChild(g);
-    api.msg('<span class="em">🖼️</span> Bild ' + (idx + 1) + ' von ' + G.n + (lv.hilfe ? '' : ' · <small>ohne Hilfe: Kreuzchen setzt du selbst</small>'));
+    api.msg('<span class="em">🖼️</span> Welches Bild versteckt sich hier?' + (lv.hilfe ? '' : ' <small>Ohne Hilfe: Kreuzchen setzt du selbst.</small>'));
     function cell(i, j) { return g.querySelector('[data-i="' + i + '"][data-j="' + j + '"]'); }
     function paint(i, j) { var c = cell(i, j), v = st[i][j]; c.className = c.className.replace(/ (v|k|f)\b/g, ''); if (v === 1) c.classList.add('v'); if (v === 2) c.classList.add('k'); if (v === 3) c.classList.add('f'); }
     function zeileFertig(i) { return sol[i].every(function (x, j) { return !x || st[i][j] === 1; }); }
@@ -528,7 +528,7 @@ G.play = function (lv, api) {
     }
     zeichne();
     var ziel = W.nuts.length ? 'Sammle ' + (W.nuts.length === 1 ? 'die Nuss 🌰' : 'alle Nüsse 🌰') + ' und bring die Eule nach Hause 🏠.' : 'Bring die Eule nach Hause 🏠.';
-    api.msg('<span class="em">🗺️</span> Weg ' + (idx + 1) + ' von ' + G.n + ': ' + ziel + (W.rel ? ' <small>Der gelbe Pfeil zeigt, wohin die Eule schaut.</small>' : ''));
+    api.msg('<span class="em">🗺️</span> ' + ziel + (W.rel ? ' <small>Der gelbe Pfeil zeigt, wohin die Eule schaut.</small>' : ''));
     function knoepfe() { Array.prototype.forEach.call(box.querySelectorAll('.prog button'), function (b) { b.disabled = laeuft || gut; }); }
     box.querySelector('.prog').onclick = function (e) {
       var b = e.target.closest('button'); if (!b || laeuft || gut) return;
@@ -674,6 +674,8 @@ STERN_CSS = r"""
 .fort.pop .stern{animation:sternpop .9s}
 @keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
 .top .fort{margin-left:auto}
+.kk-zur{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 13px;border-radius:999px;background:#fff;color:#1f2421;font:700 19px/1 system-ui,-apple-system,sans-serif;box-shadow:0 4px 14px rgba(63,120,168,.2);flex:none;min-height:0}
+.kk-zur:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)}.kk-zur img{width:34px;height:34px;display:block;border-radius:50%}
 @media (max-width:560px){.fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}.top .t{font-size:18px}}
 """
 STERN_JS = r"""
@@ -706,6 +708,23 @@ function sternFort(api, li) {
 (function () { var spiel = G.play; G.play = function (lv, api, li) { if (showStars) sternFort(api, li); return spiel(lv, api, li); }; })();
 """
 
+# Läuft nach dem Rahmen (MODE, menu, send sind dann bereit). In der Klassenkiste startet das Spiel erst nach der Nachricht vom Portal.
+STERN_NACH = r"""
+// In der Klassenkiste zeigt das Portal keinen dunklen Balken: auf der Stufen-Seite oben links «←» mit Eule zurück zur Klassenkiste
+(function () {
+  if (MODE !== 'url') return;
+  var stufen = menu;
+  menu = function () {
+    stufen();
+    var top = app.querySelector('.top'); if (!top || top.querySelector('.kk-zur')) return;
+    var b = document.createElement('button'); b.className = 'kk-zur'; b.setAttribute('aria-label', 'Zurück zur Klassenkiste'); b.title = 'Zurück zur Klassenkiste';
+    b.innerHTML = '<span aria-hidden="true">←</span><img src="../bilder/eule.webp" alt="" width="34" height="34">';
+    b.onclick = function () { send({ type: 'close' }); };
+    top.insertBefore(b, top.firstChild);
+  };
+})();
+"""
+
 
 def game_html(s):
     meta = json.dumps(s['sterne'], ensure_ascii=False).replace('"', '&quot;')
@@ -715,7 +734,7 @@ def game_html(s):
             '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
             f'<meta name="knobelnest-sterne" content="{meta}">\n'
             f'<title>{s["titel"]}</title>\n<style>{GD.CSS.replace("__SCHRIFT__", GD.schrift())}{s.get("css", "")}{STERN_CSS if s["id"] in STERN_SPIELE else ""}</style>\n</head>\n<body>\n<div id="app"></div>\n'
-            f'<script>\n{GD.POOL}\n{daten}var G = {json.dumps(g, ensure_ascii=False)};\n{s["js"]}\n{(STERN_JS + chr(10)) if s["id"] in STERN_SPIELE else ""}{FRAME}\n</script>\n</body>\n</html>\n')
+            f'<script>\n{GD.POOL}\n{daten}var G = {json.dumps(g, ensure_ascii=False)};\n{s["js"]}\n{(STERN_JS + chr(10)) if s["id"] in STERN_SPIELE else ""}{FRAME}\n{(STERN_NACH + chr(10)) if s["id"] in STERN_SPIELE else ""}</script>\n</body>\n</html>\n')
 
 
 def stub_html(s):
