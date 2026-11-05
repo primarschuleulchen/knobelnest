@@ -9,6 +9,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Lehrperson: Reihenfolge der Werkzeug-Kacheln pro Lehrperson in `teacher_store` «kacheln» (`tileOrder()`; Kacheln direkt ziehen, Pointer-Events `tdStart`/`tdMove`, Finger nach 380 ms Halten). Tier-Vorlagen fürs Klassenbild in `bilder/maskottchen/` (`TIERE`).
 - Lehrperson: Reiter «Übersicht» (`T.tab = 'uebersicht'`, Start und Klick aufs Logo) = Klassen-Banner mit Werkzeug-Kacheln; Reiter «Spiele» = Fächer und Spiele (beides `T.tabSpiele`). Kachel-Bilder in `bilder/kacheln/` (`KACHEL_BILD`, `ttIcon()`).
 - Anmeldeseite: Werkzeug-Galerie mit Vorschau beim Darüberfahren (`LOGIN_TOOLS`), Knopf «Noch kein Login?» → `C.SHOP_URL` in `config.js` (leer = Hinweis «kommt bald»). Kreisbilder in `bilder/kacheln/` und `bilder/maskottchen/` sind rund zugeschnitten (durchsichtige Ecken), den Goldrand macht das CSS.
+- Eigene Bilder für einzelne Spiele: die Lehrerin schickt sie im Chat; rund zuschneiden (wie die Kachel-Bilder), 160 px, webp (~8 KB) nach `bilder/spiele/<name>.webp` und in `SPIEL_BILD` (Schlüssel = Spieltitel klein geschrieben) eintragen. Ohne Eintrag zeigt die Spielkarte das Fach-Bild (`spielBild()`, sonst `kkIc()`).
 - Fächer, Themen und Spiele der Kinder im Stil der Knobelkiste (`K.view_thema`, `K.view_games` mit `kkKopf()`/`kkIc()`, Fach-Bild aus `fachBild()`). Spiele laufen ohne blauen Balken: nur der runde Zurück-Knopf oben links und «Vollbild» klein unten rechts (CSS `.player .player-bar` am Ende von `style.css`).
 - Kinderansicht: `body.kidv` (in `K.render`), heller Stil wie die Lehrpersonen-Seite, Schriften Fredoka/Andika bleiben. Startseite ohne Kopfleiste, «Abmelden» neben der Begrüssung (`K.shell(body, null)`).
 - Live-Quiz (Version 23): eigene Seite `quiz.html` (Bridge `window.knQuiz`, Modul `QZ` in `app.js`, `QUIZ_VER`). Lehrperson: Route `#/quiz`, Quiz in `teacher_store` «quiz» (Liste) und «quiz-<id>» (Fragen; Typen `quiz`, `rf`, `text`, `reihe`). Live-Runde: Tabellen `quiz_live`/`quiz_players`, Funktionen `quiz_open`/`quiz_step`/`quiz_host`/`quiz_kick`/`quiz_close` (Lehrperson) und `quiz_join`/`quiz_state`/`quiz_answer` (Mitspielen ohne Konto, Token). Mitspielen: `#/q/<6-stellige Nummer>` per QR-Code. Punkte rechnet die Datenbank (bis 1000 × Faktor, schneller = mehr). Runden verschwinden nach einem Tag. Freigabe pro Lehrperson wie die anderen Werkzeuge (`TOOLS` «quiz»).
@@ -141,7 +142,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=158`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=159`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen
