@@ -338,6 +338,7 @@ rep("regen:'Wortregen'};", "regen:'Wortregen',bild:'Bild',sprechen:'Sprechen'};"
 # Kärtchen: Bild klein auf der Rückseite
 rep("<div class=\"face back\"><div class=\"lang\"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>",
     "<div class=\"face back\"><div class=\"lang\"><span>${esc(aLang())}</span>${!qIsF?spkBtn(w.f):''}</div>${picOf(w)?`<div class=\"cpic\">${picHTML(picOf(w))}</div>`:''}")
+rep("${qIsF?spkBtn(w.f):''}</div>", "${qIsF?spkBtn(w.f):''}</div>${!qIsF&&picOf(w)?`<div class=\"cpic\">${picHTML(picOf(w))}</div>`:''}")
 # Editor: Bild-Spalte vorne
 rep('<span class="th">Deutsch</span>', '<span class="th">Bild</span><span class="th">Deutsch</span>')
 rep("      `<input class=\"inp\" data-id=\"${w.id}\" data-f=\"de\"", "      `${picCell(w)}<input class=\"inp\" data-id=\"${w.id}\" data-f=\"de\"")

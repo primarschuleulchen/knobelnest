@@ -112,10 +112,10 @@ function modeBild(subset){
     if(!queue.length)return summary(body,{title:'Alle Bilder erkannt!',lines:[`${total} Wörter, ${tries} Versuche.`,hard.size?`${hard.size} ${hard.size===1?'Wort war':'Wörter waren'} zuerst falsch.`:'Fehlerfrei!'],actions:endActions(hard,modeBild)});
     const id=queue.shift(),w=WD(id),opts=shuffle([w,...others(w)]),kind=turn++%2;
     body.innerHTML=(kind===0
-      ?`<div class="bq"><div class="bbig">${picHTML(picOf(w))}</div><p class="hand">Welches Wort passt zum Bild?</p></div>
-        <div class="opts">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(o.f)}</span></button>`).join('')}</div>`
-      :`<div class="bq"><div class="bword">${esc(w.f)}${spkBtn(w.f)}</div><p class="hand">Welches Bild passt?</p></div>
-        <div class="bopts">${opts.map((o,i)=>`<button class="bopt" data-i="${i}" aria-label="Bild ${i+1}"><kbd>${i+1}</kbd>${picHTML(picOf(o))}</button>`).join('')}</div>`)
+      ?`<div class="bwrap"><div class="bq"><div class="bbig">${picHTML(picOf(w))}</div></div>
+        <div class="bside"><p class="hand">Welches Wort passt zum Bild?</p><div class="opts">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(o.f)}</span></button>`).join('')}</div></div></div>`
+      :`<div class="bwrap"><div class="bq"><div class="bword">${esc(w.f)}${spkBtn(w.f)}</div><p class="hand">Welches Bild passt?</p></div>
+        <div class="bopts">${opts.map((o,i)=>`<button class="bopt" data-i="${i}" aria-label="Bild ${i+1}"><kbd>${i+1}</kbd>${picHTML(picOf(o))}</button>`).join('')}</div></div>`)
       +`<div class="fb" id="fb"></div><p class="keys">Tasten 1 – ${opts.length}</p>`;
     bindSpeak(body);if(kind===1)speak(w.f);
     let fin=false;
@@ -265,7 +265,7 @@ function vkMark(lines){
   vkBadgeCheck();saveP()}
 function vkHead(){if(!SET.key||SET.key==='box'||SET.key==='nuts')return'';const req=vkReq(SET.words),d=vkDoneOf(SET.key),n=req.filter(m=>d[m]).length;
   if(!req.length)return'';const ganz=n>=req.length;
-  return `<div class="vkfort ${ganz?'ganz':''}"><span class="vkf-t">${ganz?'🎉 Portion geschafft!':n+' von '+req.length+' Übungen geschafft'}</span><span class="vkf-dots">${req.map(m=>`<i class="${d[m]?'on':''}" title="${esc(MODE_NAMES[m]||m)}"></i>`).join('')}</span></div>`}
-const vkTileMark=m=>{const d=vkDoneOf(SET.key);return d[m]&&vkReq(SET.words).includes(m)?'<span class="vkok" title="geschafft">✓ geschafft</span>':''};
+  return `<div class="vkfort ${ganz?'ganz':''}"><span class="vkf-t">${ganz?'🎉 Portion geschafft!':n+' von '+req.length+' Übungen geschafft'}</span><span class="vkf-dots">${req.map(m=>`<i class="${d[m]?'on':''}" title="${esc(MODE_NAMES[m]||m)}${d[m]?' ✓':''}">${d[m]?'★':'☆'}</i>`).join('')}</span></div>`}
+const vkTileMark=m=>{const d=vkDoneOf(SET.key);return d[m]&&vkReq(SET.words).includes(m)?'<span class="vkok">geschafft</span>':''};
 function vkCardMark(n){if(!n.words)return'';const ws=wordsOf(n),req=vkReq(ws),d=vkDoneOf(n.id),k=req.filter(m=>d[m]).length;
   if(!req.length||!k)return'';return k>=req.length?'<span class="vkcm ganz">✓ geschafft</span>':`<span class="vkcm">${k}/${req.length} Übungen</span>`}

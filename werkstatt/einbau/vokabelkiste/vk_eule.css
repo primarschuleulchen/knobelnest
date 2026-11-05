@@ -297,3 +297,35 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .bdg.t1 .bi{box-shadow:0 4px 10px rgba(63,120,168,.18)}
 .bdg.t2 .bi{box-shadow:0 0 0 4px #eef2f5,0 6px 12px rgba(63,120,168,.2)}
 .bdg.t0 .bi img{filter:grayscale(1)}
+/* Bild & Wort: Bild links, Auswahl rechts (schmal untereinander) */
+.bwrap{display:flex;align-items:center;justify-content:center;gap:28px 40px;flex-wrap:wrap;width:min(900px,100%)}
+.bside{flex:1 1 300px;max-width:440px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.bside .hand{margin:0}
+.bside .opts{width:100%}
+.bwrap .bbig .pic{width:min(300px,70vw);height:min(300px,70vw)}
+.bwrap .bbig .pic.emo{font-size:min(170px,40vw)}
+.bwrap .bopts{flex:1 1 320px;max-width:420px}
+/* Kärtchen: Bild gross über dem Wort */
+.face .cpic{position:relative;z-index:1;display:grid;place-items:center;margin-bottom:2px}
+.face .cpic .pic{width:clamp(64px,22vw,120px);height:clamp(64px,22vw,120px);background:transparent}
+.face .cpic .pic.emo{font-size:clamp(44px,14vw,78px);width:auto;height:auto}
+.face:has(.cpic) .word{font-size:clamp(26px,6vw,40px)}
+.face:has(.cpic){padding-top:2.8rem;gap:2px}
+/* «geschafft»: goldene Sterne, Kachel mit Haken im Kreis, kein grüner Rahmen */
+.vkfort{gap:10px 14px;padding:6px 18px}
+.vkf-dots{gap:3px}
+.vkf-dots i{width:auto;height:auto;border:0;background:none;font-style:normal;font-size:20px;line-height:1;color:var(--gold-l)}
+.vkf-dots i.on{color:var(--gold);background:none;text-shadow:0 1px 4px rgba(214,173,69,.5)}
+.vkok{position:static;align-self:flex-start;order:5;background:none;box-shadow:none;color:var(--gold-d);padding:0;font-size:15px}
+.vkok::before{content:"★ "}
+.tile:has(.vkok){box-shadow:0 0 0 2px var(--gold-l),var(--shadow);background:linear-gradient(180deg,#fffdf6,#fff)}
+.tile:has(.vkok) .num{background:var(--gold);border-color:var(--gold);color:transparent}
+.tile:has(.vkok) .num::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px}
+.tile:has(.vkok) .go{order:6}
+/* Nur für Lehrpersonen: Lückensätze prüfen, unauffällig */
+#gapReview{background:#fff;border-color:var(--rule);color:var(--sky-deep);box-shadow:0 2px 0 var(--line)}
+#gapReview::before{content:"✏️ "}
+.sh .vkfort{order:9}
+.face.back .cpic{position:relative;right:auto;bottom:auto}
+.face.back .cpic .pic{width:clamp(64px,22vw,120px);height:clamp(64px,22vw,120px)}
+.face.back .cpic .pic.emo{font-size:clamp(44px,14vw,78px);width:auto;height:auto}
