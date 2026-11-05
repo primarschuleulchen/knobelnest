@@ -254,7 +254,7 @@ const PERFEKT=/Fehlerfrei|Alles beim ersten Mal|Keine Fehler|Alles ohne Hilfe/;
 function vkMark(lines){
   if(!knMode||!knMode.key||knMode.key==='box'||knMode.key==='nuts'||knMode.key==='?')return;
   const key=knMode.key,mode=knMode.mode;
-  if(ALL_MODES.includes(mode)&&(lines||[]).some(l=>PERFEKT.test(String(l||''))))vkCount('perfekt');
+  if(ALL_MODES.includes(mode)&&(lines||[]).some(l=>PERFEKT.test(String(l||'')))){vkCount('perfekt');if(mode==='hoeren')vkCount('ohr')}
   if(mode==='bild')vkCount('bild');
   if(!vkReq(SET.words).includes(mode)){vkBadgeCheck();saveP();return}
   P.done=P.done||{};const d=P.done[key]=P.done[key]||{};const neu=!d[mode];d[mode]=Date.now();
