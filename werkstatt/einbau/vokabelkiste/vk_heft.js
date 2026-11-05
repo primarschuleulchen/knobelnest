@@ -8,7 +8,7 @@
    Urkunden: für jeden Ordner mit Portionen (z. B. «Unit 1»), wenn alle Portionen darin geschafft sind (P.urk = {Ordner: Zeit}).
    Klassen-Ziel: C.ziel = {anzahl, belohnung, ab}; gezählt werden die Tagessterne aller Kinder seit «ab» (kid_vk_extra). */
 const EXTRA=KN&&KNI.settings&&KNI.settings.extra||{};
-const KIDNAME=KN&&KNI.name?String(KNI.name):'';
+const KIDNAME=KN&&KNI.name?String(KNI.name):'',KIDNAME_=KIDNAME;
 const ERSATZ=['🦊','🐼','🐸','🦁','🐙','🦄','🐢','🐝','🦋','🐬','🐧','🦒','🐨','🦔','🐳','🦜','🐞','🦀','🐿️','🦉'];
 let STK=((EXTRA.sticker&&Array.isArray(EXTRA.sticker.list))?EXTRA.sticker.list:[]).filter(x=>x&&x.id);
 const stkList=()=>STK.length?STK.map(x=>({id:x.id,img:'vk:'+x.id,name:x.name||''})):ERSATZ.map((e,i)=>({id:'e'+i,img:e,name:''}));
@@ -79,26 +79,44 @@ function vkZielHTML(teacher){const z=C.ziel;if(!z||!z.anzahl||!z.ab)return'';
     <div class="zbar"><i style="width:${pc}%"></i></div><small>Alle Tagessterne der Klasse seit ${new Date(z.ab+'T12:00:00').toLocaleDateString('de-CH',{day:'numeric',month:'long'})} zählen zusammen.</small></div>`}
 
 /* ---------- Heft ---------- */
-function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};vkCheckAll(false);
-  const list=stkList(),own=list.filter(s=>(P.stk||{})[s.id]),gold=list.reduce((a,s)=>a+(((P.stk||{})[s.id]||{}).g||0),0);
-  const units=vkUnits(),bn=BADGES.filter(b=>b[4]()>0).length;
+/* Lehrperson: «Vorschau: so sieht ein volles Heft aus» (nichts wird gespeichert) */
+let heftVor=false;
+const FUNKEN=i=>`<i style="--x:${(i*29)%70+12}%;--y:${(i*47)%64+14}%;--d:${(i*0.37)%2.4}s"></i><i style="--x:${(i*53)%66+18}%;--y:${(i*31)%58+22}%;--d:${(i*0.61+1.1)%2.4}s"></i><i style="--x:${(i*17)%60+20}%;--y:${(i*71)%60+18}%;--d:${(i*0.23+0.6)%2.4}s"></i>`;
+function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heftVor)vkCheckAll(false);
+  const list=stkList(),units=vkUnits(),V=heftVor;
+  const stkOf=(s,i)=>V?{n:i%4===1?2:1,g:i%5===4?1:0}:(P.stk||{})[s.id];
+  const bdgN=(b,i)=>V?[1,3,7,12,30,0,2,5,10,1,4,26][i%12]:b[4]();
+  const urkT=u=>V?Date.now():(P.urk||{})[u.id];
+  const own=list.filter((s,i)=>stkOf(s,i)),gold=list.reduce((a,s,i)=>a+((stkOf(s,i)||{}).g||0),0),bn=BADGES.filter((b,i)=>bdgN(b,i)>0).length;
+  const prog=(n,m,txt)=>`<div class="hprog"><span>${txt}</span><div class="hpb"><i style="width:${m?Math.round(n/m*100):0}%"></i></div><b>${n} / ${m}</b></div>`;
   let body='';
-  if(tab==='stk')body=`<div class="hpage"><p class="hsub">${own.length} von ${list.length} Stickern${gold?' · '+gold+' mit Goldrand':''}. Für jede geschaffte Portion bekommst du einen.</p>
-    <div class="album">${list.map((s,i)=>{const e=(P.stk||{})[s.id];return `<div class="stslot ${e?'':'leer'}"><div class="stk ${e&&e.g?'gold':''}" style="--r:${((i*37)%9)-4}deg">${picHTML(s.img)}</div>${e&&e.n>1?`<span class="anz">×${e.n}</span>`:''}${e&&e.g?`<span class="anz g">✦${e.g>1?' '+e.g:''}</span>`:''}</div>`}).join('')}</div>
-    ${!STK.length?'<p class="note">Die echten Sticker kommen bald. Bis dahin sammelst du diese Tiere.</p>':''}</div>`;
-  else if(tab==='bdg')body=`<div class="hpage"><p class="hsub">${bn} von ${BADGES.length} Abzeichen. Viele kannst du mehrmals bekommen. Ab 5, 10 und 25 werden sie grösser.</p>
-    <div class="badges">${BADGES.map(b=>{const n=b[4](),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><span class="emo">${b[1]}</span>${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div></div>`;
-  else body=`<div class="hpage"><p class="hsub">Für jede Unit, in der du alle Portionen geschafft hast, bekommst du eine Urkunde.</p>
-    <div class="urks">${units.length?units.map(u=>{const t=(P.urk||{})[u.id];return `<button class="urk ${t?'':'leer'}" data-urk="${u.id}" ${t?'':'disabled'}><span class="us">${t?'📜':'🔒'}</span><b>${esc(u.name)}</b><small>${t?new Date(t).toLocaleDateString('de-CH'):u.done+' von '+u.total+' Portionen'}</small></button>`}).join(''):'<p class="note">Noch keine Units.</p>'}</div></div>`;
-  stage.innerHTML=`<div class="heft"><div class="hkopf"><div><span class="hk">Vokabelkiste · ${esc(SUB().name)}</span><h1 class="big">${KIDNAME?'Heft von '+esc(KIDNAME):'Mein Heft'}</h1></div><img src="../bilder/eule.webp" alt="" class="heule"></div>
+  if(tab==='stk')body=`${prog(own.length,list.length,'Gesammelt'+(gold?' · <span class="gd">✦ '+gold+' mit Goldrand</span>':''))}
+    <div class="album">${list.map((s,i)=>{const e=stkOf(s,i);
+      return e?`<div class="stslot"><div class="stk ${e.g?'gold':''}" style="--r:${((i*37)%9)-4}deg">${picHTML(s.img)}</div>${e.n>1?`<span class="anz">×${e.n}</span>`:''}</div>`
+        :`<div class="stslot zu" aria-label="Noch nicht gefunden"><div class="geheim">${FUNKEN(i+1)}<span class="fz">?</span></div></div>`}).join('')}</div>
+    <p class="hfuss">Für jede geschaffte Portion klebst du einen neuen Sticker ein. Welcher es wird, ist eine Überraschung.</p>`;
+  else if(tab==='bdg')body=`${prog(bn,BADGES.length,'Abzeichen')}
+    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><span class="emo">${b[1]}</span>${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
+    <p class="hfuss">Viele Abzeichen bekommst du mehrmals. Ab 5, 10 und 25 werden sie grösser.</p>`;
+  else body=`${prog(units.filter(u=>urkT(u)).length,units.length,'Urkunden')}
+    <div class="urks">${units.length?units.map(u=>{const t=urkT(u);return `<button class="urk ${t?'':'leer'}" data-urk="${u.id}" ${t?'':'disabled'}>
+      <span class="mini"><span class="mt">Urkunde</span><span class="ml"></span><span class="ml k"></span><span class="ms">${t?'✦':'🔒'}</span></span>
+      <b>${esc(u.name)}</b><small>${t?new Date(t).toLocaleDateString('de-CH'):u.done+' von '+u.total+' Portionen'}</small></button>`}).join(''):'<p class="note">Noch keine Units.</p>'}</div>
+    <p class="hfuss">Hast du in einer Unit alle Portionen geschafft, bekommst du eine Urkunde zum Ausdrucken.</p>`;
+  const name=V?'Lena':KIDNAME;
+  stage.innerHTML=`<div class="heft">
+    ${CAN_EDIT?`<div class="hvor"><span>${V?'👁 Vorschau: So sieht ein volles Heft aus. Nichts davon wird gespeichert.':'Lehrperson: Möchtest du sehen, wie ein volles Heft aussieht?'}</span><button class="pill sm ${V?'rose':''}" id="hvorB">${V?'Vorschau beenden':'👁 Vorschau'}</button></div>`:''}
+    <div class="hcover"><div class="hband"></div><div class="hlabel"><span class="hk">Vokabelkiste · ${esc(SUB().name)}</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span></div><img src="../bilder/eule.webp" alt="" class="heule"></div>
     ${vkZielHTML(false)}
-    <div class="htabs" role="tablist">${[['stk','🧩 Sticker'],['bdg','🏅 Abzeichen'],['urk','📜 Urkunden']].map(([k,t])=>`<button class="htab ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}">${t}</button>`).join('')}</div>${body}</div>`;
+    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','🧩'],['bdg','Abzeichen','🏅'],['urk','Urkunden','📜']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><span class="emo">${e}</span> ${t}</button>`).join('')}</div>
+    <div class="hpage">${body}</div></div></div>`;
   $$('[data-ht]').forEach(b=>b.onclick=()=>goHeft(b.dataset.ht));
-  $$('[data-urk]').forEach(b=>b.onclick=()=>vkUrkunde(units.find(u=>u.id===b.dataset.urk)));
+  const vb=$('#hvorB');if(vb)vb.onclick=()=>{heftVor=!heftVor;goHeft(tab)};
+  $$('[data-urk]').forEach(b=>b.onclick=()=>vkUrkunde(units.find(u=>u.id===b.dataset.urk),V?'Lena':null));
   window.scrollTo(0,0)}
 
 /* Urkunde (edel, zum Ausdrucken) */
-function vkUrkunde(u){if(!u)return;const t=(P.urk||{})[u.id]||Date.now(),L=$('#layer');
+function vkUrkunde(u,nameVor){if(!u)return;const t=(P.urk||{})[u.id]||Date.now(),L=$('#layer'),KIDNAME=nameVor||KIDNAME_;
   L.innerHTML=`<div class="scrim"></div><div class="urkwrap" role="dialog" aria-label="Urkunde"><div class="cert" id="cert">
     <div class="cr"><i></i><i></i><i></i><i></i></div>
     <img class="ceule" src="../bilder/eule.webp" alt="">
