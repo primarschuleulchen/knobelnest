@@ -134,7 +134,7 @@ function vkUrkunde(u,nameVor){if(!u)return;const t=(P.urk||{})[u.id]||Date.now()
   </div><div class="dact"><button class="pill" id="uzu">Schliessen</button><button class="pill go" id="udr">🖨 Drucken</button></div></div>`;
   const zu=()=>{L.innerHTML='';document.body.classList.remove('drucke')};
   $('#uzu',L).onclick=zu;$('.scrim',L).onclick=zu;
-  $('#udr',L).onclick=()=>{document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
+  $('#udr',L).onclick=()=>{vkPage('landscape');document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
 
 /* ---------- Lehrperson: Belohnungen in der Klassen-Übersicht ---------- */
 function vkClassRewards(){const m=stkModes(),z=C.ziel||{};
