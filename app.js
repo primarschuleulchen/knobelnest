@@ -281,7 +281,7 @@
   var ZR_VER = '1';
   var VK_VER = '10'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
-  var KS_VER = '20'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
+  var KS_VER = '21'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '14'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
@@ -3935,7 +3935,12 @@
     var a = S.a;
     function key() { return cfg.modus === 'sammeln' && !cfg.proLevel ? 'Spiel' : (S.level || 'Spiel'); }
     function maxFor() { return cfg.modus === 'sammeln' ? cfg.max : 3; }
-    S.view = function () { return { lv: a.lv, max: maxFor() }; };
+    // Fürs Spiel: Sterne pro Level, Höchstzahl und (beim Sammeln) wie viele richtige schon für den nächsten Stern zählen
+    S.view = function () {
+      var v = { lv: a.lv, max: maxFor() };
+      if (cfg.modus === 'sammeln' && cfg.pro !== 'runde') { v.box = {}; v.per = cfg.pro; Object.keys(a.box || {}).forEach(function (k) { v.box[k] = boxOf(k); }); }
+      return v;
+    };
     function sync() {
       a.stars = awardSum(a); a.max = maxFor(); S.dirty = true;
       if (PL) try { PL.frame.contentWindow.postMessage({ knobelnestAward: S.view() }, '*'); } catch (e) {}

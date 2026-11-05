@@ -194,6 +194,7 @@ var showStars = MODE === 'url' || MODE === 'srcdoc';
 
 function menu() {
   stopAll(); RUN++; CUR = -1; KN.level(null);
+  if (G.menu) { G.menu(); return; }
   var o = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="kopf"><span class="ring">' + G.icon + '</span><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p><div class="deko">✦ ✧ ✦</div></div><div class="lvs">';
   G.levels.forEach(function (lv, i) {
     var s = KN.sterne('Stufe ' + (i + 1)), mx = s.max || 3;

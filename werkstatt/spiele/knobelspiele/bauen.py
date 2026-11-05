@@ -27,6 +27,9 @@ assert FRAME.count("ks") >= 4
 # Mehr Stufenfarben (Kleiderschrank hat 8 Stufen)
 FRAME = FRAME.replace("var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7'];", "var LV_COL = ['#e9f1e3', '#dcf0fd', '#fbf3dc', '#fcefed', '#efe7f7', '#fdebd8', '#e3f1f0', '#f3e9dc'];")
 assert "'#fdebd8'" in FRAME
+# Ein Spiel kann ein eigenes Stufen-Menü haben (G.menu, z. B. der Kleiderschrank als Pfad)
+FRAME = FRAME.replace("function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);", "function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);\n  if (G.menu) { G.menu(); return; }")
+assert "if (G.menu)" in FRAME
 
 SPIELE = []
 
