@@ -268,7 +268,7 @@ var POOL_DRIN = [
   { n: 'maths classroom', e: '➗', de: 'Mathematikzimmer' }, { n: 'nurse’s room', e: '🩹', de: 'Krankenzimmer' }
 ];
 var POOL_DRAUSSEN = [{ n: 'assembly hall', e: '🎭', de: 'Aula' }, { n: 'gym', e: '🏀', de: 'Turnhalle' }, { n: 'swimming pool', e: '🏊', de: 'Schwimmbad' }];
-var FEST = [{ n: 'music room' }, { n: 'classroom' }, { n: 'changing rooms', p: 1 }, { n: 'children’s bathrooms', p: 1 }, { n: 'cloakroom' }];
+var FEST = [{ n: 'music room' }, { n: 'classroom' }, { n: 'changing rooms', p: 1 }, { n: 'children’s bathrooms', p: 1 }];
 var FORMEN = { round: { b: 170, h: 96, rund: true }, small: { b: 120, h: 84 }, long: { b: 320, h: 62 } };
 var X0 = 80, X1 = 680, YT = 18, YC = 188, YC2 = 234, YB = 372;
 function teile(n, tot) {
@@ -447,7 +447,7 @@ function tierLabel(svg, k, tier) {
 var WOERTER = [['next to', 'neben'], ['opposite / across from', 'gegenüber'], ['to the left of / to the right of', 'links von / rechts von'], ['in the middle', 'in der Mitte'],
   ['between', 'zwischen'], ['behind', 'hinter'], ['in front of', 'vor'], ['on your left / on your right', 'links / rechts (von dir)'], ['turn left / turn right', 'links / rechts abbiegen'],
   ['at the end of', 'am Ende von'], ['corridor', 'Gang'], ['first, second, third, fourth, fifth, last', 'erste, zweite, dritte, vierte, fünfte, letzte'],
-  ['entrance', 'Eingang'], ['building', 'Gebäude'], ['round / small / long', 'rund / klein / lang'], ['changing rooms', 'Umkleide'], ['cloakroom', 'Garderobe'],
+  ['entrance', 'Eingang'], ['building', 'Gebäude'], ['round / small / long', 'rund / klein / lang'], ['changing rooms', 'Umkleide'],
   ['children’s bathrooms', 'WC für Kinder']];
 function huelle(api, svgText, woerter) {
   var w = document.createElement('div'); w.className = 'sh';
