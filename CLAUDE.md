@@ -60,7 +60,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `englisch/` | Englisch-Spiel «Owl Town» (3D-Stadt), gebaut mit `werkstatt/spiele/englisch/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 29) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 30) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -128,6 +128,7 @@ So läuft ein Werkzeug im Portal:
   - Lehrperson: Die Vokabelkiste ist im Spiele-Tab eine Kachel bei den Werkzeugen (nicht in der Spieleliste). «Wörter & Freigaben» bekommt `settings.kids` (Stand aller Kinder via `DB.listProgressSaves`) und `settings.frei`. In der Vokabelkiste: «📊 Klasse» (Übersicht pro Kind, pro Portion, pro Kind im Detail). Aufgezeichnet wird in `P.log[Portion][Übung] = {n,a,c,s,t}` und `P.wc[Wort] = [richtig, falsch]`.
   - Vorlagen: Die Admin-Lehrperson markiert Portionen/Ordner mit «📤 Als Vorlage freigeben» (`n.tpl`). Beim Speichern schreibt das Portal `shared_store` «vokabelkiste-vorlage» (`vkTemplate()`, nur aus der Klasse `from`). Die Admin-Lehrperson teilt die Vorlage-Portionen in der Verwaltung einzelnen Lehrpersonen zu (`shared_store` «vokabelkiste-zuweisung» = `{Lehrperson-ID: [Portion-IDs]}`, `vzRow()`, im Portal gefiltert mit `vkOnly()`). Lehrpersonen bekommen neu zugeteilte Portionen beim Öffnen als Kopie (für Kinder gesperrt, `mergeTpl()`, gemerkt in `content.tplSeen`). Sobald es eine Vorlage gibt, starten Klassen anderer Lehrpersonen ohne eigene Listen leer (nur Zugeteiltes, `settings.tplOn`).
   - Ausbau (Abschnitt 13 in `vk_patch.py`, Code in `werkstatt/einbau/vokabelkiste/vk_ausbau.js`, `vk_eule.css`, `vk_emoji.txt`): Stil der Eulenkiste (Patrick Hand lokal, keine Google-Schriften, Logo `bilder/kacheln/vokabelkiste.webp`). Bilder pro Wort `w.img` (Emoji, eigenes Bild als data:image 200 px oder `'-'` = keins; ohne Eintrag automatisch aus `vk_emoji.txt`, `autoEmo()`), im Editor runde Bild-Spalte (`picDialog()`). Neue Übungen «Bild & Wort» (`modeBild`) und «Sprechen» (`modeTalk`: Spracherkennung, sonst aufnehmen und selbst vergleichen, sonst laut sagen; Prüfung `sayMatch()`, «…» = beliebig). Anzeige «geschafft» (Abschnitt 14): Übung bis zur Schluss-Seite = abgehakt in `P.done[Portion][Übung]`, alle Übungen der Portion (`vkReq()`) = `P.ganz[Portion]`; Anzeige über den Übungen (`vkHead()`), auf den Kacheln und Portions-Karten. Dafür bekommt die Vokabelkiste im Portal Mikrofon und `allow-same-origin` (`openPlayer`); `localStorage`/`sessionStorage` sind im Portal darum abgeschaltet.
+  - Heft und Belohnungen (Version 30, Abschnitt 15, Code `vk_heft.js`): Knopf «📒 Mein Heft» (`goHeft()`) mit Stickern (pro geschaffte Portion einer, `P.stk`/`P.stkFor`; Goldrand bei jedem 5. und bei Serie ≥ 5), Abzeichen (`BADGES`, zählen mit, ab 5/10/25 grösser, `vkTier()`) und Urkunden (Ordner mit Portionen ganz geschafft, `P.urk`, `vkUrkunde()` zum Drucken). Lehrperson in «📊 Klasse» → «Belohnungen» (`vkClassRewards()`): Klassen-Ziel `C.ziel = {anzahl, belohnung, ab}` (Tagessterne der ganzen Klasse, Kinder lesen die Summe mit `kid_vk_extra`), welche Übungen zählen `C.belohnung.modes` (wirkt auf `vkReq()`), Admin: Sticker hochladen (`shared_store` «vokabelkiste-sticker» = `{list:[{id,name}]}`). Bilder (Wörter und Sticker) liegen geschützt in der Tabelle `vk_bilder` (`w.img = 'vk:<id>'`), gespeichert mit `vk_bild_put`, gelesen über das Portal (`knAsk('vkBilder')` → `vk_bilder_get` bzw. `kid_vk_bilder`). Im Editor «🖼 Viele Bilder hochladen» (Bilder oder ZIP, Dateiname = Wort, `bindBulk()`).
   - Sterne: `starCfg()` gibt für die Vokabelkiste `eigene` zurück. Tagesstern = 7 Minuten echte Übungszeit (`P.sec`, zählt nur bei laufender Übung und Eingabe in den letzten 30 s). Serie 🔥 = Schultage hintereinander; Wochenende und Tage mit «Ferien»/«schulfrei» im Hausaufgabenheft (`vkFree()`) zählen nicht. Wochenheld 🏅, Kistenprofi 📦 (100 Wörter im letzten Fach). Die Übersicht zeigt Minuten pro Schultag (`vkHTML()`).
 
 ## Datenbank (Supabase)
@@ -135,7 +136,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 29).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 30).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -145,7 +146,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=168`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=169`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('39')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

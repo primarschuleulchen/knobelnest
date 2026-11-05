@@ -10,21 +10,46 @@ function autoEmo(w){for(const k of emoKeys(w.de)){const e=EMO.get('de:'+k)||EMO.
 const isImgUrl=v=>/^data:image\//.test(v||'');
 const picOf=w=>!w||w.img==='-'?null:(w.img||autoEmo(w));
 const bildOK=w=>!!picOf(w);
-const picHTML=(v,cls='')=>!v?'':isImgUrl(v)?`<img class="pic ${cls}" src="${esc(v)}" alt="" draggable="false">`:`<span class="pic emo ${cls}" aria-hidden="true">${esc(v)}</span>`;
+/* Bilder in der Datenbank (Version 30): w.img = 'vk:<id>'. Sie kommen nur über das Portal (mit Anmeldung) und werden hier
+   zwischengespeichert (VKIMG). picHTML setzt zuerst ein leeres Bild ein und holt fehlende gesammelt nach (vkFetch). */
+const VKIMG={},vkWant=new Set();let vkWantT=null;
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const isDbImg=v=>/^vk:[a-z0-9]{8,40}$/.test(v||'');
+function vkQueue(id){if(VKIMG[id]||vkWant.has(id)||!KN)return;vkWant.add(id);clearTimeout(vkWantT);vkWantT=setTimeout(vkFetch,40)}
+async function vkFetch(){const ids=[...vkWant].filter(i=>!VKIMG[i]).slice(0,300);vkWant.clear();if(!ids.length)return;
+  try{Object.assign(VKIMG,(await knAsk('vkBilder',{ids}))||{})}catch(e){}
+  $$('img[data-vkimg]').forEach(im=>{const d=VKIMG[im.dataset.vkimg];if(d&&im.getAttribute('src')!==d)im.src=d})}
+const picHTML=(v,cls='')=>{if(!v)return'';
+  if(isDbImg(v)){const id=v.slice(3);if(!VKIMG[id])vkQueue(id);return `<img class="pic ${cls}" data-vkimg="${id}" src="${VKIMG[id]||BLANK}" alt="" draggable="false">`}
+  return isImgUrl(v)?`<img class="pic ${cls}" src="${esc(v)}" alt="" draggable="false">`:`<span class="pic emo ${cls}" aria-hidden="true">${esc(v)}</span>`};
+/* Bilder nicht herausziehen oder über das Menü speichern (ganz verhindern lässt sich das Kopieren nie) */
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('img.pic,.stk,.cert'))e.preventDefault()});
+document.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG')e.preventDefault()});
+/* Anfrage ans Portal mit Antwort (vkReply) */
+let knRid=0;const knAskW={};
+addEventListener('message',e=>{if(e.source!==parent||!e.data||e.data.vkReply==null)return;const f=knAskW[e.data.vkReply];if(f){delete knAskW[e.data.vkReply];f(e.data)}});
+function knAsk(type,o){return new Promise((res,rej)=>{if(!KN){rej(new Error('Nur in der Klassenkiste'));return}const rid='r'+(++knRid);
+  const t=setTimeout(()=>{delete knAskW[rid];rej(new Error('Keine Antwort von der Klassenkiste'))},20000);
+  knAskW[rid]=d=>{clearTimeout(t);d.ok?res(d.data):rej(new Error(d.err||'Fehler'))};knSend(Object.assign({type,rid},o||{}))})}
+const newImgId=()=>('b'+Date.now().toString(36)+Math.random().toString(36).slice(2,10)).replace(/[^a-z0-9]/g,'').slice(0,30);
+/* Ein Bild speichern: in der Klassenkiste in der Datenbank (geschützt), sonst direkt im Wort */
+async function vkStore(data){if(!KN)return data;const id=newImgId();await knAsk('vkBildPut',{id,data});VKIMG[id]=data;return 'vk:'+id}
 /* Emoji-Suche für die Lehrperson: alle Bilder, deren Stichwort mit dem Suchwort beginnt */
 function emoFind(q){q=String(q||'').toLowerCase().trim();const out=[];if(!q)return out;
   for(const [k,e] of EMO){const kk=k.replace(/^(de|fl):/,'');if((kk.startsWith(q)||kk.split(' ').some(x=>x.startsWith(q)))&&!out.includes(e))out.push(e);if(out.length>=40)break}return out}
 const EMO_GRUND=['🍎','🐕','🐈','🏫','📕','✏️','🎒','👩','👨','👧','👦','👪','😊','😢','😠','😴','☀️','🌧️','❄️','🍂','🌷','🏠','🚲','⚽','🎵','🎨','🍕','🧀','🍞','🥛','👕','👖','👟','🧢','🎁','⭐','❤️','✅','❌','🗣️'];
 
-/* Eigenes Bild: quadratisch zuschneiden, 200 px, als webp (sonst jpeg). Klein genug für die Klassenkiste. */
-function picFromFile(file){return new Promise((res,rej)=>{
+/* Eigenes Bild: ganz ins Quadrat einpassen (nichts abschneiden, durchsichtiger Hintergrund bleibt), 240 px, als webp.
+   Kann das Gerät kein webp, dann png (oder jpeg mit weissem Grund, wenn es zu gross wird). */
+function picFromFile(file,S=240){return new Promise((res,rej)=>{
   if(!file||!/^image\//.test(file.type)){rej(new Error('Das ist kein Bild.'));return}
   const url=URL.createObjectURL(file),img=new Image();
-  img.onload=()=>{try{const S=200,c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');
-      const m=Math.min(img.naturalWidth,img.naturalHeight),sx=(img.naturalWidth-m)/2,sy=(img.naturalHeight-m)/2;
-      g.imageSmoothingQuality='high';g.drawImage(img,sx,sy,m,m,0,0,S,S);URL.revokeObjectURL(url);
-      let d=c.toDataURL('image/webp',.78);
-      if(!/^data:image\/webp/.test(d)){const c2=document.createElement('canvas');c2.width=S;c2.height=S;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,S,S);g2.drawImage(c,0,0);d=c2.toDataURL('image/jpeg',.8)}
+  img.onload=()=>{try{const c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');
+      const w0=img.naturalWidth,h0=img.naturalHeight,f=Math.min((S-8)/w0,(S-8)/h0),w=Math.round(w0*f),h=Math.round(h0*f);
+      g.imageSmoothingQuality='high';g.drawImage(img,0,0,w0,h0,Math.round((S-w)/2),Math.round((S-h)/2),w,h);URL.revokeObjectURL(url);
+      let d=c.toDataURL('image/webp',.8);
+      if(!/^data:image\/webp/.test(d)){d=c.toDataURL('image/png');
+        if(d.length>200000){const c2=document.createElement('canvas');c2.width=S;c2.height=S;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,S,S);g2.drawImage(c,0,0);d=c2.toDataURL('image/jpeg',.85)}}
       res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Das Bild lässt sich nicht öffnen.'))};img.src=url})}
 
@@ -52,7 +77,7 @@ function picDialog(w,onDone){
     const pa=$('#pdauto',L);if(pa)pa.onclick=()=>{cur=undefined;draw()};
     const pn=$('#pdnone',L);if(pn)pn.onclick=()=>{cur='-';draw()};
     $('#pdfile',L).onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
-      try{cur=await picFromFile(f);draw()}catch(x){toast(x.message||'Das Bild ging nicht.')}};
+      try{toast('Bild wird gespeichert …');cur=await vkStore(await picFromFile(f));draw()}catch(x){toast(x.message||'Das Bild ging nicht.')}};
   };draw();
 }
 function bindPics(node,redraw){$$('#etab [data-pic]').forEach(b=>b.onclick=()=>{const w=node.words.find(x=>x.id===b.dataset.pic);if(!w)return;
@@ -219,19 +244,25 @@ function modeTalk(subset){
    P.done[Portion] = {Übung: Zeit}. Die Portion ist geschafft, wenn alle Übungen geschafft sind, die es in ihr gibt
    (vkReq: ohne Lückensatz, wenn es keine Sätze gibt, ohne «Bild & Wort» bei weniger als 2 Bildern usw.); dann P.ganz[Portion] = Zeit.
    Die Spiele (Paare, Wortregen), der Karteikasten und die Knacknüsse zählen nicht. */
-function vkReq(ws){ws=ws||[];if(!ws.length)return[];const nW=ws.filter(w=>!w.x).length;
+const ALL_MODES=['karte','bild','drei','merken','salat','schreiben','hoeren','sprechen','luecke'];
+const stkModes=()=>{const m=(C.belohnung||{}).modes;return Array.isArray(m)&&m.length?m:ALL_MODES};
+function vkReq(ws){ws=ws||[];if(!ws.length)return[];const nW=ws.filter(w=>!w.x).length,cnt=stkModes();
   return [['karte',1],['bild',ws.filter(bildOK).length>=2],['drei',1],['merken',1],['salat',ws.some(salatOK)],['schreiben',1],
-    ['hoeren',canSpeak&&nW],['sprechen',ws.some(sprechOK)],['luecke',!noSent()&&ws.some(gapOK)]].filter(x=>x[1]).map(x=>x[0])}
+    ['hoeren',canSpeak&&nW],['sprechen',ws.some(sprechOK)],['luecke',!noSent()&&ws.some(gapOK)]].filter(x=>x[1]&&cnt.includes(x[0])).map(x=>x[0])}
 const vkDoneOf=key=>((P.done||{})[key])||{};
-function vkMark(){
+const PERFEKT=/Fehlerfrei|Alles beim ersten Mal|Keine Fehler|Alles ohne Hilfe/;
+function vkMark(lines){
   if(!knMode||!knMode.key||knMode.key==='box'||knMode.key==='nuts'||knMode.key==='?')return;
-  const key=knMode.key,mode=knMode.mode;if(!vkReq(SET.words).includes(mode))return;
+  const key=knMode.key,mode=knMode.mode;
+  if(ALL_MODES.includes(mode)&&(lines||[]).some(l=>PERFEKT.test(String(l||'')))){vkCount('perfekt');if(mode==='hoeren')vkCount('ohr')}
+  if(mode==='bild')vkCount('bild');
+  if(!vkReq(SET.words).includes(mode)){vkBadgeCheck();saveP();return}
   P.done=P.done||{};const d=P.done[key]=P.done[key]||{};const neu=!d[mode];d[mode]=Date.now();
   const req=vkReq(SET.words),n=req.filter(m=>d[m]).length;
   P.ganz=P.ganz||{};
-  if(n>=req.length&&!P.ganz[key]){P.ganz[key]=Date.now();later(()=>toast('🎉 Portion geschafft! Du hast alle Übungen gemacht.'),400)}
+  if(n>=req.length&&!P.ganz[key]){P.ganz[key]=Date.now();saveP();vkCheckAll(true);return}
   else if(neu)later(()=>toast('✓ '+(MODE_NAMES[mode]||mode)+' geschafft · '+n+' von '+req.length+' Übungen'),400);
-  saveP()}
+  vkBadgeCheck();saveP()}
 function vkHead(){if(!SET.key||SET.key==='box'||SET.key==='nuts')return'';const req=vkReq(SET.words),d=vkDoneOf(SET.key),n=req.filter(m=>d[m]).length;
   if(!req.length)return'';const ganz=n>=req.length;
   return `<div class="vkfort ${ganz?'ganz':''}"><span class="vkf-t">${ganz?'🎉 Portion geschafft!':n+' von '+req.length+' Übungen geschafft'}</span><span class="vkf-dots">${req.map(m=>`<i class="${d[m]?'on':''}" title="${esc(MODE_NAMES[m]||m)}"></i>`).join('')}</span></div>`}

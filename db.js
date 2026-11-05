@@ -154,6 +154,11 @@
         p_done: r.done == null ? null : r.done, p_total: r.total == null ? null : r.total, p_level: r.level || null }));
     },
     kidState: async function (token, gid) { return ok(await sb.rpc('kid_state', { p_token: token, p_game: gid })); },
+    // Vokabelkiste (Version 30): Bilder geschützt in der Datenbank, Sticker und Klassen-Ziel
+    vkBildPut: async function (id, data) { return ok(await sb.rpc('vk_bild_put', { p_id: id, p_data: data })); },
+    vkBilderGet: async function (ids) { return ok(await sb.rpc('vk_bilder_get', { p_ids: ids })); },
+    kidVkBilder: async function (token, ids) { return ok(await sb.rpc('kid_vk_bilder', { p_token: token, p_ids: ids })); },
+    kidVkExtra: async function (token, gid) { return ok(await sb.rpc('kid_vk_extra', { p_token: token, p_game: gid })); },
     kidSave: async function (token, gid, save, award) {
       return ok(await sb.rpc('kid_save', { p_token: token, p_game: gid, p_save: save == null ? null : save, p_award: award == null ? null : award }));
     },

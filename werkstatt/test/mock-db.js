@@ -149,6 +149,13 @@
       var gs = (D.gsettings || {})[k.class_id + '|' + gid], st = null;
       if (gs) { st = JSON.parse(JSON.stringify(gs)); st.mine = (gs.kids || {})[k.id] || []; delete st.kids; }
       return delay({ save: p.save || null, award: p.award || {}, settings: st }); },
+    vkBildPut: function (id, data) { D.vkb = D.vkb || {}; if (!/^[a-z0-9]{8,40}$/.test(id) || !/^data:image\//.test(data)) return Promise.reject(new Error('Ungültiges Bild')); if (!D.vkb[id]) D.vkb[id] = data; return delay(); },
+    vkBilderGet: function (ids) { var m = {}; (ids || []).forEach(function (i) { if ((D.vkb || {})[i]) m[i] = D.vkb[i]; }); return delay(m); },
+    kidVkBilder: function (t, ids) { kidOf(t); var m = {}; (ids || []).forEach(function (i) { if ((D.vkb || {})[i]) m[i] = D.vkb[i]; }); return delay(m); },
+    kidVkExtra: function (t, gid) { var k = kidOf(t), gs = (D.gsettings || {})[k.class_id + '|' + gid], z = gs && gs.content && gs.content.ziel, n = 0;
+      if (z && z.ab) D.progress.forEach(function (p) { var kk = D.kids.filter(function (x) { return x.id === p.kid_id; })[0];
+        if (kk && kk.class_id === k.class_id && p.game_id === gid) Object.entries(((p.save || {}).p || {}).sec || {}).forEach(function (e) { if (e[0] >= z.ab && e[1] >= 420) n++; }); });
+      return delay({ sticker: (D.shared || {})['vokabelkiste-sticker'] || null, klasse: { sterne: n } }); },
     resetProgress: function (kid, ids) { D.progress = D.progress.filter(function (x) { return !(x.kid_id === kid && (!ids || ids.indexOf(x.game_id) >= 0)); }); return delay(); },
     gameSettingsGet: function (cid, gid) { return delay(((D.gsettings || {})[cid + '|' + gid]) || null); },
     gameSettingsSet: function (cid, gid, v) { D.gsettings = D.gsettings || {}; D.gsettings[cid + '|' + gid] = JSON.parse(JSON.stringify(v)); return delay(); },
