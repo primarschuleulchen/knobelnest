@@ -667,7 +667,7 @@
           delete: async function () { await DB.storeDel(id); }
         };
       };
-      var otterOk = false; try { otterOk = !!(await toolAccess(me)).otter; } catch (e3) {}
+      var otterOk = false, heftOk = false; try { var acc = await toolAccess(me); otterOk = !!acc.otter; heftOk = !!acc.heft; } catch (e3) {}
       if (otterOk) window.knOtter = otterBridge(cid, (kids || []).slice().sort(kidSort).map(function (k) { return k.name; }), function () {});
       window.knTagesfolie = {
         uid: uid, className: cls ? cls.name : '', isAdmin: !!(me && me.is_admin), template: tpl,
@@ -675,6 +675,7 @@
         roster: (kids || []).map(function (k) { return k.name; }),
         boardUrl: base + '#/wandtafel/' + cid + '/embed',
         otterUrl: otterOk ? 'otterteich.html?embed&v=' + OTTER_VER : '',
+        heft: heftOk ? function () { return DB.storeGet('hat-' + cid); } : null, // Hausaufgaben-Baustein (nur lesen)
         back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: {
           use: async function (name) {
@@ -685,7 +686,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('40') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('41') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
