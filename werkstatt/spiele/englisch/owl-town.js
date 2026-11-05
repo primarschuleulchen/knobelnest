@@ -370,7 +370,8 @@ function mesh(geo, c, x, y, z, par, sh) {
   var m = new THREE.Mesh(geo, typeof c === 'string' ? M(c) : c); m.position.set(x || 0, y || 0, z || 0);
   if (sh !== false) { m.castShadow = true; m.receiveShadow = true; } if (par) par.add(m); return m;
 }
-function bx(w, h, d, c, x, y, z, par, sh) { return mesh(new THREE.BoxGeometry(w, h, d), c, x, y, z, par, sh); }
+var BXN = 0;
+function bx(w, h, d, c, x, y, z, par, sh) { var j = 1 + (BXN++ % 7) * .0025, k = 1 + ((BXN * 3) % 5) * .0008; return mesh(new THREE.BoxGeometry(w * j + .004 * (BXN % 3), h * k, d * j + .004 * (BXN % 3)), c, x, y, z, par, sh); }
 function cyl(rt, rb, h, c, x, y, z, par, seg) { return mesh(new THREE.CylinderGeometry(rt, rb, h, seg || 12), c, x, y, z, par); }
 function canvasTex(w, h, draw) {
   var cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv.getContext('2d'), w, h);
@@ -820,7 +821,7 @@ function buildWorld() {
         // Laden im Erdgeschoss: Schaufenster und Markise
         var shopC = ['#c0392b', '#2f7d4a', '#2a6fb0', '#e0782c', '#7a4ab0'][Math.floor(R() * 5)];
         [-1, 1].forEach(function (sx) {
-          var sw = ww * .3; bx(sw, 2.4, .2, '#a8cbe0', sx * ww * .27, 1.6, fz2 + .05, g, false);
+          var sw = ww * .3; bx(sw, 2.4, .2, '#a8cbe0', sx * ww * .27, 1.6, fz2 + .12, g, false);
           bx(sw + .3, .18, .3, '#ffffff', sx * ww * .27, 2.9, fz2 + .1, g, false);
           var aw = bx(sw + .4, .2, 1.6, shopC, sx * ww * .27, 3.4, fz2 + .8, g); aw.rotation.x = .3;
         });
@@ -923,7 +924,7 @@ function buildWorld() {
   w.plWrap = document.createElement('div'); w.plWrap.className = 'pls';
   LOTS.forEach(function (L) {
     if (!L.place) return; var P = PLACES[L.place], el = document.createElement('div'); el.className = 'pl'; el.textContent = P.emo + ' ' + P.en; w.plWrap.appendChild(el);
-    w.plabels.push({ el: el, v: new THREE.Vector3(L.x, (TOP[L.place] || 10) + 3, L.z), w: 0 });
+    w.plabels.push({ el: el, v: new THREE.Vector3(L.x, (TOP[L.place] || 10) + 3, L.z), w: 0, box: LOTS.indexOf(L) });
   });
   // Leute vor ihren Arbeitsorten
   var byPlace = {}; JOBS.forEach(function (J) { (byPlace[J[2]] = byPlace[J[2]] || []).push(J); });
@@ -941,7 +942,8 @@ function buildWorld() {
       p.position.set(lx, .24, lz); L.g.add(p);
       if (J[0] === 'painter') { var ea = new THREE.Group(); ea.position.set(lx + 1.4, 0, lz - .6); L.g.add(ea); bx(.15, 2.6, .15, '#7a5a3a', 0, 1.3, 0, ea); bx(1.6, 1.3, .1, '#ffffff', 0, 2.1, .1, ea); }
       if (J[0] === 'musician' && !p.userData.fig) bx(.3, .9, .2, '#8a4a1a', .5, 2.1, .35, p);
-      var lb = labelSprite(J[0]); lb.position.set(lx, p.userData.H ? p.userData.H + 1.6 : 4.3, lz - (p.userData.H ? .8 : 0)); L.g.add(lb);
+      var le = document.createElement('div'); le.className = 'pl wk'; le.textContent = J[0]; w.plWrap.appendChild(le);
+      var lb = { visible: true, el: le, H: (p.userData.H || 3.1) + .5 };
       w.workers.push({ job: J[0], place: L.place, p: p, lb: lb, ph: Math.random() * 6, box: LOTS.indexOf(L) });
     });
   });
@@ -1073,7 +1075,7 @@ function loop() {
   var ch = WD.cam.position.y; WD.scene.fog.near = 260 + ch * 1.2; WD.scene.fog.far = 1300 + ch * 2.5;
   var showP = LABELS === 'immer' || CAM.mode !== 'follow';
   var op = WD.owl.position, far = CAM.mode === 'follow' ? 75 : 1e9;
-  placeLabels(showP, op, far);
+  workerLabels(placeLabels(showP, op, far));
   WD.workers.forEach(function (w) {
     w.p.rotation.y = Math.sin(t * .8 + w.ph) * (w.p.userData.fig ? .45 : .25);
   });
@@ -1089,10 +1091,34 @@ function placeLabels(show, op, far) {
   PV = PV || new THREE.Vector3();
   WD.plabels.map(function (l) { return { l: l, d: l.v.distanceTo(cp) }; }).sort(function (a, b) { return a.d - b.d; }).forEach(function (o) {
     var l = o.l, ok = show && Math.hypot(l.v.x - op.x, l.v.z - op.z) < far;
-    if (ok) { PV.copy(l.v).project(WD.cam); ok = PV.z < 1 && Math.abs(PV.x) < 1.05 && Math.abs(PV.y) < 1.05; }
+    if (ok) { PV.copy(l.v).project(WD.cam); ok = PV.z < 1 && Math.abs(PV.x) < 1.05 && Math.abs(PV.y) < 1.05 && (CAM.mode !== 'follow' || !hidden(l.v, l.box)); }
     if (ok) {
       if (!l.w) { l.w = l.el.offsetWidth || 100; l.h = l.el.offsetHeight || 26; }
       var x = (PV.x + 1) / 2 * W, y = (1 - PV.y) / 2 * H, r = { x0: x - l.w / 2 - 3, x1: x + l.w / 2 + 3, y0: y - l.h - 2, y1: y + 2 };
+      ok = !done.some(function (q) { return r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0; });
+      if (ok) { done.push(r); l.el.style.transform = 'translate(' + Math.round(x - l.w / 2) + 'px,' + Math.round(y - l.h) + 'px)'; }
+    }
+    if (l.on !== ok) { l.on = ok; l.el.style.visibility = ok ? 'visible' : 'hidden'; }
+  });
+  return done;
+}
+// Hat ein Haus zwischen Kamera und Punkt Platz? (eigenes Haus «own» zählt nicht)
+function hidden(pt, own) {
+  var c = WD.cam.position;
+  for (var q = 1; q < 16; q++) { var f = q / 16, x = c.x + (pt.x - c.x) * f, y = c.y + (pt.y - c.y) * f, z = c.z + (pt.z - c.z) * f;
+    for (var bi = 0; bi < WD.boxes.length; bi++) { var b = WD.boxes[bi]; if (bi !== own && x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1 && y < b.h) return true; } }
+  return false;
+}
+var PW = null;
+function workerLabels(done) {
+  var W = WD.el.clientWidth, H = WD.el.clientHeight; PW = PW || new THREE.Vector3();
+  WD.workers.forEach(function (w) {
+    var l = w.lb, ok = l.visible;
+    if (ok) { w.p.getWorldPosition(PW); PW.y += l.H; ok = PW.distanceTo(WD.cam.position) < 110; }
+    if (ok) { var pt = PW.clone(); PW.project(WD.cam); ok = PW.z < 1 && Math.abs(PW.x) < 1.05 && Math.abs(PW.y) < 1.05 && !hidden(pt, w.box); }
+    if (ok) {
+      if (!l.w) { l.w = l.el.offsetWidth || 80; l.h = l.el.offsetHeight || 24; }
+      var x = (PW.x + 1) / 2 * W, y = (1 - PW.y) / 2 * H, r = { x0: x - l.w / 2 - 2, x1: x + l.w / 2 + 2, y0: y - l.h - 2, y1: y + 2 };
       ok = !done.some(function (q) { return r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0; });
       if (ok) { done.push(r); l.el.style.transform = 'translate(' + Math.round(x - l.w / 2) + 'px,' + Math.round(y - l.h) + 'px)'; }
     }
@@ -1190,7 +1216,7 @@ function ui(api, lv) {
     '<div class="tools"><button class="pill" data-k="top" title="Von oben schauen">🗺 Karte</button><button class="pill" data-k="help" title="Little Helper">💡 Helper</button></div>' +
     '<div class="pad"><span></span><button data-c="U" aria-label="geradeaus">⬆</button><span></span><button data-c="L" aria-label="links drehen">⬅</button><button data-c="B" aria-label="umdrehen">⬇</button><button data-c="R" aria-label="rechts drehen">➡</button></div>' +
     '<button class="mark" data-c="M">📍 Hier ist das Ziel!</button><div class="near" id="owNear"></div><div class="pop" id="owPop" hidden></div><div class="toast" id="owToast"></div>';
-  box.insertBefore(WD.el, box.firstChild); box.insertBefore(WD.plWrap, WD.el.nextSibling); WD.plabels.forEach(function (l) { l.w = 0; }); box.appendChild(WD.mini); WD.mini.classList.toggle('aus', lv.mini === false);
+  box.insertBefore(WD.el, box.firstChild); box.insertBefore(WD.plWrap, WD.el.nextSibling); WD.plabels.forEach(function (l) { l.w = 0; }); WD.workers.forEach(function (w) { w.lb.w = 0; }); box.appendChild(WD.mini); WD.mini.classList.toggle('aus', lv.mini === false);
   api.stage.appendChild(box);
   var U = UI = { box: box, card: box.querySelector('#owCard'), near: box.querySelector('#owNear'), pop: box.querySelector('#owPop'), toast: box.querySelector('#owToast') };
   Array.prototype.forEach.call(box.querySelectorAll('[data-c]'), function (b) {
