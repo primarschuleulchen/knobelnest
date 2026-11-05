@@ -410,5 +410,10 @@ rep("${T&&!noSent()&&n?'<button class=\"pill rose sm\" id=\"gapReview\">Lückens
 rep("<div class=\"hact\">${KN_ADMIN?", "<div class=\"hact\">${T&&isPortion?wsTools():''}${KN_ADMIN?")
 rep('<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>', '<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1>${T&&ws.length?`<div class="hact">${wsTools()}</div>`:\'\'}</div>')
 
+
+# 21) «Portion löschen» steht unter «Umbenennen» (beide in einer schmalen Spalte am Ende der Knopfreihe)
+rep("""<button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button>""",
+    """<span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span>""")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

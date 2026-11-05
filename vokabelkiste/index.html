@@ -834,6 +834,8 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 }
 .hact .pill.tool{background:#fff;border-color:var(--gold);color:var(--ink);box-shadow:0 2px 0 var(--gold-l)}
 .hact .pill.tool:hover{background:var(--nut-soft)}
+.hact .hcol{display:inline-flex;flex-direction:column;gap:6px;align-items:stretch}
+.hact:has(.hcol){align-items:center}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1271,7 +1273,7 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
