@@ -82,3 +82,43 @@
 @media (max-width:760px){.pl.wk{font-size:13px}}
 .owbox .go small{font-size:.75em;color:var(--soft)}
 .steps li.jetzt{background:var(--sun);outline:2px solid var(--gold)}
+
+/* Stufen-Menü als Pfad und Stern in der Aufgabe: übernommen vom Kleiderschrank (werkstatt/spiele/knobelspiele/kleider.py) */
+/* Stern in der Aufgabe */
+.fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
+.fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}
+.stern{width:20px;height:20px;display:block;flex:none}.stern.gross{width:32px;height:32px}
+.stern .leer{fill:#f3ead2;stroke:#d6ad45;stroke-width:1.4;stroke-linejoin:round}
+.stern .voll{fill:#f0c24b;stroke:#c4952f;stroke-width:1.4;stroke-linejoin:round;transition:clip-path .6s ease}
+.fort.pop .stern{animation:sternpop .9s}
+@keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
+/* Stufen-Menü als Pfad */
+@media (max-height:820px) and (min-width:641px){
+  body .kopf .ring{width:104px;height:104px}body .kopf h1{font-size:36px;margin-top:4px}body .kopf p{font-size:17px;margin-top:2px;max-width:820px}body .deko{display:none}
+  body .pfad{padding:6px 20px 8px}body .pfad::before{top:40px;bottom:30px}body .pf-wahl{margin-bottom:0;font-size:14px}
+  body .pf-reihe{margin:3px 0}body .pf-n.pokal{width:36px;height:36px}body .pf-karte{min-height:56px;padding:6px 14px}body .pf-tx b{font-size:21px}body .pf-tx span{font-size:15px}
+  body .pf-n{width:42px;height:42px;font-size:20px}body .pf-n.zwei{width:54px;font-size:18px}body .pf-n.pokal{font-size:20px}
+}
+.pf-top{position:absolute;top:12px;left:0;right:0;margin:0 auto;padding:0 16px;pointer-events:none}.pf-top .pill{pointer-events:auto}
+.kopf+.pfad{margin-top:12px}
+.pfad{position:relative;width:100%;max-width:980px;background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:12px 22px 14px;box-shadow:var(--sch)}
+.pfad::before{content:"";position:absolute;left:50%;top:52px;bottom:40px;border-left:3px dotted var(--gold);transform:translateX(-50%)}
+.pf-wahl{text-align:center;color:var(--sky-d);letter-spacing:.12em;font-size:16px;text-transform:uppercase;margin-bottom:6px}
+.pf-reihe{display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;gap:12px;margin:8px 0;position:relative}
+.pf-n{justify-self:center;width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid var(--gold);box-shadow:inset 0 0 0 3px #fff,var(--sch-k);display:grid;place-items:center;font-size:24px;z-index:1}
+.pf-n i{font-style:normal}
+.pf-n.zwei{width:64px;border-radius:26px;display:flex;gap:2px;justify-content:center;font-size:21px}.pf-n.zwei i+i::before{content:"·";color:var(--gold);margin-right:2px}
+.pf-n.pokal{border-style:dashed;font-size:24px}
+.pf-karte{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid var(--line);border-radius:22px;padding:10px 16px;min-height:70px;box-shadow:var(--sch-k);transition:transform .15s,box-shadow .15s}
+.pf-karte:hover{transform:translateY(-3px);box-shadow:var(--sch)}.pf-karte:active{transform:translateY(1px)}
+.pf-tx{flex:1;min-width:0}.pf-tx b{display:block;font-weight:400;font-size:24px;line-height:1.1}.pf-tx span{color:var(--soft);font-size:17px;line-height:1.2;display:block}
+.pf-karte .stars{font-size:22px;letter-spacing:1px;flex:none}
+@media (max-width:640px){.pf-top{position:static;padding:0}.pfad{padding:10px 8px;border-radius:22px}
+  .pf-reihe{grid-template-columns:1fr 44px 1fr;gap:6px}.pf-n{width:40px;height:40px;font-size:19px}.pf-n.zwei{width:46px;font-size:16px}
+  .pf-karte{padding:8px 10px;min-height:62px;border-radius:16px;flex-direction:column;align-items:flex-start;gap:4px}.pf-tx b{font-size:19px}.pf-tx span{font-size:14px}
+  .pf-karte .stars{font-size:17px}
+  .top .t{display:none}.top .pill{white-space:nowrap}
+  .fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}}
+
+.pf-reihe.frei{grid-template-columns:1fr}.pf-reihe.frei .pf-karte{max-width:560px;margin:0 auto;position:relative;z-index:1;background:#fff}
+.pf-karte .pf-ic{font-size:30px;flex:none}

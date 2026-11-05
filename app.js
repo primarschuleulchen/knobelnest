@@ -294,7 +294,7 @@
   var VK_VER = '16'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var KS_VER = '34'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
-  var EN_VER = '17'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
+  var EN_VER = '18'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -4207,7 +4207,7 @@
   function starCfg(html) {
     if (/<script[^>]*id=["']vk-content["']/i.test(html || '')) return { modus: 'eigene' }; // Vokabelkiste: Tagessterne zählt sie selbst
     // Die 10 Knobelspiele: immer je 10 richtige 1 Stern, bis 3 pro Stufe (auch wenn der Eintrag in «games» noch die alte Regel hat)
-    if (STERN_IM_SPIEL.test(gameUrl(html) || '') && !/kleiderschrank/.test(gameUrl(html))) return { modus: 'sammeln', pro: 10, max: 3, proLevel: true, proFuer: {}, proTag: false };
+    if ((STERN_IM_SPIEL.test(gameUrl(html) || '') && !/kleiderschrank/.test(gameUrl(html))) || /^englisch\/owl-town\.html/.test(gameUrl(html) || '')) return { modus: 'sammeln', pro: 10, max: 3, proLevel: true, proFuer: {}, proTag: false };
     var m = /<meta\s+name=["']knobelnest-sterne["']\s+content=(["'])([\s\S]*?)\1/i.exec(html || ''), c = null;
     if (m) try { c = JSON.parse(m[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')); } catch (e) {}
     c = c || { modus: 'runde' };
@@ -4280,7 +4280,7 @@
     }
     S.render = function () {
       if (!PL || cfg.modus === 'eigene' || cfg.modus === 'aus') return;
-      if (PL.url && STERN_IM_SPIEL.test(PL.url)) { PL.bar.hidden = true; return; } // zeigt den Stern selbst (wie der Kleiderschrank), kein Balken oben
+      if (PL.url && (STERN_IM_SPIEL.test(PL.url) || /^englisch\/owl-town\.html/.test(PL.url))) { PL.bar.hidden = true; return; } // zeigt den Stern selbst (wie der Kleiderschrank), kein Balken oben
       var b = PL.bar, k = key(), max = maxFor(), have = Math.min(max, +a.lv[k] || 0), name = S.level || '', body;
       if (!S.shown) return;
       if (cfg.modus === 'runde') {
