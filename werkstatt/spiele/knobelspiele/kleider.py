@@ -94,7 +94,7 @@ def logo():
 def alle(spiel):
     items = [dict(w) for w in WORT]
     spiel(id='kleiderschrank', titel='Kleiderschrank', icon=logo(), fach='Englisch', thema='Clothes', stufe='3.–6. Klasse', sort=1, n=10,
-          sterne={'modus': 'sammeln', 'pro': 10, 'max': 10, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 10
+          sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»',
           intro='Im Schrank hängen viele Kleider. Wie heissen sie auf Englisch? Hör gut zu und sprich nach!',
           levels=[dict(name='Entdecken', info='Antippen, hören und finden', t=0),
@@ -121,14 +121,13 @@ CSS = r"""
 @keyframes sternpop{30%{transform:scale(1.5) rotate(-12deg)}60%{transform:scale(1.25) rotate(8deg)}}
 /* Stufen-Menü als Pfad */
 @media (max-height:820px) and (min-width:641px){
-  body .pf-kopf{margin-top:-46px}body .pf-kopf .ring{width:66px;height:66px}body .pf-kopf h1{font-size:32px}body .pf-kopf p{font-size:16px;margin-top:2px}
+  body .kopf .ring{width:104px;height:104px}body .kopf h1{font-size:36px;margin-top:4px}body .kopf p{font-size:17px;margin-top:2px;max-width:820px}body .deko{display:none}
   body .pfad{padding:6px 20px 8px}body .pfad::before{top:40px;bottom:30px}body .pf-wahl{margin-bottom:0;font-size:14px}
-  body .pf-reihe{margin:5px 0}body .pf-karte{min-height:56px;padding:6px 14px}body .pf-tx b{font-size:21px}body .pf-tx span{font-size:15px}
+  body .pf-reihe{margin:3px 0}body .pf-n.pokal{width:36px;height:36px}body .pf-karte{min-height:56px;padding:6px 14px}body .pf-tx b{font-size:21px}body .pf-tx span{font-size:15px}
   body .pf-n{width:42px;height:42px;font-size:20px}body .pf-n.zwei{width:54px;font-size:18px}body .pf-n.pokal{font-size:20px}
 }
-.pf-kopf{display:flex;align-items:center;gap:16px;justify-content:center;margin:0 0 6px;text-align:left;max-width:760px}
-.pf-kopf .ring{width:96px;height:96px;flex:none}.pf-kopf h1{margin:0;font-size:42px;font-weight:400;line-height:1}
-.pf-kopf h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}.pf-kopf p{margin:4px 0 0;color:var(--soft);font-size:19px}
+.pf-top{position:absolute;top:12px;left:0;right:0;margin:0 auto;padding:0 16px;pointer-events:none}.pf-top .pill{pointer-events:auto}
+.kopf+.pfad{margin-top:12px}
 .pfad{position:relative;width:100%;max-width:980px;background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:12px 22px 14px;box-shadow:var(--sch)}
 .pfad::before{content:"";position:absolute;left:50%;top:52px;bottom:40px;border-left:3px dotted var(--gold);transform:translateX(-50%)}
 .pf-wahl{text-align:center;color:var(--sky-d);letter-spacing:.12em;font-size:16px;text-transform:uppercase;margin-bottom:6px}
@@ -140,11 +139,11 @@ CSS = r"""
 .pf-karte{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid var(--line);border-radius:22px;padding:10px 16px;min-height:70px;box-shadow:var(--sch-k);transition:transform .15s,box-shadow .15s}
 .pf-karte:hover{transform:translateY(-3px);box-shadow:var(--sch)}.pf-karte:active{transform:translateY(1px)}
 .pf-tx{flex:1;min-width:0}.pf-tx b{display:block;font-weight:400;font-size:24px;line-height:1.1}.pf-tx span{color:var(--soft);font-size:17px;line-height:1.2;display:block}
-.pf-st{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none}.pf-st .stern{width:26px;height:26px}.pf-st small{font-size:15px;color:var(--soft);white-space:nowrap}
-@media (max-width:640px){.pf-kopf .ring{width:70px;height:70px}.pf-kopf h1{font-size:32px}.pf-kopf p{font-size:16px}.pfad{padding:10px 8px;border-radius:22px}
+.pf-karte .stars{font-size:22px;letter-spacing:1px;flex:none}
+@media (max-width:640px){.pf-top{position:static;padding:0}.pfad{padding:10px 8px;border-radius:22px}
   .pf-reihe{grid-template-columns:1fr 44px 1fr;gap:6px}.pf-n{width:40px;height:40px;font-size:19px}.pf-n.zwei{width:46px;font-size:16px}
   .pf-karte{padding:8px 10px;min-height:62px;border-radius:16px;flex-direction:column;align-items:flex-start;gap:4px}.pf-tx b{font-size:19px}.pf-tx span{font-size:14px}
-  .pf-st{flex-direction:row;gap:5px}.pf-st .stern{width:18px;height:18px}.pf-st small{font-size:13px}
+  .pf-karte .stars{font-size:17px}
   .top .t{display:none}.top .pill{white-space:nowrap}
   .fort{padding:3px 8px;font-size:16px;min-height:42px}.fort .fz b{font-size:19px}.stern.gross{width:26px;height:26px}.fort .fz-st{display:none}}
 .schrank{position:relative;width:min(100%,640px,calc((100vh - 250px) * 1.13))}
@@ -686,11 +685,11 @@ function sternBild(p, cls) {
 G.menu = function () {
   var reihen = [[0], [1], [2], [3], [4, 5], [6, 7]], rechts = [true, false, true, false];
   function karte(i) {
-    var lv = G.levels[i], s = KN.sterne('Stufe ' + (i + 1)), mx = +AW.max || 10, have = Math.min(s.have, mx);
+    var lv = G.levels[i], s = KN.sterne('Stufe ' + (i + 1)), mx = +AW.max || 3, have = Math.min(s.have, mx);
     return '<button class="pf-karte" data-lv="' + i + '" style="background:linear-gradient(180deg,#fff 0%,' + LV_COL[i] + ' 100%)"><span class="pf-tx"><b>' + h(lv.name) + '</b><span>' + h(lv.info) + '</span></span>' +
-      '<span class="pf-st">' + sternBild(have / mx) + '<small>' + have + ' von ' + mx + '</small></span></button>';
+      stars(have, mx) + '</button>';
   }
-  var o = '<div class="top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="pf-kopf"><span class="ring">' + G.icon + '</span><div><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p></div></div>' +
+  var o = '<div class="top pf-top"><span style="flex:1"></span>' + sndBtn() + '</div><div class="kopf"><span class="ring">' + G.icon + '</span><h1>' + h(G.title) + '</h1><p>' + G.intro + '</p><div class="deko">✦ ✧ ✦</div></div>' +
     '<div class="pfad"><div class="pf-wahl">Wähle eine Stufe</div>';
   reihen.forEach(function (r, ri) {
     if (r.length === 2) o += '<div class="pf-reihe"><div class="pf-l">' + karte(r[0]) + '</div><div class="pf-n zwei"><i>' + (r[0] + 1) + '</i><i>' + (r[1] + 1) + '</i></div><div class="pf-r">' + karte(r[1]) + '</div></div>';
@@ -701,7 +700,7 @@ G.menu = function () {
 };
 // ---------- Stern in der Aufgabe: füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern
 function sternFortschritt(api, li) {
-  var k = 'Stufe ' + (li + 1), per = +AW.per || 10, max = +AW.max || 10;
+  var k = 'Stufe ' + (li + 1), per = +AW.per || 10, max = +AW.max || 3;
   AW.lv = AW.lv || {}; AW.box = AW.box || {};
   var el = document.createElement('div'); el.className = 'fort'; el.setAttribute('aria-live', 'polite');
   el.innerHTML = sternBild(0, 'stern gross') + '<span class="fz"></span>';
