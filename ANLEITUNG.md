@@ -1,7 +1,7 @@
 # Knobelnest – Einrichtung (Testphase)
 
-Adresse nach der Einrichtung: https://primarschuleulchen.github.io/knobelnest/
-Kinder: https://primarschuleulchen.github.io/knobelnest/#/klasse
+Adresse nach der Einrichtung: https://klassenkiste.primarschuleulchen.com/
+Kinder: https://klassenkiste.primarschuleulchen.com/#/klasse
 
 ## 1. Datenbank einrichten (Supabase, einmalig)
 
@@ -30,7 +30,7 @@ Sie können es danach im Portal oben rechts unter ihrem Namen ändern.
 ## 4. Optional, für später
 
 Supabase → **Authentication** → **URL Configuration** → **Site URL** auf
-`https://primarschuleulchen.github.io/knobelnest/` setzen.
+`https://klassenkiste.primarschuleulchen.com/` setzen.
 
 ## Dateien
 
