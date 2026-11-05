@@ -399,9 +399,16 @@ rep("  C.tplSeen=[...seen];return added;", """  {let n=0;const ws=[];TPL.subject
 # 19) Arbeitsblatt- und Test-Generator für Lehrpersonen (Code vk_blatt.js): Knopf «🖨 Arbeitsblatt / Test» über den Übungen
 #     (nur im Lehrpersonen-Modus), eigene Ansicht nav.view = 'ws', Drucken mit body.wsdruck.
 rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_blatt.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
-rep("Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}", "Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${wsBtn()}${vkHead()}")
+
 rep("function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;", "function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;const wb=$('#wsBtn',r);if(wb)wb.onclick=goWs;")
 rep("function rerender(){if(nav.view==='heft')", "function rerender(){if(nav.view==='ws')return goWs();if(nav.view==='heft')")
+
+
+# 20) Werkzeuge der Lehrperson gut sichtbar oben bei «So wurde geübt»: «🖨 Arbeitsblatt / Test» und «✏️ Lückensätze prüfen»
+#     (statt klein über den Übungen). In «… · Gesamt» stehen sie neben dem Titel.
+rep("${T&&!noSent()&&n?'<button class=\"pill rose sm\" id=\"gapReview\">Lückensätze prüfen</button>':''}", "")
+rep("<div class=\"hact\">${KN_ADMIN?", "<div class=\"hact\">${T&&isPortion?wsTools():''}${KN_ADMIN?")
+rep('<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>', '<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1>${T&&ws.length?`<div class="hact">${wsTools()}</div>`:\'\'}</div>')
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
