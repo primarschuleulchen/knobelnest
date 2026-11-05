@@ -1,4 +1,4 @@
-# Baut die Knobelspiele der Klassenkiste: Rechen-Rakete, Wort-Raten, Bilderrätsel, Eulen-Weg, weitere (weitere.py) und Im Museum (museum.py).
+# Baut die Knobelspiele der Klassenkiste: Rechen-Rakete, Wort-Raten, Bilderrätsel, Eulen-Weg, weitere (weitere.py), Im Museum (museum.py) und Im Schulhaus (schulhaus.py).
 # Aufruf im Repo-Hauptordner:  python3 werkstatt/spiele/knobelspiele/bauen.py
 #
 # Ergebnis:
@@ -605,6 +605,11 @@ kleider.alle(spiel)
 # ================================================================== Im Museum (Englisch, museum.py)
 import museum
 museum.alle(spiel)
+
+
+# ================================================================== Im Schulhaus (Englisch, Lesen, schulhaus.py)
+import schulhaus
+schulhaus.alle(spiel)
 
 
 # ------------------------------------------------------------------ Prüfen und bauen
