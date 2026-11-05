@@ -389,7 +389,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Bilder-Sudoku
-    spiel(id='bilder-sudoku', titel='Bilder-Sudoku', icon=logo('bilder-sudoku'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=3, n=3,
+    spiel(id='bilder-sudoku', titel='Bilder-Sudoku', icon=logo('bilder-sudoku'), fach='Knobelkiste', thema='Logik', stufe='1.–6. Klasse', sort=3, n=3,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Jedes Bild nur einmal pro Zeile, Spalte und Kästchen.',
           intro='Fülle die leeren Felder. In jeder Zeile, jeder Spalte und jedem dicken Kästchen kommt jedes Bild genau einmal vor.',
@@ -508,7 +508,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Wasser-Weg
-    spiel(id='wasser-weg', titel='Wasser-Weg', icon=logo('wasser-weg'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=4, n=3,
+    spiel(id='wasser-weg', titel='Wasser-Weg', icon=logo('wasser-weg'), fach='Knobelkiste', thema='Logik', stufe='1.–6. Klasse', sort=4, n=3,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Röhren drehen, bis das Wasser zur Blume fliesst.',
           intro='Tippe auf eine Röhre, dann dreht sie sich. Baue einen Weg vom Wasserhahn bis zur Blume. Blaue Röhren haben schon Wasser.',
