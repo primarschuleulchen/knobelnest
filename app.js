@@ -3459,7 +3459,8 @@
     var allSel = FG.length && FG.every(function (g) { return sel[g.id]; });
     var glist = T.games.length ? bulk + '<div class="tablewrap"><table><thead><tr><th style="width:44px"><input type="checkbox" aria-label="Alle Spiele auswählen" style="width:22px;height:22px" data-change="gSelAll"' + (allSel ? ' checked' : '') + '></th><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + FG.map(function (g) {
       var key = 'game:' + g.id;
-      return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td>' + h(g.fach) + ' › ' + h(g.thema) + '</td>' +
+      return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td><div class="ft-edit"><input class="ft-in" list="fachList" value="' + h(g.fach) + '" maxlength="40" aria-label="Fach von ' + h(g.title) + '" title="Fach ändern" data-change="gFtSet" data-k="fach" data-id="' + g.id + '"><span aria-hidden="true">›</span>' +
+          '<input class="ft-in" list="themaList" value="' + h(g.thema) + '" maxlength="60" aria-label="Thema von ' + h(g.title) + '" title="Thema ändern" data-change="gFtSet" data-k="thema" data-id="' + g.id + '"></div></td>' +
         '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
         '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
@@ -3604,6 +3605,16 @@
     var who = (A.teachers.filter(function (x) { return x.id === t; })[0] || {});
     toast(plural(ids.length, 'Spiel', 'Spiele') + (on ? ' an ' : ' weggenommen von ') + (who.name || who.email) + (on ? ' zugeteilt.' : '.'));
     T.render();
+  };
+  // Fach oder Thema direkt in der Liste ändern
+  ACT.gFtSet = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], k = el.dataset.k, v = el.value.trim();
+    if (!g) return; if (!v) { el.value = g[k]; return toast(k === 'fach' ? 'Das Fach darf nicht leer sein.' : 'Das Thema darf nicht leer sein.'); }
+    if (v === g[k]) return;
+    var alt = g[k]; g[k] = v;
+    try { await DB.saveGame({ id: g.id, title: g.title, description: g.description, fach: g.fach, thema: g.thema, stufe: g.stufe, for_all: g.for_all, sort: g.sort });
+      toast(g.title + ': ' + (k === 'fach' ? 'Fach' : 'Thema') + ' «' + v + '» gespeichert.'); T.render(); }
+    catch (e) { g[k] = alt; el.value = alt; toast(errMsg(e)); }
   };
   ACT.gAllToggle = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
