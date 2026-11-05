@@ -680,7 +680,6 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
   body.drucke .app,body.drucke .scrim,body.drucke .urkwrap .dact,body.drucke #pubbar,body.drucke .toast{display:none!important}
   body.drucke .urkwrap{position:static;transform:none;width:100%;max-height:none}
   body.drucke .cert{box-shadow:inset 0 0 0 10px #fffdf6,inset 0 0 0 12px #c4952f,inset 0 0 0 16px #fffdf6,inset 0 0 0 17px #d6ad45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  @page{size:A4 landscape;margin:12mm}
 }
 /* Lehrperson: Belohnungen */
 .rewards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
@@ -775,6 +774,65 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .mhz span{display:inline-flex;align-items:center;gap:4px}
 .mhz img{width:22px;height:22px;object-fit:contain}
 .kt-heft .mhl{height:14px;background:repeating-linear-gradient(transparent 0 4px,rgba(63,120,168,.18) 4px 5px),#fffdf5}
+/* Arbeitsblatt- und Test-Generator */
+#wsBtn{background:#fff;border-color:var(--rule);color:var(--sky-deep);box-shadow:0 2px 0 var(--line)}
+.wsg{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.wsg{grid-template-columns:1fr}}
+.wsset{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:sticky;top:10px}
+.wsl{display:flex;flex-direction:column;gap:4px;font-size:16px;color:var(--muted)}
+.wsopts{display:flex;flex-direction:column;gap:5px}
+.wsopts .kbx.off{opacity:.45}
+.wsopts small{font-size:13px}
+.ws-typ{align-self:flex-start}
+.wsprev{display:flex;flex-direction:column;gap:20px;align-items:center;min-width:0;overflow:auto}
+.wsp{width:794px;min-height:1123px;background:#fff;color:#1f2421;box-shadow:0 8px 26px rgba(0,0,0,.15);padding:44px 52px;font-size:17px;line-height:1.35;display:flex;flex-direction:column;gap:18px;flex:none}
+.wsp.loes{background:#fffef7}
+.wsh{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:2px solid #d6ad45;padding-bottom:10px}
+.wsp-k{color:#3f78a8;font-size:14px;letter-spacing:.06em}
+.wsp-t{margin:0;font-size:30px;font-weight:400}
+.wsf{display:flex;flex-direction:column;gap:6px;font-size:15px;min-width:230px}
+.wsf i{display:inline-block;width:150px;border-bottom:1.5px solid #888;vertical-align:bottom}
+.wsf i.k{width:40px}
+.wst{break-inside:avoid;page-break-inside:avoid}
+.wst h3{margin:0 0 10px;font-size:19px;font-weight:400;display:flex;align-items:center;gap:10px}
+.wst h3 b{width:28px;height:28px;border-radius:50%;background:#d6ad45;color:#fff;display:grid;place-items:center;font-weight:400;flex:none}
+.wspt{margin-left:auto;font-size:15px;color:#666}
+.wsrows{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px}
+.wsr{display:flex;align-items:flex-end;gap:10px;min-height:40px}
+.wsq{flex:0 1 45%;min-width:0}
+.wsq.salat{letter-spacing:.06em;color:#3f78a8}
+.wsline{flex:1;border-bottom:1.5px solid #999;min-height:26px;position:relative}
+.wsline em,.wsgap em,.wsv em,.wssl em{font-style:normal;color:#c0392b}
+.wsline em{position:absolute;left:4px;bottom:2px}
+.wsb{flex:none}
+.wsb .pic{width:40px;height:40px;border-radius:8px;background:transparent}
+.wsb .pic.emo{font-size:28px;width:auto;height:auto}
+.wsbg{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 18px}
+.wsbc{display:flex;flex-direction:column;align-items:center;gap:6px}
+.wsbb .pic{width:120px;height:120px;border-radius:12px;background:transparent}
+.wsbb .pic.emo{font-size:72px;width:auto;height:auto}
+.wsbc .wsline{width:100%;min-height:30px;flex:none}
+.wsv{display:grid;grid-template-columns:1fr 1fr;gap:0 80px}
+.wsvr{display:flex;align-items:center;justify-content:space-between;gap:10px;height:38px}
+.wsvr.r{justify-content:flex-start}
+.wsvr .dot{width:10px;height:10px;border-radius:50%;background:#1f2421;flex:none}
+.wsnote{margin:6px 0 0;font-size:13px;color:#888}
+.wsbank{display:flex;flex-wrap:wrap;gap:6px 14px;border:1.5px dashed #d6ad45;border-radius:10px;padding:8px 12px;margin-bottom:8px;color:#3f78a8}
+.wsgaps p{margin:0 0 12px}
+.wsgap{display:inline-block;min-width:130px;border-bottom:1.5px solid #999;margin:0 4px;text-align:center}
+.wss{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.wsgrid{border-collapse:collapse;font-size:20px}
+.wsgrid td{width:30px;height:30px;text-align:center;border:1px solid #ddd;font-family:ui-monospace,Menlo,Consolas,monospace}
+.wsgrid td.hit{background:#fdecc8;color:#c0392b}
+.wssl{display:flex;flex-direction:column;gap:4px}
+.wsfoot{margin-top:auto;font-size:12px;color:#aaa;text-align:right}
+@media print{
+  body.wsdruck .app>*:not(main),body.wsdruck #stage>*:not(.wsg),body.wsdruck .wsset,body.wsdruck #pubbar,body.wsdruck .toast,body.wsdruck .bg{display:none!important}
+  body.wsdruck .wsg{display:block}
+  body.wsdruck .wsprev{display:block;overflow:visible}
+  body.wsdruck .wsp{zoom:1!important;width:auto;min-height:0;box-shadow:none;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.wsdruck .wsp:last-child{break-after:auto;page-break-after:auto}
+}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1194,7 +1252,7 @@ function toggleRelease(id){const info=NODES.get(id);if(!info)return;const val=!i
   touch();rerender();
   if(ART){toast(val?'Freigegeben! Wird für die Kinder gespeichert …':'Ausgeblendet. Wird gespeichert …');publishContent(null)}
   else toast(val?'Freigegeben. Jetzt noch veröffentlichen.':'Für die Kinder ausgeblendet.')}
-function rerender(){if(nav.view==='heft')return goHeft(nav.tab);if(nav.view==='class')return goClass();if(nav.view==='classp')return goClassPortion(nav.node);if(nav.view==='classk')return goClassKid(nav.kid);if(nav.view==='all')goAll(nav.node);else if(nav.view==='box')goBox(nav.kind);else if(nav.view==='boxsel')goBoxSelect();else if(nav.view==='nuts')goNuts();else goNode(nav.node)}
+function rerender(){if(nav.view==='ws')return goWs();if(nav.view==='heft')return goHeft(nav.tab);if(nav.view==='class')return goClass();if(nav.view==='classp')return goClassPortion(nav.node);if(nav.view==='classk')return goClassKid(nav.kid);if(nav.view==='all')goAll(nav.node);else if(nav.view==='box')goBox(nav.kind);else if(nav.view==='boxsel')goBoxSelect();else if(nav.view==='nuts')goNuts();else goNode(nav.node)}
 const makeBack=n=>()=>n.view==='all'?goAll(n.node):n.view==='box'?goBox(n.kind):n.view==='nuts'?goNuts():goNode(n.node||null);
 
 /* ---------- Ordner-Ansicht ---------- */
@@ -1313,7 +1371,7 @@ function practiceHTML(){
     ['luecke','Lückensatz',gapN?`Setz das fehlende Wort in den Satz ein. ${gapN} ${gapN===1?'Satz':'Sätze'}.`:'Zu diesen Wörtern gibt es noch keine Beispielsätze.',gapN]].filter(m=>!(m[0]==='luecke'&&noSent()));knMoreModes(MODES,ws);
   const GAMES=[['pairs','Paare finden','Memory mit höchstens 8 Wortpaaren.',n>=2],['regen','Wortregen','Tipp die Übersetzung, bevor die Wörter unten ankommen.',nW]];
   const tile=([m,t,d,ok],i)=>`<button class="tile" data-mode="${m}" ${ok?'':'disabled'}>${i!=null?`<span class="num">${i+1}</span>`:''}<h3><span class="ico ${i==null?'rose':''}">${ICONS[m]}</span>${t}</h3><p>${d}</p>${m==='regen'&&best?`<span class="rec">Rekord: ${best} Punkte</span>`:''}${vkTileMark(m)}<span class="go">Starten →</span></button>`;
-  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
+  return `<div class="sh"><h2 class="lbl">Üben</h2><p class="hand">Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${wsBtn()}${vkHead()}${T&&!noSent()&&n?'<button class="pill rose sm" id="gapReview">Lückensätze prüfen</button>':''}${ws.some(w=>w.x)?`<p class="hand" style="flex-basis:100%">Wörter mit «nur verstehen» musst du nicht schreiben können. Beim Schreiben fragt dich die Kiste von ${esc(SUB().name)} auf Deutsch. Im Buchstabensalat, beim Hören & Schreiben und im Wortregen kommen sie nicht vor.</p>`:''}</div><div class="tiles">${MODES.map((m,i)=>tile(m,i)).join('')}</div>
     <div class="sh"><h2 class="lbl">Spiele</h2></div><div class="tiles">${GAMES.map(m=>tile(m,null)).join('')}</div>`;
 }
 const MODE_FN=()=>({karte:modeCards,drei:modeThree,merken:modeMerken,salat:modeScramble,schreiben:modeWrite,hoeren:modeListen,luecke:modeGap,pairs:modePairs,regen:modeRain,bild:modeBild,sprechen:modeTalk});
@@ -1347,7 +1405,7 @@ function reviewGaps(){
   session.key=e=>{if(e.key==='ArrowRight'){e.preventDefault();$('#gn').click()}else if(e.key==='ArrowLeft'){e.preventDefault();$('#gp').click()}};
   show();
 }
-function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;$$('[data-mode]',r).forEach(b=>b.onclick=()=>{
+function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;const wb=$('#wsBtn',r);if(wb)wb.onclick=goWs;$$('[data-mode]',r).forEach(b=>b.onclick=()=>{
   const s=SUB();if(SET.key&&SET.key!=='nuts'){P.recent[s.id]=[SET.key,...(P.recent[s.id]||[]).filter(k=>k!==SET.key)].slice(0,4);saveP()}
   knStart(SET.key,b.dataset.mode);MODE_FN()[b.dataset.mode]()})}
 
@@ -2044,7 +2102,7 @@ function vkUrkunde(u,nameVor){if(!u)return;const t=(P.urk||{})[u.id]||Date.now()
   </div><div class="dact"><button class="pill" id="uzu">Schliessen</button><button class="pill go" id="udr">🖨 Drucken</button></div></div>`;
   const zu=()=>{L.innerHTML='';document.body.classList.remove('drucke')};
   $('#uzu',L).onclick=zu;$('.scrim',L).onclick=zu;
-  $('#udr',L).onclick=()=>{document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
+  $('#udr',L).onclick=()=>{vkPage('landscape');document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
 
 /* ---------- Lehrperson: Belohnungen in der Klassen-Übersicht ---------- */
 function vkClassRewards(){const m=stkModes(),z=C.ziel||{};
@@ -2111,6 +2169,100 @@ function vkHeftCard(){const list=stkList(),st=list.filter(s=>(P.stk||{})[s.id]).
   return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh" aria-hidden="true"><i></i></span>
     <span class="ktx"><b>Mein Heft</b><span class="mhz"><span><img src="abzeichen/reiter-sticker.webp?v=2" alt="">${st}/${list.length}</span><span><img src="abzeichen/reiter-abzeichen.webp?v=2" alt="">${bd}</span><span><img src="abzeichen/reiter-urkunden.webp?v=2" alt="">${ur}</span></span><small>Sticker, Abzeichen und Urkunden anschauen →</small></span></button>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#heftCard');if(b)goHeft()});
+
+/* ---------- Knobelnest: Arbeitsblatt- und Test-Generator (nur Lehrperson) ----------
+   Aus den Wörtern der Portion (SET.words) entsteht ein A4-Blatt zum Drucken: Arbeitsblatt oder Test, Aufgaben wählbar,
+   mit oder ohne Bilder, Version A/B (anders gemischt), auf Wunsch mit Lösungsblatt. Nichts wird gespeichert. */
+const WSA=[ /* [Schlüssel, Name, Aufgabentext] */
+  ['de','Übersetzen Deutsch → Fremdsprache','Schreib auf {S}.'],
+  ['fl','Übersetzen Fremdsprache → Deutsch','Schreib auf Deutsch.'],
+  ['bild','Bilder beschriften','Schreib das Wort auf {S} unter das Bild.'],
+  ['verb','Verbinden','Verbinde, was zusammengehört.'],
+  ['salat','Buchstabensalat','Ordne die Buchstaben. Schreib das Wort richtig.'],
+  ['luecke','Lückensätze','Setz das passende Wort ein.'],
+  ['suche','Wörter-Suchrätsel','Such die Wörter auf {S}. Sie stehen waagrecht oder senkrecht.']];
+let WS=null;
+const vkPage=sz=>{let st=document.getElementById('pgsz');if(!st){st=document.createElement('style');st.id='pgsz';document.head.appendChild(st)}st.textContent='@page{size:A4 '+sz+';margin:'+(sz==='landscape'?'12mm':'14mm')+'}'};
+
+function wsRng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const wsMix=(arr,r)=>{const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const wsF=w=>String(w.f||'').replace(/\s*\[|\]\s*/g,' ').trim();
+function wsBtn(){return T?'<button class="pill sm" id="wsBtn">🖨 Arbeitsblatt / Test</button>':''}
+function goWs(){
+  const ws=SET.words.filter(valid);if(!ws.length){toast('Hier gibt es keine Wörter.');return}
+  if(!WS||WS.key!==SET.key)WS={key:SET.key,typ:'blatt',titel:SET.label||'',bilder:ws.some(bildOK),ver:'A',n:10,loes:true,seed:Math.random()*1e9|0,
+    tasks:{de:true,fl:false,bild:ws.filter(bildOK).length>=3,verb:true,salat:false,luecke:ws.some(gapOK),suche:false}};
+  if(nav.view!=='ws')lastBack=makeBack(nav);
+  stopSession();nav={view:'ws'};wsRender();window.scrollTo(0,0)}
+function wsRender(){const ws=SET.words.filter(valid),s=SUB(),W=WS;
+  const opt=(k,label,dis,hint)=>`<label class="kbx ${dis?'off':''}"><input type="checkbox" data-wt="${k}" ${W.tasks[k]&&!dis?'checked':''} ${dis?'disabled':''}> ${label}${hint?` <small>${hint}</small>`:''}</label>`;
+  const nB=ws.filter(bildOK).length,nG=ws.filter(gapOK).length,nS=ws.filter(w=>salatOf(wsF(w))).length;
+  stage.innerHTML=`<div class="stop"><button class="pill" id="wsBack">← Zurück</button><div class="t"><div class="eyebrow">${esc(s.name)} · ${esc(SET.label)}</div><h1 class="big mid">Arbeitsblatt &amp; Test</h1></div></div>
+  <div class="wsg"><aside class="wsset">
+    <div class="seg ws-typ" role="group"><button data-wtyp="blatt" aria-pressed="${W.typ==='blatt'}">📝 Arbeitsblatt</button><button data-wtyp="test" aria-pressed="${W.typ==='test'}">✅ Test</button></div>
+    <label class="wsl">Titel<input class="inp" id="wsTitel" value="${esc(W.titel)}" maxlength="80"></label>
+    <div class="wsl">Aufgaben</div>
+    <div class="wsopts">${opt('de','Deutsch → '+esc(s.name))}${opt('fl',esc(s.name)+' → Deutsch')}${opt('bild','Bilder beschriften',nB<2,nB<2?'(zu wenige Bilder)':'')}${opt('verb','Verbinden')}
+      ${opt('salat','Buchstabensalat',!nS)}${opt('luecke','Lückensätze',!nG||noSent(),!nG?'(keine Sätze)':'')}${opt('suche','Wörter-Suchrätsel')}</div>
+    <label class="wsl">Wörter pro Aufgabe<select class="inp" id="wsN">${[5,8,10,12,15,99].map(n=>`<option value="${n}" ${W.n===n?'selected':''}>${n===99?'alle ('+ws.length+')':n}</option>`).join('')}</select></label>
+    <label class="kbx"><input type="checkbox" id="wsBild" ${W.bilder?'checked':''}> Bilder neben die Wörter</label>
+    <label class="kbx"><input type="checkbox" id="wsLoes" ${W.loes?'checked':''}> Lösungsblatt dazu</label>
+    <div class="wsl">Version</div>
+    <div class="seg" role="group"><button data-wver="A" aria-pressed="${W.ver==='A'}">A</button><button data-wver="B" aria-pressed="${W.ver==='B'}">B</button></div>
+    <p class="note" style="margin:0">Version B hat dieselben Aufgaben, aber anders gemischt. So schreiben Banknachbarn nicht ab.</p>
+    <div class="actions" style="justify-content:flex-start"><button class="pill" id="wsMix">🔀 Neu mischen</button><button class="pill go" id="wsPrint">🖨 Drucken / PDF</button></div>
+    <p class="note" style="margin:0">Im Druckfenster kannst du auch «Als PDF sichern» wählen.</p>
+  </aside><div class="wsprev" id="wsPrev">${wsPages(false)}${W.loes?wsPages(true):''}</div></div>`;
+  $('#wsBack').onclick=()=>lastBack();
+  $$('[data-wtyp]').forEach(b=>b.onclick=()=>{W.typ=b.dataset.wtyp;if(W.typ==='test')W.tasks.suche=false;wsRender()});
+  $$('[data-wver]').forEach(b=>b.onclick=()=>{W.ver=b.dataset.wver;wsRender()});
+  $$('[data-wt]').forEach(c=>c.onchange=()=>{W.tasks[c.dataset.wt]=c.checked;wsRender()});
+  $('#wsTitel').oninput=e=>{W.titel=e.target.value;$$('.wsp-t').forEach(x=>x.textContent=W.titel)};
+  $('#wsN').onchange=e=>{W.n=+e.target.value;wsRender()};
+  $('#wsBild').onchange=e=>{W.bilder=e.target.checked;wsRender()};
+  $('#wsLoes').onchange=e=>{W.loes=e.target.checked;wsRender()};
+  $('#wsMix').onclick=()=>{W.seed=Math.random()*1e9|0;wsRender()};
+  $('#wsPrint').onclick=()=>{vkPage('portrait');document.body.classList.add('wsdruck');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('wsdruck'),600)},120)};
+  wsZoom()}
+function wsZoom(){const p=$('#wsPrev');if(!p)return;const z=Math.min(1,(p.clientWidth-8)/794);$$('.wsp',p).forEach(x=>x.style.zoom=z)}
+addEventListener('resize',()=>{if(nav.view==='ws')wsZoom()});
+/* Ein Blatt (oder das Lösungsblatt) */
+function wsPages(L){const W=WS,s=SUB(),all=SET.words.filter(valid),r=wsRng(W.seed+(W.ver==='B'?7919:0));
+  const pick=list=>wsMix(list,r).slice(0,W.n);
+  const bild=w=>W.bilder&&picOf(w)?`<span class="wsb">${picHTML(picOf(w))}</span>`:'';
+  const line=ans=>`<span class="wsline">${L?`<em>${esc(ans)}</em>`:''}</span>`;
+  const pts=n=>W.typ==='test'?`<span class="wspt">___ / ${n}</span>`:'';
+  let nr=0,tot=0;const blocks=[];
+  const task=(k,body,n)=>{nr++;tot+=n;const t=WSA.find(x=>x[0]===k);blocks.push(`<section class="wst"><h3><b>${nr}</b> ${esc(t[2].replace('{S}',s.name))}${pts(n)}</h3>${body}</section>`)};
+  if(W.tasks.de){const l=pick(all);task('de',`<div class="wsrows">${l.map(w=>`<div class="wsr">${bild(w)}<span class="wsq">${esc(w.de)}</span>${line(wsF(w))}</div>`).join('')}</div>`,l.length)}
+  if(W.tasks.fl){const l=pick(all);task('fl',`<div class="wsrows">${l.map(w=>`<div class="wsr">${bild(w)}<span class="wsq">${esc(wsF(w))}</span>${line(w.de)}</div>`).join('')}</div>`,l.length)}
+  if(W.tasks.bild){const l=pick(all.filter(bildOK));if(l.length>=2)task('bild',`<div class="wsbg">${l.map(w=>`<div class="wsbc"><span class="wsbb">${picHTML(picOf(w))}</span>${line(wsF(w))}</div>`).join('')}</div>`,l.length)}
+  if(W.tasks.verb){const l=pick(all).slice(0,Math.min(W.n,10)),rr=wsMix(l,r);
+    task('verb',`<div class="wsv"><div>${l.map((w,i)=>`<div class="wsvr"><span>${esc(wsF(w))}</span><i class="dot"></i></div>`).join('')}</div>
+      <div>${rr.map(w=>`<div class="wsvr r"><i class="dot"></i><span>${esc(w.de)}${L?` <em>(${l.indexOf(w)+1})</em>`:''}</span></div>`).join('')}</div></div>
+      ${L?`<p class="wsnote">Lösung: Die Zahl zeigt, zu welchem Wort links (von oben gezählt) es gehört.</p>`:''}`,l.length)}
+  if(W.tasks.salat){const l=pick(all.filter(w=>salatOf(wsF(w))));if(l.length)task('salat',`<div class="wsrows">${l.map(w=>{const t=salatOf(wsF(w)),ch=[...t.replace(/\s+/g,'')];let m=wsMix(ch,r);for(let i=0;i<5&&m.join('')===ch.join('');i++)m=wsMix(ch,r);
+      return `<div class="wsr">${bild(w)}<span class="wsq salat">${esc(m.join(' ').toLowerCase())}</span>${line(t)}</div>`}).join('')}</div>`,l.length)}
+  if(W.tasks.luecke&&!noSent()){const l=pick(all.filter(gapOK));if(l.length){const bank=wsMix(l.map(w=>gapOf(w).word),r);
+    task('luecke',`${W.typ==='blatt'?`<div class="wsbank">${bank.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:''}<div class="wsgaps">${l.map((w,i)=>{const g=gapOf(w);
+      return `<p>${i+1}. ${esc(cleanS(g.before))}<span class="wsgap">${L?`<em>${esc(g.word)}</em>`:''}</span>${esc(cleanS(g.after))}</p>`}).join('')}</div>`,l.length)}}
+  if(W.tasks.suche&&W.typ==='blatt'){const z=wsSuche(all,r);if(z.words.length)task('suche',`<div class="wss"><table class="wsgrid">${z.grid.map((row,y)=>`<tr>${row.map((c,x)=>`<td class="${L&&z.hit[y][x]?'hit':''}">${c}</td>`).join('')}</tr>`).join('')}</table>
+      <div class="wssl"><b>Finde:</b>${z.words.map(w=>`<span>${esc(w.de)}${L?` = <em>${esc(w.f2)}</em>`:''}</span>`).join('')}</div></div>`,0)}
+  const kopf=`<header class="wsh"><div><span class="wsp-k">${esc(s.name)} · ${W.typ==='test'?'Test':'Arbeitsblatt'}${W.ver==='B'?' · Version B':''}${L?' · Lösung':''}</span><h2 class="wsp-t">${esc(W.titel)}</h2></div>
+    <div class="wsf"><span>Name: <i></i></span><span>Datum: <i></i></span>${W.typ==='test'?`<span>Punkte: <i class="k"></i> / ${tot}</span>`:''}</div></header>`;
+  return `<div class="wsp ${L?'loes':''}">${kopf}${blocks.join('')||'<p class="note">Wähl links mindestens eine Aufgabe.</p>'}<footer class="wsfoot">Klassenkiste · Vokabelkiste</footer></div>`}
+/* Wörter-Suchrätsel: nur Wörter aus Buchstaben (ohne Leerzeichen), höchstens 12 lang; waagrecht und senkrecht */
+function wsSuche(all,r){const N=12,g=[...Array(N)].map(()=>Array(N).fill('')),hit=[...Array(N)].map(()=>Array(N).fill(false)),words=[];
+  const cand=wsMix(all,r).map(w=>{const t=String(w.f||'').replace(/\([^)]*\)/g,'').split(/[\/,;]/)[0].trim().replace(ARTRE,'').replace(/^to\s+/i,'').trim();
+    return {w,t:t.toUpperCase().normalize('NFC')}}).filter(x=>/^[\p{L}]{3,12}$/u.test(x.t));
+  for(const c of cand){if(words.length>=10)break;let ok=false;
+    for(let tries=0;tries<80&&!ok;tries++){const d=r()<.5?[1,0]:[0,1],L=c.t.length,x0=Math.floor(r()*((d[0]?N-L:N-1)+1)),y0=Math.floor(r()*((d[1]?N-L:N-1)+1));
+      if(x0+(d[0]?L-1:0)>=N||y0+(d[1]?L-1:0)>=N)continue;let fit=true;
+      for(let i=0;i<L;i++){const ch=g[y0+d[1]*i][x0+d[0]*i];if(ch&&ch!==c.t[i]){fit=false;break}}
+      if(!fit)continue;for(let i=0;i<L;i++){g[y0+d[1]*i][x0+d[0]*i]=c.t[i];hit[y0+d[1]*i][x0+d[0]*i]=true}ok=true}
+    if(ok)words.push({de:c.w.de,f2:c.t.toLowerCase()})}
+  const AB='ABCDEFGHIJKLMNOPRSTUVWY';for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!g[y][x])g[y][x]=AB[Math.floor(r()*AB.length)];
+  return {grid:g,hit,words}}
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
 const INTERVALS=[1,2,7,14,30],INT_LABEL=['jeden Tag','alle 2 Tage','jede Woche','alle 2 Wochen','jeden Monat'],ROUND=20;

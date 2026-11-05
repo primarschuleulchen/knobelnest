@@ -395,5 +395,13 @@ rep("  C.tplSeen=[...seen];return added;", """  {let n=0;const ws=[];TPL.subject
     reindex();ws.forEach(tw=>{if(!tw.img||tw.img==='-')return;const i=IDX.get(tw.id);if(i&&i.w&&!i.w.img){i.w.img=tw.img;n++}});if(n)knFresh=true}
   C.tplSeen=[...seen];return added;""")
 
+
+# 19) Arbeitsblatt- und Test-Generator für Lehrpersonen (Code vk_blatt.js): Knopf «🖨 Arbeitsblatt / Test» über den Übungen
+#     (nur im Lehrpersonen-Modus), eigene Ansicht nav.view = 'ws', Drucken mit body.wsdruck.
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_blatt.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+rep("Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}", "Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${wsBtn()}${vkHead()}")
+rep("function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;", "function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;const wb=$('#wsBtn',r);if(wb)wb.onclick=goWs;")
+rep("function rerender(){if(nav.view==='heft')", "function rerender(){if(nav.view==='ws')return goWs();if(nav.view==='heft')")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
