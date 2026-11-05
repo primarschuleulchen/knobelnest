@@ -50,7 +50,7 @@ SIL_WORT = ['Schu-le','Leh-re-rin','Pau-sen-platz','Fe-ri-en','Ge-burts-tag','Mo
 
 def alle(spiel, logo=None, LOGO_CSS=''):
     # ================================================================== Wie spät ist es?
-    spiel(id='uhr-lesen', titel='Wie spät ist es?', icon='⏰', fach='Mathematik', thema='Zeit', stufe='1.–4. Klasse', sort=2, n=10,
+    spiel(id='uhr-lesen', titel='Wie spät ist es?', icon=logo('uhr-lesen'), fach='Mathematik', thema='Zeit', stufe='1.–4. Klasse', sort=2, n=10,
           sterne={'modus': 'runde', 'n': 10},
           kurz='Die Uhr lesen: volle Stunden bis genaue Minuten.',
           intro='Der kurze Zeiger zeigt die Stunde, der lange Zeiger die Minuten. Schau genau hin!',
@@ -59,7 +59,7 @@ def alle(spiel, logo=None, LOGO_CSS=''):
                   dict(name='Mittel', info='Viertelstunden', t=2),
                   dict(name='Schwer', info='Alle 5 Minuten', t=3),
                   dict(name='Profi', info='Genaue Minuten, auch am Nachmittag', t=4)],
-          css=r"""
+          css=LOGO_CSS + r"""
 .uh{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
 .uh .frage{display:grid;place-items:center;background:#fff;border:2px solid var(--line);border-radius:28px;padding:12px 26px;box-shadow:var(--sch);min-height:120px}
 .uh .frage .dig{font-family:system-ui,-apple-system,sans-serif;font-weight:700;font-size:clamp(48px,10vw,76px);color:var(--sky-d);letter-spacing:.02em}
