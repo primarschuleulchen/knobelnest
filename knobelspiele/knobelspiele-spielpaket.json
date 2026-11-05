@@ -108,6 +108,15 @@
    "stufe": "3.–6. Klasse",
    "sort": 1,
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/im-museum.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 10, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Im Museum</title></head><body><p>Im Museum: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Im Schulhaus",
+   "description": "Englische Sätze über ein Schulhaus lesen und die Räume auf dem Plan finden.",
+   "fach": "Englisch",
+   "thema": "Places in school (Lesen)",
+   "stufe": "4.–6. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/im-schulhaus.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;runde&quot;, &quot;n&quot;: 12}\"><title>Im Schulhaus</title></head><body><p>Im Schulhaus: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   }
  ]
 }
