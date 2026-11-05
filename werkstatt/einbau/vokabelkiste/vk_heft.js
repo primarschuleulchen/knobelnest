@@ -96,7 +96,7 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
         :`<div class="stslot zu" aria-label="Noch nicht gefunden"><div class="geheim">${FUNKEN(i+1)}<span class="fz">?</span></div></div>`}).join('')}</div>
     <p class="hfuss">Für jede geschaffte Portion klebst du einen neuen Sticker ein. Welcher es wird, ist eine Überraschung.</p>`;
   else if(tab==='bdg')body=`${prog(bn,BADGES.length,'Abzeichen')}
-    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><img src="abzeichen/${b[0]}.webp?v=1" alt="" draggable="false">${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
+    <div class="badges">${BADGES.map((b,i)=>{const n=bdgN(b,i),t=vkTier(n);return `<div class="bdg t${t}"><div class="bi"><img src="abzeichen/${b[0]}.webp?v=2" alt="" draggable="false">${n>0?`<b class="bz">${n}</b>`:''}</div><span class="bn">${b[2]}</span><small>${b[3]}</small></div>`}).join('')}</div>
     <p class="hfuss">Viele Abzeichen bekommst du mehrmals. Ab 5, 10 und 25 werden sie grösser.</p>`;
   else body=`${prog(units.filter(u=>urkT(u)).length,units.length,'Urkunden')}
     <div class="urks">${units.length?units.map(u=>{const t=urkT(u);return `<button class="urk ${t?'':'leer'}" data-urk="${u.id}" ${t?'':'disabled'}>
@@ -106,9 +106,12 @@ function goHeft(tab){stopSession();tab=tab||'stk';nav={view:'heft',tab};if(!heft
   const name=V?'Lena':KIDNAME;
   stage.innerHTML=`<div class="heft">
     ${CAN_EDIT?`<div class="hvor"><span>${V?'👁 Vorschau: So sieht ein volles Heft aus. Nichts davon wird gespeichert.':'Lehrperson: Möchtest du sehen, wie ein volles Heft aussieht?'}</span><button class="pill sm ${V?'rose':''}" id="hvorB">${V?'Vorschau beenden':'👁 Vorschau'}</button></div>`:''}
-    <div class="hcover"><div class="hband"></div><div class="hlabel"><span class="hk">Vokabelkiste · ${esc(SUB().name)}</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span></div><img src="../bilder/eule.webp" alt="" class="heule"></div>
+    <div class="hcover"><i class="hstich"></i><div class="hband"><i></i></div><i class="hribbon"></i>
+      <span class="hdoo d1">✦</span><span class="hdoo d2">✧</span><span class="hdoo d3">♡</span><span class="hdoo d4">✦</span><span class="hdoo d5">☆</span><span class="hdoo d6">✧</span>
+      <div class="hlabel"><i class="htape l"></i><i class="htape r"></i><span class="hk">✦ Vokabelkiste · ${esc(SUB().name)} ✦</span><span class="hn">${name?'Heft von '+esc(name):'Mein Heft'}</span><span class="hz"></span></div>
+      <img src="../bilder/eule.webp" alt="" class="heule" draggable="false"></div>
     ${vkZielHTML(false)}
-    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','🧩'],['bdg','Abzeichen','🏅'],['urk','Urkunden','📜']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><span class="emo">${e}</span> ${t}</button>`).join('')}</div>
+    <div class="hbook"><div class="htabs" role="tablist">${[['stk','Sticker','sticker'],['bdg','Abzeichen','abzeichen'],['urk','Urkunden','urkunden']].map(([k,t,e])=>`<button class="htab h-${k} ${k===tab?'on':''}" data-ht="${k}" role="tab" aria-selected="${k===tab}"><img class="rt" src="abzeichen/reiter-${e}.webp?v=1" alt="" draggable="false">${t}</button>`).join('')}</div>
     <div class="hpage">${body}</div></div></div>`;
   $$('[data-ht]').forEach(b=>b.onclick=()=>goHeft(b.dataset.ht));
   const vb=$('#hvorB');if(vb)vb.onclick=()=>{heftVor=!heftVor;goHeft(tab)};
