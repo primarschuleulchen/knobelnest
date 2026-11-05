@@ -3523,7 +3523,7 @@
     var glist = T.games.length ? bulk + '<div class="tablewrap"><table><thead><tr><th style="width:44px"><input type="checkbox" aria-label="Alle Spiele auswählen" style="width:22px;height:22px" data-change="gSelAll"' + (allSel ? ' checked' : '') + '></th><th>Spiel</th><th>Fach › Thema</th><th>Zugang</th><th></th></tr></thead><tbody>' + FG.map(function (g) {
       var key = 'game:' + g.id;
       return '<tr><td><input type="checkbox" aria-label="' + h(g.title) + ' auswählen" style="width:22px;height:22px" data-change="gSel" data-id="' + g.id + '"' + (sel[g.id] ? ' checked' : '') + '></td><td><b>' + h(g.title) + '</b>' + (g.stufe ? '<br><span class="muted small">' + h(g.stufe) + '</span>' : '') + '</td><td><div class="ft-edit"><input class="ft-in" list="fachList" value="' + h(g.fach) + '" maxlength="40" aria-label="Fach von ' + h(g.title) + '" title="Fach ändern" data-change="gFtSet" data-k="fach" data-id="' + g.id + '"><span aria-hidden="true">›</span>' +
-          themen(g).map(function (th) { return '<span class="ft-chip">' + h(th) + (themen(g).length > 1 ? '<button class="ft-x" aria-label="Thema ' + h(th) + ' entfernen" title="Thema entfernen" data-a="gThDel" data-id="' + g.id + '" data-t="' + h(th) + '">×</button>' : '') + '</span>'; }).join('') +
+          themen(g).map(function (th) { return '<span class="ft-chip"><input class="ft-th" list="alleThemenList" value="' + h(th) + '" size="' + Math.max(4, th.length + 1) + '" maxlength="40" aria-label="Thema ' + h(th) + ' ändern" title="Antippen, um das Thema zu ändern" data-change="gThRen" data-id="' + g.id + '" data-t="' + h(th) + '">' + (themen(g).length > 1 ? '<button class="ft-x" aria-label="Thema ' + h(th) + ' entfernen" title="Thema entfernen" data-a="gThDel" data-id="' + g.id + '" data-t="' + h(th) + '">×</button>' : '') + '</span>'; }).join('') +
           '<input class="ft-in ft-neu" list="alleThemenList" maxlength="40" placeholder="+ Thema" aria-label="Weiteres Thema für ' + h(g.title) + '" title="Weiteres Thema (das Spiel steht dann in beiden)" data-change="gThAdd" data-id="' + g.id + '"></div>' +
           '<div class="ft-edit ft-labs">' + spielLabels(g).map(function (x) { return '<span class="ft-chip lab" style="background:' + labelFarbe(x)[0] + ';color:' + labelFarbe(x)[1] + '">🏷 ' + h(x) + '<button class="ft-x" aria-label="Stichwort ' + h(x) + ' entfernen" data-a="gLabDel" data-id="' + g.id + '" data-t="' + h(x) + '">×</button></span>'; }).join('') +
           '<input class="ft-in ft-neu" list="labelList" maxlength="40" placeholder="+ Stichwort" aria-label="Stichwort für ' + h(g.title) + '" title="Stichwort hinzufügen, z. B. Young World 3" data-change="gLabAdd" data-id="' + g.id + '"></div></td>' +
@@ -3730,6 +3730,15 @@
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], v = el.value.replace(/;/g, ',').trim(); if (!g || !v) return;
     var l = themen(g); if (l.indexOf(v) >= 0) { el.value = ''; return toast('Dieses Thema hat das Spiel schon.'); }
     await themaSpeichern(g, l.concat([v]), g.title + ' steht jetzt auch im Thema «' + v + '».');
+  };
+  // Thema direkt im Schildchen korrigieren (leer = entfernen, wenn es noch ein anderes gibt)
+  ACT.gThRen = async function (el) {
+    var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0], alt = el.dataset.t, v = el.value.replace(/;/g, ',').trim(); if (!g) return;
+    var l = themen(g);
+    if (!v) { if (l.length > 1) return themaSpeichern(g, l.filter(function (t) { return t !== alt; }), g.title + ': Thema «' + alt + '» entfernt.'); el.value = alt; return toast('Das Thema darf nicht leer sein.'); }
+    if (v === alt) return;
+    var neu = []; l.forEach(function (t) { var x = t === alt ? v : t; if (neu.indexOf(x) < 0) neu.push(x); });
+    await themaSpeichern(g, neu, g.title + ': Thema «' + alt + '» heisst jetzt «' + v + '».');
   };
   ACT.gThDel = async function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!g) return;
