@@ -349,10 +349,32 @@ rep('«Kasten» weg = ', 'Tippe auf das runde Bild, um es zu ändern (gestrichel
 # 14) Anzeige «geschafft» (vk_ausbau.js: vkReq, vkMark, vkHead, vkTileMark, vkCardMark): Am Ende einer Übung (Schluss-Seite) wird sie
 #     für die Portion abgehakt. Über den Übungen steht «6 von 9 Übungen geschafft» mit Punkten, die Kacheln zeigen «✓ geschafft»,
 #     die Portions-Karten «6/9 Übungen» bzw. «✓ geschafft».
-rep("function summary(body,{title,lines,actions}){", "function summary(body,{title,lines,actions}){vkMark();")
+rep("function summary(body,{title,lines,actions}){", "function summary(body,{title,lines,actions}){vkMark(lines);")
 rep('Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>', 'Am besten der Reihe nach, von 1 bis ${MODES.length}.</p>${vkHead()}')
 rep('<span class="go">Starten →</span></button>`;', '${vkTileMark(m)}<span class="go">Starten →</span></button>`;')
 rep('<span class="fmeta">${meta}', '<span class="fmeta">${meta}${vkCardMark(n)?\' · \'+vkCardMark(n):\'\'}')
+
+
+# 15) Mein Heft, Sticker, Abzeichen, Urkunden, Klassen-Ziel und Bilder in der Datenbank (Version 30, Code in vk_heft.js,
+#     Bilder-Speicher in vk_ausbau.js: w.img = 'vk:<id>', geholt über das Portal mit knAsk('vkBilder')).
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_heft.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+# Knopf «Mein Heft» oben und Ansicht im Navigations-Verteiler
+rep("${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}", "${KN?`<button class=\"pill\" id=\"heftBtn\">📒 Mein Heft</button>`:''}${CAN_EDIT&&KN?`<button class=\"pill\" id=\"clsbtn\">📊 Klasse</button>`:''}")
+rep("const cb=$('#clsbtn');if(cb)cb.onclick=goClass;", "const cb=$('#clsbtn');if(cb)cb.onclick=goClass;const hb=$('#heftBtn');if(hb)hb.onclick=()=>goHeft();")
+rep("function rerender(){if(nav.view==='class')", "function rerender(){if(nav.view==='heft')return goHeft(nav.tab);if(nav.view==='class')")
+# Klassen-Ziel auf der Startseite der Sprache
+rep("  return `${KN?knTodayHTML():''}<div class=\"feat\">", "  return `${KN?knTodayHTML()+vkZielHTML(T):''}<div class=\"feat\">")
+# Lehrperson: Belohnungen und Sticker-Spalte in der Klassen-Übersicht
+rep("h+=`<div class=\"sh\"><h2 class=\"lbl\">Portion anschauen</h2>", "h+=vkClassRewards();h+=`<div class=\"sh\"><h2 class=\"lbl\">Portion anschauen</h2>")
+rep("stage.innerHTML=h;bindClass();", "stage.innerHTML=h;bindClass();bindClassRewards();")
+rep("<th>Knacknüsse</th>", "<th>Knacknüsse</th><th>🧩 Sticker</th>")
+rep("<td>${nuts||'–'}</td>", "<td>${nuts||'–'}</td><td>${vkStkN(p)||'–'}</td>")
+# Editor: viele Bilder auf einmal (Dateiname = Wort, auch ZIP)
+rep('<details class="import"><summary>Viele Wörter auf einmal einfügen</summary>',
+    '<div class="bulk"><label class="pill"><input type="file" accept="image/*,.zip" multiple hidden id="bulkPic">🖼 Viele Bilder hochladen</label><span class="note">Bilder oder eine ZIP-Datei. Der Dateiname ist das Wort, z. B. «lifejacket.png» oder «Rettungsweste.png».</span></div><details class="import"><summary>Viele Wörter auf einmal einfügen</summary>')
+rep("$('#impBtn').onclick=", "bindBulk(node,table);$('#impBtn').onclick=")
+# Start: Sticker, Urkunden und Abzeichen nachführen
+rep("  if(KN){setInterval(knTick,1000);knAward();}", "  if(KN){setInterval(knTick,1000);knAward();vkCheckAll(false);vkBadgeReady=true;}")
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

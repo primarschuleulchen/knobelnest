@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 29)
+-- Knobelnest – Datenbank-Einrichtung (Version 30)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -2169,5 +2169,72 @@ revoke execute on function public.eltern_get(uuid, uuid, text), public.eltern_se
 grant execute on function public.eltern_get(uuid, uuid, text), public.eltern_set(uuid, uuid, text, text, jsonb, text, boolean) to anon, authenticated;
 revoke execute on function public.talk_answer_put(uuid, uuid, jsonb) from anon;
 grant execute on function public.talk_answer_put(uuid, uuid, jsonb) to authenticated;
+
+-- =====================================================================
+-- Version 30: Vokabelkiste – Bilder geschützt in der Datenbank, Sticker, Klassen-Ziel
+--   vk_bilder:      Bilder zu Wörtern und Sticker (nicht öffentlich auf GitHub). Lehrpersonen legen sie an
+--                   (vk_bild_put) und lesen sie (vk_bilder_get), Kinder nur mit Anmeldung (kid_vk_bilder).
+--   kid_vk_extra:   Sticker-Liste (shared_store «vokabelkiste-sticker») und Klassen-Ziel: Summe der Tagessterne
+--                   (7 Minuten geübt) aller Kinder der Klasse seit dem Start des Ziels (content.ziel.ab). Keine Namen.
+-- =====================================================================
+create table if not exists public.vk_bilder (
+  id         text primary key check (id ~ '^[a-z0-9]{8,40}$'),
+  data       text not null check (data like 'data:image/%' and length(data) <= 300000),
+  owner      uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+alter table public.vk_bilder enable row level security;
+revoke all on public.vk_bilder from anon, authenticated;
+
+create or replace function public.vk_bild_put(p_id text, p_data text) returns void
+language plpgsql volatile security definer set search_path = public as $$
+begin
+  if auth.uid() is null or not exists (select 1 from public.profiles where id = auth.uid()) then raise exception 'Nicht erlaubt'; end if;
+  if p_id !~ '^[a-z0-9]{8,40}$' or p_data not like 'data:image/%' or length(p_data) > 300000 then raise exception 'Ungültiges Bild'; end if;
+  insert into public.vk_bilder (id, data, owner) values (p_id, p_data, auth.uid()) on conflict (id) do nothing;
+end;
+$$;
+
+create or replace function public.vk_bilder_get(p_ids text[]) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Nicht erlaubt'; end if;
+  if coalesce(array_length(p_ids, 1), 0) > 300 then raise exception 'Zu viele Bilder'; end if;
+  return coalesce((select jsonb_object_agg(id, data) from public.vk_bilder where id = any(p_ids)), '{}'::jsonb);
+end;
+$$;
+
+create or replace function public.kid_vk_bilder(p_token uuid, p_ids text[]) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids;
+begin
+  k := public._kid(p_token);
+  if coalesce(array_length(p_ids, 1), 0) > 300 then raise exception 'Zu viele Bilder'; end if;
+  return coalesce((select jsonb_object_agg(id, data) from public.vk_bilder where id = any(p_ids)), '{}'::jsonb);
+end;
+$$;
+
+create or replace function public.kid_vk_extra(p_token uuid, p_game uuid) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare k public.kids; z jsonb; ab text; n int := 0; st jsonb;
+begin
+  k := public._kid(p_token);
+  select data into st from public.shared_store where doc = 'vokabelkiste-sticker';
+  select gs.settings -> 'content' -> 'ziel' into z from public.game_settings gs where gs.class_id = k.class_id and gs.game_id = p_game;
+  ab := case when jsonb_typeof(z) = 'object' then z ->> 'ab' end;
+  if ab ~ '^\d{4}-\d{2}-\d{2}$' then
+    select count(*) into n
+      from public.progress p join public.kids kk on kk.id = p.kid_id,
+           lateral jsonb_each_text(case when jsonb_typeof(p.save -> 'p' -> 'sec') = 'object' then p.save -> 'p' -> 'sec' else '{}'::jsonb end) e
+     where kk.class_id = k.class_id and p.game_id = p_game and e.key >= ab and e.value ~ '^\d+$' and e.value::int >= 420;
+  end if;
+  return jsonb_build_object('sticker', st, 'klasse', jsonb_build_object('sterne', n));
+end;
+$$;
+
+revoke execute on function public.vk_bild_put(text, text), public.vk_bilder_get(text[]), public.kid_vk_bilder(uuid, text[]), public.kid_vk_extra(uuid, uuid) from public;
+grant execute on function public.kid_vk_bilder(uuid, text[]), public.kid_vk_extra(uuid, uuid) to anon, authenticated;
+revoke execute on function public.vk_bild_put(text, text), public.vk_bilder_get(text[]) from anon;
+grant execute on function public.vk_bild_put(text, text), public.vk_bilder_get(text[]) to authenticated;
 
 -- Fertig.
