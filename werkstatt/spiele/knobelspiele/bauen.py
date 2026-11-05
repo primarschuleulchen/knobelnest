@@ -179,7 +179,7 @@ W6 = [w for w in W6 if len(w) == 6 and w != 'KÄSTLI']
 for _w in [x[0] for x in W4] + W4X + [x[0] for x in W5] + W5X + W6:
     assert 'ß' not in _w and _w.isupper(), _w
 
-spiel(id='wort-raten', titel='Wort-Raten', icon='🔤', fach='Deutsch', thema='Wörter', stufe='2.–6. Klasse', sort=1, n=5,
+spiel(id='wort-raten', titel='Wort-Raten', icon=logo('wort-raten'), fach='Deutsch', thema='Wörter', stufe='2.–6. Klasse', sort=1, n=5,
       sterne={'modus': 'runde', 'n': 5},
       kurz='Ein geheimes Wort in sechs Versuchen erraten.',
       intro='Errate das geheime Wort! Nach jedem Versuch zeigen die Farben: <b style="color:#4c8a37">grün</b> = richtiger Platz, <b style="color:#b8892a">gelb</b> = kommt vor, aber an einem anderen Platz.',
@@ -189,7 +189,7 @@ spiel(id='wort-raten', titel='Wort-Raten', icon='🔤', fach='Deutsch', thema='W
               dict(name='Schwer', info='5 Buchstaben', L=5, bild=False),
               dict(name='Profi', info='6 Buchstaben', L=6, bild=False)],
       daten={'W4': W4, 'W4X': W4X, 'W5': W5, 'W5X': W5X, 'W6': W6},
-      css=r"""
+      css=LOGO_CSS + r"""
 .wr{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
 .wr .bild{font-size:52px;line-height:1;background:#fff;border:3px solid var(--gold);border-radius:50%;width:84px;height:84px;display:grid;place-items:center;box-shadow:inset 0 0 0 5px #fff,var(--sch-k)}
 .brett{display:grid;gap:6px}
@@ -289,7 +289,7 @@ G.play = function (lv, api) {
 def nono_level(n):
     return [{'n': b[0], 'e': b[1], 'c': b[2], 'p': b[3].split('\n')} for b in BILDER[n]]
 
-spiel(id='bilderraetsel', titel='Bilderrätsel', icon='🖼️', fach='Knobeln', thema='Logik', stufe='2.–6. Klasse', sort=1, n=3,
+spiel(id='bilderraetsel', titel='Bilderrätsel', icon=logo('bilderraetsel'), fach='Knobeln', thema='Logik', stufe='2.–6. Klasse', sort=1, n=3,
       sterne={'modus': 'runde', 'n': 3},
       kurz='Felder nach Zahlen ausmalen, bis ein Bild erscheint.',
       intro='Die Zahlen sagen, wie viele Felder in einer Reihe nebeneinander ausgemalt sind. «2 1» heisst: zuerst 2 Felder, dann eine Lücke, dann 1 Feld. Male so lange, bis ein Bild erscheint!',
@@ -298,7 +298,7 @@ spiel(id='bilderraetsel', titel='Bilderrätsel', icon='🖼️', fach='Knobeln',
               dict(name='Mittel', info='8 × 8 Felder', s=8, hilfe=True, bilder=nono_level(8)),
               dict(name='Schwer', info='10 × 10 Felder', s=10, hilfe=True, bilder=nono_level(10)),
               dict(name='Profi', info='10 × 10 Felder, ohne Hilfe', s=10, hilfe=False, bilder=nono_level(10))],
-      css=r"""
+      css=LOGO_CSS + r"""
 .nn-werk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .nn-werk .go{min-height:50px;font-size:21px;padding:4px 18px}
 .nn-werk .go[aria-pressed="true"]{background:var(--sun);border-color:var(--gold-d);box-shadow:inset 0 0 0 2px var(--gold)}
