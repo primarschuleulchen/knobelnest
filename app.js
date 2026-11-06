@@ -297,7 +297,7 @@
   var ZR_VER = '1';
   var VK_VER = '30'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
-  var KS_VER = '37'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
+  var KS_VER = '38'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '19'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
@@ -3953,7 +3953,10 @@
     ['Irrgarten', 'irrgarten', 'Knobeln', 'Die Eule durch das Labyrinth nach Hause führen.'],
     ['Waage', 'waage', 'Mathematik', 'Gewichte auflegen, bis die Waage gerade ist.'],
     ['Spiegelbild', 'spiegelbild', 'Knobeln', 'Ein Muster an der goldenen Linie spiegeln.'],
-    ['Zahlen-Pfad', 'zahlen-pfad', 'Knobeln', 'Einen Weg von 1 bis zur letzten Zahl durch alle Felder ziehen.']];
+    ['Zahlen-Pfad', 'zahlen-pfad', 'Knobeln', 'Einen Weg von 1 bis zur letzten Zahl durch alle Felder ziehen.'],
+    ['Brüche', 'brueche', 'Mathematik', 'Brüche an Pizza und Streifen erkennen, malen und vergleichen.'],
+    ['Muster-Reihe', 'muster-reihe', 'Knobeln', 'Erkennen, wie das Muster weitergeht.'],
+    ['Lichtstrahl', 'lichtstrahl', 'Knobeln', 'Spiegel drehen, bis das Licht den Kristall trifft.']];
   var KNOBEL_ARTEN = ['Mathematik', 'Deutsch', 'Knobeln'];
   function knobelOf(g) { var t = String((g && g.title) || '').trim().toLowerCase(); for (var i = 0; i < KNOBEL.length; i++) if (KNOBEL[i][0].toLowerCase() === t) return KNOBEL[i]; return null; }
   function knobelIdx(g) { var k = knobelOf(g); return k ? KNOBEL.indexOf(k) : 99; }
@@ -4273,7 +4276,7 @@
     return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
   }
   // Spiele mit eigenem Stern in der Aufgabe: Kleiderschrank und die 10 Knobelspiele der Knobelkiste
-  var STERN_IM_SPIEL = /^knobelspiele\/(kleiderschrank|rechen-rakete|uhr-lesen|kiosk|wort-raten|der-die-das|silben-puzzle|bilderraetsel|eulen-weg|bilder-sudoku|wasser-weg|zahlenmauer|kloetzli-turm|kisten-packen|laternen|schiebe-bild|geheimcode|irrgarten|waage|spiegelbild|zahlen-pfad)\.html/;
+  var STERN_IM_SPIEL = /^knobelspiele\/(kleiderschrank|rechen-rakete|uhr-lesen|kiosk|wort-raten|der-die-das|silben-puzzle|bilderraetsel|eulen-weg|bilder-sudoku|wasser-weg|zahlenmauer|kloetzli-turm|kisten-packen|laternen|schiebe-bild|geheimcode|irrgarten|waage|spiegelbild|zahlen-pfad|brueche|muster-reihe|lichtstrahl)\.html/;
   function starMax(c) { return c.modus === 'sammeln' ? c.max : c.modus === 'runde' ? 3 : 0; }
   // Wie viele richtige braucht es für einen Stern? (pro Level verschieden möglich, z. B. "Zeichnen": 1)
   function starPer(c, k) { var n = c.pro; Object.keys(c.proFuer || {}).forEach(function (p) { if (String(k).indexOf(p) === 0) n = c.proFuer[p]; }); return n; }
