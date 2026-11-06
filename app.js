@@ -588,8 +588,11 @@
       if (!embed && !(await toolGate('tafel', 'Die Arbeitsstand-Tafel'))) return;
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); W.bild = wc && wc.bild; } catch (e) {}
+      var lastHtml = '';
       async function load() {
-        try { paint(board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall')); }
+        // Nur neu zeichnen, wenn sich etwas geändert hat (sonst blinken die Namen); danach ohne Aufpopp-Animation
+        try { var html = board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall'); if (html === lastHtml) return;
+          var first = !lastHtml; lastHtml = html; paint(first ? html : html.replace('<div class="board', '<div class="ruhig board')); }
         catch (e) { paint('<div class="main"><div class="card stack"><h2>Tafel nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); stopTimers(); }
       }
       await load();
@@ -2119,7 +2122,7 @@
       paint('<div class="folie"><iframe src="gedaechtnis/index.html?v=' + GD_VER + '" title="Gedächtniskiste" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '8';
+  var OTTER_VER = '9';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};
