@@ -2024,7 +2024,7 @@ const EXTRA=KN&&KNI.settings&&KNI.settings.extra||{};
 const KIDNAME=KN&&KNI.name?String(KNI.name):'',KIDNAME_=KIDNAME;
 let STK=((EXTRA.sticker&&Array.isArray(EXTRA.sticker.list))?EXTRA.sticker.list:[]).filter(x=>x&&x.id);
 /* Feste Sticker-Tiere der Lehrerin (vokabelkiste/sticker/<name>.webp), dazu die in «Belohnungen» hochgeladenen */
-const TIERE=['fuchs','baer','biene','delfin','eichhoernchen','eisbaer','esel','frosch','giraffe','hund','igel','katze'];
+const TIERE=['fuchs','baer','biene','delfin','eichhoernchen','eisbaer','esel','frosch','giraffe','hund','igel','katze','koala','loewe','marienkaefer','oktopus','panda','pinguin','schildkroete','schlange','schmetterling','tintenfisch','wal'];
 const stkList=()=>TIERE.map(n=>({id:'t-'+n,img:'sticker/'+n+'.webp?v=1',name:n})).concat(STK.map(x=>({id:x.id,img:'vk:'+x.id,name:x.name||''})));
 const vkCount=(k,n=1)=>{P.cnt=P.cnt||{};P.cnt[k]=(P.cnt[k]||0)+n};
 /* richtig geschrieben / gesagt zählen (rec wird hier ergänzt) */

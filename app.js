@@ -295,7 +295,7 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '34'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '35'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var RO_VER = '1'; // Rechenoperationen (rechenoperationen/, gebaut mit werkstatt/spiele/rechenoperationen/bauen.py)
   var KS_VER = '38'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
