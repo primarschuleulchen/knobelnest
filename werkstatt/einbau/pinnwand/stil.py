@@ -135,3 +135,14 @@ select.field{min-height:42px;font-family:var(--ui)}
 </style>
 
 <div class="wrap">''')
+
+# Hinweis auf die Klassenkiste: dort lassen sich Vorlagen bearbeiten, löschen und eigene erstellen
+rep('esc(t.icon) + " Erstellen"}</button></div></section>`;', '''esc(t.icon) + " Erstellen"}</button></div>
+    <div class="kk-hint"><span class="kk-stern" aria-hidden="true">✦</span><p><b>Eigene Vorlagen?</b> In der Klassenkiste können Sie Vorlagen bearbeiten, löschen und eigene erstellen, dazu viele weitere Werkzeuge für Ihre Klasse.</p><a class="btn kk-btn" href="https://primarschuleulchen.github.io/knobelnest/" target="_blank" rel="noopener">✦ Hol dir jetzt den Zugang</a></div></section>`;''')
+rep('/* ===== Klassenkiste-Stil ===== */', '''/* ===== Klassenkiste-Stil ===== */
+.kk-hint{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--sun-soft, #fbf3dc);border:1.5px dashed var(--gold, #d6ad45);border-radius:20px;padding:12px 18px;color:#4a3d1a}
+.kk-hint p{flex:1 1 300px;margin:0;font-size:1.05rem;line-height:1.35;min-width:0}
+.kk-hint b{color:#6b5418}
+.kk-stern{font-size:1.6rem;color:var(--gold, #d6ad45);line-height:1}
+.kk-btn{text-decoration:none;background:#fff;white-space:nowrap}
+.kk-btn:hover{background:#fff6dc}''')
