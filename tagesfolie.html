@@ -204,6 +204,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-item:hover .pl-ops{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.bwrap{background:#eef2f6}
+.app:not(.voll) #board{box-shadow:0 6px 30px rgba(63,120,168,.22)}
+.app.voll .bwrap{background:#000}
 .bwrap{position:absolute;inset:0;margin:0;overflow:hidden}
 .w.oben .chrome{top:auto;bottom:-34px}
 .top{pointer-events:none}
@@ -1331,8 +1334,12 @@ function fitBoard(){
   // Fläche = Bildschirm im Vollbild. Im Fenster gleich breit wie das Fenster (oben links angesetzt, gleiches Verhältnis);
   // was im Fenster unten nicht Platz hat, ist abgeschnitten. So sieht die Vorbereitung genau aus wie das Vollbild.
   const sw = Math.max(window.screen.width || 0, 1), sh = Math.max(window.screen.height || 0, 1); // window.screen: «screen» ist hier eine Funktion der Folie
-  const k = aw / sw;
+  const voll = !!document.fullscreenElement, dk = document.getElementById("dock");
+  const oben = voll ? 0 : th, unten = voll ? 0 : (dk ? Math.ceil(dk.offsetHeight) + 18 : 90), rand = voll ? 0 : 12;
+  const bw = Math.max(50, aw - 2 * rand), bh = Math.max(50, ah - oben - unten);
+  const k = Math.min(bw / sw, bh / sh);
   b.style.width = sw + "px"; b.style.height = sh + "px"; b.style.setProperty("--vh", (sh / 100) + "px");
+  b.style.left = Math.round((aw - sw * k) / 2) + "px"; b.style.top = Math.round(oben + (bh - sh * k) / 2) + "px";
   b.style.transform = Math.abs(k - 1) < 0.001 ? "none" : `scale(${k.toFixed(5)})`;
 }
 try { new ResizeObserver(() => fitBoard()).observe(document.getElementById("bwrap")); } catch {}
