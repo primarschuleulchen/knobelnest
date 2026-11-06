@@ -1,0 +1,59 @@
+{
+ "format": "knobelnest-spielpaket",
+ "games": [
+  {
+   "title": "Im Kopf",
+   "description": "Runde Zahlen und Nullen schnell im Kopf rechnen.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 1,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/im-kopf.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;eigene&quot;}\"><title>Im Kopf</title></head><body><p>Im Kopf: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  },
+  {
+   "title": "Halbschriftlich",
+   "description": "In Teilschritten rechnen: Rechenstrich und Teilprodukte.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 2,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/halbschriftlich.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;eigene&quot;}\"><title>Halbschriftlich</title></head><body><p>Halbschriftlich: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  },
+  {
+   "title": "Schriftlich",
+   "description": "Untereinander rechnen: Plus, Minus, Mal und Durch.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 3,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/schriftlich.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;eigene&quot;}\"><title>Schriftlich</title></head><body><p>Schriftlich: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  },
+  {
+   "title": "Flexibel rechnen",
+   "description": "Rechentricks und Verteilungsgesetze mit Erklärung.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 4,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/flexibel-rechnen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;eigene&quot;}\"><title>Flexibel rechnen</title></head><body><p>Flexibel rechnen: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  },
+  {
+   "title": "Fachwörter",
+   "description": "Summand, Produkt, Quotient, Quersumme.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 5,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/fachwoerter.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;eigene&quot;}\"><title>Fachwörter</title></head><body><p>Fachwörter: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  },
+  {
+   "title": "Merkblätter",
+   "description": "Theorie: So rechnest du, mit Beispielen zum Aufdecken.",
+   "fach": "Mathematik",
+   "thema": "Rechenoperationen",
+   "stufe": "5. Klasse",
+   "sort": 6,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"rechenoperationen/merkblaetter.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;aus&quot;}\"><title>Merkblätter</title></head><body><p>Merkblätter: Dieses Spiel liegt in der Klassenkiste im Ordner rechenoperationen/.</p></body></html>"
+  }
+ ]
+}

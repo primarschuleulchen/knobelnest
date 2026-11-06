@@ -297,6 +297,7 @@
   var ZR_VER = '1';
   var VK_VER = '33'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
+  var RO_VER = '1'; // Rechenoperationen (rechenoperationen/, gebaut mit werkstatt/spiele/rechenoperationen/bauen.py)
   var KS_VER = '38'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '19'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
@@ -313,10 +314,11 @@
     var url = gameUrl(html);
     // Kleiderschrank und Vokabelkiste (Übung «Sprechen»): Mikrofon für die Spracherkennung erlauben (eigene Dateien aus dem Repo)
     if (url && /^(knobelspiele\/kleiderschrank\.html|vokabelkiste\/)/.test(url)) { f.setAttribute('allow', 'fullscreen; autoplay; picture-in-picture; encrypted-media; microphone'); f.setAttribute('sandbox', f.getAttribute('sandbox') + ' allow-same-origin'); }
-    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : /^gedaechtnis\//.test(url) ? GD_VER : /^knobelspiele\//.test(url) ? KS_VER : /^englisch\//.test(url) ? EN_VER : ZR_VER);
+    if (url) f.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'v=' + (/^vokabelkiste\//.test(url) ? VK_VER : /^gedaechtnis\//.test(url) ? GD_VER : /^knobelspiele\//.test(url) ? KS_VER : /^englisch\//.test(url) ? EN_VER : /^rechenoperationen\//.test(url) ? RO_VER : ZR_VER);
     else f.srcdoc = prepare(html, seed);
     if (url && /^vokabelkiste\//.test(url)) p.classList.add('player-vk'); // eigener Knopf «← Klassenkiste» statt dunklem Balken
-    if (url && STERN_IM_SPIEL.test(url) && !/kleiderschrank/.test(url)) p.classList.add('player-vk'); // Knobelkiste: eigener Knopf «←» mit Eule auf der Stufen-Seite
+    if (url && STERN_IM_SPIEL.test(url) && !/kleiderschrank/.test(url)) p.classList.add('player-vk');
+    if (url && /^rechenoperationen\//.test(url)) p.classList.add('player-vk'); // Rechenoperationen: eigener Knopf «←» mit Eule // Knobelkiste: eigener Knopf «←» mit Eule auf der Stufen-Seite
     var bar = document.createElement('div'); bar.className = 'starbar'; bar.hidden = true; bar.setAttribute('aria-live', 'polite');
     p.querySelector('.player-bar').insertBefore(bar, p.querySelector('[data-a="playerFull"]'));
     p.appendChild(f); document.body.appendChild(p); document.body.style.overflow = 'hidden';

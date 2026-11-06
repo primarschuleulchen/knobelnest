@@ -1,0 +1,657 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Plus & Minus Werkstatt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: kariertes Heftblatt; Übersicht mit drei Kacheln, jede öffnet eine eigene Übungsansicht */
+:root{
+  --paper:#e8f0fb; --paper2:#dce8f8; --tile:#dfe9f7; --grid:#cde2f6; --ink:#1d2b53; --ink-soft:#5b6890;
+  --pen:#2752c9; --red:#c9372b; --green:#1b8048; --mark:#ffd84a;
+  --wash1:#fff3c7; --wash2:#f0f6ff; --wash3:#dcf2e3; --card:#ffffff; --line:#c3cde3;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Andika","Segoe UI",system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(160deg,var(--paper) 0%,var(--paper2) 100%);background-attachment:fixed;min-height:100%;}
+.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:28px 60px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,5vw,2.2rem);font-weight:800}
+.lead{color:var(--ink-soft);max-width:60ch;margin:.4rem 0 0}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Kacheln */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:28px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:14px;
+  border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;min-width:0}
+.tile:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile:focus-visible{outline:3px solid var(--pen);outline-offset:3px}
+.tile.t1{background:#fdf1d8} .tile.t2{background:#e3ecfb} .tile.t3{background:#e2f3e8}
+.tile .kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700}
+.tile h3{font-family:var(--display);font-size:1.6rem;margin:0;line-height:1}
+.tile p{margin:0;color:var(--ink-soft);font-size:.95rem}
+.preview{background:var(--card);border-radius:10px;border:1.5px solid var(--line);min-height:96px;display:grid;place-items:center;padding:10px;font-variant-numeric:tabular-nums}
+.preview .big{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.preview svg{width:100%;height:auto;max-width:220px}
+.mini{display:grid;grid-template-columns:repeat(5,22px);font-size:1.05rem;line-height:22px;text-align:center}
+.mini .c{font-size:.7rem;color:var(--red);font-weight:700}
+.mini .ln{grid-column:1/-1;border-top:2px solid var(--ink);height:0}
+.go{font-weight:700;color:var(--pen)}
+
+/* Übungsansicht */
+.back{all:unset;cursor:pointer;font-weight:700;color:var(--pen);display:inline-flex;gap:6px;margin-bottom:14px}
+.back:focus-visible{outline:2px solid var(--pen);outline-offset:3px;border-radius:4px}
+.vhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.score{font-weight:700;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:4px 14px;font-variant-numeric:tabular-nums}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:18px 0}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-weight:700;font-size:.95rem}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:3px solid var(--pen);outline-offset:-3px}
+.bar label{font-size:.85rem;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.sheet{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:22px;box-shadow:4px 4px 0 var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{all:unset;cursor:pointer;padding:9px 18px;border-radius:10px;border:2px solid var(--ink);font-weight:700;background:var(--card)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--paper)}
+.btn:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.btn:hover{filter:brightness(1.06)}
+.msg{margin-top:16px;padding:10px 14px;border-radius:10px;font-weight:700;min-height:1.5em}
+.msg:empty{display:none}
+.msg.ok{background:var(--wash3);color:var(--green)}
+.msg.bad{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
+.msg.info{background:var(--wash1);color:var(--ink)}
+.note{color:var(--ink-soft);font-size:.92rem;margin:14px 0 0;max-width:62ch}
+
+input.cell, input.field{font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:8px;text-align:center;font-variant-numeric:tabular-nums}
+input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px color-mix(in srgb,var(--pen) 25%,transparent)}
+input.ok{border-color:var(--green);background:var(--wash3)}
+input.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+input.shown{color:var(--ink-soft);border-style:dashed}
+
+/* Kopfrechnen */
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink-soft)}
+.dot.now{border-color:var(--pen);background:color-mix(in srgb,var(--pen) 25%,transparent)}
+.dot.ok{background:var(--green);border-color:var(--green)}
+.dot.bad{background:var(--red);border-color:var(--red)}
+.task{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.6rem);display:flex;flex-wrap:wrap;align-items:center;gap:.3em;font-variant-numeric:tabular-nums}
+.task input.field{font-family:var(--display);font-weight:800;font-size:inherit;width:6.2em;padding:0 .2em}
+
+/* Rechenstrich */
+.svgbox{overflow-x:auto;margin:6px -6px 10px}
+.svgbox svg{display:block;width:100%;min-width:520px;height:auto}
+.rs-line{stroke:var(--ink);stroke-width:3}
+.rs-tick{stroke:var(--ink);stroke-width:2.5}
+.rs-arc{fill:none;stroke:var(--pen);stroke-width:2.5}
+.rs-arc.ok{stroke:var(--green)} .rs-arc.bad{stroke:var(--red)}
+.rs-arrow{fill:var(--pen)}
+.rs-lbl{fill:var(--ink);font:700 15px var(--body);font-variant-numeric:tabular-nums}
+.rs-jmp{fill:var(--pen);font:700 15px var(--body)}
+.rs-start{fill:var(--ink);font:800 17px var(--display)}
+.rows{display:grid;gap:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.row .op{font-family:var(--display);font-weight:800;font-size:1.4rem;width:1em;text-align:center}
+.row input.field{width:8.5em;padding:6px 8px;font-size:1.05rem}
+.row .arrow{color:var(--ink-soft);font-weight:700}
+.row .lab{font-size:.75rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;width:100%;margin-bottom:-6px}
+.row input.given{background:var(--wash2);border-style:dashed;color:var(--pen);font-weight:700}
+.row .x{all:unset;cursor:pointer;color:var(--ink-soft);font-weight:700;padding:4px 8px;border-radius:6px}
+.row .x:hover{color:var(--red)}
+.row .x:focus-visible{outline:2px solid var(--pen)}
+
+/* Schriftlich */
+.written{overflow-x:auto;padding:4px 0}
+.wgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.wgrid > div{width:2.3rem;height:2.3rem;display:grid;place-items:center}
+.wgrid .head{font-size:.7rem;font-weight:700;color:var(--ink-soft);height:1.4rem;letter-spacing:.04em}
+.wgrid .opc{font-family:var(--display);font-weight:800}
+.wgrid .carry{height:1.9rem;border-bottom:3px solid var(--ink)}
+.wgrid .carry.nl{border-bottom-color:var(--ink)}
+.wgrid input.cell{width:2rem;height:2rem;font-size:1.4rem;padding:0}
+.wgrid input.cc{width:1.45rem;height:1.45rem;font-size:.9rem;font-weight:700;color:var(--red);border-radius:6px;padding:0}
+.wgrid .res{padding-top:6px;height:2.7rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--ink-soft);margin-top:10px;justify-content:center}
+.legend b{color:var(--red)}
+
+@media (max-width:480px){
+  .sheet{padding:16px}
+  .wgrid > div{width:2.05rem}
+  .wgrid input.cell{width:1.8rem}
+}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+
+<div class="wrap">
+
+<!-- ÜBERSICHT -->
+<section id="home">
+  <h1>Plus &amp; Minus bis 1 Million</h1>
+  <p class="lead">Wähle eine Kachel. Drei Wege zum gleichen Ziel: im Kopf, mit dem Rechenstrich oder schriftlich mit Behalte.</p>
+  <div class="tiles">
+    <button class="tile t1" data-go="kopf">
+      <span class="kicker">Weg 1</span>
+      <h3>Im Kopf</h3>
+      <div class="preview"><span class="big num">45 000 + 8 000</span></div>
+      <p>Runde Zahlen schnell addieren, subtrahieren und ergänzen. 10 Aufgaben pro Runde.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+    <button class="tile t2" data-go="strich">
+      <span class="kicker">Weg 2</span>
+      <h3>Rechenstrich</h3>
+      <div class="preview">
+        <svg viewBox="0 0 220 80" aria-hidden="true">
+          <line x1="10" y1="56" x2="210" y2="56" class="rs-line"/>
+          <path d="M200 56 Q170 22 140 56" class="rs-arc"/><path d="M140 56 Q110 22 80 56" class="rs-arc"/><path d="M80 56 Q55 30 30 56" class="rs-arc"/>
+          <text x="170" y="30" text-anchor="middle" class="rs-jmp" style="font-size:11px">−10 000</text>
+          <text x="110" y="30" text-anchor="middle" class="rs-jmp" style="font-size:11px">−3 000</text>
+          <text x="55" y="34" text-anchor="middle" class="rs-jmp" style="font-size:11px">−80</text>
+          <text x="200" y="74" text-anchor="middle" class="rs-lbl" style="font-size:10px">705 100</text>
+          <text x="30" y="74" text-anchor="middle" class="rs-lbl" style="font-size:10px">692 020</text>
+        </svg>
+      </div>
+      <p>Grosse Rechnungen in Sprüngen lösen und jedes Zwischenergebnis notieren.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+    <button class="tile t3" data-go="schriftlich">
+      <span class="kicker">Weg 3</span>
+      <h3>Schriftlich</h3>
+      <div class="preview">
+        <div class="mini num" aria-hidden="true">
+          <span></span><span>4</span><span>6</span><span>8</span><span>5</span>
+          <span>+</span><span>2</span><span>7</span><span>4</span><span>9</span>
+          <span></span><span class="c">1</span><span class="c">1</span><span class="c">1</span><span></span>
+          <span class="ln"></span>
+          <span></span><span>7</span><span>4</span><span>3</span><span>4</span>
+        </div>
+      </div>
+      <p>Untereinander rechnen mit Übertrag. Die Behalte schreibst du über den Strich.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+  </div>
+</section>
+
+<!-- KOPFRECHNEN -->
+<section id="kopf" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Im Kopf rechnen</h2><span class="score" id="k-score">Runde 1</span></div>
+  <div class="bar"><span><label>Zahlenraum</label><span class="seg" data-for="kopf">
+    <button data-lv="1">bis 10 000</button><button data-lv="2" aria-pressed="true">bis 100 000</button><button data-lv="3">bis 1 000 000</button></span></span></div>
+  <div class="sheet">
+    <div class="dots" id="k-dots"></div>
+    <div id="k-body"></div>
+    <div class="msg" id="k-msg"></div>
+    <div class="btns" id="k-btns"></div>
+  </div>
+  <p class="note">Tipp: Rechne mit den Tausendern wie mit Einern. 45 000 + 8 000 ist wie 45 + 8, nur mit drei Nullen dahinter.</p>
+</section>
+
+<!-- RECHENSTRICH -->
+<section id="strich" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Mit dem Rechenstrich</h2><span class="score" id="s-score">Richtig gelöst: 0</span></div>
+  <div class="bar"><span><label>Zahlenraum</label><span class="seg" data-for="strich">
+    <button data-lv="1">bis 10 000</button><button data-lv="2">bis 100 000</button><button data-lv="3" aria-pressed="true">bis 1 000 000</button></span></span>
+    <span><label>Schwierigkeit</label><span class="seg" data-for="sdiff">
+      <button data-v="1" aria-pressed="true">Leicht</button><button data-v="2">Mittel</button><button data-v="3">Schwer</button></span></span>
+    <span><label>Hilfe</label><span class="seg" data-for="shelp">
+      <button data-v="0" aria-pressed="true">Ohne</button><button data-v="1">Sprünge vorgeben</button></span></span>
+  </div>
+  <div class="sheet">
+    <p class="note" id="s-level" style="margin:0 0 10px"></p>
+    <div class="task" id="s-task"></div>
+    <div class="svgbox"><svg id="s-svg" viewBox="0 0 660 150" role="img" aria-label="Rechenstrich mit deinen Sprüngen"></svg></div>
+    <div class="rows" id="s-rows"></div>
+    <div class="btns">
+      <button class="btn" id="s-add">+ Sprung</button>
+      <button class="btn primary" id="s-check">Prüfen</button>
+      <button class="btn" id="s-tip">Tipp</button>
+      <button class="btn" id="s-new">Neue Rechnung</button>
+    </div>
+    <div class="msg" id="s-msg"></div>
+  </div>
+  <p class="note">Springe vom Startwert aus in Schritten. Schreibe bei jedem Sprung, wie gross er ist und wo du landest. Der Rechenstrich ist nicht massstabgetreu.</p>
+</section>
+
+<!-- SCHRIFTLICH -->
+<section id="schriftlich" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Schriftlich rechnen</h2><span class="score" id="w-score">Richtig gelöst: 0</span></div>
+  <div class="bar">
+    <span><label>Rechenart</label><span class="seg" data-for="wop">
+      <button data-v="+" aria-pressed="true">Plus</button><button data-v="-">Minus</button><button data-v="mix">Gemischt</button></span></span>
+    <span><label>Stellen</label><span class="seg" data-for="wlen">
+      <button data-v="4">4</button><button data-v="5" aria-pressed="true">5</button><button data-v="6">6</button></span></span>
+  </div>
+  <div class="sheet">
+    <div class="written"><div class="wgrid" id="w-grid"></div></div>
+    <div class="legend"><span><b>Behalte</b> = kleines Feld direkt über dem Strich</span><span>Rechne von rechts nach links</span></div>
+    <div class="btns">
+      <button class="btn primary" id="w-check">Prüfen</button>
+      <button class="btn" id="w-show">Lösung zeigen</button>
+      <button class="btn" id="w-new">Neue Rechnung</button>
+    </div>
+    <div class="msg" id="w-msg"></div>
+  </div>
+  <p class="note" id="w-note"></p>
+</section>
+
+</div>
+
+<script>
+// ---------- Hilfsfunktionen ----------
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const parse = s => { const t = String(s).replace(/[\s'’.  ]/g,''); return /^\d+$/.test(t) ? Number(t) : null; };
+const MINUS = '−';
+
+// ---------- Navigation ----------
+const views = ['home','kopf','strich','schriftlich'];
+function show(id){
+  if(!views.includes(id)) id='home';
+  views.forEach(v => document.getElementById(v).hidden = v!==id);
+  window.scrollTo(0,0);
+  if(id==='kopf') focusKopf();
+  if(id==='schriftlich') setTimeout(() => $('#w-r0')?.focus(), 30);
+}
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  const id = b.dataset.go;
+  if(location.hash.slice(1)!==id) location.hash = id==='home' ? '' : id; else show(id);
+  show(id);
+}));
+window.addEventListener('hashchange', () => show(location.hash.slice(1)||'home'));
+
+// Segment-Schalter
+function seg(name, onChange){
+  const el = document.querySelector(`.seg[data-for="${name}"]`);
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+    onChange(b.dataset.lv ?? b.dataset.v);
+  }));
+  const cur = el.querySelector('[aria-pressed="true"]');
+  return cur.dataset.lv ?? cur.dataset.v;
+}
+function setMsg(el, text, kind){ el.textContent = text; el.className = 'msg ' + (kind||''); }
+
+// =========================================================
+// 1) KOPFRECHNEN
+// =========================================================
+const K = { lv: 2, tasks: [], i: 0, results: [], answered: false, round: 1 };
+K.lv = Number(seg('kopf', v => { K.lv = Number(v); kNewRound(); }));
+
+function kGen(lv){
+  const max = [0,10000,100000,1000000][lv];
+  const s = [0,100,1000,10000][lv];
+  const units = max / s;            // 100
+  const type = pick(['add','add','sub','sub','erg','mix','mixsub']);
+  if(type==='add'){
+    const x = rnd(11, units-12), y = rnd(2, Math.min(units-x-1, 89));
+    return {parts:[x*s,'+',y*s,'=',null], ans:(x+y)*s};
+  }
+  if(type==='sub'){
+    const x = rnd(20, units-1), y = rnd(2, x-3);
+    return {parts:[x*s, MINUS, y*s,'=',null], ans:(x-y)*s};
+  }
+  if(type==='erg'){
+    let x; do { x = rnd(11, units-1); } while(x%10===0);
+    const target = Math.ceil(x/10)*10*s;
+    return {parts:[x*s,'+',null,'=',target], ans:target - x*s};
+  }
+  const t = s/10;                    // feinere Stelle
+  if(type==='mix'){
+    const a = rnd(101, units*10-200)*t, b = rnd(2,9)*s;
+    if(a+b>max) return kGen(lv);
+    return {parts:[a,'+',b,'=',null], ans:a+b};
+  }
+  const a = rnd(200, units*10-1)*t, b = rnd(2,9)*s;
+  if(b>=a) return kGen(lv);
+  return {parts:[a, MINUS, b,'=',null], ans:a-b};
+}
+function kNewRound(){
+  K.tasks = Array.from({length:10}, () => kGen(K.lv));
+  K.i = 0; K.results = []; K.answered = false;
+  kRender();
+}
+function kRender(){
+  const dots = $('#k-dots'); dots.innerHTML = '';
+  K.tasks.forEach((_,j) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (K.results[j]===true?' ok':K.results[j]===false?' bad':j===K.i?' now':'');
+    dots.appendChild(d);
+  });
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+  const body = $('#k-body'), btns = $('#k-btns');
+  setMsg($('#k-msg'),'');
+  btns.innerHTML = '';
+  if(K.i >= K.tasks.length){
+    const n = K.results.filter(Boolean).length;
+    body.innerHTML = `<div class="task">${n} von 10 richtig</div>`;
+    setMsg($('#k-msg'), n>=9 ? 'Ausgezeichnet! Probiere den nächsten Zahlenraum.' : n>=6 ? 'Gut gemacht. Mit einer weiteren Runde wirst du noch sicherer.' : 'Übe noch eine Runde. Denk an den Tipp unten.', n>=6?'ok':'info');
+    const b = document.createElement('button'); b.className='btn primary'; b.textContent='Neue Runde';
+    b.onclick = () => { K.round++; kNewRound(); focusKopf(); };
+    btns.appendChild(b); b.focus(); return;
+  }
+  const t = K.tasks[K.i];
+  body.innerHTML = '<div class="task">' + t.parts.map(p =>
+    p===null ? '<input class="field" id="k-in" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort">' :
+    typeof p==='number' ? `<span class="num">${fmt(p)}</span>` : `<span>${p}</span>`).join('') + '</div>';
+  const b = document.createElement('button'); b.className='btn primary'; b.id='k-go'; b.textContent='Prüfen';
+  b.onclick = kStep; btns.appendChild(b);
+  $('#k-in').addEventListener('keydown', e => { if(e.key==='Enter') kStep(); });
+  K.answered = false;
+}
+function kStep(){
+  if(K.answered){ K.i++; kRender(); focusKopf(); return; }
+  const inp = $('#k-in'), v = parse(inp.value), t = K.tasks[K.i];
+  if(v===null){ setMsg($('#k-msg'),'Schreibe eine Zahl ins Feld.','info'); inp.focus(); return; }
+  const ok = v===t.ans;
+  K.results[K.i] = ok; K.answered = true;
+  inp.classList.add(ok?'ok':'bad'); inp.readOnly = true;
+  setMsg($('#k-msg'), ok ? 'Richtig!' : `Leider nein. Richtig ist ${fmt(t.ans)}.`, ok?'ok':'bad');
+  $('#k-go').textContent = K.i===9 ? 'Auswertung' : 'Weiter';
+  $('#k-go').focus();
+  // Punkte neu zeichnen
+  const dots = $('#k-dots').children; dots[K.i].className = 'dot ' + (ok?'ok':'bad');
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+  // Enter auf dem Button führt weiter
+}
+function focusKopf(){ setTimeout(() => $('#k-in')?.focus(), 30); }
+kNewRound();
+
+// =========================================================
+// 2) RECHENSTRICH
+// =========================================================
+const S = { lv: 3, a:0, b:0, op:'-', solved:false, score:0 };
+S.lv = Number(seg('strich', v => { S.lv = Number(v); sNew(); }));
+S.diff = Number(seg('sdiff', v => { S.diff = Number(v); sNew(); }));
+S.help = seg('shelp', v => { S.help = v==='1'; sNew(); }) === '1';
+
+const S_LEVEL_TEXT = {
+  1: 'Leicht: Die zweite Zahl hat nur zwei Teile, und bei keinem Sprung gibt es einen Übergang. Es ändert sich jeweils nur eine Ziffer.',
+  2: 'Mittel: Die zweite Zahl hat zwei Teile. Bei einem Sprung gibt es einen Übergang.',
+  3: 'Schwer: Die zweite Zahl hat zwei bis drei Teile, mit mehreren Übergängen und Nullen in der Startzahl.'
+};
+
+function digitsOf(n,len){ return String(n).padStart(len,'0').split('').reverse().map(Number); }
+function placeParts(n){
+  const out = [];
+  String(n).split('').reverse().forEach((d,p) => { if(d!=='0') out.unshift(Number(d)*10**p); });
+  return out;
+}
+function sGen(lv, diff){
+  const D = [0,4,5,6][lv];
+  for(let tries=0; tries<2000; tries++){
+    const op = Math.random()<0.5 ? '-' : '+';
+    // Startzahl: leicht = nur 2–3 besetzte Stellen, sonst mit einigen Nullen
+    let a;
+    if(diff===1){
+      a = rnd(1,9)*10**(D-1) + rnd(0,9)*10**(D-2) + rnd(0,9)*10**(D-3);
+    } else {
+      a = rnd(2*10**(D-1), 10**D - 1);
+      const rr = diff===2 ? 10**(D-4) : pick([1,10,100]);
+      a = Math.round(a / rr) * rr;
+    }
+    a = Math.min(a, 10**D - 1);
+    if(a < 10**(D-1)) continue;
+    // Zweite Zahl: leicht/mittel 2 Teile, schwer 2–3 Teile
+    const places = [];
+    const lowest = diff===1 ? D-3 : diff===2 ? D-4 : 0;
+    for(let p=lowest;p<=D-2;p++) places.push(p);
+    const k = diff===3 ? rnd(2,3) : 2, chosen = [];
+    while(chosen.length<k){ const p = pick(places); if(!chosen.includes(p)) chosen.push(p); }
+    if(!chosen.includes(D-2) && lv>1 && Math.random()<0.7) chosen[0] = D-2;
+    let b = 0; new Set(chosen).forEach(p => b += rnd(1,9)*10**p);
+    const res = op==='-' ? a-b : a+b;
+    if(res<=0 || res>=10**D) continue;
+    // Übergänge zählen (Sprung pro Stellenwert)
+    const da = digitsOf(a,D), db = digitsOf(b,D);
+    let cross = 0;
+    for(let p=0;p<D;p++){ if(db[p] && (op==='-' ? da[p]<db[p] : da[p]+db[p]>9)) cross++; }
+    if(diff===1 && cross!==0) continue;
+    if(diff===2 && cross!==1) continue;
+    if(diff===3 && cross<1) continue;
+    return {a,b,op};
+  }
+  return {a:705100,b:13080,op:'-'};
+}
+function sNew(){
+  Object.assign(S, sGen(S.lv, S.diff)); S.solved = false;
+  $('#s-level').textContent = S_LEVEL_TEXT[S.diff] + (S.help ? ' Die Sprünge sind vorgegeben: Du rechnest nur die Landepunkte.' : '');
+  $('#s-task').innerHTML = `<span class="num">${fmt(S.a)}</span><span>${S.op==='-'?MINUS:'+'}</span><span class="num">${fmt(S.b)}</span><span>=</span><span>?</span>`;
+  $('#s-rows').innerHTML = '';
+  if(S.help){ placeParts(S.b).forEach(j => sAddRow(j)); $('#s-v1')?.focus(); }
+  else sAddRow();
+  $('#s-add').hidden = S.help;
+  setMsg($('#s-msg'),'');
+  sDraw();
+}
+function sAddRow(given){
+  const rows = $('#s-rows');
+  if(rows.children.length>=6){ setMsg($('#s-msg'),'Mehr als 6 Sprünge braucht es nicht. Versuche grössere Sprünge.','info'); return; }
+  const n = rows.children.length+1;
+  const r = document.createElement('div'); r.className='row';
+  r.innerHTML = `<span class="lab">Sprung ${n}</span>
+    <span class="op">${S.op==='-'?MINUS:'+'}</span>
+    <input class="field jmp" id="s-j${n}" inputmode="numeric" autocomplete="off" placeholder="Sprung" aria-label="Sprung ${n}: Wie weit springst du?">
+    <span class="arrow">→</span>
+    <input class="field val" id="s-v${n}" inputmode="numeric" autocomplete="off" placeholder="Landepunkt" aria-label="Sprung ${n}: Wo landest du?">
+    <button class="x" title="Sprung entfernen" aria-label="Sprung ${n} entfernen">✕</button>`;
+  r.querySelectorAll('input').forEach(i => {
+    i.addEventListener('input', () => { i.classList.remove('ok','bad'); sDraw(); });
+    i.addEventListener('keydown', e => { if(e.key==='Enter') sCheck(); });
+  });
+  r.querySelector('.x').onclick = () => { if(rows.children.length>1){ r.remove(); sRenumber(); sDraw(); } };
+  rows.appendChild(r);
+  if(typeof given==='number'){
+    const j = r.querySelector('.jmp'); j.value = fmt(given); j.readOnly = true; j.classList.add('given');
+    r.querySelector('.x').hidden = true;
+  } else r.querySelector('.jmp').focus();
+  sDraw();
+}
+function sRenumber(){
+  [...$('#s-rows').children].forEach((r,i) => r.querySelector('.lab').textContent = `Sprung ${i+1}`);
+}
+function sRowsData(){
+  return [...$('#s-rows').children].map(r => ({
+    row:r, jIn:r.querySelector('.jmp'), vIn:r.querySelector('.val'),
+    j:parse(r.querySelector('.jmp').value), v:parse(r.querySelector('.val').value) }));
+}
+function sDraw(status){
+  const data = sRowsData(), N = data.length;
+  const svg = $('#s-svg'), y = 100, L = 50, R = 610;
+  const step = (R-L)/Math.max(N,1);
+  const xs = [S.op==='-' ? R : L];
+  for(let i=1;i<=N;i++) xs.push(S.op==='-' ? R - i*step : L + i*step);
+  let h = `<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="rs-arrow"/></marker></defs>`;
+  h += `<line x1="20" y1="${y}" x2="640" y2="${y}" class="rs-line"/>`;
+  h += `<line x1="${xs[0]}" y1="${y-10}" x2="${xs[0]}" y2="${y+10}" class="rs-tick"/>`;
+  h += `<text x="${xs[0]}" y="${y+32}" text-anchor="middle" class="rs-start">${fmt(S.a)}</text>`;
+  data.forEach((d,i) => {
+    const x0 = xs[i], x1 = xs[i+1], mx = (x0+x1)/2;
+    const cls = status ? (status[i] ? ' ok':' bad') : '';
+    h += `<path d="M${x0} ${y-4} Q${mx} ${y-64} ${x1} ${y-4}" class="rs-arc${cls}" marker-end="url(#ah)"/>`;
+    h += `<text x="${mx}" y="${y-40}" text-anchor="middle" class="rs-jmp">${(S.op==='-'?MINUS:'+')}${d.j!==null?fmt(d.j):'?'}</text>`;
+    h += `<line x1="${x1}" y1="${y-10}" x2="${x1}" y2="${y+10}" class="rs-tick"/>`;
+    h += `<text x="${x1}" y="${y+32}" text-anchor="middle" class="rs-lbl">${d.v!==null?fmt(d.v):'?'}</text>`;
+  });
+  svg.innerHTML = h;
+}
+function sCheck(){
+  const data = sRowsData();
+  let prev = S.a, sum = 0, allOk = true, empty = false;
+  const status = [];
+  data.forEach(d => {
+    if(d.j===null || d.v===null){ empty = true; }
+    const expect = d.j===null ? null : (S.op==='-' ? prev - d.j : prev + d.j);
+    const ok = d.j!==null && d.j>0 && d.v!==null && d.v===expect;
+    d.jIn.classList.toggle('ok', ok); d.jIn.classList.toggle('bad', !ok && d.j===null ? false : !ok && d.j!==null && d.j<=0);
+    d.vIn.classList.toggle('ok', ok); d.vIn.classList.toggle('bad', !ok && d.v!==null);
+    status.push(ok);
+    if(!ok) allOk = false;
+    if(d.j!==null) sum += d.j;
+    prev = d.v!==null ? d.v : (expect ?? prev);
+  });
+  sDraw(status);
+  const msg = $('#s-msg');
+  if(empty){ setMsg(msg,'Fülle bei jedem Sprung beide Felder aus: Sprunggrösse und Landepunkt.','info'); return; }
+  if(!allOk){ setMsg(msg,'Bei den rot markierten Landepunkten stimmt die Rechnung noch nicht. Rechne diesen Sprung nochmals.','bad'); return; }
+  if(sum < S.b){ setMsg(msg,`Deine Sprünge sind zusammen ${fmt(sum)}. Es fehlen noch ${fmt(S.b-sum)}. Füge einen Sprung hinzu.`,'info'); return; }
+  if(sum > S.b){ setMsg(msg,`Deine Sprünge sind zusammen ${fmt(sum)}, also ${fmt(sum-S.b)} zu viel. Du darfst insgesamt genau ${fmt(S.b)} springen.`,'bad'); return; }
+  const res = S.op==='-' ? S.a-S.b : S.a+S.b;
+  setMsg(msg,`Super! ${fmt(S.a)} ${S.op==='-'?MINUS:'+'} ${fmt(S.b)} = ${fmt(res)}`,'ok');
+  $('#s-task').lastElementChild.textContent = fmt(res);
+  if(!S.solved){ S.solved = true; S.score++; $('#s-score').textContent = `Richtig gelöst: ${S.score}`; }
+}
+function sTip(){
+  const parts = [];
+  String(S.b).split('').reverse().forEach((d,p) => { if(d!=='0') parts.unshift(fmt(Number(d)*10**p)); });
+  setMsg($('#s-msg'), `Tipp: Zerlege ${fmt(S.b)} nach Stellenwerten in ${parts.join(' + ')}. Mache mit jedem Teil einen Sprung.`,'info');
+}
+$('#s-add').onclick = () => sAddRow();
+$('#s-check').onclick = sCheck;
+$('#s-tip').onclick = sTip;
+$('#s-new').onclick = sNew;
+sNew();
+
+// =========================================================
+// 3) SCHRIFTLICH mit Behalte
+// =========================================================
+const W = { op:'+', mode:'+', len:5, score:0, solved:false, shown:false };
+W.mode = seg('wop', v => { W.mode = v; wNew(); });
+W.len = Number(seg('wlen', v => { W.len = Number(v); wNew(); }));
+const PLACES = ['E','Z','H','T','ZT','HT','M'];
+
+function wCompute(a,b,op,n){
+  const da = digitsOf(a,n), db = digitsOf(b,n), c = Array(n+1).fill(0), r = Array(n).fill(0);
+  for(let p=0;p<n;p++){
+    if(op==='+'){ const s = da[p]+db[p]+c[p]; r[p] = s%10; c[p+1] = Math.floor(s/10); }
+    else { const u = db[p]+c[p]; if(da[p]<u){ r[p] = da[p]+10-u; c[p+1]=1; } else { r[p] = da[p]-u; c[p+1]=0; } }
+  }
+  return {c,r};
+}
+function wGen(){
+  const D = W.len;
+  for(let t=0;t<800;t++){
+    const op = W.mode==='mix' ? pick(['+','-']) : W.mode;
+    let a = rnd(10**(D-1), 10**D - 1);
+    if(op==='-' && Math.random()<0.4){ // Nullen in der oberen Zahl, z. B. 705 100
+      const p = rnd(1,D-2); a = a - (Math.floor(a/10**p)%10)*10**p;
+    }
+    const bl = Math.random()<0.6 ? D : D-1;
+    let b = rnd(10**(bl-1), 10**bl - 1);
+    if(op==='-' && b>=a) continue;
+    if(op==='+' && a+b>=10**D && Math.random()<0.5) continue;
+    const n = op==='+' ? D+1 : D;
+    const {c} = wCompute(a,b,op,n);
+    const carries = c.filter(x=>x>0).length;
+    if(carries<2 || carries>D-1) continue;
+    return {a,b,op,n};
+  }
+  return {a:705100,b:13080,op:'-',n:6};
+}
+function wNew(){
+  Object.assign(W, wGen()); W.solved=false; W.shown=false;
+  W.exp = wCompute(W.a,W.b,W.op,W.n);
+  W.res = W.op==='+' ? W.a+W.b : W.a-W.b;
+  wBuild();
+  setMsg($('#w-msg'),'');
+  $('#w-note').textContent = W.op==='+'
+    ? 'Plus: Zähle Spalte für Spalte von rechts zusammen. Ist die Summe 10 oder mehr, schreibst du die Einer unter den Strich und den Behalte klein in die nächste Spalte über den Strich.'
+    : 'Minus mit Ergänzen: Rechne unten + Behalte, dann ergänze bis zur oberen Ziffer. Geht das nicht, ergänzt du bis zur oberen Ziffer + 10 und schreibst den Behalte 1 klein in die nächste Spalte über den Strich.';
+}
+function wBuild(){
+  const g = $('#w-grid'), n = W.n;
+  g.style.gridTemplateColumns = `repeat(${n+1}, auto)`;
+  const sa = String(W.a), sb = String(W.b);
+  let h = '<div class="head"></div>';
+  for(let col=n-1; col>=0; col--) h += `<div class="head">${PLACES[col]}</div>`;
+  // Zeile 1: obere Zahl
+  h += '<div></div>';
+  for(let p=n-1;p>=0;p--) h += `<div>${p<sa.length ? sa[sa.length-1-p] : ''}</div>`;
+  // Zeile 2: untere Zahl
+  h += `<div class="opc">${W.op==='+'?'+':MINUS}</div>`;
+  for(let p=n-1;p>=0;p--) h += `<div>${p<sb.length ? sb[sb.length-1-p] : ''}</div>`;
+  // Zeile 3: Behalte über dem Strich
+  h += '<div class="carry"></div>';
+  for(let p=n-1;p>=0;p--){
+    h += p===0 ? '<div class="carry"></div>'
+      : `<div class="carry"><input class="cc" id="w-c${p}" data-p="${p}" data-k="c" inputmode="numeric" autocomplete="off" aria-label="Behalte in der Spalte ${PLACES[p]}"></div>`;
+  }
+  // Zeile 4: Ergebnis
+  h += '<div class="res"></div>';
+  for(let p=n-1;p>=0;p--) h += `<div class="res"><input class="cell" id="w-r${p}" data-p="${p}" data-k="r" inputmode="numeric" autocomplete="off" aria-label="Ergebnis in der Spalte ${PLACES[p]}"></div>`;
+  g.innerHTML = h;
+  g.querySelectorAll('input').forEach(i => {
+    i.addEventListener('input', () => {
+      i.value = i.value.replace(/\D/g,'').slice(-1);
+      i.classList.remove('ok','bad','shown');
+      if(i.value==='') return;
+      const p = Number(i.dataset.p);
+      // Reihenfolge: Ergebnis-Ziffer → Behalte der nächsten Spalte → nächste Ergebnis-Ziffer
+      const next = i.dataset.k==='r' ? (document.getElementById('w-c'+(p+1)) || document.getElementById('w-r'+(p+1))) : document.getElementById('w-r'+p);
+      next?.focus(); next?.select?.();
+    });
+    i.addEventListener('keydown', e => {
+      if(e.key==='Enter') wCheck();
+      if(e.key==='Backspace' && i.value===''){
+        const p = Number(i.dataset.p);
+        const prev = i.dataset.k==='r' ? document.getElementById('w-c'+p) || document.getElementById('w-r'+(p-1)) : document.getElementById('w-r'+(p-1));
+        if(prev){ e.preventDefault(); prev.focus(); }
+      }
+    });
+  });
+  setTimeout(() => $('#w-r0')?.focus(), 30);
+}
+function wCheck(){
+  const n = W.n, rs = String(W.res);
+  let badR = 0, badC = 0, emptyR = 0;
+  for(let p=0;p<n;p++){
+    const el = document.getElementById('w-r'+p), v = el.value;
+    const leading = p >= rs.length;
+    const ok = leading ? (v==='' || v==='0') : v===String(W.exp.r[p]);
+    if(!leading && v==='') emptyR++;
+    el.classList.toggle('ok', ok && v!==''); el.classList.toggle('bad', !ok);
+    if(!ok) badR++;
+  }
+  for(let p=1;p<n;p++){
+    const el = document.getElementById('w-c'+p), v = el.value, e = W.exp.c[p];
+    const ok = e===0 ? (v===''||v==='0') : v===String(e);
+    el.classList.toggle('ok', ok && v!==''); el.classList.toggle('bad', !ok);
+    if(!ok) badC++;
+  }
+  const msg = $('#w-msg');
+  if(emptyR===rs.length){ setMsg(msg,'Beginne ganz rechts bei den Einern.','info'); return; }
+  if(badR===0 && badC===0){
+    setMsg(msg, `Richtig, auch alle Behalte! ${fmt(W.a)} ${W.op==='+'?'+':MINUS} ${fmt(W.b)} = ${fmt(W.res)}`, 'ok');
+    if(!W.solved && !W.shown){ W.solved = true; W.score++; $('#w-score').textContent = `Richtig gelöst: ${W.score}`; }
+    return;
+  }
+  const parts = [];
+  if(badR) parts.push(badR===1 ? '1 Ergebnisziffer stimmt nicht' : `${badR} Ergebnisziffern stimmen nicht`);
+  if(badC) parts.push(badC===1 ? '1 Behalte fehlt oder ist falsch' : `${badC} Behalte fehlen oder sind falsch`);
+  const txt = parts.join(', ') + '.';
+  setMsg(msg, txt.charAt(0).toUpperCase() + txt.slice(1) + ' Schau dir die roten Felder nochmals an.', badR ? 'bad' : 'info');
+}
+function wShow(){
+  W.shown = true;
+  const rs = String(W.res);
+  for(let p=0;p<W.n;p++){ const el = document.getElementById('w-r'+p); el.value = p<rs.length ? W.exp.r[p] : ''; el.className='cell shown'; }
+  for(let p=1;p<W.n;p++){ const el = document.getElementById('w-c'+p); el.value = W.exp.c[p] ? W.exp.c[p] : ''; el.className='cc shown'; }
+  setMsg($('#w-msg'), 'So sieht die Lösung aus. Vergleiche mit deinem Weg und versuche dann eine neue Rechnung.', 'info');
+}
+$('#w-check').onclick = wCheck;
+$('#w-show').onclick = wShow;
+$('#w-new').onclick = wNew;
+wNew();
+
+// Startansicht (Deep-Link per #kopf, #strich, #schriftlich)
+show(location.hash.slice(1) || 'home');
+</script>
+
+</body></html>
