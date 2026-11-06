@@ -422,5 +422,12 @@ rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_ordnen.j
 rep("""<span class="hcol"><button class="pill" id="ren">Umbenennen</button>""", """<span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button>""")
 rep("$('#ren').onclick=", "$('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=")
 
+
+# 23) Verschieben auch direkt auf den Karten im Ordner (Knopf 📁 neben ✎) und im Verschieben-Fenster gleich einen neuen Ordner
+#     erstellen (vk_ordnen.js). Der neue Ordner ist so offen für die Kinder wie das Verschobene, damit nichts verschwindet.
+rep("""aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button>""",
+    """aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="ib" data-mvto="${n.id}" aria-label="Verschieben" title="In einen anderen Ordner verschieben">📁</button>""")
+rep("$$('[data-ren]').forEach(", "$$('[data-mvto]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkMove(b.dataset.mvto,rerender)});$$('[data-ren]').forEach(")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
