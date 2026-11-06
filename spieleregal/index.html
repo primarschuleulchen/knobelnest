@@ -72,7 +72,7 @@ main{max-width:1180px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-le
 .banner p{margin:0;color:var(--soft);max-width:56ch}
 .banner .knoepfe{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .schachteln{flex:0 1 300px;height:170px;position:relative;margin-right:10px}
-.schachteln img{position:absolute;bottom:6px;height:140px;width:auto;border-radius:5px;box-shadow:0 10px 18px rgba(31,36,33,.25);transition:transform .3s}
+.schachteln img{position:absolute;bottom:6px;height:150px;width:auto;filter:drop-shadow(0 10px 12px rgba(31,36,33,.28));transition:transform .3s}
 .schachteln img:nth-child(1){left:0;transform:rotate(-8deg)}
 .schachteln img:nth-child(2){left:22%;transform:rotate(-3deg);bottom:12px}
 .schachteln img:nth-child(3){left:44%;transform:rotate(3deg);bottom:12px}
@@ -119,27 +119,27 @@ details.mehr > div{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .link{border:0;background:none;color:var(--sky-d);text-decoration:underline;text-underline-offset:3px;padding:4px}
 @media (max-width:620px){.flab{min-width:100%;margin-bottom:-2px}.filter{padding:16px 14px}}
 
-/* Regal: einheitliche Karten */
-.regal{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px}
-.game{position:relative;display:flex;flex-direction:column;min-width:0;background:#fff;border:1.5px solid var(--line);border-radius:26px;box-shadow:var(--sch);overflow:hidden;transition:transform .2s,box-shadow .2s}
-.game:hover,.game:focus-within{transform:translateY(-4px);box-shadow:var(--sch-h)}
-.game .stage{height:216px;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 50% 38%,#fff 0%,color-mix(in srgb,var(--c) 15%,#fff) 80%);border-bottom:1.5px dashed var(--line2)}
-.game .stage img{display:block;height:176px;width:auto;max-width:100%;object-fit:contain;border-radius:6px;box-shadow:0 10px 18px rgba(31,36,33,.22),0 2px 4px rgba(31,36,33,.14);transition:transform .25s}
-.game:hover .stage img,.game:focus-within .stage img{transform:scale(1.04)}
-.game .info{padding:12px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+/* Regal: Schachteln stehen auf Holzbrettern, alle gerade, Seitenverhältnis bleibt */
+.regal{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:40px 26px;padding:6px 4px 0}
+.game{position:relative;display:flex;flex-direction:column;min-width:0}
+.game .stage{height:232px;display:flex;align-items:flex-end;justify-content:center;padding:0 6px}
+.game .stage img{display:block;width:auto;height:auto;max-height:212px;max-width:100%;margin-bottom:-2px;
+  filter:drop-shadow(0 12px 12px rgba(31,36,33,.3));transform-origin:50% 100%;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.game:hover .stage img,.game:focus-within .stage img{transform:translateY(-8px) scale(1.03)}
+.plank{height:16px;margin:0 -14px;border-radius:3px;background:linear-gradient(var(--wood1),var(--wood2) 60%,var(--wood3));box-shadow:0 9px 15px -6px rgba(63,40,10,.45);position:relative}
+.game .info{margin-top:14px;display:flex;flex-direction:column;gap:6px;padding:0 2px}
 .game h3{font-size:26px}
 .game h3 a{text-decoration:none}
-.game h3 a::after{content:"";position:absolute;inset:0;z-index:1;border-radius:26px}
+.game h3 a::after{content:"";position:absolute;inset:0;z-index:1;border-radius:14px}
 .game h3 a:focus-visible{outline:none}
 .game:focus-within h3{text-decoration:underline;text-decoration-color:var(--gold)}
 .game .sub{font-size:16px;color:var(--soft);line-height:1.25}
-.game .kicons{margin-top:auto;padding-top:4px}
 @media (max-width:560px){
-  .regal{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .game{border-radius:20px}.game h3 a::after{border-radius:20px}
-  .game .stage{height:158px;padding:12px}.game .stage img{height:130px}
-  .game .info{padding:10px 10px 12px;gap:5px}.game h3{font-size:21px}.game .sub{font-size:14px}
-  .game .chip{font-size:12.5px;padding:0 7px}.stern{width:36px;height:36px;font-size:19px;top:8px;right:8px}
+  .regal{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 16px}
+  .game .stage{height:170px}.game .stage img{max-height:156px}
+  .plank{margin:0 -8px;height:13px}
+  .game h3{font-size:21px}.game .sub{font-size:14px}
+  .game .chip{font-size:12.5px;padding:0 7px}.stern{width:36px;height:36px;font-size:19px}
   .kicons span{width:26px;height:26px;font-size:14px}
   .ktiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}.ktile{font-size:13px;padding:6px 2px}.ktile .e{width:46px;height:46px;font-size:22px}
 }
@@ -149,7 +149,7 @@ details.mehr > div{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .kicons span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;background:var(--sun);box-shadow:0 0 0 1.5px var(--gold) inset}
 .tag{border:1.5px solid var(--c);border-radius:6px;padding:0 7px;font-size:13px;font-weight:700;white-space:nowrap}
 .tag.main{background:var(--c);color:#fff}
-.stern{position:absolute;top:10px;right:10px;z-index:2;width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);background:#fff;font-size:22px;line-height:1;color:var(--gold-d);box-shadow:0 4px 10px rgba(63,120,168,.18)}
+.stern{position:absolute;top:6px;right:0;z-index:2;width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);background:#fff;font-size:22px;line-height:1;color:var(--gold-d);box-shadow:0 4px 10px rgba(63,120,168,.18)}
 .stern[aria-pressed="true"]{background:var(--gold);color:#fff}
 .stufe{letter-spacing:1px;color:var(--gold-d)}
 .leer{padding:34px;text-align:center;color:var(--soft);border:2px dashed var(--line2);border-radius:22px;background:#fff}
@@ -163,7 +163,7 @@ details.legende summary{cursor:pointer;font-family:var(--h);font-size:20px;color
 /* Detail */
 .gamehero{background:linear-gradient(180deg,#fff 0%,color-mix(in srgb,var(--c) 9%,#fff) 100%);border:1.5px solid var(--line);border-radius:32px;padding:24px 28px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;box-shadow:var(--sch);position:relative}
 .gamehero::before{content:"";position:absolute;left:28px;right:28px;top:0;height:5px;border-radius:0 0 6px 6px;background:var(--c)}
-.gamehero .cover{height:220px;width:auto;max-width:38vw;object-fit:contain;border-radius:8px;box-shadow:0 14px 26px rgba(31,36,33,.25),0 2px 5px rgba(31,36,33,.15);cursor:zoom-in}
+.gamehero .cover{height:auto;width:auto;max-height:230px;max-width:38vw;filter:drop-shadow(0 14px 16px rgba(31,36,33,.3));cursor:zoom-in}
 .gamehero .txt{display:flex;flex-direction:column;gap:10px;min-width:0}
 .gamehero h1{font-size:clamp(38px,7vw,56px)}
 .gamehero h1::after{content:" ✦";color:var(--gold);font-size:.45em;vertical-align:super}
@@ -1618,7 +1618,6 @@ GAMES.forEach(g=>{
   g.komp = x.k||[]; g.stufe = x.s||2; g.ziel = x.ziel||""; g.tipp = x.tipp||"";
   g.ageN = parseInt(String(g.age).replace(/\D/g,""),10)||0;
   g.art = g.cats.find(c=>CATS[c] && CATS[c].group==="mit") || "komp";
-  g.front = "img/front/" + g.cover.replace(/^img\/cover_/,"").replace(/\.\w+$/,"") + ".webp";  /* Vorderseite gerade (img/front/) */
 });
 
 /* ---------- Zustand ---------- */
@@ -1682,7 +1681,7 @@ function renderShelf(){
           <a class="btn sky" href="#stationen">🏫 Spielstationen planen</a>
         </div>
       </div>
-      <div class="schachteln" aria-hidden="true">${["cascadia","bombbusters","saboteur","biss20"].map(byId).map(g=>`<img src="${g.front}" alt="">`).join("")}</div>
+      <div class="schachteln" aria-hidden="true">${["cascadia","bombbusters","saboteur","biss20"].map(byId).map(g=>`<img src="${g.cover}" alt="">`).join("")}</div>
     </section>
     <div class="deko" aria-hidden="true">✦ ✧ ✦</div>
     <section class="filter" aria-label="Spiele suchen und filtern">
@@ -1743,7 +1742,8 @@ function renderList(){
   box.innerHTML = list.length ? `<div class="regal">${list.map(g=>`
     <article class="game" style="--c:var(${g.c})">
       <button class="stern" data-merk="${g.id}" aria-pressed="${MERK.includes(g.id)}" aria-label="${esc(g.name)} auf die Merkliste">${MERK.includes(g.id)?"★":"☆"}</button>
-      <div class="stage"><img src="${g.front}" alt="" loading="lazy"></div>
+      <div class="stage"><img src="${g.cover}" alt="" loading="lazy"></div>
+      <div class="plank"></div>
       <div class="info">
         <h3><a href="#${g.id}">${esc(g.name)}</a></h3><div class="sub">${esc(g.sub)}</div>
         <div class="facts"><span class="chip">👥 ${g.min}–${g.max}</span><span class="chip">⏱ ${esc(g.time)}</span><span class="chip">🎂 ${esc(g.age)}</span><span class="chip">${stufeTxt(g.stufe)}</span></div>
@@ -1785,7 +1785,7 @@ function renderGame(g){
   const material = String(g.material).split(/,\s*(?![^()]*\))/).map(t=>t.trim()).filter(Boolean);
   app.innerHTML = `
     <header class="gamehero">
-      <img class="cover" src="${g.front}" alt="Schachtel von ${esc(g.name)}">
+      <img class="cover" src="${g.cover}" alt="Schachtel von ${esc(g.name)}">
       <div class="txt">
         <span class="klein">Spieleregal</span>
         <h1>${esc(g.name)}</h1>
@@ -1859,8 +1859,8 @@ function renderGame(g){
       <div class="links">${g.videos.map(([t,u,src])=>`<a href="${u}" target="_blank" rel="noopener"><span class="ic">▶</span><span><b>${esc(t)}</b><small>${esc(src)}</small></span></a>`).join("")}</div>
     </section>`:""}
     <nav class="blaettern" aria-label="Weitere Spiele">
-      ${prev?`<a href="#${prev.id}"><img src="${prev.front}" alt=""><span><small>← vorheriges</small><b>${esc(prev.name)}</b></span></a>`:""}
-      ${next?`<a href="#${next.id}"><img src="${next.front}" alt=""><span><small>nächstes →</small><b>${esc(next.name)}</b></span></a>`:""}
+      ${prev?`<a href="#${prev.id}"><img src="${prev.cover}" alt=""><span><small>← vorheriges</small><b>${esc(prev.name)}</b></span></a>`:""}
+      ${next?`<a href="#${next.id}"><img src="${next.cover}" alt=""><span><small>nächstes →</small><b>${esc(next.name)}</b></span></a>`:""}
     </nav>`;
   const q=document.getElementById("q2");
   if(q) q.oninput=()=>{ const v=q.value.trim().toLowerCase(); app.querySelectorAll("#tasks li").forEach(li=>{ const t=li.dataset.s; li.hidden = !!v && (/^\d+$/.test(v) ? t.split(" ")[0]!==v : !t.includes(v)); }); };
@@ -1927,13 +1927,13 @@ function renderStationen(){
           <button class="btn sm" id="ausMerk" ${MERK.length?"":"disabled"}>⭐ Merkliste übernehmen</button>
           <button class="btn sm" id="keine">Keine</button>
         </div>
-        <div class="wahl">${sortiert.map(g=>`<button data-g="${g.id}" aria-pressed="${ST.games.includes(g.id)}"><img src="${g.front}" alt=""><span>${esc(g.name)}<small>👥 ${g.min}–${g.max} · ${esc(g.time)}</small></span></button>`).join("")}</div>
+        <div class="wahl">${sortiert.map(g=>`<button data-g="${g.id}" aria-pressed="${ST.games.includes(g.id)}"><img src="${g.cover}" alt=""><span>${esc(g.name)}<small>👥 ${g.min}–${g.max} · ${esc(g.time)}</small></span></button>`).join("")}</div>
       </div>
     </section>
     ${warn?`<div class="warn">${esc(warn)}</div>`:""}
     ${v.drin.length?`<div class="nurdruck"><b>${ST.kinder} Kinder · ${v.drin.length} Stationen</b></div><div class="stationen">${v.drin.map((g,i)=>{ const n=v.size[i]; const st=prep(g); const r=g.compute(n, Object.assign({}, st, {n})); const main=r.deal.find(d=>d.main)||r.deal[0];
       return `<article class="station" style="--c:var(${g.c})">
-        <div class="kopf"><img src="${g.front}" alt=""><div><small class="klein">Station ${i+1}</small><h3>${esc(g.name)}</h3><div class="gr">${n} Kinder · ${esc(g.time)}</div></div></div>
+        <div class="kopf"><img src="${g.cover}" alt=""><div><small class="klein">Station ${i+1}</small><h3>${esc(g.name)}</h3><div class="gr">${n} Kinder · ${esc(g.time)}</div></div></div>
         <ul><li><b>${esc(main.v)}</b> ${esc(main.t)}</li>${r.deal.filter(d=>d!==main).slice(0,3).map(d=>`<li><b>${esc(d.v)}</b> ${esc(d.t)}</li>`).join("")}</ul>
         <a class="btn sm nodruck" href="#${g.id}/${n}">Aufbau für ${n} ansehen →</a>
       </article>`; }).join("")}</div>`:""}`;
