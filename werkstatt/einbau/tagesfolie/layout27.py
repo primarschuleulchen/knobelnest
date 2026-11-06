@@ -1,7 +1,8 @@
 # 27) Die Folie sieht beim Bearbeiten genau gleich aus wie im Vollbild:
 #     Die Fläche (#board) hat immer die Grösse, die sie im Vollbild auf diesem Bildschirm hätte (screen.width/height),
 #     und wird im Fenster nur verkleinert gezeigt (transform: scale). Schriftgrössen hängen an --vh = 1 % der
-#     Bildschirmhöhe statt an der Fensterhöhe. Rahmen #bwrap übernimmt den Platz im Layout.
+#     Bildschirmhöhe statt an der Fensterhöhe. Die Fläche reicht bis an den Rand (#bwrap = ganzes Fenster);
+#     obere Leiste und Werkzeugleiste liegen darüber (im Vollbild verschwinden sie, wenn die Maus ruht).
 #     Beim Verschieben/Grössenändern sind alle Knöpfe und Leisten ausgeblendet (.app.dragging).
 import re as _re
 
@@ -32,12 +33,10 @@ window.addEventListener("resize", fitBoard);
 document.addEventListener("fullscreenchange", () => { APP.classList.toggle("voll", !!document.fullscreenElement); setTimeout(fitBoard, 60); });
 function renderBoard(){''')
 rep('.t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}', '''.t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
-.bwrap{position:relative;flex:1;min-height:0;margin-top:30px;margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px))}
+.bwrap{position:absolute;inset:0;margin:0}
 #board{position:absolute;left:0;top:0;flex:none;margin:0;transform-origin:0 0;--vh:1vh}
-.app:not(.voll) #board{box-shadow:0 0 0 1.5px rgba(214,173,69,.55),0 10px 34px rgba(63,120,168,.14);border-radius:6px}
-.app.voll .bwrap{position:absolute;inset:0;margin:0}
-.app.voll .top{position:absolute;top:0;left:0;right:0}
-.app.voll .dock{position:absolute;bottom:0;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px)}
+.app .top{position:absolute;top:0;left:0;right:0}
+.app .dock{position:absolute;bottom:0;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px)}
 .app.dragging .top,.app.dragging .dock,.app.dragging .music-chip,.app.dragging .w .chrome,.app.dragging .w .rs,.app.dragging .w .rse,.app.dragging .w .rsb{opacity:0!important;pointer-events:none}
 .app.dragging .lfoot,.app.dragging .mnote.empty,.app.dragging .itools,.app.dragging .pl-ops{display:none!important}
 .app.dragging .w.sel .card{outline:0}''')
