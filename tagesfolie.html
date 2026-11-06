@@ -204,6 +204,8 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-item:hover .pl-ops{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.music-chip{padding:4px!important;gap:2px!important}
+.music-chip .mt{padding:0 8px 0 4px;font-size:18px}
 iframe.yt{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:0;pointer-events:none;border:0;z-index:-1}
 #otterLayer,.t-otter .obody{border-radius:22px!important}
 .w.otter.hov .chrome{opacity:1}
@@ -2083,7 +2085,7 @@ function musicRender(){
   const m = screen().music, c = musicChip();
   if (!m) { c.hidden = true; return; }
   c.hidden = false;
-  c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern">♪ ${esc(m.name || "Musik")}</span>`;
+  c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern" aria-label="Musik ändern">♪</span>`;
   if (MUS.kind === "yt" && MUS.el && !MUS.el.isConnected) APP.appendChild(MUS.el);
 }
 function ytCmd(func){ try { MUS.el.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*"); } catch {} }
@@ -2111,12 +2113,13 @@ function syncMusic(force){
   if (m) {
     MUS.key = key; MUS.kind = m.type;
     if (m.type === "file") {
-      const a = new Audio(m.src); a.loop = true; MUS.el = a;
+      const a = new Audio(m.src); a.loop = m.loop !== false; MUS.el = a; a.addEventListener("ended", () => { MUS.playing = false; musicRender(); });
       a.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => { MUS.playing = false; musicRender(); });
     } else {
       const f = document.createElement("iframe");
       f.className = "yt"; f.allow = "autoplay; encrypted-media"; f.title = "Musik";
-      f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1&loop=1&playlist=${m.id}&controls=0&enablejsapi=1&playsinline=1`;
+      f.referrerPolicy = "strict-origin-when-cross-origin";
+      f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1${m.loop === false ? "" : `&loop=1&playlist=${m.id}`}&controls=0&enablejsapi=1&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
       f.addEventListener("load", () => { try { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch {} });
       MUS.el = f; MUS.playing = false;
     }
@@ -2155,13 +2158,16 @@ setTimeout(autoScreen, 2500);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) autoScreen(); });
 function openMusic(s){
   const html = () => `<p class="hint">Die Musik läuft im Hintergrund, solange dieser Bildschirm offen ist. Unten links kannst du sie pausieren.</p>
-    ${s.music ? `<p style="margin:0 0 10px"><b>Jetzt:</b> ♪ ${esc(s.music.name || "Musik")} <button class="sbtn" data-mrm>Musik entfernen</button></p>` : ""}
+    ${s.music ? `<p style="margin:0 0 10px"><b>Jetzt:</b> ♪ ${esc(s.music.name || "Musik")} <button class="sbtn" data-mrm>Musik entfernen</button></p>
+      <label style="display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:17px"><input type="checkbox" data-mloop ${s.music.loop === false ? "" : "checked"} style="width:22px;height:22px"> Endlos wiederholen (sonst hört die Musik am Ende auf)</label>` : ""}
     <h3 class="sh3">YouTube-Link</h3><div class="addrow"><input type="text" id="mus-yt" placeholder="https://www.youtube.com/watch?v=…" aria-label="YouTube-Link"><button class="sbtn rose" data-myt>Übernehmen</button></div>
     <h3 class="sh3">Oder Audiodatei hochladen</h3><div class="addrow"><button class="sbtn" data-mup>🎵 Datei wählen (MP3, M4A …)</button></div>
     <input type="file" id="mus-file" accept="audio/*" hidden>`;
   const set = mus => { s.music = mus; save(); if (s.id === S.active) syncMusic(true); };
   sheet("Musik für «" + s.name + "»", html(), async (e, bg) => {
     const body = bg.querySelector(".body");
+    if (e.target.matches && e.target.matches("[data-mloop]")) { s.music.loop = e.target.checked; save();
+      if (s.id === S.active && MUS.el) { if (MUS.kind === "file") MUS.el.loop = s.music.loop; else syncMusic(true); } return; }
     if (e.target.closest("[data-mrm]")) { delete s.music; save(); if (s.id === S.active) syncMusic(true); body.innerHTML = html(); return; }
     if (e.target.closest("[data-myt]")) { const id = ytId($("#mus-yt").value); if (!id) { toast("Das ist kein YouTube-Link"); return; } set({ type: "yt", id, name: "YouTube" }); toast("Musik gespeichert ♪"); body.innerHTML = html(); return; }
     if (e.target.closest("[data-mup]")) {
