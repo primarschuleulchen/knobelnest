@@ -100,7 +100,7 @@ def alle(spiel):
           levels=[dict(name='Entdecken', info='Antippen, hören und finden', t=0),
                   dict(name='Auswählen', info='Wie heisst es auf Englisch?', t=1),
                   dict(name='Schreiben', info='Das englische Wort schreiben', t=2),
-                  dict(name='Sprechen', info='Das Wort laut sagen 🎤', t=3),
+                  dict(name='Sprechen', info='Das Wort laut sagen', t=3),
                   dict(name='Pronomen benennen', info='my, your, his, her, its … auswählen', t=4),
                   dict(name='Pronomen schreiben', info='my hat, her tie … selber schreiben', t=5),
                   dict(name='Sätze bauen', info='This is my … / These are my …', t=6),
@@ -267,7 +267,7 @@ function say(t, rate) {
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-function lautBtn(t) { var b = document.createElement('button'); b.className = 'laut'; b.setAttribute('aria-label', 'Anhören'); b.textContent = '🔊'; b.onclick = function (e) { e.stopPropagation(); say(t); }; return b; }
+function lautBtn(t) { var b = document.createElement('button'); b.className = 'laut'; b.setAttribute('aria-label', 'Anhören'); b.innerHTML = ik('laut', 30); b.onclick = function (e) { e.stopPropagation(); say(t); }; return b; }
 function norm(s) { return String(s || '').toLowerCase().replace(/[’']/g, '').replace(/[^a-z\- ]/g, ' ').replace(/\s+/g, ' ').trim(); }
 function klein(s) { return norm(s).replace(/-/g, '').replace(/ /g, ''); }
 function abstand(a, b) {
@@ -324,7 +324,7 @@ function stufeSchrank(api) {
       rich.classList.add('an');
       if (!ok) { g.classList.remove('no'); void g.offsetWidth; g.classList.add('no'); }
       say(ok ? ziel.en : 'This is the ' + ziel.en + '.');
-      fb(ok ? '<span class="em">✨</span> Yes! <b>' + h(ziel.en) + '</b> = ' + h(ziel.de) : '<span class="em">💡</span> Das ist <b>' + h(ITM[id].en) + '</b>. Gesucht war <b>' + h(ziel.en) + '</b> (leuchtet).');
+      fb(ok ? 'Yes! <b>' + h(ziel.en) + '</b> = ' + h(ziel.de) : 'Das ist <b>' + h(ITM[id].en) + '</b>. Gesucht war <b>' + h(ziel.en) + '</b> (leuchtet).');
       k++;
       if (!api.answer(ok)) return;
       api.later(function () { rich.classList.remove('an'); g.classList.remove('no'); frage(); }, ok ? 1300 : 2400);
@@ -355,7 +355,7 @@ function stufeWahl(api) {
         bt.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === x.en) c.classList.add('hint'); });
         say(x.en); b.appendChild(lautBtn(x.en));
-        fb(ok ? '<span class="em">' + pick(['✨', '🌟', '👏'], 1)[0] + '</span> Richtig! <b>' + h(x.en) + '</b> = ' + h(x.de) : '<span class="em">💡</span> Das ist <b>' + h(x.en) + '</b> (' + h(x.de) + ').');
+        fb(ok ? 'Richtig! <b>' + h(x.en) + '</b> = ' + h(x.de) : 'Das ist <b>' + h(x.en) + '</b> (' + h(x.de) + ').');
         k++; if (!api.answer(ok)) return;
         api.later(frage, ok ? 1300 : 2300);
       };
@@ -380,7 +380,7 @@ function stufeSchreiben(api) {
     var f = neu('schreib', '<input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Englisches Wort"><button class="go">Prüfen</button>');
     w.appendChild(f);
     var inp = f.querySelector('input'), btn = f.querySelector('button');
-    api.msg('<span class="em">✏️</span> Schreib das englische Wort. <small>(' + h(x.de) + ')</small>');
+    api.msg('Schreib das englische Wort. <small>(' + h(x.de) + ')</small>');
     setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
     function pruef() {
       if (lock) return; if (!inp.value.trim()) { inp.focus(); return; }
@@ -389,7 +389,7 @@ function stufeSchreiben(api) {
         vers = 1; inp.classList.add('no'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); bad();
         lu.textContent = x.en.split('').map(function (c, i) { return i === 0 || c === '-' ? c : '_'; }).join(' ');
         b.appendChild(lautBtn(x.en)); say(x.en);
-        fb('<span class="em">💡</span> Noch nicht. Tipp: So viele Buchstaben hat das Wort. Hör nochmal zu!');
+        fb('Noch nicht. Tipp: So viele Buchstaben hat das Wort. Hör nochmal zu!');
         api.later(function () { inp.classList.remove('no'); inp.select(); }, 600);
         return;
       }
@@ -397,7 +397,7 @@ function stufeSchreiben(api) {
       if (!ok) { lu.textContent = x.en; }
       if (vers === 0 || !ok) b.appendChild(lautBtn(x.en));
       say(x.en);
-      fb(ok ? '<span class="em">🌟</span> Richtig geschrieben: <b>' + h(x.en) + '</b>!' : '<span class="em">📝</span> So schreibt man es: <b>' + h(x.en) + '</b>');
+      fb(ok ? 'Richtig geschrieben: <b>' + h(x.en) + '</b>!' : 'So schreibt man es: <b>' + h(x.en) + '</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 1400 : 2800);
     }
@@ -429,15 +429,15 @@ function stufeSprechen(api) {
   function frage() {
     var x = liste[k], vers = 0, lock = false; w.innerHTML = ''; fb('');
     var b = neu('bild', art(x.id)); b.appendChild(lautBtn(x.en)); w.appendChild(b);
-    var mik = document.createElement('button'); mik.className = 'mik'; mik.setAttribute('aria-label', 'Sprechen'); mik.textContent = '🎤';
+    var mik = document.createElement('button'); mik.className = 'mik'; mik.setAttribute('aria-label', 'Sprechen'); mik.innerHTML = ik('mikro', 56);
     var info = neu('gehoert', ''); w.appendChild(mik); w.appendChild(info);
     var selbst = !SR || SR_AUS;
-    api.msg(selbst ? '<span class="em">🗣️</span> Sag das Wort laut auf Englisch! <small>Tippe auf 🔊 zum Vorhören, dann auf 🎤.</small>'
-                   : '<span class="em">🗣️</span> Tippe auf 🎤 und sag das Wort auf Englisch! <small>(🔊 = vorhören)</small>');
+    api.msg(selbst ? 'Sag das Wort laut auf Englisch! <small>Tippe auf ' + ik('laut', 18) + ' zum Vorhören, dann auf ' + ik('mikro', 18) + '.</small>'
+                   : 'Tippe auf ' + ik('mikro', 18) + ' und sag das Wort auf Englisch! <small>(' + ik('laut', 18) + ' = vorhören)</small>');
     function fertig(ok) {
       if (lock) return; lock = true; mik.disabled = true; mik.classList.remove('hoert');
       say(x.en);
-      fb(ok ? '<span class="em">🌟</span> Super ausgesprochen: <b>' + h(x.en) + '</b>!' : '<span class="em">👂</span> Hör nochmal gut zu: <b>' + h(x.en) + '</b>');
+      fb(ok ? 'Super ausgesprochen: <b>' + h(x.en) + '</b>!' : 'Hör nochmal gut zu: <b>' + h(x.en) + '</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 1500 : 2600);
     }
@@ -446,19 +446,19 @@ function stufeSprechen(api) {
       info.innerHTML = '';
       var r = neu('row', '<button class="go alt" data-x="ja">👍 Klang gleich</button><button class="go alt" data-x="nochmal">🔁 Nochmal</button>');
       function wahl() { w.appendChild(r); r.querySelector('[data-x="ja"]').onclick = function () { r.remove(); fertig(true); }; r.querySelector('[data-x="nochmal"]').onclick = function () { r.remove(); info.textContent = ''; }; }
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { info.textContent = 'Sag das Wort laut. Klang es wie bei 🔊?'; wahl(); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { info.innerHTML = 'Sag das Wort laut. Klang es wie beim Vorhören?'; wahl(); return; }
       navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
         var mr = new MediaRecorder(st), teile = [];
         mr.ondataavailable = function (e) { if (e.data && e.data.size) teile.push(e.data); };
         mr.onstop = function () {
           st.getTracks().forEach(function (t) { t.stop(); }); mik.classList.remove('hoert');
           var url = URL.createObjectURL(new Blob(teile, { type: mr.mimeType || 'audio/webm' })), a = new Audio(url);
-          info.innerHTML = 'So klingst du: '; var p = document.createElement('button'); p.className = 'laut'; p.textContent = '▶️'; p.onclick = function () { a.play(); }; info.appendChild(p);
+          info.innerHTML = 'So klingst du: '; var p = document.createElement('button'); p.className = 'laut'; p.innerHTML = ik('play', 26); p.onclick = function () { a.play(); }; info.appendChild(p);
           a.play().catch(function () {}); wahl();
         };
         mik.classList.add('hoert'); info.textContent = 'Ich nehme auf … sprich jetzt!'; mr.start();
         api.later(function () { if (mr.state !== 'inactive') mr.stop(); }, 2600);
-      }).catch(function () { info.textContent = 'Sag das Wort laut. Klang es wie bei 🔊?'; wahl(); });
+      }).catch(function () { info.innerHTML = 'Sag das Wort laut. Klang es wie beim Vorhören?'; wahl(); });
     }
     mik.onclick = function () {
       if (lock || mik.classList.contains('hoert')) return;
@@ -473,13 +473,13 @@ function stufeSprechen(api) {
         if (gehoertOk(x, alts)) { info.textContent = 'Ich habe gehört: «' + alts[0] + '» ✓'; fertig(true); return; }
         vers++; info.textContent = 'Ich habe gehört: «' + (alts[0] || '…') + '»';
         if (vers >= 3) { fertig(false); return; }
-        bad(); fb('<span class="em">🔁</span> Fast! Hör mit 🔊 zu und versuch es nochmal.');
+        bad(); fb('Fast! Hör nochmal zu und versuch es wieder.');
       };
       r.onerror = function (e) {
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
           SR_AUS = true; info.textContent = 'Das Mikrofon ist hier gesperrt. Du kannst trotzdem üben:'; mik.classList.remove('hoert'); api.later(selbstPruefen, 900); return;
         }
-        if (e.error === 'no-speech') { info.textContent = 'Ich habe nichts gehört. Tippe auf 🎤 und sprich etwas lauter.'; return; }
+        if (e.error === 'no-speech') { info.textContent = 'Ich habe nichts gehört. Tippe nochmal und sprich etwas lauter.'; return; }
         if (e.error === 'aborted') return;
         // z. B. «network»: Die Spracherkennung geht hier nicht, also selber vergleichen
         SR_AUS = true; mik.classList.remove('hoert'); info.textContent = 'Zuhören geht gerade nicht. Du kannst trotzdem üben:'; api.later(selbstPruefen, 900);
@@ -574,7 +574,7 @@ function stufeBegleiter(api) {
         bt.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(wahl.children, function (c) { if (c.textContent === a.enP) c.classList.add('hint'); });
         say(a.enP);
-        fb(ok ? '<span class="em">✨</span> Richtig: <b>' + h(a.enP) + '</b>' : '<span class="em">💡</span> ' + h(tippPr(a)) + ': <b>' + h(a.enP) + '</b>');
+        fb(ok ? 'Richtig: <b>' + h(a.enP) + '</b>' : '' + h(tippPr(a)) + ': <b>' + h(a.enP) + '</b>');
         k++; if (!api.answer(ok)) return;
         api.later(frage, ok ? 1500 : 3000);
       };
@@ -618,7 +618,7 @@ function stufeSaetze(api) {
         vers = 1; satz.classList.add('no', 'shake'); bad();
         var g = s.split(' '), tipp = g[0] !== ziel[0] || g[1] !== ziel[1] ? (a.enPl ? 'Mehrere Dinge (oder trousers, socks …) → These are' : 'Ein Ding → This is') : g[2] !== ziel[2] ? tippPr(a) : 'Schau das Bild genau an: eins oder zwei?';
         if (!a.x.sg && (g[0] !== ziel[0] || g[1] !== ziel[1])) tipp = '«' + a.x.pl + '» ist auf Englisch immer Mehrzahl → These are';
-        fb('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
+        fb('Noch nicht ganz. ' + h(tipp));
         api.later(function () { satz.classList.remove('no', 'shake'); gewaehlt.forEach(function (b) { b.classList.remove('weg'); }); gewaehlt = []; zeichnen(); }, 1500);
         return;
       }
@@ -626,7 +626,7 @@ function stufeSaetze(api) {
       if (!ok) { satz.innerHTML = ''; ziel.forEach(function (t) { var e = document.createElement('button'); e.textContent = t; satz.appendChild(e); }); satz.appendChild(neu('pkt', '.')); }
       satz.classList.add(ok ? 'ok' : 'no'); satz.appendChild(lautBtn(a.enS + '.'));
       say(a.enS + '.');
-      fb(ok ? '<span class="em">🌟</span> Super! <b>' + h(a.enS) + '.</b>' : '<span class="em">📝</span> So heisst der Satz: <b>' + h(a.enS) + '.</b>');
+      fb(ok ? 'Super! <b>' + h(a.enS) + '.</b>' : 'So heisst der Satz: <b>' + h(a.enS) + '.</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 2000 : 3400);
     };
@@ -661,13 +661,13 @@ function stufeSchreibPr(api, satz) {
         if (satz && (g[0] !== z[0] || g[1] !== z[1])) tipp = !a.x.sg ? '«' + a.x.pl + '» ist auf Englisch immer Mehrzahl → These are' : a.enPl ? 'Mehrere Dinge → These are' : 'Ein Ding → This is';
         else if (g[satz ? 2 : 0] !== z[satz ? 2 : 0]) tipp = tippPr(a);
         else { tipp = 'Schau das Kleidungsstück genau an. So viele Buchstaben hat das Wort:'; hint.textContent = luecke(a.word); }
-        fb('<span class="em">💡</span> Noch nicht ganz. ' + h(tipp));
+        fb('Noch nicht ganz. ' + h(tipp));
         api.later(function () { s.inp.classList.remove('no'); s.inp.select(); }, 600);
         return;
       }
       lock = true; s.inp.classList.add(ok ? 'ok' : 'no'); s.inp.disabled = true; s.btn.remove();
       hint.textContent = ''; w.appendChild(lautBtn(ziel)); say(ziel);
-      fb(ok ? '<span class="em">🌟</span> Richtig: <b>' + h(ziel) + '</b>' : '<span class="em">📝</span> So heisst es: <b>' + h(ziel) + '</b>');
+      fb(ok ? 'Richtig: <b>' + h(ziel) + '</b>' : 'So heisst es: <b>' + h(ziel) + '</b>');
       k++; if (!api.answer(ok)) return;
       api.later(frage, ok ? 1800 : 3400);
     }
@@ -695,7 +695,7 @@ G.menu = function () {
     if (r.length === 2) o += '<div class="pf-reihe"><div class="pf-l">' + karte(r[0]) + '</div><div class="pf-n zwei"><i>' + (r[0] + 1) + '</i><i>' + (r[1] + 1) + '</i></div><div class="pf-r">' + karte(r[1]) + '</div></div>';
     else o += '<div class="pf-reihe"><div class="pf-l">' + (rechts[ri] ? '' : karte(r[0])) + '</div><div class="pf-n"><i>' + (r[0] + 1) + '</i></div><div class="pf-r">' + (rechts[ri] ? karte(r[0]) : '') + '</div></div>';
   });
-  app.innerHTML = o + '<div class="pf-reihe"><div></div><div class="pf-n pokal">🏆</div><div></div></div></div>';
+  app.innerHTML = o + '<div class="pf-reihe"><div></div><div class="pf-n pokal">' + ik('pokal', 26) + '</div><div></div></div></div>';
   Array.prototype.forEach.call(app.querySelectorAll('[data-lv]'), function (b) { b.onclick = function () { tone(520, 0.08); start(+b.dataset.lv); }; });
 };
 // ---------- Stern in der Aufgabe: füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern

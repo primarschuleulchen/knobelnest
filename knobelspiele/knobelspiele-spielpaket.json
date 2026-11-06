@@ -155,6 +155,33 @@
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/irrgarten.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Irrgarten</title></head><body><p>Irrgarten: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   },
   {
+   "title": "Spiegelbild",
+   "description": "Ein Muster an der goldenen Linie spiegeln.",
+   "fach": "Knobelkiste",
+   "thema": "Geometrie",
+   "stufe": "1.–6. Klasse",
+   "sort": 11,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/spiegelbild.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Spiegelbild</title></head><body><p>Spiegelbild: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Waage",
+   "description": "Gewichte auflegen, bis die Waage gerade ist.",
+   "fach": "Mathematik",
+   "thema": "Rechnen",
+   "stufe": "1.–6. Klasse",
+   "sort": 12,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/waage.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Waage</title></head><body><p>Waage: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Zahlen-Pfad",
+   "description": "Einen Weg von 1 bis zur letzten Zahl durch alle Felder ziehen.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 13,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/zahlen-pfad.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Zahlen-Pfad</title></head><body><p>Zahlen-Pfad: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
    "title": "Kleiderschrank",
    "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»",
    "fach": "Englisch",
