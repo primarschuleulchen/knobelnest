@@ -356,6 +356,8 @@ body{font-size:17px}
 .btn.go:hover{background:#c9e5fa}
 .toast{font-weight:400;font-size:17px}
 .tile .tn{font-family:var(--ui)!important;font-weight:400!important}
+.sw[data-cov="monat"]{display:inline-grid;place-items:center;color:var(--gold-d);font-size:18px;background:conic-gradient(#cbe5bf 0 25%,#f2df9f 0 50%,#eec7a0 0 75%,#c6d9ee 0)!important}
+.covtip{margin:6px 0 0;font-size:14px;color:var(--muted)}
 .ptab,.seg button{font-weight:400;font-size:17px}
 .ptab{border:1.5px solid var(--line2)}
 .ptab.on,.seg button.on{background:var(--himmel);border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
@@ -467,7 +469,10 @@ const KIND = {
 const INKS = { blau:"#27489a", schwarz:"#24272b", rot:"#c23a33", gruen:"#2f7a45" };
 const MARKS = { gelb:"rgba(244,247,80,.85)", gruen:"rgba(160,236,110,.7)", rosa:"rgba(255,160,200,.7)", blau:"rgba(140,210,255,.7)", orange:"rgba(255,190,100,.75)", rot:"rgba(255,110,100,.6)" };
 const FAECHER = ["D","M","F","E","NMG","BG","TTG","MU","BS"];
-const COVERS = { eule:["#d9ebfa","#bcd8f1"], gruen:["#87ad74","#6f9a5f"], rose:["#e9a49b","#d9867c"], himmel:["#8fb0cf","#6f93b8"], lila:["#a690cf","#8a73b8"], sand:["#d6ad6e","#c0924f"], petrol:["#5f9a98","#4a817f"] };
+const MONATE_C = [["#dfeaf6","#c6d9ee"],["#e7e4f5","#d1cbea"],["#e4f2dc","#cbe5bf"],["#f8e4eb","#efcbd7"],["#ede2f5","#d9c7ec"],["#fbf1d2","#f2df9f"],["#d7eef6","#b7dfee"],["#fbe5d4","#f3cdb0"],["#f2ead2","#e3d2a3"],["#f8e1ca","#eec7a0"],["#e5eae2","#cdd7cb"],["#f5e0e0","#e7c6c6"]];
+const MONATE_N = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const COVER_N = k => k === "monat" ? "Passend zum Monat" : k === "eule" ? "Eule" : /^m\d+$/.test(k) ? MONATE_N[+k.slice(1) - 1] : k.charAt(0).toUpperCase() + k.slice(1);
+const COVERS = { monat:MONATE_C[new Date().getMonth()], eule:["#d9ebfa","#bcd8f1"], m1:MONATE_C[0], m2:MONATE_C[1], m3:MONATE_C[2], m4:MONATE_C[3], m5:MONATE_C[4], m6:MONATE_C[5], m7:MONATE_C[6], m8:MONATE_C[7], m9:MONATE_C[8], m10:MONATE_C[9], m11:MONATE_C[10], m12:MONATE_C[11], gruen:["#87ad74","#6f9a5f"], rose:["#e9a49b","#d9867c"], himmel:["#8fb0cf","#6f93b8"], lila:["#a690cf","#8a73b8"], sand:["#d6ad6e","#c0924f"], petrol:["#5f9a98","#4a817f"] };
 const FONTS = { "Patrick Hand":'"Patrick Hand","Comic Sans MS",cursive', "Playpen Sans":'"Playpen Sans","Comic Sans MS",cursive', "Andika":'"Andika",system-ui,sans-serif', "Comic Neue":'"Comic Neue","Comic Sans MS",cursive' };
 
 // ---------- Datum ----------
@@ -481,7 +486,7 @@ const longDate = s => { const d = parse(s); return `${WD[d.getDay()]}, ${d.getDa
 const shortDate = s => { const d = parse(s); return `${WD[d.getDay()].slice(0,2)} ${d.getDate()}.${d.getMonth()+1}.`; };
 
 // ---------- Zustand ----------
-const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse", sus:[], settings:{ lines:8, font:"Patrick Hand", cover:"eule" }, entries:[] });
+const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse", sus:[], settings:{ lines:8, font:"Patrick Hand", cover:"monat" }, entries:[] });
 let S = EMPTY(), week = monday(new Date()), who = KIDM ? KN.kidId : "", beamer = false;
 let store = { mode:"local", ref:null }, loaded = false, assets = null;
 const LS = "hausaufgabentafel1" + (KN ? "-" + KN.key : "");
@@ -612,9 +617,9 @@ function render(){
   const sun = addDays(week, 6), kw = isoWeek(week);
   const m1 = MO[week.getMonth()], m2 = MO[sun.getMonth()];
   $("#wk").innerHTML = `Woche ${kw}<small>${week.getDate()}.${week.getMonth()+1}. – ${sun.getDate()}.${sun.getMonth()+1}.${sun.getFullYear()}</small>`;
-  const c = COVERS[S.settings.cover] || COVERS.eule;
+  const c = S.settings.cover === "monat" || !COVERS[S.settings.cover] ? MONATE_C[addDays(week, 3).getMonth()] : COVERS[S.settings.cover];
   const book = $("#book");
-  book.classList.toggle("eule", !COVERS[S.settings.cover] || S.settings.cover === "eule"); book.style.setProperty("--cover", c[0]); book.style.setProperty("--cover2", c[1]);
+  book.classList.toggle("eule", !COVERS[S.settings.cover] || /^(eule|monat|m\d+)$/.test(S.settings.cover)); book.style.setProperty("--cover", c[0]); book.style.setProperty("--cover2", c[1]);
   document.documentElement.style.setProperty("--hand", FONTS[S.settings.font] || FONTS["Patrick Hand"]);
   $("#spread").innerHTML = `
     <div class="page l"><div class="phead"><span class="big">${m1 === m2 ? m1 : m1 + "/" + m2}</span></div>
@@ -1010,7 +1015,7 @@ function openKlasse(){
       <div><span class="lbl">Aufgaben übernehmen</span><div class="row"><label class="btn" style="cursor:pointer">Datei importieren …<input type="file" id="impIn" accept=".json,application/json" hidden></label></div><div class="hint" id="impHint">Aufgaben aus der bisherigen Hausaufgabentafel. Kontrollen und Notizen werden über den Vornamen den Kindern zugeordnet.</div></div>` : `<div><label class="lbl" for="sIn">Schülerinnen und Schüler · eine Person pro Zeile</label><textarea class="inp" id="sIn" style="min-height:220px;font-family:var(--ui);font-size:15px">${esc(d.list)}</textarea><div class="hint">Die Reihenfolge ergibt die Nummern. Bereits kontrollierte Aufgaben bleiben erhalten, solange der Name gleich bleibt.</div></div>`}
       <div><span class="lbl">Zeilen pro Tag</span><div class="row">${[[6,"gross"],[8,"mittel"],[10,"klein"]].map(([n,l]) => `<button class="opt${d.settings.lines === n ? " on" : ""}" data-l="${n}">${l} · ${n}</button>`).join("")}</div></div>
       <div><span class="lbl">Handschrift</span><div class="row">${Object.entries(FONTS).map(([k,v]) => `<button class="opt${d.settings.font === k ? " on" : ""}" data-font="${k}" style="font-family:${esc(v)};font-size:17px">${k}</button>`).join("")}</div></div>
-      <div><span class="lbl">Umschlag</span><div class="row">${Object.entries(COVERS).map(([k,v]) => `<button class="sw${d.settings.cover === k ? " on" : ""}" data-cov="${k}" style="background:linear-gradient(160deg,${v[0]},${v[1]})" aria-label="Umschlag ${k}"></button>`).join("")}</div></div>`;
+      <div><span class="lbl">Umschlag</span><div class="row">${Object.entries(COVERS).map(([k,v]) => `<button class="sw${d.settings.cover === k ? " on" : ""}" data-cov="${k}" style="background:linear-gradient(160deg,${v[0]},${v[1]})" aria-label="Umschlag ${COVER_N(k)}" title="${COVER_N(k)}">${k === "monat" ? "✦" : ""}</button>`).join("")}</div><p class="covtip">✦ = passend zum Monat, wechselt von selbst mit der Woche</p></div>`;
     pb.querySelector("#kIn").oninput = ev => d.klasse = ev.target.value;
     const sIn = pb.querySelector("#sIn"); if (sIn) sIn.oninput = ev => d.list = ev.target.value;
     const impIn = pb.querySelector("#impIn");

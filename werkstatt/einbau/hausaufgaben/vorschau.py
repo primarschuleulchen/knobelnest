@@ -25,7 +25,7 @@ E = [
  dict(id='e7', date=d(4), type='aufgabe', fach='Deutsch', title='Diktat üben: Wörter mit ie', details='Eltern diktieren lassen', order=0),
 ]
 for e in E: e.update(dict(status={}, notes={}, first={}, neuAuf={}, selbst={}, **({'for': []})))
-DATA = dict(klasse='Klasse 5b', sus=[], settings=dict(lines=8, font='Patrick Hand', cover='eule'), entries=E)
+DATA = dict(klasse='Klasse 5b', sus=[], settings=dict(lines=8, font='Patrick Hand', cover='monat'), entries=E)
 seite = '''<title>Hausaufgabenheft Vorschau</title><meta name="claude:viewport-fit-sides" content="cover">
 <style>''' + FONT + '''
 :root{color-scheme:light;--ink:#1f2421;--gold:#d6ad45;--sky:#dcf0fd;--bg:#f4f9fd}

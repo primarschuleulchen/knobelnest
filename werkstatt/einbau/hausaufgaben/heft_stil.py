@@ -1,10 +1,17 @@
 # 12) Klassenkiste-/Eulenkiste-Stil: Schrift Patrick Hand auch in der Bedienung, Aquarell-Hintergrund, Gold-Akzente,
-#     ruhige Titel statt Umriss-Schrift, goldenes Lesezeichen, neuer Umschlag «Eule» (hell, Gold) als Standard.
+#     ruhige Titel statt Umriss-Schrift, goldenes Lesezeichen, helle Einbände mit Goldrand. Standard «monat»: Farbe passend
+#     zum Monat der angezeigten Woche (MONATE_C), dazu die zwölf Monats-Einbände m1–m12 und «Eule» einzeln wählbar.
 #     Die Handschrift der Einträge bleibt wählbar (--hand). Nur Aussehen, Daten und Abläufe bleiben gleich.
-rep('const COVERS = { gruen:', 'const COVERS = { eule:["#d9ebfa","#bcd8f1"], gruen:')
-rep('settings:{ lines:8, font:"Patrick Hand", cover:"gruen" }', 'settings:{ lines:8, font:"Patrick Hand", cover:"eule" }')
-rep('const c = COVERS[S.settings.cover] || COVERS.gruen;', 'const c = COVERS[S.settings.cover] || COVERS.eule;')
-rep('book.style.setProperty("--cover", c[0]);', 'book.classList.toggle("eule", !COVERS[S.settings.cover] || S.settings.cover === "eule"); book.style.setProperty("--cover", c[0]);')
+MK = ' '.join('m%d:MONATE_C[%d],' % (i + 1, i) for i in range(12))
+rep('const COVERS = { gruen:', 'const MONATE_C = [["#dfeaf6","#c6d9ee"],["#e7e4f5","#d1cbea"],["#e4f2dc","#cbe5bf"],["#f8e4eb","#efcbd7"],["#ede2f5","#d9c7ec"],["#fbf1d2","#f2df9f"],["#d7eef6","#b7dfee"],["#fbe5d4","#f3cdb0"],["#f2ead2","#e3d2a3"],["#f8e1ca","#eec7a0"],["#e5eae2","#cdd7cb"],["#f5e0e0","#e7c6c6"]];\n'
+    'const MONATE_N = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];\n'
+    'const COVER_N = k => k === "monat" ? "Passend zum Monat" : k === "eule" ? "Eule" : /^m\\d+$/.test(k) ? MONATE_N[+k.slice(1) - 1] : k.charAt(0).toUpperCase() + k.slice(1);\n'
+    'const COVERS = { monat:MONATE_C[new Date().getMonth()], eule:["#d9ebfa","#bcd8f1"], ' + MK + ' gruen:')
+rep('settings:{ lines:8, font:"Patrick Hand", cover:"gruen" }', 'settings:{ lines:8, font:"Patrick Hand", cover:"monat" }')
+rep('const c = COVERS[S.settings.cover] || COVERS.gruen;', 'const c = S.settings.cover === "monat" || !COVERS[S.settings.cover] ? MONATE_C[addDays(week, 3).getMonth()] : COVERS[S.settings.cover];')
+rep('book.style.setProperty("--cover", c[0]);', 'book.classList.toggle("eule", !COVERS[S.settings.cover] || /^(eule|monat|m\\d+)$/.test(S.settings.cover)); book.style.setProperty("--cover", c[0]);')
+# Auswahl im Fenster: Namen beim Darüberfahren, «Passend zum Monat» mit Stern
+rep('aria-label="Umschlag ${k}"></button>`).join("")}</div></div>`;', 'aria-label="Umschlag ${COVER_N(k)}" title="${COVER_N(k)}">${k === "monat" ? "✦" : ""}</button>`).join("")}</div><p class="covtip">✦ = passend zum Monat, wechselt von selbst mit der Woche</p></div>`;')
 rep('#knBack{font-weight:700}', '''#knBack{font-weight:700}
 /* ===== Klassenkiste-Stil ===== */
 :root{--ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;--gold:#d6ad45;--gold-d:#a87c1f;--sun:#fbf3dc;--himmel:#dcf0fd;--blau:#3f78a8;--line2:#c5d8e8;
@@ -43,6 +50,8 @@ body{font-size:17px}
 .btn.go:hover{background:#c9e5fa}
 .toast{font-weight:400;font-size:17px}
 .tile .tn{font-family:var(--ui)!important;font-weight:400!important}
+.sw[data-cov="monat"]{display:inline-grid;place-items:center;color:var(--gold-d);font-size:18px;background:conic-gradient(#cbe5bf 0 25%,#f2df9f 0 50%,#eec7a0 0 75%,#c6d9ee 0)!important}
+.covtip{margin:6px 0 0;font-size:14px;color:var(--muted)}
 .ptab,.seg button{font-weight:400;font-size:17px}
 .ptab{border:1.5px solid var(--line2)}
 .ptab.on,.seg button.on{background:var(--himmel);border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}''')
