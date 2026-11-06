@@ -33,7 +33,8 @@ rep("</style>", r"""
 /* ===== Knobelnest ===== */
 #knResume{position:fixed;inset:0;z-index:31;display:grid;place-items:center;background:rgba(20,60,45,.28)}
 #knResume button{font:700 1.25rem var(--display);border:0;border-radius:999px;padding:16px 30px;background:#fff;color:var(--fur);box-shadow:0 6px 22px rgba(0,0,0,.25);cursor:pointer}
-html.embed .clock,html.embed #fsBtn,html.embed #setBtn,html.embed #knBack,html.embed .drawer{display:none!important}
+html.embed .clock,html.embed #fsBtn,html.embed #knBack{display:none!important}
+html.embed .drawer{top:6px;right:6px;bottom:6px;width:min(400px,calc(100vw - 12px))}
 html.embed .br,html.embed .count,html.embed .pausebadge{zoom:.7}
 html.embed .caption{zoom:.75}
 html.embed .scard{zoom:.6}

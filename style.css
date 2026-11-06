@@ -1333,6 +1333,14 @@ body.kidv .kk-tile{background:#F6E7C8}
 @media (prefers-reduced-motion:reduce){.board .tag{animation:none}}
 
 .board .mx-h.blank{background:none!important;border:0!important;box-shadow:none}
+.ruhig.board .tag{animation:none}
+.board .board-head .kick{font-family:inherit;font-weight:400;letter-spacing:.12em;color:#3f78a8}
+.board.embed .board-head .kick{font-size:15px}
+.board.embed .board-head h1{font-size:clamp(20px,4.6vh,32px)}
+.board.embed .matrix{grid-template-columns:minmax(118px,.8fr) repeat(var(--ncol,3),minmax(0,1fr))}
+.board.embed .mx-subj{hyphens:manual;overflow-wrap:normal;word-break:normal}
+.board.embed .mx-subj small{display:block}
+.board .tag{font-weight:400}
 .board .mx-h .lbl{font-size:clamp(17px,1.7vw,25px)!important;line-height:1.1}
 /* ===== Kinder-Start (Klassencode) im Stil der Eulenkiste ===== */
 .kc-code{position:relative;font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;text-align:center;align-items:center;gap:10px;max-width:600px;margin:10px auto 0;padding:34px 36px 32px;border-radius:34px;
