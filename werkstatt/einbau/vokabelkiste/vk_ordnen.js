@@ -27,3 +27,15 @@ function vkMove(id,back){const i=NODES.get(id);if(!i)return;const s=i.sub,L=$('#
   $('#mvNew',L).onclick=()=>{const nm=$('#mvName',L).value.trim();if(!nm){toast('Bitte zuerst einen Namen für den neuen Ordner eingeben.');$('#mvName',L).focus();return}
     const pid=$('#mvIn',L).value,par=pid?NODES.get(pid).node:null,arr=par?(par.kids=par.kids||[]):s.tree;
     const f={id:uid(),name:nm,kids:[],open:isOpen(i.node)};arr.push(f);take();f.kids.push(i.node);done(f)}}
+/* Ordnerfarbe (Lehrperson): n.farbe = Schlüssel aus FFARBEN; ohne eigene Farbe gilt die des nächsten oberen Ordners */
+const FFARBEN=[['blau','#dcf0fd','Hellblau'],['gruen','#e4f1da','Grün'],['mint','#d8f1ea','Mint'],['gelb','#fbf0cc','Gelb'],['orange','#fde3cc','Orange'],['rosa','#fbe0e5','Rosa'],['lila','#e9e0f7','Lila'],['grau','#ebebe8','Grau']];
+function vkFc(n){let i=NODES.get(n.id);while(i){const f=i.node.farbe&&FFARBEN.find(x=>x[0]===i.node.farbe);if(f)return f[1];i=i.parent?NODES.get(i.parent.id):null}return ''}
+const vkFcStyle=n=>{const c=vkFc(n);return c?` style="--fc:${c}"`:''};
+function vkFarbe(id,back){const i=NODES.get(id);if(!i)return;const n=i.node,L=$('#layer');
+  L.innerHTML=`<div class="scrim"></div><div class="dlg fcdlg" role="dialog" aria-label="Farbe"><h2 class="lbl">Farbe für «${esc(n.name)}»</h2>
+    <p class="note" style="margin:0">Ordner darin ohne eigene Farbe bekommen dieselbe Farbe.</p>
+    <div class="fcwahl">${FFARBEN.map(([k,c,t])=>`<button class="fcs ${n.farbe===k?'on':''}" data-fc="${k}" style="--fc:${c}" title="${t}"><span></span>${t}</button>`).join('')}
+      <button class="fcs auto ${n.farbe?'':'on'}" data-fc=""><span></span>Automatisch</button></div>
+    <div class="dact"><button class="pill" id="fcX">Abbrechen</button></div></div>`;
+  const zu=()=>{L.innerHTML=''};$('#fcX',L).onclick=zu;$('.scrim',L).onclick=zu;
+  $$('[data-fc]',L).forEach(b=>b.onclick=()=>{const k=b.dataset.fc;if(k)n.farbe=k;else delete n.farbe;zu();touch();toast('Farbe gespeichert');if(back)back()})}

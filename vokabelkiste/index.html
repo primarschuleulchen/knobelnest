@@ -876,6 +876,21 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
   .hgrp+.hgrp{border-left:0;border-top:1.5px dashed var(--rule)}
   .hgrp.hedit{margin-top:0;padding-top:8px}
 }
+/* Startseite: Vorlesestimme einklappbar, Abstand unter den Stufen, Ordnerfarbe (Abschnitt 25) */
+.grp>.grph{margin:34px 0 16px}
+.vdet{margin-top:8px}
+.vdet>summary{list-style:none;cursor:pointer;align-items:center}
+.vdet>summary::-webkit-details-marker{display:none}
+.vchev{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#fff;border:1.5px solid var(--rule);box-shadow:0 2px 0 var(--line);color:var(--sky-deep);font-size:22px;line-height:1;transition:transform .2s}
+.vdet>summary:hover .vchev{background:var(--sky-soft)}
+.vdet[open] .vchev{transform:rotate(-90deg)}
+.vdet .voice{margin-bottom:14px}
+.fcwahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.fcs{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:7px 10px;font:inherit;font-size:16px;cursor:pointer;text-align:left}
+.fcs span{width:26px;height:22px;border-radius:3px 8px 8px 8px;background:var(--fc);border:1px solid rgba(0,0,0,.08);flex:none}
+.fcs.auto span{background:linear-gradient(135deg,#e9f1e3 50%,#dcf0fd 50%)}
+.fcs:hover{background:var(--sky-soft)}
+.fcs.on{border-color:var(--gold);background:var(--nut-soft)}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1313,15 +1328,15 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hbar"><div class="hgrp"><span class="hlab">Freigabe</span><div class="hrow"><button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'🔒 Für Kinder freigeben'}</button>${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'tplon':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}</div></div>${isPortion?`<div class="hgrp"><span class="hlab">Im Unterricht</span><div class="hrow">${KN?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}${wsTools()}</div></div>`:''}<div class="hgrp hedit"><span class="hlab">${isPortion?'Portion':'Ordner'}</span><div class="hrow"><button class="hb" id="dupNode">⧉ Duplizieren</button><button class="hb" id="ren">✎ Umbenennen</button><button class="hb" id="mvNode">📁 Verschieben</button><button class="hb del" id="delNode">🗑 Löschen</button></div></div></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hbar"><div class="hgrp"><span class="hlab">Freigabe</span><div class="hrow"><button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'🔒 Für Kinder freigeben'}</button>${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'tplon':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}</div></div>${isPortion?`<div class="hgrp"><span class="hlab">Im Unterricht</span><div class="hrow">${KN?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}${wsTools()}</div></div>`:''}<div class="hgrp hedit"><span class="hlab">${isPortion?'Portion':'Ordner'}</span><div class="hrow">${isPortion?'':'<button class="hb" id="fcNode">🎨 Farbe</button>'}<button class="hb" id="dupNode">⧉ Duplizieren</button><button class="hb" id="ren">✎ Umbenennen</button><button class="hb" id="mvNode">📁 Verschieben</button><button class="hb del" id="delNode">🗑 Löschen</button></div></div></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
   if(isPortion&&ws.length)h+=practiceHTML();
   if(isPortion)h+=T?editorHTML(node):wordListHTML(ws);
   if(node&&!ws.length&&!T)h+=`<div class="empty" style="margin-top:20px"><p class="hand">Hier sind noch keine Wörter eingetragen.</p></div>`;
-  if(!node&&canSpeak)h+=`<div class="sh"><h2 class="lbl">Vorlesestimme</h2><p class="hand">Es wird automatisch eine Frauenstimme gewählt.</p></div>
-    <div class="voice"><select id="voiceSel" aria-label="Stimme für ${esc(s.name)}">${voiceOptions(s.lang)}</select><button class="pill" id="voiceTest">${SPK} Probehören</button></div>`;
+  if(!node&&canSpeak)h+=`<details class="vdet"><summary class="sh"><h2 class="lbl">Vorlesestimme</h2><p class="hand">Es wird automatisch eine Frauenstimme gewählt.</p><span class="vchev" aria-hidden="true">‹</span></summary>
+    <div class="voice"><select id="voiceSel" aria-label="Stimme für ${esc(s.name)}">${voiceOptions(s.lang)}</select><button class="pill" id="voiceTest">${SPK} Probehören</button></div></details>`;
   if(!node)h+=`<p class="note">Dein Fortschritt (Karteikasten, Knacknüsse, Rekorde) wird ${KN?'in der Klassenkiste gespeichert – auf jedem Gerät gleich':'auf diesem Gerät gespeichert'}.</p>`;
   stage.innerHTML=h;
   bindNodes(stage);bindSpeak(stage);bindPractice(stage);
@@ -1329,7 +1344,7 @@ function goNode(id){
   bindFolderGrid(id);
   if(T&&node){
     $('#relNode').onclick=()=>toggleRelease(id);const tpb=$('#tplNode');if(tpb)tpb.onclick=()=>toggleTpl(id);const cpb=$('#cpBtn');if(cpb)cpb.onclick=()=>goClassPortion(id);
-    $('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=()=>openDialog({title:isPortion?'Portion umbenennen':'Ordner umbenennen',value:node.name,onOk:v=>{node.name=v;touch();goNode(id)}});
+    const fcb=$('#fcNode');if(fcb)fcb.onclick=()=>vkFarbe(id,()=>goNode(id));$('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=()=>openDialog({title:isPortion?'Portion umbenennen':'Ordner umbenennen',value:node.name,onOk:v=>{node.name=v;touch();goNode(id)}});
     confirmBtn($('#delNode'),'Wirklich löschen?',()=>{const arr=kidsOf(info.parent?info.parent.id:null);arr.splice(arr.indexOf(node),1);touch();toast('Gelöscht');goNode(info.parent?info.parent.id:null)});
   }
   if(isPortion&&T)bindEditor(node);
@@ -1368,8 +1383,8 @@ function folderGrid(kids,pid,depth){
   let h='<div class="fgrid">';
   kids.forEach((n,i)=>{if(!vis(n))return;const isP=!!n.words,ws=wordsOf(n),op=isOpen(n);
     const meta=isP?`${ws.length} ${ws.length===1?'Wort':'Wörter'}`:`${portionsIn(n)} ${portionsIn(n)===1?'Portion':'Portionen'} · ${ws.length} Wörter`;
-    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${vkCardMark(n)?' · '+vkCardMark(n):''}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
-      ${T?`<div class="cact"><button class="ib" data-mv="-1" data-id="${n.id}" ${i?'':'disabled'} aria-label="Nach vorne">‹</button><button class="ib" data-mv="1" data-id="${n.id}" ${i<kids.length-1?'':'disabled'} aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="ib" data-mvto="${n.id}" aria-label="Verschieben" title="In einen anderen Ordner verschieben">📁</button><button class="relb ${op?'on':''}" data-rel="${n.id}">${op?'✓ Freigegeben':'Freigeben'}</button></div>`:''}</div>`});
+    h+=`<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"${isP?'':vkFcStyle(n)}><button class="fmain" data-node="${n.id}"><span class="fname">${esc(n.name)}</span><span class="fmeta">${meta}${vkCardMark(n)?' · '+vkCardMark(n):''}${T&&!op?' · <span class="lock">nicht freigegeben</span>':''}${KN_ADMIN&&tplOf(n.id)?' · 📤 Vorlage':''}</span>${isP&&ws.length?`<span class="pv">${ws.slice(0,4).map(w=>esc(w.f)).join(' · ')}${ws.length>4?' …':''}</span>`:''}</button>
+      ${T?`<div class="cact"><button class="ib" data-mv="-1" data-id="${n.id}" ${i?'':'disabled'} aria-label="Nach vorne">‹</button><button class="ib" data-mv="1" data-id="${n.id}" ${i<kids.length-1?'':'disabled'} aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="ib" data-mvto="${n.id}" aria-label="Verschieben" title="In einen anderen Ordner verschieben">📁</button>${isP?'':`<button class="ib" data-farbe="${n.id}" aria-label="Farbe" title="Farbe des Ordners">🎨</button>`}<button class="relb ${op?'on':''}" data-rel="${n.id}">${op?'✓ Freigegeben':'Freigeben'}</button></div>`:''}</div>`});
   const parent=pid?NODES.get(pid).node:null,direct=kids.filter(n=>n.words&&vis(n)&&wordsOf(n).length);
   if(parent&&direct.length){const all=wordsOf(parent);h+=`<div class="portion total"><button class="fmain" data-all="${pid}"><span class="fname">${esc(parent.name)} · Gesamt</span><span class="fmeta">Alle Teile zusammen · ${all.length} Wörter</span><span class="pv">${direct.map(n=>esc(n.name)).join(' + ')}</span></button></div>`}
   if(T)h+=`<div class="addcard"><div class="row"><button class="pill" data-add="folder" data-pid="${pid||''}">+ Ordner</button><button class="pill" data-add="portion" data-pid="${pid||''}">+ Portion</button></div><span class="hand">Neues ist zuerst nur für dich sichtbar. Mit «Freigeben» schaltest du es für die Kinder frei.</span></div>`;
@@ -1380,7 +1395,7 @@ function bindFolderGrid(pid){
   $$('[data-mv]').forEach(b=>b.onclick=()=>{const inf=NODES.get(b.dataset.id);if(!inf)return;const arr=kidsOf(inf.parent?inf.parent.id:null);const i=arr.indexOf(inf.node),j=i+(+b.dataset.mv);if(i<0||j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];touch();rerender()});
   $$('[data-rel]').forEach(b=>b.onclick=()=>toggleRelease(b.dataset.rel));
   $$('[data-all]').forEach(b=>b.onclick=()=>goAll(b.dataset.all));
-  $$('[data-mvto]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkMove(b.dataset.mvto,rerender)});$$('[data-ren]').forEach(b=>b.onclick=()=>{const n=NODES.get(b.dataset.ren).node;openDialog({title:'Umbenennen',value:n.name,onOk:v=>{n.name=v;touch();rerender()}})});
+  $$('[data-farbe]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkFarbe(b.dataset.farbe,rerender)});$$('[data-mvto]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkMove(b.dataset.mvto,rerender)});$$('[data-ren]').forEach(b=>b.onclick=()=>{const n=NODES.get(b.dataset.ren).node;openDialog({title:'Umbenennen',value:n.name,onOk:v=>{n.name=v;touch();rerender()}})});
   $$('[data-add]').forEach(b=>b.onclick=()=>{const f=b.dataset.add==='folder',pp=b.dataset.pid||null;
     openDialog({title:f?'Neuer Ordner':'Neue Portion',value:'',ok:'Anlegen',onOk:v=>{const n=f?{id:uid(),name:v,kids:[],open:false}:{id:uid(),name:v,words:[],open:false};kidsOf(pp).push(n);touch();if(f)rerender();else goNode(n.id);if(!f)setTimeout(()=>{const i=$('#nde');if(i)i.focus()},50)}})});
 }
@@ -2339,6 +2354,18 @@ function vkMove(id,back){const i=NODES.get(id);if(!i)return;const s=i.sub,L=$('#
   $('#mvNew',L).onclick=()=>{const nm=$('#mvName',L).value.trim();if(!nm){toast('Bitte zuerst einen Namen für den neuen Ordner eingeben.');$('#mvName',L).focus();return}
     const pid=$('#mvIn',L).value,par=pid?NODES.get(pid).node:null,arr=par?(par.kids=par.kids||[]):s.tree;
     const f={id:uid(),name:nm,kids:[],open:isOpen(i.node)};arr.push(f);take();f.kids.push(i.node);done(f)}}
+/* Ordnerfarbe (Lehrperson): n.farbe = Schlüssel aus FFARBEN; ohne eigene Farbe gilt die des nächsten oberen Ordners */
+const FFARBEN=[['blau','#dcf0fd','Hellblau'],['gruen','#e4f1da','Grün'],['mint','#d8f1ea','Mint'],['gelb','#fbf0cc','Gelb'],['orange','#fde3cc','Orange'],['rosa','#fbe0e5','Rosa'],['lila','#e9e0f7','Lila'],['grau','#ebebe8','Grau']];
+function vkFc(n){let i=NODES.get(n.id);while(i){const f=i.node.farbe&&FFARBEN.find(x=>x[0]===i.node.farbe);if(f)return f[1];i=i.parent?NODES.get(i.parent.id):null}return ''}
+const vkFcStyle=n=>{const c=vkFc(n);return c?` style="--fc:${c}"`:''};
+function vkFarbe(id,back){const i=NODES.get(id);if(!i)return;const n=i.node,L=$('#layer');
+  L.innerHTML=`<div class="scrim"></div><div class="dlg fcdlg" role="dialog" aria-label="Farbe"><h2 class="lbl">Farbe für «${esc(n.name)}»</h2>
+    <p class="note" style="margin:0">Ordner darin ohne eigene Farbe bekommen dieselbe Farbe.</p>
+    <div class="fcwahl">${FFARBEN.map(([k,c,t])=>`<button class="fcs ${n.farbe===k?'on':''}" data-fc="${k}" style="--fc:${c}" title="${t}"><span></span>${t}</button>`).join('')}
+      <button class="fcs auto ${n.farbe?'':'on'}" data-fc=""><span></span>Automatisch</button></div>
+    <div class="dact"><button class="pill" id="fcX">Abbrechen</button></div></div>`;
+  const zu=()=>{L.innerHTML=''};$('#fcX',L).onclick=zu;$('.scrim',L).onclick=zu;
+  $$('[data-fc]',L).forEach(b=>b.onclick=()=>{const k=b.dataset.fc;if(k)n.farbe=k;else delete n.farbe;zu();touch();toast('Farbe gespeichert');if(back)back()})}
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
 const INTERVALS=[1,2,7,14,30],INT_LABEL=['jeden Tag','alle 2 Tage','jede Woche','alle 2 Wochen','jeden Monat'],ROUND=20;
