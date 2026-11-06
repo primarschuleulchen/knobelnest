@@ -47,3 +47,13 @@ rep('.t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}', '''.t
 .app.dragging .lfoot,.app.dragging .mnote.empty,.app.dragging .itools,.app.dragging .pl-ops{display:none!important}
 .app.dragging .w.sel .card{outline:0}''')
 rep('return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}', 'return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${w.y < 7 ? " oben" : ""}')
+# Titel: am Text ziehen verschiebt den Titel; kurz antippen (ohne Ziehen) setzt den Schreibcursor zum Bearbeiten
+rep('  const onBody = DRAG_BODY.has(w.type) && !e.target.closest("button,input,textarea,[contenteditable]");',
+    '''  const tCe = w.type === "title" ? e.target.closest("[contenteditable]") : null, tEdit = tCe && document.activeElement !== tCe ? tCe : null;
+  const onBody = DRAG_BODY.has(w.type) && (tEdit || !e.target.closest("button,input,textarea,[contenteditable]"));''')
+rep('  drag = { w, el, mode: rs ? "rs" : "mv",', '  drag = { ted: tEdit ? w.id : "", w, el, mode: rs ? "rs" : "mv",')
+rep('if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); } drag = null; });',
+    '''if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); }
+  else if (drag.ted) { const id = drag.ted, x = drag.sx, y = drag.sy; setTimeout(() => { const ce = document.querySelector(`[data-w="${id}"] [contenteditable]`); if (!ce) return; ce.focus();
+    try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(x, y) : null; if (r && ce.contains(r.startContainer)) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } } catch {} }, 30); }
+  drag = null; });''')
