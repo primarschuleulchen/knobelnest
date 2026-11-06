@@ -416,5 +416,25 @@ rep('<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>',
 rep("""<button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button>""",
     """<span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span>""")
 
+
+# 22) Portionen und Ordner duplizieren und in einen anderen Ordner verschieben (Code vk_ordnen.js, nur Lehrperson)
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_ordnen.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+rep("""<span class="hcol"><button class="pill" id="ren">Umbenennen</button>""", """<span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button>""")
+rep("$('#ren').onclick=", "$('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=")
+
+
+# 23) Verschieben auch direkt auf den Karten im Ordner (Knopf 📁 neben ✎) und im Verschieben-Fenster gleich einen neuen Ordner
+#     erstellen (vk_ordnen.js). Der neue Ordner ist so offen für die Kinder wie das Verschobene, damit nichts verschwindet.
+rep("""aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button>""",
+    """aria-label="Nach hinten">›</button><button class="ib" data-ren="${n.id}" aria-label="Umbenennen">✎</button><button class="ib" data-mvto="${n.id}" aria-label="Verschieben" title="In einen anderen Ordner verschieben">📁</button>""")
+rep("$$('[data-ren]').forEach(", "$$('[data-mvto]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkMove(b.dataset.mvto,rerender)});$$('[data-ren]').forEach(")
+
+
+# 24) Kopf einer Portion / eines Ordners (Lehrperson) aufgeräumt: eine weisse Leiste mit drei Gruppen
+#     «Freigabe» (Für Kinder, Vorlage), «Im Unterricht» (nur Portion: So wurde geübt, Arbeitsblatt, Lückensätze)
+#     und «Portion»/«Ordner» (Duplizieren, Umbenennen, Verschieben, Löschen als leise Knöpfe). IDs bleiben gleich.
+rep("""${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}""",
+    """${T&&node?`<div class="hbar"><div class="hgrp"><span class="hlab">Freigabe</span><div class="hrow"><button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'🔒 Für Kinder freigeben'}</button>${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'tplon':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}</div></div>${isPortion?`<div class="hgrp"><span class="hlab">Im Unterricht</span><div class="hrow">${KN?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}${wsTools()}</div></div>`:''}<div class="hgrp hedit"><span class="hlab">${isPortion?'Portion':'Ordner'}</span><div class="hrow"><button class="hb" id="dupNode">⧉ Duplizieren</button><button class="hb" id="ren">✎ Umbenennen</button><button class="hb" id="mvNode">📁 Verschieben</button><button class="hb del" id="delNode">🗑 Löschen</button></div></div></div>`:''}""")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

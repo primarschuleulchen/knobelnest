@@ -295,10 +295,10 @@
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
   var ZR_VER = '1';
-  var VK_VER = '30'; // Vokabelkiste (vokabelkiste/index.html)
+  var VK_VER = '33'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var RO_VER = '1'; // Rechenoperationen (rechenoperationen/, gebaut mit werkstatt/spiele/rechenoperationen/bauen.py)
-  var KS_VER = '37'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
+  var KS_VER = '38'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
   var EN_VER = '19'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
@@ -462,7 +462,7 @@
     }
     var missing = s.kids.filter(function (k) { return !entry[k.id] || !subjName[entry[k.id].subject_id]; }).map(function (k) { return k.name; });
     if (!kid && !emb) out += '<div class="board-fehlt">' + (missing.length ? '<b>Noch nicht auf der Tafel:</b>' + missing.map(function (n) { return '<span class="tag"><span class="ini" style="background:' + kidColor(n) + '">' + h(n.charAt(0)) + '</span>' + h(n) + '</span>'; }).join('') : '<b>✓ Alle Kinder stehen auf der Tafel.</b>') + '</div>';
-    return '<div class="board' + (kid ? '' : ' wall') + (emb ? ' embed' : '') + '"><div class="board-in">' + out + '</div></div>';
+    return '<div class="board' + (kid ? ' kid' : ' wall') + (emb ? ' embed' : '') + '"><div class="board-in">' + out + '</div></div>';
   }
 
 
@@ -696,14 +696,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('57') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('59') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '9';
+  var HEFT_VER = '10';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -765,7 +765,7 @@
   // Klassen-Pinnwand: eigene Seite pinnwand.html im Rahmen. Sie spricht mit einer nachgebauten
   // «claude.use('db')»-Schnittstelle; dahinter liegen teacher_store «pin-<Klasse>» und die kid_pin-Funktionen.
   // ===================================================================
-  var PIN_VER = '16';
+  var PIN_VER = '17';
   function pinBridge(o) {
     // o.load() -> { boards, ideas, settings, votes }, o.put(coll, id, obj|null), o.add(coll, obj) -> id, o.vote(body)
     var data = { boards: {}, ideas: {}, settings: {}, votes: {} }, subs = [], iv = null;
@@ -848,7 +848,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '6';
+  var ATELIER_VER = '7';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {
@@ -2234,7 +2234,7 @@
   var T = {
     me: null, tools: {}, classes: [], cls: null, games: [], rel: new Set(), kids: [], subjects: [],
     progress: null, progressBusy: false, tafel: null, tafelBusy: false,
-    tab: LS.get('kn_tab') || 'uebersicht', fach: 'alle', closed: LS.get('kn_closed') || {}, q: '', pfilter: 'alle',
+    tab: LS.get('kn_tab') || 'uebersicht', fach: 'alle', closed: LS.get('kn_closed') || {}, spalten: LS.get('kn_spalten') || '', q: '', pfilter: 'alle',
     fresh: new Set(), editColor: null, newColor: '#2E7D4F', loginErr: '', loginInfo: '',
     admin: { teachers: null, tg: [], open: null, form: null }
   };
@@ -2553,17 +2553,28 @@
     } else if (ordnen === 'stichwort') {
       shown.forEach(function (g) { var ls = spielLabels(g); (ls.length ? ls : ['']).forEach(function (x) { var k = 'L|' + x; if (!by[k]) { by[k] = { fach: 'Stichwort', thema: x || 'Ohne Stichwort', key: k, list: [] }; groups.push(by[k]); } by[k].list.push(g); }); });
       groups.sort(function (a, b) { return (a.key === 'L|') - (b.key === 'L|') || a.thema.localeCompare(b.thema, 'de'); });
-    } else shown.forEach(function (g) { themen(g).forEach(function (th) { var k = g.fach + '|' + th; if (!by[k]) { by[k] = { fach: g.fach, thema: th, list: [] }; groups.push(by[k]); } by[k].list.push(g); }); });
+    } else shown.forEach(function (g) { themen(g).forEach(function (th) {
+      // Themen mit Überthema (z. B. «Young World 3 › Unit 1») kommen in einen Ordner «Young World 3», darin Knöpfe pro Unit
+      var u = thTeile(th).ueber, k = g.fach + '|' + (u ? 'U:' + u : th);
+      if (!by[k]) { by[k] = { fach: g.fach, thema: u || th, ueber: u, key: k, list: [] }; groups.push(by[k]); }
+      if (by[k].list.indexOf(g) < 0) by[k].list.push(g); }); });
     if (!groups.length) out += '<div class="empty">Kein Spiel gefunden.</div>';
     groups.forEach(function (gr) {
-      var gk = gr.key || gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q;
+      var gk = gr.key || gr.fach + '|' + gr.thema, shut = !!T.closed[gk] && !q, subs = [], uSel = 'alle';
+      if (gr.ueber) {
+        gr.list.forEach(function (g) { unterthemen(g, gr.ueber).forEach(function (x) { if (subs.indexOf(x) < 0) subs.push(x); }); });
+        uSel = subs.indexOf((T.unitSel || {})[gk]) >= 0 ? T.unitSel[gk] : 'alle';
+        if (uSel !== 'alle') gr = { fach: gr.fach, thema: gr.thema, ueber: gr.ueber, key: gk, all: gr.list, list: gr.list.filter(function (g) { return unterthemen(g, gr.ueber).indexOf(uSel) >= 0; }) };
+      }
       var sorting = T.sorting === gk && !shut, real = gr.list.filter(function (g) { return !g.live; });
       out += '<div class="ghead"><h3 class="gtitle"><button class="gtoggle" aria-expanded="' + !shut + '" data-a="gGroup" data-k="' + h(gk) + '"><span class="chev" aria-hidden="true">›</span>' +
-        '<small>' + h(gr.fach) + ' ›</small> ' + h(gr.thema) + ' <small>' + plural(gr.list.length, 'Spiel', 'Spiele') + ' · ' +
-        gr.list.filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
+        '<small>' + h(gr.fach) + ' ›</small> ' + (gr.ueber ? '<span class="g-ordner" aria-hidden="true">📁</span> ' : '') + h(gr.thema) + ' <small>' + plural((gr.all || gr.list).length, 'Spiel', 'Spiele') + ' · ' +
+        (gr.all || gr.list).filter(function (g) { return T.rel.has(g.id); }).length + ' freigegeben</small></button></h3>' +
         (real.length ? (function () { var all = real.every(function (g) { return T.rel.has(g.id); });
           return '<button class="btn sm" data-a="gRelAll" data-k="' + h(gk) + '" data-ids="' + real.map(function (g) { return g.id; }).join(',') + '" data-v="' + (all ? 0 : 1) + '">' + (all ? '🔒 Alle sperren' : '✓ Alle freigeben') + '</button>'; })() : '') +
         (T.me.is_admin && ordnen === 'thema' && !shut && real.length > 1 && !q ? '<button class="btn sm" data-a="gSort" data-k="' + h(gk) + '"' + (sorting ? ' aria-pressed="true"' : '') + '>' + ic(I.sort, 14) + (sorting ? ' Fertig' : ' Reihenfolge ändern') + '</button>' : '') + '</div>';
+      if (subs.length > 1 && !shut) out += '<div class="kk-arten g-units" role="group" aria-label="Welche Unit?">' + ['alle'].concat(subs).map(function (x) {
+        return '<button class="kk-art' + (uSel === x ? ' on' : '') + '" data-a="gUnit" data-k="' + h(gk) + '" data-v="' + h(x) + '">' + (x === 'alle' ? 'Alle' : h(x)) + '</button>'; }).join('') + '</div>';
       if (sorting) {
         out += '<div class="sortbox"><p class="muted">Ziehen Sie ein Spiel am Griff <span aria-hidden="true">⠿</span> an die richtige Stelle oder benutzen Sie die Pfeile. Die Reihenfolge wird sofort gespeichert und gilt für alle Lehrpersonen und Kinder.</p>' +
           '<ol class="sorter" data-k="' + h(gk) + '">' + real.map(function (g, i) {
@@ -2573,26 +2584,27 @@
           }).join('') + '</ol><div class="row"><button class="btn primary" data-a="gSort" data-k="' + h(gk) + '">Fertig</button></div></div>';
         return;
       }
-      out += (shut ? '' : '<div class="games">' +
+      out += (shut ? '' : '<div class="games' + (T.spalten ? ' sp-' + T.spalten : '') + '">' +
         gr.list.map(function (g) {
-          if (g.live) return '<article class="game live"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) + '</div><div class="game-body"><div class="row" style="gap:8px">' +
-            '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span><span class="pill" style="background:#FFE8A3;color:#6A5420">Live mit iPads</span></div>' +
-            '<h3>' + g.icon + ' ' + h(g.title) + '</h3><p>' + h(g.description) + '</p>' +
+          var bild = spielBild(g) || kkIc(g.fach);
+          var ort = gr.ueber ? unterthemen(g, gr.ueber).join(' · ') : ordnen === 'thema' ? '' : themen(g).map(function (t) { return thTeile(t).name; }).join(' · ');
+          var kopf = '<div class="kkt-kopf">' + bild + '<div class="kkt-pills">' + (isNew(g) && !g.live ? '<span class="pill kkt-neu">Neu</span>' : '') +
+            (g.live ? '<span class="pill" style="background:#FFE8A3;color:#6A5420">Live mit iPads</span>' : '') +
+            (g.stufe ? (/zusatz/i.test(g.stufe) ? '<span class="pill zusatz-t">★ ' + h(g.stufe) + '</span>' : '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>') : '') +
+            (g.live ? '' : spielLabels(g).map(labelPill).join('')) + '</div></div>' +
+            '<span class="kk-fach">' + h(ort || g.fach) + '</span><b>' + (g.live && g.icon ? g.icon + ' ' : '') + h(g.title) + '</b>' + (g.description ? '<p>' + h(g.description) + '</p>' : '');
+          if (g.live) return '<article class="game kk-karte kkt live">' + kopf +
             '<div class="game-foot"><p class="muted small" style="margin:0">Immer verfügbar. Die Kinder sehen den Sprint erst, wenn Sie ihn öffnen.</p>' +
-            '<a class="btn primary" href="' + g.href + '">' + ic(I.play, 14, '#fff') + ' Spielen</a></div></div></article>';
+            '<a class="btn primary" href="' + g.href + '">' + ic(I.play, 14, '#fff') + ' Spielen</a></div></article>';
           var on = T.rel.has(g.id);
-          return '<article class="game"><div class="game-top" style="background:' + fachColor(g.fach) + '">' + h(fachShort(g.fach)) +
-            (isNew(g) ? '<span class="pill">Neu</span>' : '') + '</div><div class="game-body"><div class="row" style="gap:8px">' +
-            '<span class="pill" style="background:#E3F0FC;color:#2B6CB0">' + h(g.fach) + '</span>' +
-            (g.stufe ? (/zusatz/i.test(g.stufe) ? '<span class="pill zusatz-t">★ ' + h(g.stufe) + '</span>' : '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>') : '') + spielLabels(g).map(labelPill).join('') + '</div>' +
-            '<h3>' + h(g.title) + '</h3>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
+          return '<article class="game kk-karte kkt' + (on ? ' frei' : '') + '">' + kopf +
             '<div class="game-foot"><button class="switch" role="switch" aria-checked="' + on + '" data-a="rel" data-id="' + g.id + '"><span>' +
             (on ? 'Für die Klasse freigegeben' : 'Für die Klasse gesperrt') + '</span><span class="track"></span></button>' +
             (isWall(g) ? '<button class="btn primary" data-a="playBoard" data-id="' + g.id + '">' + ic(I.play, 14, '#fff') + ' Spielen</button>' :
             '<button class="btn" data-a="preview" data-id="' + g.id + '">' + ic(I.play, 14) + ' Selbst ansehen</button>') +
             (isZeit(g) ? '<button class="btn primary" data-a="zrOpen" data-id="' + g.id + '">🔓 Zeiten & Fortschritt</button>' : '') +
             (isVok(g) ? '<button class="btn primary" data-a="vkOpen" data-id="' + g.id + '">📚 Wörter & Freigaben</button>' : '') +
-            (isWdt(g) ? '<button class="btn primary" data-a="wdtOpen" data-id="' + g.id + '">✏️ Eigene Wörter</button>' : '') + '</div></div></article>';
+            (isWdt(g) ? '<button class="btn primary" data-a="wdtOpen" data-id="' + g.id + '">✏️ Eigene Wörter</button>' : '') + '</div></article>';
         }).join('') + '</div>');
     });
     return out + '</section>';
@@ -2934,9 +2946,15 @@
       opts.map(function (o) { return '<option value="' + h(o[0]) + '"' + (String(val) === String(o[0]) ? ' selected' : '') + '>' + h(o[1]) + '</option>'; }).join('') + '</select></div>'; };
     return '<div class="row sw-wahl">' + sel('gOrdnen', 'Ordnen nach', 'gOrdnen', T.ordnen || 'thema', [['thema', 'Thema'], ['klasse', 'Klasse'], ['stichwort', 'Stichwort']]) +
       (kl.length ? sel('gFKl', 'Klasse', 'gFKl', T.fKl || 'alle', [['alle', 'Alle Klassen']].concat(kl.map(function (k) { return [k, k + '. Klasse']; }))) : '') +
-      (labs.length ? sel('gFLab', 'Stichwort', 'gFLab', T.fLab || 'alle', [['alle', 'Alle Stichwörter']].concat(labs.map(function (x) { return [x, x]; }))) : '') + '</div>';
+      (labs.length ? sel('gFLab', 'Stichwort', 'gFLab', T.fLab || 'alle', [['alle', 'Alle Stichwörter']].concat(labs.map(function (x) { return [x, x]; }))) : '') +
+      '<div class="field sw-feld"><span class="sw-lab">Nebeneinander</span><div class="sp-wahl" role="group" aria-label="Wie viele Spiele nebeneinander?">' +
+      [['', 'Auto'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6']].map(function (o) { return '<button class="sp-btn' + (String(T.spalten || '') === o[0] ? ' on' : '') + '" data-a="gSpalten" data-v="' + o[0] + '"' + (o[0] ? ' title="' + o[0] + ' Spiele nebeneinander"' : ' title="Passend zur Bildschirmbreite"') + '>' + o[1] + '</button>'; }).join('') + '</div></div></div>';
   }
   ACT.gOrdnen = function (el) { T.ordnen = el.value; T.render(); };
+  // Wie viele Spielkarten nebeneinander (leer = automatisch), gemerkt im Browser
+  ACT.gSpalten = function (el) { T.spalten = el.dataset.v || ''; LS.set('kn_spalten', T.spalten); T.render(); };
+  // Ordner mit Überthema: nur die Spiele einer Unit zeigen
+  ACT.gUnit = function (el) { T.unitSel = T.unitSel || {}; T.unitSel[el.dataset.k] = el.dataset.v; T.render(); };
   ACT.gFKl = function (el) { T.fKl = el.value; T.render(); };
   ACT.gFLab = function (el) { T.fLab = el.value; T.render(); };
   // Bilder der Werkzeug-Kacheln (bilder/kacheln/), sonst das Symbol
@@ -3955,7 +3973,10 @@
     ['Irrgarten', 'irrgarten', 'Knobeln', 'Die Eule durch das Labyrinth nach Hause führen.'],
     ['Waage', 'waage', 'Mathematik', 'Gewichte auflegen, bis die Waage gerade ist.'],
     ['Spiegelbild', 'spiegelbild', 'Knobeln', 'Ein Muster an der goldenen Linie spiegeln.'],
-    ['Zahlen-Pfad', 'zahlen-pfad', 'Knobeln', 'Einen Weg von 1 bis zur letzten Zahl durch alle Felder ziehen.']];
+    ['Zahlen-Pfad', 'zahlen-pfad', 'Knobeln', 'Einen Weg von 1 bis zur letzten Zahl durch alle Felder ziehen.'],
+    ['Brüche', 'brueche', 'Mathematik', 'Brüche an Pizza und Streifen erkennen, malen und vergleichen.'],
+    ['Muster-Reihe', 'muster-reihe', 'Knobeln', 'Erkennen, wie das Muster weitergeht.'],
+    ['Lichtstrahl', 'lichtstrahl', 'Knobeln', 'Spiegel drehen, bis das Licht den Kristall trifft.']];
   var KNOBEL_ARTEN = ['Mathematik', 'Deutsch', 'Knobeln'];
   function knobelOf(g) { var t = String((g && g.title) || '').trim().toLowerCase(); for (var i = 0; i < KNOBEL.length; i++) if (KNOBEL[i][0].toLowerCase() === t) return KNOBEL[i]; return null; }
   function knobelIdx(g) { var k = knobelOf(g); return k ? KNOBEL.indexOf(k) : 99; }
@@ -4275,7 +4296,7 @@
     return { modus: 'runde', n: Math.max(3, Math.min(100, +c.n || 10)) };
   }
   // Spiele mit eigenem Stern in der Aufgabe: Kleiderschrank und die 10 Knobelspiele der Knobelkiste
-  var STERN_IM_SPIEL = /^knobelspiele\/(kleiderschrank|rechen-rakete|uhr-lesen|kiosk|wort-raten|der-die-das|silben-puzzle|bilderraetsel|eulen-weg|bilder-sudoku|wasser-weg|zahlenmauer|kloetzli-turm|kisten-packen|laternen|schiebe-bild|geheimcode|irrgarten|waage|spiegelbild|zahlen-pfad)\.html/;
+  var STERN_IM_SPIEL = /^knobelspiele\/(kleiderschrank|rechen-rakete|uhr-lesen|kiosk|wort-raten|der-die-das|silben-puzzle|bilderraetsel|eulen-weg|bilder-sudoku|wasser-weg|zahlenmauer|kloetzli-turm|kisten-packen|laternen|schiebe-bild|geheimcode|irrgarten|waage|spiegelbild|zahlen-pfad|brueche|muster-reihe|lichtstrahl)\.html/;
   function starMax(c) { return c.modus === 'sammeln' ? c.max : c.modus === 'runde' ? 3 : 0; }
   // Wie viele richtige braucht es für einen Stern? (pro Level verschieden möglich, z. B. "Zeichnen": 1)
   function starPer(c, k) { var n = c.pro; Object.keys(c.proFuer || {}).forEach(function (p) { if (String(k).indexOf(p) === 0) n = c.proFuer[p]; }); return n; }

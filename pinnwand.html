@@ -2,8 +2,6 @@
 </style></head><body>
 <title>Klassen-Pinnwand</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">
 <style>
 /* Layout: wie Tagesfolien und Hausaufgabentafel – Aquarellpapier als Grund, weisse runde Karten, Pillen-Knöpfe in Rosé.
    Darauf hängen die Ideen als pastellige Zettel. Bewusst nur hell, damit es am Beamer gleich aussieht wie die Folien. */
@@ -490,12 +488,148 @@ html{min-height:100%}body{min-height:100vh;box-sizing:border-box}
 .peeknote{margin:0;color:var(--leaf-deep, #3f6b39)}
 body.peeking .note .tool,body.peeking .baro .tray,body.peeking .baro .track .pin{pointer-events:none}
 body.peeking #ideaIn,body.peeking [data-act="send"]{opacity:.5}
+@font-face{font-family:"Patrick Hand";src:url(schriften/patrick-hand.woff2) format("woff2");font-weight:400;font-display:swap}
+/* ===== Klassenkiste-Stil ===== */
+.vl-bar{gap:10px}
+.tpls.vl-on .tpl{border-style:dashed;border-color:var(--gold)}
+.tpl{position:relative}
+.tpls.vl-on .tpl-top{padding-right:18px}
+.tpl-ed{position:absolute;top:8px;right:10px;color:var(--gold-d);font-size:1.1rem}
+.tpl-neu{align-items:center;justify-content:center;text-align:center;border:2px dashed var(--gold)!important;background:var(--sun-soft)}
+.tpl-neu .tpl-i{font-size:2rem}
+.vl-ed{display:flex;flex-direction:column;gap:12px;background:var(--sun-soft);border:1.5px dashed var(--gold);border-radius:22px;padding:14px 18px}
+.vl-ed h3{font-size:1.5rem}
+.vl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.vl-row{flex-direction:row!important;gap:12px!important}
+.vl-ico{width:90px;flex:none}
+.vl-name{flex:1}
+.vl-grid label,.vl-grid>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.vl-wide{grid-column:span 2}
+.vl-grid .vl-ico input{text-align:center;font-size:1.4rem}
+.vl-act{gap:10px}
+@media (max-width:640px){.vl-grid{grid-template-columns:minmax(0,1fr)}.vl-wide{grid-column:auto}}
+:root{
+  --paper:#f4f9fd; --card:#ffffff; --ink:#1f2421; --muted:#5f6963; --line:#dbe7f1; --line2:#c5d8e8; --edge:#e1edf7;
+  --gold:#d6ad45; --gold-d:#c4952f; --sky-soft:#dcf0fd; --sky-mid:#c9e7fb; --sky-deep:#3f78a8; --sun-soft:#fbf3dc;
+  --sky:#8fc3ea; --rose:#3f78a8; --rose-soft:#dcf0fd; --leaf:#7ea56a; --leaf-deep:#4f7d3c; --leaf-soft:#e9f1e3;
+  --ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive; --hand:var(--ui); --bubble:var(--ui);
+  --shadow:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);
+  --shadow-hi:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14);
+  --note-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 18px -6px rgba(63,120,168,.32);
+}
+html{font-size:18px;background:var(--paper)}
+body{font-size:1.05rem;line-height:1.4;background:radial-gradient(ellipse 70% 32% at 50% -6%,#dcf0fd 0,transparent 70%),radial-gradient(ellipse 40% 30% at 100% 100%,rgba(214,173,69,.10),transparent 70%),var(--paper);background-attachment:fixed}
+body,body *{font-weight:400!important}
+:focus-visible{outline:3px solid #9fd0f3;outline-offset:2px}
+h2,h3{font-size:1.75rem;line-height:1.1}
+/* Kopf und Marke */
+header.top{padding-block:4px 10px;border-bottom:1.5px dashed rgba(214,173,69,.45);margin-bottom:4px}
+header.top h1.marke{all:unset;flex:1 1 auto;display:flex;align-items:center;gap:12px;min-width:0}
+.marke-bild{flex:none;width:58px;height:58px;border-radius:50%;background:#fff;padding:3px;box-shadow:0 0 0 2px var(--gold),0 6px 18px rgba(63,120,168,.25);transform:rotate(-6deg);transition:transform .3s}
+.marke-bild img{width:100%;height:100%;display:block;border-radius:50%}
+.marke:hover .marke-bild{transform:rotate(4deg) scale(1.05)}
+.marke-text{display:flex;flex-direction:column;min-width:0}
+.marke-text b{font-family:var(--ui);font-size:2.05rem;line-height:.95;color:var(--ink)}
+.marke-text em{font-style:normal;color:var(--gold-d)}
+.marke-text i{font-style:normal;color:var(--gold);font-size:.55em;vertical-align:super;margin-left:3px}
+.marke-text small{align-self:flex-start;margin-top:3px;font-size:.9rem;color:var(--muted);border-top:1.5px dashed var(--gold);padding-top:1px}
+.status{background:#fff;border:1.5px solid var(--edge);font-size:.85rem;color:var(--muted)}
+#roleSeg{background:#fff;border:1.5px solid var(--edge);border-radius:999px;padding:4px;box-shadow:var(--shadow);gap:2px}
+#roleSeg button{border:0;box-shadow:none;background:transparent}
+#roleSeg button[aria-pressed="true"]{background:var(--sky-soft);border:0;box-shadow:none}
+.pres-title{all:unset;flex:1 1 auto;font-family:var(--ui);font-size:clamp(30px,4.4vw,48px);line-height:1;color:var(--ink)}
+.pres-title::after{content:" ✦";color:var(--gold);font-size:.45em;vertical-align:super}
+/* Karten */
+.panel,.empty,.baro,.bcard{border:1.5px solid var(--edge);border-radius:28px;box-shadow:var(--shadow);background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%)}
+.panel>h2,.panel>div>h2,.panel summary h2,.baro>div>h2{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel>h2::after,.panel>div>h2::after,.panel summary h2::after,.baro>div>h2::after{content:"✦ ✧ ✦";font-size:12px;letter-spacing:.3em;color:var(--gold)}
+.empty{border:2px dashed #b9d6ec;box-shadow:none;background:rgba(255,255,255,.7)}
+.empty h3{color:var(--muted)}
+.sub{color:var(--muted);font-size:.95rem}
+.tool-l{color:var(--sky-deep);font-size:.78rem;letter-spacing:.1em}
+.bhead h2::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.bcard:hover,button.bcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-hi)}
+.bcard{transition:transform .15s,box-shadow .15s}
+.bcard .foot{border-top:1.5px dashed rgba(214,173,69,.55)}
+.btpl{background:var(--sun-soft);color:#6b5418}
+.vis{font-size:.8rem}
+.vis.on{background:var(--leaf-soft);color:#3f6b2e}
+.badge{background:var(--sun-soft);color:#6b5418;border:1.5px solid var(--gold);font-family:var(--ui);font-size:.85rem}
+/* Knöpfe */
+.btn{border:2px solid var(--ink);border-radius:14px;background:var(--sky-soft);color:var(--ink);font-size:1.05rem;padding:6px 18px;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{background:var(--sky-mid);border-color:var(--ink);transform:translateY(-2px);box-shadow:var(--shadow-hi)}
+.btn:active{transform:translateY(1px);box-shadow:var(--shadow)}
+.btn.ghost{background:#fff;border-color:var(--ink);color:var(--ink)}
+.btn.ghost:hover{background:var(--sky-soft);border-color:var(--ink)}
+.btn.small{border-radius:11px;padding:3px 13px;font-size:.95rem;box-shadow:0 4px 12px rgba(63,120,168,.14)}
+.btn:disabled{transform:none}
+.linkbtn,.edit-btn{color:var(--sky-deep);font-family:var(--ui);font-size:.95rem}
+.del{font-size:.92rem;color:#9a3b33}
+.del.arm{background:#b5524a}
+/* Umschalter, Reiter, Felder */
+.seg button,.tabs button{border:1.5px solid transparent;background:transparent;border-radius:999px;color:var(--ink);font-size:1.05rem;padding:5px 16px;transition:background .15s}
+.tabs button{font-size:1.15rem;padding:6px 18px;min-height:42px}
+.seg button:hover,.tabs button:hover{background:var(--sky-soft);border-color:transparent}
+.seg button[aria-pressed="true"],.tabs button[aria-selected="true"]{background:#fff;border-color:var(--ink);color:var(--ink);box-shadow:var(--shadow)}
+.tabs{gap:6px}
+.field{border:1.5px solid var(--line2);border-radius:14px;background:#fff;font-size:1.05rem;padding:8px 14px}
+.field:focus{border-color:var(--sky-deep);outline:3px solid #9fd0f3;box-shadow:none}
+textarea.field{background:#fff;font-size:1.3rem}
+select,button,input,textarea{font-family:inherit}
+select.field{min-height:42px;font-family:var(--ui)}
+.tg{border:1.5px solid var(--line2);border-radius:14px;background:#f7fbfe;font-size:.98rem;padding:4px 12px}
+.tg input{accent-color:#7ea56a}
+.tg:has(input:checked){background:var(--leaf-soft);border-color:#7ea56a;color:#3f6b2e}
+.note .tg{font-size:.88rem}
+.qitem{background:var(--sun-soft);border:1.5px dashed var(--gold);border-radius:20px}
+/* Zettel */
+.note::before{background:rgba(214,173,69,.30);border-left:1px dashed rgba(196,149,47,.35);border-right:1px dashed rgba(196,149,47,.35)}
+.tool{border-top:1.5px dashed rgba(214,173,69,.45)}
+.scale button,.agree button{font-size:.95rem}
+.scale button[aria-pressed="true"]{background:var(--sky-deep);color:#fff}
+.sbar-mark span{background:var(--sky-deep)}
+.sbar-fill,.pr-r .pt i,.pc-track i{background:linear-gradient(90deg,#9fd0f3,var(--sky-deep))}
+.cm b{font-family:var(--ui);font-size:.9rem}
+.lpc .lpc-t{border-left-color:var(--gold)}
+/* Vorlagen */
+.tpl{border:1.5px solid var(--edge);border-radius:22px;box-shadow:0 4px 12px rgba(63,120,168,.10);transition:transform .15s,box-shadow .15s}
+.tpl:hover{border-color:var(--edge);transform:translateY(-3px);box-shadow:var(--shadow-hi)}
+.tpl[aria-pressed="true"]{border:2px solid var(--ink);background:#fff;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--gold),var(--shadow)}
+.tpl-top b{font-size:1.1rem}
+.tpl-d{font-size:.9rem}
+.bprompt{border:1.5px dashed var(--gold);border-left:1.5px dashed var(--gold);background:#fff;font-size:1.6rem}
+/* Seitenleiste, Spalten, Mindmap, Leinwand */
+.side-top{color:var(--sky-deep);font-size:.85rem;letter-spacing:.1em}
+.lpside .panel{border-radius:22px}
+.col{border-radius:24px;border:1.5px solid var(--edge);border-top:10px solid var(--mc,#c5d8e8);background:rgba(255,255,255,.75)}
+.colhead{font-size:1.5rem}
+.mm-center{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 4px #fff,0 0 0 6px var(--gold),var(--shadow)}
+.mm-node{font-size:1.2rem}
+.cv{border:1.5px solid var(--edge);border-radius:28px;box-shadow:var(--shadow);background:#fff}
+.cv-lt{font-family:var(--ui)}
+.tl-dot{background:var(--sky-deep);box-shadow:0 0 0 4px #fff,0 0 0 6px var(--gold)}
+.tl-it::before{background:var(--sky-deep)}
+.one-nav{border:2px solid var(--ink);box-shadow:var(--shadow)}
+.pc-title{font-family:var(--ui);border-bottom:3px dashed var(--gold)}
+.pc-chip{border:1.5px solid var(--line2)}
+.pc-chip.cur{background:var(--sky-soft);border-color:var(--ink);color:var(--ink)}
+.cathead{font-family:var(--ui);border-bottom:2px dashed var(--gold)}
+.catnote{border-left:6px solid var(--gold);border-radius:18px}
+.toast{background:var(--ink);border-radius:14px;font-size:1rem;box-shadow:var(--shadow-hi)}
+@media (max-width:640px){.marke-bild{width:46px;height:46px}.marke-text b{font-size:1.65rem}.marke-text small{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.vl-hint{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--sun-soft);border:1.5px dashed var(--gold);border-radius:20px;padding:12px 18px;color:#4a3d1a}
+.vl-hint p{flex:1 1 300px;margin:0;font-size:1.05rem;line-height:1.35;min-width:0}
+.vl-hint b{color:#6b5418}
+.vl-stern{font-size:1.6rem;color:var(--gold);line-height:1}
+.vl-btn{text-decoration:none;background:#fff;white-space:nowrap}
+.vl-btn:hover{background:#fff6dc}
 </style>
 
 <div class="wrap">
   <header class="top">
     <button class="btn ghost small" type="button" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste" hidden><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>
-    <h1>Klassen-Pinnwand</h1>
+    <h1 class="marke"><span class="marke-text"><b>Klassen<em>-</em>Pinnwand<i>✦</i></b><small>Ideen sammeln · ordnen · abstimmen</small></span></h1>
     <span class="status" id="status"><i></i><span>Verbinde …</span></span>
     <div class="seg" id="roleSeg" hidden>
       <button type="button" data-act="role" data-v="lp" aria-pressed="true">Lehrperson</button>
@@ -535,7 +669,7 @@ const LABEL_FIELDS = [
   ["baroL", "Barometer links (0)"], ["baroR", "Barometer rechts (10)"], ["baroHint", "Anleitung zum Barometer", "wide"]
 ];
 const L = () => ({ ...DEF_LABELS, ...(S.labels || {}) });
-const TPL = [
+const TPL0 = [
   { id: "leer", icon: "📌", name: "Leere Pinnwand", desc: "Ideen sammeln, freigeben und abstimmen.", ph: "z. B. Ideen für die Schulreise", layout: "wand" },
   { id: "brain", icon: "💡", name: "Brainstorming", desc: "Alle Gedanken sofort an die Wand, danach ordnen.", ph: "z. B. Was fällt dir zum Wald ein?", layout: "wand", direct: true, tools: { like: true }, prompt: "Was fällt dir dazu ein? Schreib jeden Gedanken auf einen eigenen Zettel." },
   { id: "mind", icon: "🧠", name: "Mindmap", desc: "Ein Thema in der Mitte, Äste rundherum. Jeder Zettel hängt an einem Ast.", ph: "z. B. Der Igel", layout: "mind", kidCat: true,
@@ -567,8 +701,62 @@ const TPL = [
   { id: "woche", icon: "🌟", name: "Wochenrückblick", desc: "Highlights, Schwieriges und Vorfreude der Woche.", ph: "z. B. Woche 45", layout: "spalten", kidCat: true,
     cats: [["Mein Highlight", "c0"], ["Das war schwierig", "c4"], ["Darauf freue ich mich", "c3"]] }
 ];
+let TPL = TPL0.slice();
+const VL_MAX = 30;
+function vlState() { const v = S.vl || {}; return { own: Array.isArray(v.own) ? v.own : [], hide: Array.isArray(v.hide) ? v.hide : [], edit: v.edit && typeof v.edit === "object" ? v.edit : {} }; }
+function applyVl() {
+  const v = vlState();
+  TPL = [...TPL0.filter(t => !v.hide.includes(t.id)).map(t => ({ ...t, ...(v.edit[t.id] || {}), id: t.id })), ...v.own.filter(t => t && t.id && t.name)];
+  if (!TPL.length) TPL = [TPL0[0]];
+}
+async function saveVl(v, msg) {
+  if (JSON.stringify(v).length > 19000) { toast("Zu viele eigene Vorlagen. Bitte zuerst eine löschen."); return false; }
+  S.vl = v; applyVl(); render();
+  try { await db.doc("settings/vorlagen").set(JSON.parse(JSON.stringify(v))); if (msg) toast(msg); return true; } catch (err) { failed(err); return false; }
+}
+function vlBarHTML() {
+  const v = vlState(), n = v.hide.length;
+  return `<div class="row vl-bar"><button class="btn ${S.vlEdit ? "" : "ghost "}small" type="button" data-act="vledit" aria-pressed="${!!S.vlEdit}">${S.vlEdit ? "✓ Fertig mit Bearbeiten" : "✎ Vorlagen bearbeiten"}</button>
+    ${S.vlEdit ? `<span class="sub">Tippen Sie auf eine Vorlage, um sie zu ändern oder zu löschen.</span>${n ? `<button class="linkbtn" type="button" data-act="vlrestore">${n === 1 ? "1 gelöschte Vorlage" : n + " gelöschte Vorlagen"} zurückholen</button>` : ""}` : ""}</div>`;
+}
+function vlEditorHTML() {
+  if (!S.vlEdit || !S.vlOpen) return "";
+  const isNew = S.vlOpen === "neu", t = isNew ? { icon: "⭐", name: "", desc: "", ph: "", layout: "spalten", cats: [["Spalte 1", "c0"], ["Spalte 2", "c2"]] } : TPL.find(x => x.id === S.vlOpen);
+  if (!t) return "";
+  const own = !isNew && !TPL0.some(x => x.id === t.id), changed = !isNew && !own && vlState().edit[t.id];
+  const sel = (id, list, cur) => `<select class="field" id="${id}">${list.map(([k, l]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  const chk = (k, l) => `<label class="tg"><input type="checkbox" id="vl-${k}" ${t[k] ? "checked" : ""}>${l}</label>`;
+  return `<section class="vl-ed" aria-label="Vorlage bearbeiten"><h3>${isNew ? "Neue Vorlage" : "Vorlage «" + esc(t.name) + "» bearbeiten"}</h3>
+    <div class="vl-grid">
+      <div class="vl-wide vl-row"><label class="vl-ico"><span class="tool-l">Symbol</span><input class="field" id="vl-icon" maxlength="4" value="${esc(t.icon || "⭐")}"></label>
+      <label class="vl-name"><span class="tool-l">Name</span><input class="field" id="vl-name" maxlength="40" value="${esc(t.name)}" placeholder="z. B. Lesekonferenz"></label></div>
+      <label class="vl-wide"><span class="tool-l">Kurze Beschreibung</span><input class="field" id="vl-desc" maxlength="90" value="${esc(t.desc || "")}" placeholder="Wofür ist die Vorlage?"></label>
+      <label><span class="tool-l">Darstellung</span>${sel("vl-layout", LAYOUTS, t.layout || "wand")}</label>
+      <label><span class="tool-l">Vorlage der Leinwand</span>${sel("vl-canvas", Object.entries(CANVAS).map(([k, v]) => [k, v.name]), t.canvas || "leer")}</label>
+      <label class="vl-wide"><span class="tool-l">Spalten, Äste oder Felder (eine pro Zeile)</span><textarea class="field" id="vl-cats" rows="4" maxlength="600" placeholder="leer lassen für keine">${esc((t.cats || []).map(c => c[0]).join("\n"))}</textarea></label>
+      <label class="vl-wide"><span class="tool-l">Auftrag für die Kinder</span><textarea class="field" id="vl-prompt" rows="2" maxlength="300" placeholder="freiwillig">${esc(t.prompt || "")}</textarea></label>
+      <label class="vl-wide"><span class="tool-l">Beispiel-Name für neue Pinnwände</span><input class="field" id="vl-ph" maxlength="60" value="${esc(t.ph || "")}" placeholder="z. B. Lesekonferenz Woche 3"></label>
+      <div class="vl-wide"><span class="tool-l">Optionen</span><div class="tools-set">${chk("kidCat", "Kinder wählen die Spalte selbst")}${chk("direct", "Ohne Freigabe anpinnen")}${chk("names", "Namen zeigen")}${chk("imgs", "Bilder erlauben")}</div></div>
+    </div>
+    <div class="row vl-act"><button class="btn" type="button" data-act="vlsave">Speichern</button><button class="btn ghost" type="button" data-act="vlclose">Abbrechen</button>
+      ${changed ? `<button class="linkbtn" type="button" data-act="vlreset">Original wiederherstellen</button>` : ""}
+      ${isNew ? "" : `<button class="del ${S.armed === "vl:" + t.id ? "arm" : ""}" type="button" data-act="vldel">${S.armed === "vl:" + t.id ? "Wirklich löschen?" : "Vorlage löschen"}</button>`}</div>
+  </section>`;
+}
+function vlRead(old) {
+  const val = id => (document.getElementById(id) || {}).value || "", on = id => !!(document.getElementById(id) || {}).checked;
+  const cols = ["c0", "c2", "c3", "c4", "c1"], oldCats = (old && old.cats) || [];
+  const cats = val("vl-cats").split("\n").map(x => x.trim()).filter(Boolean).slice(0, 8).map((x, k) => [x.slice(0, 60), (oldCats[k] && oldCats[k][1]) || cols[k % cols.length]]);
+  const t = { icon: val("vl-icon").trim() || "⭐", name: val("vl-name").trim().slice(0, 40), desc: val("vl-desc").trim().slice(0, 90), ph: val("vl-ph").trim().slice(0, 60),
+    layout: val("vl-layout") || "wand", prompt: val("vl-prompt").trim().slice(0, 300), cats };
+  const cv = val("vl-canvas"); if (t.layout === "frei" && cv && cv !== "leer") t.canvas = cv;
+  for (const k of ["kidCat", "direct", "names", "imgs"]) if (on("vl-" + k)) t[k] = true;
+  if (old && old.tools) t.tools = old.tools;
+  if (old && old.bg) t.bg = old.bg;
+  return t;
+}
 const LAYOUTS = [["wand", "Wand"], ["spalten", "Spalten"], ["liste", "Liste"], ["zeit", "Zeitstrahl"], ["mind", "Mindmap"], ["frei", "Leinwand"]];
-const BGS = [["", "Aquarell"], ["kork", "Kork"], ["karo", "Karo"], ["linien", "Linien"], ["himmel", "Himmel"], ["wiese", "Wiese"]];
+const BGS = [["", "Klassenkiste"], ["kork", "Kork"], ["karo", "Karo"], ["linien", "Linien"], ["himmel", "Himmel"], ["wiese", "Wiese"]];
 const CCOL = [["c0", "Gelb"], ["c1", "Rosa"], ["c2", "Blau"], ["c3", "Grün"], ["c4", "Lila"]];
 const newId = p => p + Math.random().toString(36).slice(2, 9);
 const timeCmp = (x, y) => ((x.okAt || x.at || 0) - (y.okAt || y.at || 0)) * ((curBoard() || {}).newPos === "oben" ? -1 : 1);
@@ -786,7 +974,7 @@ document.addEventListener("pointercancel", mvEnd);
 function noteColor(id, i) { const c = cats().find(c => c.id === (i && i.cat)); return (c && c.color) || colorOf(id); }
 function fromTpl(t, title) {
   const b = { title, visible: false, at: Date.now(), tpl: t.id, layout: t.layout || "wand" };
-  for (const k of ["prompt", "bg", "kidCat", "direct", "names", "canvas"]) if (t[k]) b[k] = t[k];
+  for (const k of ["prompt", "bg", "kidCat", "direct", "names", "canvas", "imgs", "size", "font", "newPos", "sortBy"]) if (t[k]) b[k] = t[k];
   if (t.tools) b.tools = { ...t.tools };
   if (t.cats) b.cats = t.cats.map(([title, color]) => ({ id: newId("c"), title, color, note: "" }));
   return b;
@@ -809,7 +997,8 @@ function tplSVG(t) {
 function newBoardHTML() {
   const t = TPL.find(x => x.id === S.tpl) || TPL[0];
   return `<section class="panel"><div><h2>Neue Pinnwand</h2><p class="sub">Wählen Sie eine Vorlage. Spalten, Fragen und Werkzeuge sind dann schon vorbereitet und lassen sich später ändern. Eine neue Pinnwand ist zuerst versteckt.</p></div>
-    <div class="tpls" role="list">${TPL.map(x => `<button type="button" class="tpl" role="listitem" data-act="tpl" data-v="${x.id}" aria-pressed="${x.id === t.id}"><span class="tpl-top"><span class="tpl-i" aria-hidden="true">${x.icon}</span><b>${esc(x.name)}</b></span>${tplSVG(x)}<span class="tpl-d">${esc(x.desc)}</span></button>`).join("")}</div>
+    ${vlBarHTML()}<div class="tpls${S.vlEdit ? " vl-on" : ""}" role="list">${TPL.map(x => `<button type="button" class="tpl" role="listitem" data-act="tpl" data-v="${x.id}" aria-pressed="${x.id === t.id}"><span class="tpl-top"><span class="tpl-i" aria-hidden="true">${x.icon}</span><b>${esc(x.name)}</b></span>${tplSVG(x)}<span class="tpl-d">${esc(x.desc)}</span>${S.vlEdit ? `<span class="tpl-ed" aria-hidden="true">✎</span>` : ""}</button>`).join("")}${S.vlEdit && vlState().own.length < VL_MAX ? `<button type="button" class="tpl tpl-neu" data-act="tpl" data-v="neu" aria-pressed="${S.vlOpen === "neu"}"><span class="tpl-i" aria-hidden="true">＋</span><b>Neue Vorlage</b><span class="tpl-d">Eigene Spalten, Äste oder Felder festlegen.</span></button>` : ""}</div>
+    ${vlEditorHTML()}
     ${t.cats ? `<p class="sub tpl-sel"><b>${esc(t.name)}:</b> ${t.cats.map(c => "«" + esc(c[0]) + "»").join(" · ")}</p>` : ""}
     <div class="row"><input class="field grow" id="newBoard" data-keep maxlength="60" placeholder="${esc(t.ph)}" aria-label="Name der Pinnwand"><button class="btn" type="button" data-act="newboard">${t.id === "leer" ? "Erstellen" : esc(t.icon) + " Erstellen"}</button></div></section>`;
 }
@@ -837,7 +1026,7 @@ function bsetHTML() {
         ${opt("names", "Namen auf den Zetteln zeigen")}
         ${opt("imgs", "Kinder dürfen ein Bild anhängen")}</div>
         <p class="sub">Spalten, Äste und Kategorien benennen, färben und ordnen Sie unter «Sortieren».${b.direct ? " <b>Ohne Freigabe hängen die Zettel der Kinder sofort an der Pinnwand. Sie können sie jederzeit entfernen.</b>" : ""}</p></div>
-      <div class="row"><button class="btn ghost small" type="button" data-act="print">🖨️ Drucken</button></div>
+      <div class="row"><button class="btn ghost small" type="button" data-act="vlfromboard">⭐ Als Vorlage speichern</button><button class="btn ghost small" type="button" data-act="print">🖨️ Drucken</button></div>
     </div></details>`;
 }
 function kidCatHTML() {
@@ -1632,6 +1821,37 @@ document.addEventListener("click", async e => {
     try { await patchIdea(id, { poll: o, tools: { poll: true } }); toast("Umfrage gespeichert."); } catch (err) { failed(err); }
   }
   else if (act === "pollv") { const v = +b.dataset.v, m = myVote(id); if (S.peek) return; if (m.poll === v) delete m.poll; else m.poll = v; touchMy(400); render(); }
+  else if (act === "tpl" && S.vlEdit) { S.vlOpen = S.vlOpen === b.dataset.v ? null : b.dataset.v; S.armed = null; render(); document.querySelector(".vl-ed")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  else if (act === "vledit") { S.vlEdit = !S.vlEdit; S.vlOpen = null; render(); }
+  else if (act === "vlclose") { S.vlOpen = null; render(); }
+  else if (act === "vlrestore") { const v = vlState(); await saveVl({ ...v, hide: [] }, "Gelöschte Vorlagen sind wieder da."); }
+  else if (act === "vlreset") { const v = vlState(), e = { ...v.edit }; delete e[S.vlOpen]; await saveVl({ ...v, edit: e }, "Original wiederhergestellt."); }
+  else if (act === "vlsave") {
+    const v = vlState(), id = S.vlOpen, isNew = id === "neu", base = TPL0.find(x => x.id === id), old = TPL.find(x => x.id === id);
+    const t = vlRead(old); if (!t.name) { toast("Bitte geben Sie der Vorlage einen Namen."); document.getElementById("vl-name")?.focus(); return; }
+    let nv;
+    if (isNew) { const nid = "eigen-" + newId(""); nv = { ...v, own: [...v.own, { id: nid, ...t }] }; S.tpl = nid; }
+    else if (base) nv = { ...v, edit: { ...v.edit, [id]: t } };
+    else nv = { ...v, own: v.own.map(x => x.id === id ? { id, ...t } : x) };
+    if (await saveVl(nv, isNew ? "Vorlage erstellt." : "Vorlage gespeichert.")) { S.vlOpen = null; render(); }
+  }
+  else if (act === "vldel") {
+    const id = S.vlOpen, key = "vl:" + id;
+    if (S.armed !== key) { S.armed = key; render(); setTimeout(() => { if (S.armed === key) { S.armed = null; render(); } }, 4000); return; }
+    S.armed = null; const v = vlState(), base = TPL0.some(x => x.id === id);
+    const nv = base ? { ...v, hide: [...new Set([...v.hide, id])] } : { ...v, own: v.own.filter(x => x.id !== id) };
+    if (S.tpl === id) S.tpl = null; S.vlOpen = null;
+    await saveVl(nv, base ? "Vorlage gelöscht. Sie können sie jederzeit zurückholen." : "Vorlage gelöscht.");
+  }
+  else if (act === "vlfromboard") {
+    const bd = curBoard(); if (!bd) return; const v = vlState();
+    if (v.own.length >= VL_MAX) { toast("Es gibt schon " + VL_MAX + " eigene Vorlagen. Bitte zuerst eine löschen."); return; }
+    const t = { id: "eigen-" + newId(""), icon: "⭐", name: String(bd.title || "Eigene Vorlage").slice(0, 40), desc: "Eigene Vorlage", ph: String(bd.title || "").slice(0, 60), layout: bd.layout || "wand",
+      cats: cats().slice(0, 8).map(c => [String(c.title || "").slice(0, 60), c.color || "c0"]) };
+    for (const k of ["prompt", "canvas", "bg", "kidCat", "direct", "names", "imgs", "size", "font", "newPos", "sortBy"]) if (bd[k]) t[k] = bd[k];
+    if (bd.tools) t.tools = { ...bd.tools };
+    await saveVl({ ...v, own: [...v.own, t] }, "Als Vorlage gespeichert. Sie finden sie bei «Neue Pinnwand».");
+  }
   else if (act === "tpl") { S.tpl = b.dataset.v; render(); $("#newBoard")?.focus(); }
   else if (act === "copyboard") {
     const src = S.boards.get(id); if (!src) return;
@@ -1846,6 +2066,7 @@ async function start() {
   S.view = isTeacher ? "lp" : "kind"; S.live = true;
   db.collection("boards").onSnapshot(snap => { S.boards = new Map(snap.docs.map(d => [d.id, d.data()])); render(); }, () => {});
   db.collection("ideas").onSnapshot(snap => { S.ideas = new Map(snap.docs.map(d => [d.id, JSON.parse(JSON.stringify(d.data()))])); render(); }, () => toast("Verbindung zur Pinnwand unterbrochen. Bitte neu laden."));
+  if (isTeacher) db.doc("settings/vorlagen").onSnapshot(d => { S.vl = d.exists ? (d.data() || {}) : {}; applyVl(); render(); }, () => {});
   db.doc("settings/main").onSnapshot(d => { S.labels = d.exists ? (d.data().labels || {}) : {}; render(); }, () => {});
   if (isTeacher) db.collection("votes").onSnapshot(snap => { S.votes = new Map(snap.docs.map(d => [d.id, d.data()])); if (S.peek) setPeek(S.peek); render(); }, () => {});
   if (myId) db.doc("votes/" + myId).onSnapshot(d => {

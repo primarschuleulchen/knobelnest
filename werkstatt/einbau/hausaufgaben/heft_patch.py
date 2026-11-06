@@ -137,5 +137,9 @@ rep('if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;', """if (KN && KN.
 }
 if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;""")
 
+# 11) iPad hochkant: zwei Heftseiten nebeneinander wie im Querformat (gestapelt erst unter 640 px), passt ohne Scrollen
+rep("@media (max-width:820px){\n  body{overflow:auto}", "@media (max-width:640px){\n  body{overflow:auto}")
+rep('if (matchMedia("(max-width:820px)").matches) { book.style.setProperty("--lh", "30px"); return; }', 'if (matchMedia("(max-width:640px)").matches) { book.style.setProperty("--lh", "30px"); return; }')
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
