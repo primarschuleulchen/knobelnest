@@ -204,6 +204,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-item:hover .pl-ops{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
+iframe.yt{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:0;pointer-events:none;border:0;z-index:-1}
+#otterLayer,.t-otter .obody{border-radius:22px!important}
+.w.otter.hov .chrome{opacity:1}
 .dock button.wunsch svg{color:#c4952f}
 .wunsch-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0 10px;font-size:19px}
 .wunsch-box p{margin:0;max-width:30em}
@@ -825,7 +828,7 @@ const TYPES = {
   symbol:  { lab: "Arbeitsform", w: 16, h: 26, d: () => ({ key: "einzel" }), icon: `<circle cx="16" cy="10" r="4.5" fill="currentColor"/><path d="M7 27c0-8 18-8 18 0z" fill="currentColor"/>` },
   traffic: { lab: "Ampel", w: 8, h: 34, d: () => ({ on: "green" }), icon: `<rect x="10" y="3" width="12" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="10" r="2.5" fill="currentColor"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><circle cx="16" cy="22" r="2.5" fill="currentColor"/>` },
   groups:  { lab: "Gruppen", w: 40, h: 30, d: () => ({ heading: "Partner", source: "random", size: 2, groups: [] }), icon: `<circle cx="9" cy="9" r="3.6" fill="currentColor"/><circle cx="23" cy="9" r="3.6" fill="currentColor"/><path d="M3 18c0-4 12-4 12 0zM17 18c0-4 12-4 12 0z" fill="currentColor"/><circle cx="16" cy="22" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 30c0-4 12-4 12 0" fill="none" stroke="currentColor" stroke-width="2"/>` },
-  otter:   { lab: "Otterteich", w: 42, h: 46, d: () => ({}), icon: `<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="11" cy="7.5" r="1.8" fill="currentColor"/><circle cx="21" cy="7.5" r="1.8" fill="currentColor"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/>` },
+  otter:   { lab: "Lautstärke", w: 42, h: 46, d: () => ({}), icon: `<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="11" cy="7.5" r="1.8" fill="currentColor"/><circle cx="21" cy="7.5" r="1.8" fill="currentColor"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/>` },
   stand:   { lab: "Arbeitsstand", w: 50, h: 60, d: () => ({}), icon: `<rect x="4" y="6" width="24" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4 13h24M12 6v20M20 6v20" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="19" r="2" fill="currentColor"/><circle cx="24" cy="22" r="2" fill="currentColor"/>` },
   random:  { lab: "Zufallsname", w: 24, h: 30, d: () => ({ names: "", pick: "", editing: !(KN && KN.roster.length) }), icon: `<rect x="6" y="6" width="20" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="20" cy="20" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/>` }
 };
@@ -1270,7 +1273,7 @@ function widgetInner(w){
       ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<button class="mat${(d.crossed || []).includes(k) ? " crossed" : ""}" data-mk="${k}" title="${MAT[k][0]} – antippen zum Durchstreichen">${MAT[k][1]}<span>${MAT[k][0]}</span></button>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
       <div class="mnote${d.note ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="note" data-ph="Anmerkung (optional)" style="${d.tc ? `color:${d.tc}` : ""}">${esc(d.note || "")}</div>
       <div class="lfoot"><button class="sbtn rose" data-mat>Material wählen</button><button class="sbtn" data-iconsonly>${d.iconsOnly ? "Mit Text" : "Nur Symbole"}</button></div>`;
-    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur in der Klassenkiste."}</span></div></div>`;
+    case "otter": return `<div class="t-otter"><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Lautstärkeregler erscheint hier (einmal pro Bildschirm)." : KN ? "Der Lautstärkeregler ist für dich noch nicht freigegeben." : "Den Lautstärkeregler gibt es nur in der Klassenkiste."}</span></div></div>`;
     case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur in der Klassenkiste.</div>`;
     case "heft": return heftHTML(w);
     case "image": return `<div class="t-img">${d.src ? `<img src="${esc(d.src)}" alt="">` : ""}</div>`;
@@ -1341,6 +1344,14 @@ setTimeout(() => {
       <a class="sbtn rose wunsch-link" href="${INSTA}" target="_blank" rel="noopener">Auf Instagram schreiben ✦</a>
       <p class="hint">@primarschuleulchen</p></div>`));
 }, 0);
+// Lautstärke: Maus über dem Teich zeigt die Leiste zum Verschieben (der Teich selbst fängt alle Klicks)
+(() => {
+  const layer = document.getElementById("otterLayer"); if (!layer) return; let t = 0;
+  const w = () => document.querySelector("#board .w.otter");
+  layer.addEventListener("pointerenter", () => { clearTimeout(t); w()?.classList.add("hov"); });
+  layer.addEventListener("pointerleave", () => { clearTimeout(t); t = setTimeout(() => { const x = w(); if (x && !x.matches(":hover")) x.classList.remove("hov"); }, 900); });
+  document.addEventListener("pointerover", e => { const x = w(); if (x && e.target.closest && e.target.closest(".w.otter .chrome")) { clearTimeout(t); x.classList.add("hov"); } });
+})();
 function rerender(w){ const el = document.querySelector(`[data-w="${w.id}"]`); if (el) el.outerHTML = widgetHTML(w); }
 const findW = el => { const n = el.closest?.("[data-w]"); return n && screen().widgets.find(w => w.id === n.dataset.w); };
 
@@ -2073,13 +2084,20 @@ function musicRender(){
   if (!m) { c.hidden = true; return; }
   c.hidden = false;
   c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern">♪ ${esc(m.name || "Musik")}</span>`;
-  if (MUS.kind === "yt" && MUS.el && !c.contains(MUS.el)) c.appendChild(MUS.el);
+  if (MUS.kind === "yt" && MUS.el && !MUS.el.isConnected) APP.appendChild(MUS.el);
 }
 function ytCmd(func){ try { MUS.el.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*"); } catch {} }
 function musicStop(){
   if (MUS.el) { try { if (MUS.kind === "file") { MUS.el.pause(); MUS.el.src = ""; } } catch {} MUS.el.remove?.(); }
   MUS.el = null; MUS.key = ""; MUS.kind = ""; MUS.playing = false;
 }
+// YouTube meldet, ob es wirklich spielt (1 = spielt, 3 = lädt)
+window.addEventListener("message", e => {
+  if (!MUS.el || MUS.kind !== "yt" || e.source !== MUS.el.contentWindow) return;
+  let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch { return; }
+  const st = d && d.info && d.info.playerState; if (st == null) return;
+  const p = st === 1 || st === 3; if (p !== MUS.playing) { MUS.playing = p; musicRender(); }
+});
 function musicToggle(){
   if (!MUS.el) { syncMusic(true); return; }
   if (MUS.kind === "file") { if (MUS.el.paused) MUS.el.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => {}); else { MUS.el.pause(); MUS.playing = false; musicRender(); } return; }
@@ -2099,7 +2117,8 @@ function syncMusic(force){
       const f = document.createElement("iframe");
       f.className = "yt"; f.allow = "autoplay; encrypted-media"; f.title = "Musik";
       f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1&loop=1&playlist=${m.id}&controls=0&enablejsapi=1&playsinline=1`;
-      MUS.el = f; MUS.playing = true;
+      f.addEventListener("load", () => { try { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch {} });
+      MUS.el = f; MUS.playing = false;
     }
   }
   musicRender();
