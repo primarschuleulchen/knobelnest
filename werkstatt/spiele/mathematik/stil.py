@@ -129,41 +129,77 @@ for g in pak['games']:
     n = dict(g); n['html'] = umbauen(g); neu['games'].append(n)
 json.dump(neu, open(os.path.join(AUS, 'mathematik-spielpaket.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 
-# Vorschau-Seite: alle Spiele nach Thema, mit Spielfenster
+# Vorschau-Seite wie bei den Kindern: zuerst die Themen (Karten mit Bild), darin die Spiele, dann das Spiel
+import base64
+def bild(p): return 'data:image/webp;base64,' + base64.b64encode(open(os.path.join(ROOT, p), 'rb').read()).decode()
+FACH = bild('bilder/faecher/mathematik.webp')
+THEMA_BILD = {'Einmaleins': bild('bilder/spiele/einmaleins.webp')}
 themen = []
 for g in neu['games']:
     if g['thema'] not in themen: themen.append(g['thema'])
 logo = lambda t: EINMALEINS_LOGO.get(t) or SPIELE[t]['logo']
-karten = ''.join('<section><h2>' + H.escape(th) + '</h2><div class="liste">' + ''.join(
-    '<button class="sp" data-i="%d"><span class="ic">%s</span><span class="t"><b>%s</b><span>%s</span></span></button>' % (i, H.escape(logo(g['title'])), H.escape(g['title']), H.escape(g['description']))
-    for i, g in enumerate(neu['games']) if g['thema'] == th) + '</div></section>' for th in themen)
+E = H.escape
+thema_karten = ''.join(
+    '<article class="th"><img class="rund" src="%s" alt=""><span class="ober">Thema</span><b>%s</b><span class="info">%d Spiele</span>'
+    '<button class="los" data-th="%d">Öffnen</button></article>' % (THEMA_BILD.get(th, FACH), E(th), sum(1 for g in neu['games'] if g['thema'] == th), k)
+    for k, th in enumerate(themen))
+spiel_listen = ''.join(
+    '<div class="liste" data-th="%d" hidden>' % k + ''.join(
+    '<button class="sp" data-i="%d"><span class="ic">%s</span><span class="t"><b>%s</b><span>%s</span></span></button>' % (i, E(logo(g['title'])), E(g['title']), E(g['description']))
+    for i, g in enumerate(neu['games']) if g['thema'] == th) + '</div>' for k, th in enumerate(themen))
 daten = json.dumps([g['html'] for g in neu['games']], ensure_ascii=False).replace('</', '<\\/')
-seite = '''<title>Mathe-Spiele Klassenkiste</title><meta name="claude:viewport-fit-sides" content="cover"><style>''' + FONT + '''
-:root{--ink:#1f2421;--soft:#5f6963;--line:#e1edf7;--gold:#d6ad45;--sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10)}
-/* Bewusst nur hell: die Spiele selbst sind hell */
-:root{color-scheme:light}
-*{box-sizing:border-box}
-body{font-family:"Patrick Hand","Segoe Print",cursive;color:var(--ink);background:radial-gradient(1200px 600px at 10% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 500px at 110% 110%,#fbf3dc 0%,transparent 60%),#f4f9fd;min-height:100vh}
-.wrap{max-width:1040px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1{font-weight:400;font-size:clamp(36px,6vw,52px);margin:0}h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
-.lead{color:var(--soft);font-size:19px;margin:6px 0 18px}
-h2{font-weight:400;font-size:30px;margin:26px 0 12px}
+seite = """<title>Mathe-Spiele Klassenkiste</title><meta name="claude:viewport-fit-sides" content="cover"><style>""" + FONT + """
+/* Wie die Kinderansicht der Klassenkiste: Kopf mit rundem Fach-Bild, Karten mit Goldrand. Bewusst nur hell. */
+:root{color-scheme:light;--ink:#1f2421;--soft:#5f6963;--blau:#3f78a8;--line:#e1edf7;--gold:#d6ad45;--sky:#dcf0fd;--bg:#f4f9fd;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);--hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{font-family:var(--hand);color:var(--ink);background:radial-gradient(1200px 600px at 10% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 500px at 110% 110%,#fbf3dc 0%,transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+.zur{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:22px;background:#fff;border:0;border-radius:999px;padding:6px 18px;cursor:pointer;box-shadow:0 4px 14px rgba(63,120,168,.25);color:var(--ink)}
+.kopf{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.sterne{color:var(--gold);letter-spacing:.4em;font-size:17px}
+.kopf .rund{width:118px;height:118px}
+.kopf .ic{width:118px;height:118px;font-size:30px}
+h1{font-weight:400;font-size:clamp(40px,6vw,56px);line-height:1;margin:4px 0 0;text-wrap:balance}h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.kopf p{color:var(--soft);font-size:21px;margin:0}
+.rund{width:96px;height:96px;border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 0 3px #fff,0 6px 14px rgba(63,120,168,.2);background:#fff;object-fit:cover;max-width:100%}
+.themen{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px}
+.th{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:28px;padding:22px 20px 18px;box-shadow:var(--sch);min-width:0}
+.ober{font-size:16px;color:var(--blau);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.th b{font-weight:400;font-size:32px;line-height:1.05}
+.info{color:var(--soft);font-size:19px}
+.los{margin-top:auto;align-self:stretch;font:inherit;font-size:22px;min-height:50px;border-radius:16px;border:2px solid var(--ink);background:var(--sky);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(63,120,168,.14)}
 .liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.sp{display:flex;gap:14px;align-items:center;text-align:left;font:inherit;color:inherit;cursor:pointer;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:24px;padding:14px 16px;box-shadow:var(--sch);min-width:0}
-.sp:hover{transform:translateY(-3px)}
+.sp{display:flex;gap:14px;align-items:center;text-align:left;font:inherit;color:inherit;cursor:pointer;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid var(--line);border-radius:24px;padding:14px 16px;box-shadow:var(--sch);min-width:0;transition:transform .15s}
+.sp:hover,.los:hover{transform:translateY(-3px)}
 .ic{flex:none;width:76px;height:76px;border-radius:50%;border:3px solid var(--gold);box-shadow:inset 0 0 0 4px #fff;display:grid;place-items:center;font-size:20px;white-space:nowrap;background:radial-gradient(circle at 35% 30%,#fff 0%,#eaf5fe 70%)}
 .t{display:flex;flex-direction:column;gap:2px;min-width:0}.t b{font-weight:400;font-size:24px;line-height:1.05}.t span{color:var(--soft);font-size:16px;line-height:1.2}
-.fenster{position:fixed;inset:0;background:#f4f9fd;display:none;z-index:9}.fenster.offen{display:block}
+.hinweis{color:var(--soft);font-size:16px;text-align:center;margin:0}
+.fenster{position:fixed;inset:0;background:var(--bg);z-index:9}
 .fenster iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.zu{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));z-index:2;font:inherit;font-size:22px;background:#fff;border:0;border-radius:999px;padding:6px 18px;cursor:pointer;box-shadow:0 4px 14px rgba(63,120,168,.25)}
-.sp:focus-visible,.zu:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
-@media (prefers-reduced-motion:reduce){.sp:hover{transform:none}}
-</style><div class="wrap"><h1>Mathe-Spiele im Klassenkiste-Stil</h1>
-<p class="lead">Vorschau zum gemeinsamen Überarbeiten. Tippe auf ein Spiel, um es auszuprobieren. Hier wird nichts gespeichert.</p>''' + karten + '''</div>
-<div class="fenster" id="f"><button class="zu" id="zu" title="Zurück zur Übersicht">← Zurück</button><iframe id="fr" title="Spiel" sandbox="allow-scripts allow-modals"></iframe></div>
-<script>var SP=''' + daten + ''';
-document.querySelectorAll('.sp').forEach(function(b){b.onclick=function(){document.getElementById('fr').srcdoc=SP[+b.dataset.i];document.getElementById('f').classList.add('offen');};});
-document.getElementById('zu').onclick=function(){document.getElementById('f').classList.remove('offen');document.getElementById('fr').srcdoc='';};
-</script>'''
+.fenster .zur{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));z-index:2}
+.sp:focus-visible,.los:focus-visible,.zur:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.sp:hover,.los:hover{transform:none}}
+</style>
+<div class="wrap" id="v-themen">
+  <div class="kopf"><span class="sterne" aria-hidden="true">✦ ✧ ✦</span><img class="rund" src=\"""" + FACH + """\" alt=""><h1>Mathematik</h1><p>Wähle ein Thema.</p></div>
+  <div class="themen">""" + thema_karten + """</div>
+  <p class="hinweis">Vorschau zum gemeinsamen Überarbeiten. Hier wird nichts gespeichert.</p>
+</div>
+<div class="wrap" id="v-spiele" hidden>
+  <button class="zur" id="zurTh">← Themen</button>
+  <div class="kopf"><span class="sterne" aria-hidden="true">✦ ✧ ✦</span><img class="rund" id="thBild" src="" alt=""><h1 id="thName"></h1><p>Mathematik · Wähle ein Spiel.</p></div>
+  """ + spiel_listen + """
+</div>
+<div class="fenster" id="f" hidden><button class="zur" id="zu">← Zurück</button><iframe id="fr" title="Spiel" sandbox="allow-scripts allow-modals"></iframe></div>
+<script>var SP=""" + daten + """, TH=""" + json.dumps(themen, ensure_ascii=False) + """, TB=""" + json.dumps([THEMA_BILD.get(t, FACH) for t in themen]) + """;
+var $=function(i){return document.getElementById(i);};
+function thema(k){ $('v-themen').hidden=true; $('v-spiele').hidden=false; $('thName').textContent=TH[k]; $('thBild').src=TB[k];
+  document.querySelectorAll('.liste').forEach(function(l){ l.hidden = l.dataset.th!=String(k); }); window.scrollTo(0,0); }
+document.querySelectorAll('.los').forEach(function(b){ b.onclick=function(){ thema(+b.dataset.th); }; });
+$('zurTh').onclick=function(){ $('v-spiele').hidden=true; $('v-themen').hidden=false; };
+document.querySelectorAll('.sp').forEach(function(b){ b.onclick=function(){ $('fr').srcdoc=SP[+b.dataset.i]; $('f').hidden=false; }; });
+$('zu').onclick=function(){ $('f').hidden=true; $('fr').srcdoc=''; };
+</script>"""
 open(os.path.join(AUS, 'vorschau.html'), 'w', encoding='utf-8').write(seite)
 print('ok', len(neu['games']), 'Spiele ->', AUS)
