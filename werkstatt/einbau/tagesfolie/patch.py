@@ -66,6 +66,7 @@ exec(open(__file__.replace('patch.py','hintergruende.py'), encoding='utf-8').rea
 exec(open(__file__.replace('patch.py','ausbau21.py'), encoding='utf-8').read())
 exec(open(__file__.replace('patch.py','vorlage22.py'), encoding='utf-8').read())
 exec(open(__file__.replace('patch.py','wunsch23.py'), encoding='utf-8').read())
+exec(open(__file__.replace('patch.py','heft24.py'), encoding='utf-8').read())
 # 19) Stil der Eulenkiste (gemeinsam mit der Eulenkiste, siehe eulenstil.py) und Schriften lokal statt von Google
 import os as _os, re as _re
 sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))

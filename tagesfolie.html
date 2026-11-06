@@ -229,6 +229,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .hf-lernkontrolle .hf-z{color:#e07a70}
 .hf-leer{color:#a7ada8;font-size:.85em}
 .hf-tag.bald{font-size:.82em}
+.hf-voll{align-self:flex-start;margin-top:.2em;border:0;background:none;padding:0;color:#3f78a8;text-decoration:underline;font:inherit;font-size:.7em;cursor:pointer}
+.t-heftvoll{position:absolute;inset:0}
+.t-heftvoll iframe{width:100%;height:100%;border:0;display:block}
 .rinfo{font-size:clamp(12px,4cqh,17px);color:#8a918c;font-family:var(--hand)}
 .rreset{border:0;background:none;padding:0;color:#3f78a8;text-decoration:underline;font:inherit;cursor:pointer}
 .ring.sand{aspect-ratio:.6}
@@ -1297,7 +1300,7 @@ function widgetInner(w){
 }
 const FS_DEFAULT = { list: 3.6, check: 3.6, plan: 2.5, material: 3.4, groups: 2.8, note: 3.2 };
 const STYLED = new Set(["list", "check", "note", "material"]);
-const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], heft: ["↻", "Hausaufgaben neu laden"], timer: ["⚙", "Ton und Aussehen"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
+const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], heft: ["⇄ Ansicht", "Kurzansicht oder ganzes Heft"], timer: ["⚙", "Ton und Aussehen"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
 function widgetHTML(w){
   const x = EXTRA[w.type], auto = AUTO.has(w.type);
   return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${w.type === "note" ? `--fs:${w.fs || FS_DEFAULT.note};` : ""}${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
@@ -1422,7 +1425,7 @@ $("#board").addEventListener("click", e => {
     if (w.type === "date") openColors("Farbe des Kalenderblatts", [["auto", ""], ...Object.entries(CAL_COLORS).map(([k, v]) => [k, v[0]])], d.color, v => { d.color = v; });
     if (w.type === "symbol") openSymbols(w);
     if (w.type === "clock") { d.sec = !d.sec; save(); rerender(w); }
-    if (w.type === "heft") { heftLoad(true); toast("Hausaufgaben werden neu geladen"); }
+    if (w.type === "heft") heftToggle(w);
     if (w.type === "timer") openTimerSet(w);
     if (w.type === "image") uploadImage(1600).then(img => { if (img) { d.src = img.src; save(); rerender(w); } });
     return;
@@ -1468,6 +1471,7 @@ $("#board").addEventListener("click", e => {
   if (e.target.closest("[data-rdone]")) { d.names = $("#names-" + w.id).value; d.editing = false; save(); rerender(w); return; }
   if (e.target.closest("[data-redit]")) { d.editing = true; save(); rerender(w); return; }
   if (e.target.closest("[data-roll]")) roll(w);
+  if (e.target.closest("[data-hfvoll]")) { heftToggle(w); return; }
   if (e.target.closest("[data-rreset]")) { w.data.drawn = []; save(); rerender(w); return; }
   if (e.target.closest("[data-groster]")) { openRoster(w); return; }
   if (e.target.closest("[data-gsets]")) { openGroupSets(w); return; }
@@ -1617,9 +1621,16 @@ setInterval(() => { if (S && screen().widgets.some(w => w.type === "heft")) heft
 const isoDay = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 const HF_ART = { aufgabe: "", lernkontrolle: "Lernkontrolle", termin: "Termin", ferien: "Ferien", schulfrei: "schulfrei", geburtstag: "Geburtstag" };
 const HF_ZEICHEN = { aufgabe: "✎", lernkontrolle: "★", termin: "◷", ferien: "☀", schulfrei: "☾", geburtstag: "♥" };
+function heftToggle(w){
+  const d = w.data; d.voll = !d.voll;
+  if (d.voll) { w.w = Math.max(w.w, 62); w.h = Math.max(w.h, 74); w.x = Math.max(0, Math.min(w.x, 100 - w.w)); w.y = Math.max(0, Math.min(w.y, 100 - w.h)); }
+  else heftLoad(true);
+  save(); rerender(w);
+}
 function heftHTML(w){
   const d = w.data, head = `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading || "")}</div>`;
   if (!KN || !KN.heft) return head + `<div class="emptyhint">${KN ? "Das Hausaufgabenheft ist für dich noch nicht freigegeben." : "Die Hausaufgaben gibt es nur in der Klassenkiste."}</div>`;
+  if (d.voll && KN.heftUrl) return `<div class="t-heftvoll"><iframe src="${esc(KN.heftUrl)}" title="Hausaufgabenheft"></iframe></div>`;
   if (!HEFT.data) { heftLoad(); return head + `<div class="emptyhint">Hausaufgaben werden geladen …</div>`; }
   const all = HEFT.data.entries.filter(e => e && !e.by && (!Array.isArray(e.for) || !e.for.length) && /^\d{4}-\d{2}-\d{2}$/.test(e.date || ""));
   const frei = new Set(all.filter(e => e.type === "ferien" || e.type === "schulfrei").map(e => e.date));
@@ -1636,7 +1647,8 @@ function heftHTML(w){
   const kurz = iso => { const x = new Date(iso + "T12:00:00"); return `${WD[x.getDay()].slice(0, 2)} ${x.getDate()}.${x.getMonth() + 1}.`; };
   return head + `<div class="t-heft">${tag("Heute", heute)}${tag(isoDay(morgen) === naechst ? "Morgen" : WD[nx.getDay()], naechst)}
     ${bald.length ? `<div class="hf-tag bald"><div class="hf-t">Bald</div><ul>${bald.map(e => `<li><span class="hf-z" aria-hidden="true">${HF_ZEICHEN[e.type]}</span><span><i>${kurz(e.date)}</i> ${txt(e)}</span></li>`).join("")}</ul></div>` : ""}
-    ${HEFT.err ? `<div class="hf-leer">Das Heft konnte gerade nicht geladen werden.</div>` : ""}</div>`;
+    ${HEFT.err ? `<div class="hf-leer">Das Heft konnte gerade nicht geladen werden.</div>` : ""}
+    ${KN.heftUrl ? `<button class="hf-voll" data-hfvoll>Ganzes Heft zeigen</button>` : ""}</div>`;
 }
 function randNames(w){
   let names = (w.data.names || "").split("\n").map(s => s.trim()).filter(Boolean);

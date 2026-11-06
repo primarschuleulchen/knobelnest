@@ -388,8 +388,8 @@
     if (ma) return AT.start(ma[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
-    var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
-    if (mh) return H.start(mh[1]);
+    var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})(\/embed)?/);
+    if (mh) return H.start(mh[1], !!mh[2]);
     var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})(?:\/([0-9a-f-]{36}))?/);
     if (mgs) return E.start(mgs[1], mgs[2]);
     var mel = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
@@ -680,6 +680,7 @@
         boardUrl: base + '#/wandtafel/' + cid + '/embed',
         otterUrl: otterOk ? 'otterteich.html?embed&v=' + OTTER_VER : '',
         heft: heftOk ? function () { return DB.storeGet('hat-' + cid); } : null, // Hausaufgaben-Baustein (nur lesen)
+        heftUrl: heftOk ? base + '#/hausaufgaben/' + cid + '/embed' : '', // ganzes Heft im Baustein
         back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: {
           use: async function (name) {
@@ -690,14 +691,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('43') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('44') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '6';
+  var HEFT_VER = '7';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -705,7 +706,7 @@
     } };
   }
   var H = {
-    start: async function (cid) {
+    start: async function (cid, embed) {
       UI.view = 'heft';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
@@ -742,9 +743,9 @@
         }
       };
       window.knHeft = {
-        mode: 'teacher', key: cid, className: 'Klasse ' + cls.name,
+        mode: 'teacher', key: cid, className: 'Klasse ' + cls.name, embed: !!embed, // embed = ganzes Heft als Baustein in der Tagesfolie
         roster: (kids || []).slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; }),
-        back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
+        back: function () { if (embed) return; if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: { use: async function (name) {
           if (name === 'db') return { doc: function () { return doc; }, collection: function () { return { doc: function () { return doc; } }; } };
           if (name === 'assets') return { upload: async function (blob) { var u = await DB.storeUpload(blob); return { id: u, url: u, contentType: blob.type }; }, delete: async function () {} };
