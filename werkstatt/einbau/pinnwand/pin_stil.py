@@ -1,27 +1,16 @@
-# 17) Klassenkiste-Stil (wie die Lehrpersonen-Seite im Stil der Eulenkiste, body.lp in style.css):
-#     Schrift Patrick Hand (eingebettet), helles Blau, weisse Karten mit weichem blauem Schatten, Knöpfe mit dunklem Rand,
-#     Gold-Akzente und ✦ ✧ ✦, Eulen-Marke. Bewusst nur hell (wie das Portal und für den Beamer).
-#     Schrift und Eule werden als data:-Adressen eingebettet, damit die Seite auch als claude.ai-Artefakt ohne fremde Dateien läuft.
-#     «Drucken» fällt weg: im Artefakt kann die Seite keinen Druckdialog öffnen.
-#     Wird als letzter Abschnitt von standalone.py ausgeführt.
-import base64
-_root = os.path.abspath(os.path.join(here, '..', '..', '..'))
-_font = base64.b64encode(open(os.path.join(_root, 'schriften', 'patrick-hand.woff2'), 'rb').read()).decode()
-_eule = base64.b64encode(open(os.path.join(_root, 'bilder', 'eule.webp'), 'rb').read()).decode()
-
-# Keine Schriften von Google mehr: Patrick Hand ist eingebettet
-rep('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">\n', '')
+# Klassenkiste-Stil für die Klassen-Pinnwand (wie die Lehrpersonen-Seite der Klassenkiste und die Eulenkiste):
+# Schrift Patrick Hand, helles Blau, weisse Karten mit weichem blauem Schatten, Knöpfe mit dunklem Rand,
+# Gold-Akzente und ✦ ✧ ✦, Eulen-Marke. Bewusst nur hell (Beamer).
+# Gemeinsam für Klassenkiste (pin6_patch.py), eigenständige Pinnwand/Artefakt (standalone.py) und
+# Eulenkiste (Repo lernkompass, werkstatt/bauen.py, Abschnitt «Klassenkiste-Stil»). Bei Änderungen alle anpassen.
+# Vor dem Ausführen setzen: EULE = Bildadresse der Eule ("" = ohne Bild), SCHRIFT = @font-face-Zeile ("" = Schrift kommt anderswoher).
 
 # Marke oben links: Eule im Goldring, Name in Handschrift
-rep('    <h1>Klassen-Pinnwand</h1>', '''    <h1 class="marke"><span class="marke-bild"><img src="data:image/webp;base64,''' + _eule + '''" alt=""></span><span class="marke-text"><b>Klassen<em>-</em>Pinnwand<i>✦</i></b><small>Ideen sammeln · ordnen · abstimmen</small></span></h1>''')
-
-# Standard-Hintergrund heisst jetzt wie das Portal
+rep('    <h1>Klassen-Pinnwand</h1>', '    <h1 class="marke">' + ('<span class="marke-bild"><img src="' + EULE + '" alt=""></span>' if EULE else '')
+    + '<span class="marke-text"><b>Klassen<em>-</em>Pinnwand<i>✦</i></b><small>Ideen sammeln · ordnen · abstimmen</small></span></h1>')
+# Standard-Hintergrund heisst wie das Portal
 rep('const BGS = [["", "Aquarell"],', 'const BGS = [["", "Klassenkiste"],')
-# Kein Drucken im Artefakt
-rep('      <div class="row"><button class="btn ghost small" type="button" data-act="print">🖨️ Drucken</button></div>\n', '')
-
-rep('</style>\n\n<div class="wrap">', '''/* ===== Klassenkiste-Stil ===== */
-@font-face{font-family:"Patrick Hand";src:url(data:font/woff2;base64,''' + _font + ''') format("woff2");font-weight:400;font-display:swap}
+rep('</style>\n\n<div class="wrap">', SCHRIFT + '''/* ===== Klassenkiste-Stil ===== */
 :root{
   --paper:#f4f9fd; --card:#ffffff; --ink:#1f2421; --muted:#5f6963; --line:#dbe7f1; --line2:#c5d8e8; --edge:#e1edf7;
   --gold:#d6ad45; --gold-d:#c4952f; --sky-soft:#dcf0fd; --sky-mid:#c9e7fb; --sky-deep:#3f78a8; --sun-soft:#fbf3dc;
@@ -132,17 +121,12 @@ select.field{min-height:42px;font-family:var(--ui)}
 .toast{background:var(--ink);border-radius:14px;font-size:1rem;box-shadow:var(--shadow-hi)}
 @media (max-width:640px){.marke-bild{width:46px;height:46px}.marke-text b{font-size:1.65rem}.marke-text small{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.vl-hint{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--sun-soft);border:1.5px dashed var(--gold);border-radius:20px;padding:12px 18px;color:#4a3d1a}
+.vl-hint p{flex:1 1 300px;margin:0;font-size:1.05rem;line-height:1.35;min-width:0}
+.vl-hint b{color:#6b5418}
+.vl-stern{font-size:1.6rem;color:var(--gold);line-height:1}
+.vl-btn{text-decoration:none;background:#fff;white-space:nowrap}
+.vl-btn:hover{background:#fff6dc}
 </style>
 
 <div class="wrap">''')
-
-# Hinweis auf die Klassenkiste: dort lassen sich Vorlagen bearbeiten, löschen und eigene erstellen
-rep('esc(t.icon) + " Erstellen"}</button></div></section>`;', '''esc(t.icon) + " Erstellen"}</button></div>
-    <div class="kk-hint"><span class="kk-stern" aria-hidden="true">✦</span><p><b>Eigene Vorlagen?</b> In der Klassenkiste können Sie Vorlagen bearbeiten, löschen und eigene erstellen, dazu viele weitere Werkzeuge für Ihre Klasse.</p><a class="btn kk-btn" href="https://primarschuleulchen.github.io/knobelnest/" target="_blank" rel="noopener">✦ Hol dir jetzt den Zugang</a></div></section>`;''')
-rep('/* ===== Klassenkiste-Stil ===== */', '''/* ===== Klassenkiste-Stil ===== */
-.kk-hint{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--sun-soft, #fbf3dc);border:1.5px dashed var(--gold, #d6ad45);border-radius:20px;padding:12px 18px;color:#4a3d1a}
-.kk-hint p{flex:1 1 300px;margin:0;font-size:1.05rem;line-height:1.35;min-width:0}
-.kk-hint b{color:#6b5418}
-.kk-stern{font-size:1.6rem;color:var(--gold, #d6ad45);line-height:1}
-.kk-btn{text-decoration:none;background:#fff;white-space:nowrap}
-.kk-btn:hover{background:#fff6dc}''')
