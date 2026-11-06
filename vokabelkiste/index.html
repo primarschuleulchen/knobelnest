@@ -836,6 +836,15 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .hact .pill.tool:hover{background:var(--nut-soft)}
 .hact .hcol{display:inline-flex;flex-direction:column;gap:6px;align-items:stretch}
 .hact:has(.hcol){align-items:center}
+.mvdlg{top:12%;max-height:80vh;overflow:auto}
+.mvlist{display:flex;flex-direction:column;gap:4px;max-height:50vh;overflow:auto}
+.mvo{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;text-align:left;font-size:17px}
+.mvo:hover{background:var(--sky-soft)}
+.mvo.cur{border-color:var(--gold);background:var(--nut-soft)}
+.mvo.cur::after{content:" · jetzt hier";color:var(--muted);font-size:14px}
+.hact .hgrid{display:inline-grid;grid-template-columns:auto auto;gap:6px}
+.hact .hgrid .pill{min-height:32px}
+.hact .hgrid #delNode{font-size:15px;min-height:32px;padding:0 11px}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1273,7 +1282,7 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
@@ -1289,7 +1298,7 @@ function goNode(id){
   bindFolderGrid(id);
   if(T&&node){
     $('#relNode').onclick=()=>toggleRelease(id);const tpb=$('#tplNode');if(tpb)tpb.onclick=()=>toggleTpl(id);const cpb=$('#cpBtn');if(cpb)cpb.onclick=()=>goClassPortion(id);
-    $('#ren').onclick=()=>openDialog({title:isPortion?'Portion umbenennen':'Ordner umbenennen',value:node.name,onOk:v=>{node.name=v;touch();goNode(id)}});
+    $('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=()=>openDialog({title:isPortion?'Portion umbenennen':'Ordner umbenennen',value:node.name,onOk:v=>{node.name=v;touch();goNode(id)}});
     confirmBtn($('#delNode'),'Wirklich löschen?',()=>{const arr=kidsOf(info.parent?info.parent.id:null);arr.splice(arr.indexOf(node),1);touch();toast('Gelöscht');goNode(info.parent?info.parent.id:null)});
   }
   if(isPortion&&T)bindEditor(node);
@@ -2268,6 +2277,28 @@ function wsSuche(all,r){const N=12,g=[...Array(N)].map(()=>Array(N).fill('')),hi
     if(ok)words.push({de:c.w.de,f2:c.t.toLowerCase()})}
   const AB='ABCDEFGHIJKLMNOPRSTUVWY';for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!g[y][x])g[y][x]=AB[Math.floor(r()*AB.length)];
   return {grid:g,hit,words}}
+
+/* ---------- Knobelnest: Portionen/Ordner duplizieren und verschieben (Lehrperson) ---------- */
+const vkArr=id=>{const i=NODES.get(id);return !i?null:i.parent?(i.parent.kids=i.parent.kids||[]):i.sub.tree};
+/* Kopie gleich hinter dem Original, mit neuen IDs (eigener Fortschritt), für die Kinder zuerst gesperrt */
+function vkDup(id){const i=NODES.get(id);if(!i)return;const s=i.sub,ex=new Set(s.excl),arr=vkArr(id);
+  const cp=JSON.parse(JSON.stringify(i.node));
+  const neu=n=>{n.id=uid();delete n.tpl;(n.words||[]).forEach(w=>{const old=w.id;w.id=uid();delete w.imgT;if(ex.has(old))s.excl.push(w.id)});(n.kids||[]).forEach(neu)};
+  neu(cp);cp.name=i.node.name+' (Kopie)';cp.open=false;arr.splice(arr.indexOf(i.node)+1,0,cp);
+  touch();toast('Kopie erstellt. Sie ist für die Kinder noch gesperrt.');goNode(cp.id)}
+/* In einen anderen Ordner (oder ganz nach oben) verschieben; nie in sich selbst */
+function vkMove(id){const i=NODES.get(id);if(!i)return;const s=i.sub,L=$('#layer');
+  const rows=[];const walk=(arr,d)=>arr.forEach(n=>{if(n.words||n.id===id)return;rows.push({n,d});walk(n.kids||[],d+1)});walk(s.tree,0);
+  const cur=i.parent?i.parent.id:'';
+  L.innerHTML=`<div class="scrim"></div><div class="dlg mvdlg" role="dialog" aria-label="Verschieben"><h2 class="lbl">«${esc(i.node.name)}» verschieben</h2>
+    <p class="note" style="margin:0">Wähl den Ordner, in den ${i.node.words?'die Portion':'der Ordner'} kommen soll.</p>
+    <div class="mvlist"><button class="mvo ${cur===''?'cur':''}" data-to="">🏠 ${esc(s.name)} (ganz oben)</button>${rows.map(r=>`<button class="mvo ${r.n.id===cur?'cur':''}" data-to="${r.n.id}" style="padding-left:${14+r.d*22}px">📁 ${esc(r.n.name)}</button>`).join('')}</div>
+    <div class="dact"><button class="pill" id="mvX">Abbrechen</button></div></div>`;
+  const zu=()=>{L.innerHTML=''};$('#mvX',L).onclick=zu;$('.scrim',L).onclick=zu;
+  $$('[data-to]',L).forEach(b=>b.onclick=()=>{const to=b.dataset.to;if(to===cur){zu();return}
+    const from=vkArr(id),ziel=to?NODES.get(to).node:null;from.splice(from.indexOf(i.node),1);
+    (ziel?(ziel.kids=ziel.kids||[]):s.tree).push(i.node);
+    zu();touch();toast('Verschoben nach «'+(ziel?ziel.name:s.name)+'»');goNode(id)})}
 
 /* ---------- Karteikasten (pro Sprache) ---------- */
 const INTERVALS=[1,2,7,14,30],INT_LABEL=['jeden Tag','alle 2 Tage','jede Woche','alle 2 Wochen','jeden Monat'],ROUND=20;
