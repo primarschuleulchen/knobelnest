@@ -388,8 +388,8 @@
     if (ma) return AT.start(ma[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
-    var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})/);
-    if (mh) return H.start(mh[1]);
+    var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})(\/embed)?/);
+    if (mh) return H.start(mh[1], !!mh[2]);
     var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})(?:\/([0-9a-f-]{36}))?/);
     if (mgs) return E.start(mgs[1], mgs[2]);
     var mel = hs.match(/^#\/eltern\/([0-9a-f-]{36})/);
@@ -416,7 +416,7 @@
     var mine = me ? entry[me] : null;
     var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
     var kid = mode === 'kid', emb = mode === 'embed';
-    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
+    var out = emb ? '' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
       '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
       '<p>' + (kid ? 'Tippe beim Fach auf das Feld, das zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
       (kid ? '' : '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button></div>') + '</div>';
@@ -588,8 +588,11 @@
       if (!embed && !(await toolGate('tafel', 'Die Arbeitsstand-Tafel'))) return;
       app.innerHTML = '<p class="boot">Tafel wird geladen …</p>';
       try { var wc = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; setTafelCols(wc && wc.tafel_cols); W.bild = wc && wc.bild; } catch (e) {}
+      var lastHtml = '';
       async function load() {
-        try { paint(board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall')); }
+        // Nur neu zeichnen, wenn sich etwas geändert hat (sonst blinken die Namen); danach ohne Aufpopp-Animation
+        try { var html = board(await DB.tafelTeacher(cid), embed ? 'embed' : 'wall'); if (html === lastHtml) return;
+          var first = !lastHtml; lastHtml = html; paint(first ? html : html.replace('<div class="board', '<div class="ruhig board')); }
         catch (e) { paint('<div class="main"><div class="card stack"><h2>Tafel nicht verfügbar</h2><p>' + h(errMsg(e)) + '</p><a class="btn" href="#/">Zum Portal</a></div></div>'); stopTimers(); }
       }
       await load();
@@ -680,6 +683,7 @@
         boardUrl: base + '#/wandtafel/' + cid + '/embed',
         otterUrl: otterOk ? 'otterteich.html?embed&v=' + OTTER_VER : '',
         heft: heftOk ? function () { return DB.storeGet('hat-' + cid); } : null, // Hausaufgaben-Baustein (nur lesen)
+        heftUrl: heftOk ? base + '#/hausaufgaben/' + cid + '/embed' : '', // ganzes Heft im Baustein
         back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: {
           use: async function (name) {
@@ -690,14 +694,14 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('42') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('46') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '6';
+  var HEFT_VER = '9';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -705,7 +709,7 @@
     } };
   }
   var H = {
-    start: async function (cid) {
+    start: async function (cid, embed) {
       UI.view = 'heft';
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
@@ -742,9 +746,9 @@
         }
       };
       window.knHeft = {
-        mode: 'teacher', key: cid, className: 'Klasse ' + cls.name,
+        mode: 'teacher', key: cid, className: 'Klasse ' + cls.name, embed: !!embed, // embed = ganzes Heft als Baustein in der Tagesfolie
         roster: (kids || []).slice().sort(kidSort).map(function (k) { return { id: k.id, name: k.name }; }),
-        back: function () { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
+        back: function () { if (embed) return; if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); location.hash = '#/'; },
         claude: { use: async function (name) {
           if (name === 'db') return { doc: function () { return doc; }, collection: function () { return { doc: function () { return doc; } }; } };
           if (name === 'assets') return { upload: async function (blob) { var u = await DB.storeUpload(blob); return { id: u, url: u, contentType: blob.type }; }, delete: async function () {} };
@@ -2118,7 +2122,7 @@
       paint('<div class="folie"><iframe src="gedaechtnis/index.html?v=' + GD_VER + '" title="Gedächtniskiste" allow="fullscreen"></iframe></div>');
     }
   };
-  var OTTER_VER = '8';
+  var OTTER_VER = '9';
   // Ein gemeinsamer Speicher pro Klasse für den Otterteich und den Teich in der Tagesfolie («otter-<Klasse>»):
   // Einstellungen + «run» (Stand des Teichs). Der Stand wird hier im Portal gemerkt und gebündelt gespeichert.
   var OTTER_CACHE = {};

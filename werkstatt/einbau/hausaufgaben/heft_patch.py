@@ -44,7 +44,7 @@ rep('''  <div class="top" id="top">
     <button class="pill ic" id="prev"''', '''  <div class="top" id="top">
     <button class="pill" id="knBack" hidden>← Klassenkiste</button>
     <button class="pill ic" id="prev"''')
-rep('$("#prev").onclick = () =>', '''if (KN) { const b = $("#knBack"); b.hidden = false; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
+rep('$("#prev").onclick = () =>', '''if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
 $("#prev").onclick = () =>''')
 
 # 5) Klasse und Aussehen: Kinderliste kommt aus der Klassenkiste, dazu Import der alten Hausaufgabentafel
@@ -109,6 +109,33 @@ rep('S.entries = S.entries.filter(x => x.id !== d.id); save(); render(); closePa
 
 # 9) Kein Nachladen im Hintergrund, solange ein Bearbeitungsfenster offen ist (sonst gehen Haken in der Kontrolle verloren)
 rep('if (!s.exists || dirty || flushing) return;', 'if (!s.exists || dirty || flushing || (layer && layer.innerHTML)) return;')
+
+# 10) Als Baustein in der Tagesfolie (KN.embed): keine Leiste oben, nur das Heft; die Knöpfe der Lehrperson
+#     öffnen sich über einen kleinen runden Knopf unten rechts
+rep('.kidmode .e{cursor:default}\n</style>', """.kidmode .e{cursor:default}
+.embed .top{display:none}
+.embed .stage{padding-block:10px}
+#embTools{display:none}
+.embed #embTools{display:flex;position:absolute;right:14px;bottom:14px;z-index:70;width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:#1f2421;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1.5px #d6ad45,0 4px 14px rgba(63,120,168,.25)}
+.embed.tools-on #embTools{background:#fbf3dc}
+.embed.tools-on .top{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;position:absolute;right:66px;bottom:14px;left:auto;z-index:60;max-width:calc(100% - 92px);overflow-x:auto;scrollbar-width:none;background:rgba(255,255,255,.97);border-radius:999px;padding:5px 8px;box-shadow:0 0 0 1.5px #d6ad45,0 8px 22px rgba(63,120,168,.25);animation:embIn .2s ease-out}
+.embed.tools-on .top::-webkit-scrollbar{display:none}
+.embed.tools-on .top>*{flex:none}
+.embed.tools-on .top .sp,.embed.tools-on .top .status{display:none}
+.embed.tools-on .top .pill{min-height:34px;padding:4px 12px;font-size:15px;white-space:nowrap}
+.embed.tools-on .top .pill.ic{width:34px;padding:0;justify-content:center}
+.embed.tools-on .top select.pill{padding-right:30px}
+.embed.tools-on .top .wk{white-space:nowrap;font-size:17px;padding:0 4px}
+.embed.tools-on .top .wk small,.embed.tools-on .top .wk span{font-size:12px}
+@keyframes embIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+</style>""")
+rep('if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;', """if (KN && KN.embed) {
+  const app = document.getElementById("app"); app.classList.add("embed");
+  const t = document.createElement("button"); t.id = "embTools"; t.type = "button"; t.title = "Werkzeuge"; t.setAttribute("aria-label", "Werkzeuge für die Lehrperson"); t.textContent = "⚙";
+  t.onclick = e => { e.stopPropagation(); app.classList.toggle("tools-on"); }; app.appendChild(t);
+  document.addEventListener("click", e => { if (app.classList.contains("tools-on") && !e.target.closest("#top, #embTools, .dd, .menu")) app.classList.remove("tools-on"); });
+}
+if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;""")
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

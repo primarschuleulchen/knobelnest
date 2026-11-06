@@ -204,6 +204,15 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-item:hover .pl-ops{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.music-chip{padding:4px!important;gap:2px!important}
+.music-chip .mt{padding:0 8px 0 4px;font-size:18px}
+iframe.yt{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:0;pointer-events:none;border:0;z-index:-1}
+#otterLayer,.t-otter .obody{border-radius:22px!important}
+.w.otter.hov .chrome{opacity:1}
+.dock button.wunsch svg{color:#c4952f}
+.wunsch-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0 10px;font-size:19px}
+.wunsch-box p{margin:0;max-width:30em}
+.wunsch-link{display:inline-block;text-decoration:none;font-size:19px!important;padding:8px 20px!important;color:#1f2421}
 .pl-item.vorbei{opacity:.42;filter:saturate(.6)}
 .pl-item{transition:opacity .6s}
 #board.fade,#bg.fade{animation:bfade .45s ease-out}
@@ -225,6 +234,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .hf-lernkontrolle .hf-z{color:#e07a70}
 .hf-leer{color:#a7ada8;font-size:.85em}
 .hf-tag.bald{font-size:.82em}
+.hf-voll{align-self:flex-start;margin-top:.2em;border:0;background:none;padding:0;color:#3f78a8;text-decoration:underline;font:inherit;font-size:.7em;cursor:pointer}
+.t-heftvoll{position:absolute;inset:0}
+.t-heftvoll iframe{width:100%;height:100%;border:0;display:block}
 .rinfo{font-size:clamp(12px,4cqh,17px);color:#8a918c;font-family:var(--hand)}
 .rreset{border:0;background:none;padding:0;color:#3f78a8;text-decoration:underline;font:inherit;cursor:pointer}
 .ring.sand{aspect-ratio:.6}
@@ -818,7 +830,7 @@ const TYPES = {
   symbol:  { lab: "Arbeitsform", w: 16, h: 26, d: () => ({ key: "einzel" }), icon: `<circle cx="16" cy="10" r="4.5" fill="currentColor"/><path d="M7 27c0-8 18-8 18 0z" fill="currentColor"/>` },
   traffic: { lab: "Ampel", w: 8, h: 34, d: () => ({ on: "green" }), icon: `<rect x="10" y="3" width="12" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="10" r="2.5" fill="currentColor"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><circle cx="16" cy="22" r="2.5" fill="currentColor"/>` },
   groups:  { lab: "Gruppen", w: 40, h: 30, d: () => ({ heading: "Partner", source: "random", size: 2, groups: [] }), icon: `<circle cx="9" cy="9" r="3.6" fill="currentColor"/><circle cx="23" cy="9" r="3.6" fill="currentColor"/><path d="M3 18c0-4 12-4 12 0zM17 18c0-4 12-4 12 0z" fill="currentColor"/><circle cx="16" cy="22" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 30c0-4 12-4 12 0" fill="none" stroke="currentColor" stroke-width="2"/>` },
-  otter:   { lab: "Otterteich", w: 42, h: 46, d: () => ({}), icon: `<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="11" cy="7.5" r="1.8" fill="currentColor"/><circle cx="21" cy="7.5" r="1.8" fill="currentColor"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/>` },
+  otter:   { lab: "Lautstärke", w: 42, h: 46, d: () => ({}), icon: `<ellipse cx="16" cy="22" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="11" cy="7.5" r="1.8" fill="currentColor"/><circle cx="21" cy="7.5" r="1.8" fill="currentColor"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/>` },
   stand:   { lab: "Arbeitsstand", w: 50, h: 60, d: () => ({}), icon: `<rect x="4" y="6" width="24" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4 13h24M12 6v20M20 6v20" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="19" r="2" fill="currentColor"/><circle cx="24" cy="22" r="2" fill="currentColor"/>` },
   random:  { lab: "Zufallsname", w: 24, h: 30, d: () => ({ names: "", pick: "", editing: !(KN && KN.roster.length) }), icon: `<rect x="6" y="6" width="20" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="20" cy="20" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/>` }
 };
@@ -1263,7 +1275,7 @@ function widgetInner(w){
       ${d.keys.length ? `<div class="t-mat ${d.iconsOnly ? "icons" : ""}">${d.keys.filter(k => MAT[k]).map(k => `<button class="mat${(d.crossed || []).includes(k) ? " crossed" : ""}" data-mk="${k}" title="${MAT[k][0]} – antippen zum Durchstreichen">${MAT[k][1]}<span>${MAT[k][0]}</span></button>`).join("")}</div>` : `<div class="emptyhint">Noch kein Material gewählt</div>`}
       <div class="mnote${d.note ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="note" data-ph="Anmerkung (optional)" style="${d.tc ? `color:${d.tc}` : ""}">${esc(d.note || "")}</div>
       <div class="lfoot"><button class="sbtn rose" data-mat>Material wählen</button><button class="sbtn" data-iconsonly>${d.iconsOnly ? "Mit Text" : "Nur Symbole"}</button></div>`;
-    case "otter": return `<div class="t-otter"><div class="ohead">🦦 Otterteich</div><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Otterteich erscheint hier (einmal pro Bildschirm)." : KN ? "Der Otterteich ist für dich noch nicht freigegeben." : "Den Otterteich gibt es nur in der Klassenkiste."}</span></div></div>`;
+    case "otter": return `<div class="t-otter"><div class="obody" data-otter="${w.id}"><span>${KN && KN.otterUrl ? "Der Lautstärkeregler erscheint hier (einmal pro Bildschirm)." : KN ? "Der Lautstärkeregler ist für dich noch nicht freigegeben." : "Den Lautstärkeregler gibt es nur in der Klassenkiste."}</span></div></div>`;
     case "stand": return KN ? `<div class="t-stand"><iframe src="${esc(KN.boardUrl)}" title="Arbeitsstand-Tafel" tabindex="-1"></iframe></div>` : `<div class="emptyhint">Die Arbeitsstand-Tafel gibt es nur in der Klassenkiste.</div>`;
     case "heft": return heftHTML(w);
     case "image": return `<div class="t-img">${d.src ? `<img src="${esc(d.src)}" alt="">` : ""}</div>`;
@@ -1293,7 +1305,7 @@ function widgetInner(w){
 }
 const FS_DEFAULT = { list: 3.6, check: 3.6, plan: 2.5, material: 3.4, groups: 2.8, note: 3.2 };
 const STYLED = new Set(["list", "check", "note", "material"]);
-const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], heft: ["↻", "Hausaufgaben neu laden"], timer: ["⚙", "Ton und Aussehen"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
+const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], heft: ["⇄ Ansicht", "Kurzansicht oder ganzes Heft"], timer: ["⚙", "Ton und Aussehen"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
 function widgetHTML(w){
   const x = EXTRA[w.type], auto = AUTO.has(w.type);
   return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${w.type === "note" ? `--fs:${w.fs || FS_DEFAULT.note};` : ""}${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
@@ -1323,6 +1335,24 @@ function renderBoard(){
   document.addEventListener("pointerdown", e => { if (e.target.closest?.(".w.otter [data-grip], .w.otter .ohead, .w.otter [data-rs]")) APP_DRAGGING(true); }, true);
   window.addEventListener("pointerup", () => APP_DRAGGING(false));
   function APP_DRAGGING(on){ document.body.classList.toggle("drag-otter", on); }
+})();
+// Wunsch-Knopf: ganz rechts in der Leiste (nach allen anderen, auch den grauen der Eulenkiste)
+const INSTA = "https://www.instagram.com/primarschuleulchen";
+setTimeout(() => {
+  const dock = document.getElementById("dock"); if (!dock || dock.querySelector("[data-wunsch]")) return;
+  dock.insertAdjacentHTML("beforeend", `<span class="sep"></span><button data-wunsch class="wunsch" aria-label="Dir fehlt ein Werkzeug?"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4a8 8 0 0 0-4.6 14.5c.8.6 1.3 1.5 1.3 2.5v1h6.6v-1c0-1 .5-1.9 1.3-2.5A8 8 0 0 0 16 4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12.8 26h6.4M13.8 29h4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Wunsch</button>`);
+  dock.querySelector("[data-wunsch]").addEventListener("click", () => sheet("Dir fehlt ein Werkzeug?", `<div class="wunsch-box">
+      <p>Dir fehlt etwas in der Tagesfolie? Schreib es mir – vielleicht erscheint es schon bald hier.</p>
+      <a class="sbtn rose wunsch-link" href="${INSTA}" target="_blank" rel="noopener">Auf Instagram schreiben ✦</a>
+      <p class="hint">@primarschuleulchen</p></div>`));
+}, 0);
+// Lautstärke: Maus über dem Teich zeigt die Leiste zum Verschieben (der Teich selbst fängt alle Klicks)
+(() => {
+  const layer = document.getElementById("otterLayer"); if (!layer) return; let t = 0;
+  const w = () => document.querySelector("#board .w.otter");
+  layer.addEventListener("pointerenter", () => { clearTimeout(t); w()?.classList.add("hov"); });
+  layer.addEventListener("pointerleave", () => { clearTimeout(t); t = setTimeout(() => { const x = w(); if (x && !x.matches(":hover")) x.classList.remove("hov"); }, 900); });
+  document.addEventListener("pointerover", e => { const x = w(); if (x && e.target.closest && e.target.closest(".w.otter .chrome")) { clearTimeout(t); x.classList.add("hov"); } });
 })();
 function rerender(w){ const el = document.querySelector(`[data-w="${w.id}"]`); if (el) el.outerHTML = widgetHTML(w); }
 const findW = el => { const n = el.closest?.("[data-w]"); return n && screen().widgets.find(w => w.id === n.dataset.w); };
@@ -1408,7 +1438,7 @@ $("#board").addEventListener("click", e => {
     if (w.type === "date") openColors("Farbe des Kalenderblatts", [["auto", ""], ...Object.entries(CAL_COLORS).map(([k, v]) => [k, v[0]])], d.color, v => { d.color = v; });
     if (w.type === "symbol") openSymbols(w);
     if (w.type === "clock") { d.sec = !d.sec; save(); rerender(w); }
-    if (w.type === "heft") { heftLoad(true); toast("Hausaufgaben werden neu geladen"); }
+    if (w.type === "heft") heftToggle(w);
     if (w.type === "timer") openTimerSet(w);
     if (w.type === "image") uploadImage(1600).then(img => { if (img) { d.src = img.src; save(); rerender(w); } });
     return;
@@ -1454,6 +1484,7 @@ $("#board").addEventListener("click", e => {
   if (e.target.closest("[data-rdone]")) { d.names = $("#names-" + w.id).value; d.editing = false; save(); rerender(w); return; }
   if (e.target.closest("[data-redit]")) { d.editing = true; save(); rerender(w); return; }
   if (e.target.closest("[data-roll]")) roll(w);
+  if (e.target.closest("[data-hfvoll]")) { heftToggle(w); return; }
   if (e.target.closest("[data-rreset]")) { w.data.drawn = []; save(); rerender(w); return; }
   if (e.target.closest("[data-groster]")) { openRoster(w); return; }
   if (e.target.closest("[data-gsets]")) { openGroupSets(w); return; }
@@ -1603,9 +1634,16 @@ setInterval(() => { if (S && screen().widgets.some(w => w.type === "heft")) heft
 const isoDay = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 const HF_ART = { aufgabe: "", lernkontrolle: "Lernkontrolle", termin: "Termin", ferien: "Ferien", schulfrei: "schulfrei", geburtstag: "Geburtstag" };
 const HF_ZEICHEN = { aufgabe: "✎", lernkontrolle: "★", termin: "◷", ferien: "☀", schulfrei: "☾", geburtstag: "♥" };
+function heftToggle(w){
+  const d = w.data; d.voll = !d.voll;
+  if (d.voll) { w.w = Math.max(w.w, 62); w.h = Math.max(w.h, 74); w.x = Math.max(0, Math.min(w.x, 100 - w.w)); w.y = Math.max(0, Math.min(w.y, 100 - w.h)); }
+  else heftLoad(true);
+  save(); rerender(w);
+}
 function heftHTML(w){
   const d = w.data, head = `<div class="whead${d.heading ? "" : " empty"}" contenteditable="true" spellcheck="false" data-f="heading" data-ph="Überschrift">${esc(d.heading || "")}</div>`;
   if (!KN || !KN.heft) return head + `<div class="emptyhint">${KN ? "Das Hausaufgabenheft ist für dich noch nicht freigegeben." : "Die Hausaufgaben gibt es nur in der Klassenkiste."}</div>`;
+  if (d.voll && KN.heftUrl) return `<div class="t-heftvoll"><iframe src="${esc(KN.heftUrl)}" title="Hausaufgabenheft"></iframe></div>`;
   if (!HEFT.data) { heftLoad(); return head + `<div class="emptyhint">Hausaufgaben werden geladen …</div>`; }
   const all = HEFT.data.entries.filter(e => e && !e.by && (!Array.isArray(e.for) || !e.for.length) && /^\d{4}-\d{2}-\d{2}$/.test(e.date || ""));
   const frei = new Set(all.filter(e => e.type === "ferien" || e.type === "schulfrei").map(e => e.date));
@@ -1622,7 +1660,8 @@ function heftHTML(w){
   const kurz = iso => { const x = new Date(iso + "T12:00:00"); return `${WD[x.getDay()].slice(0, 2)} ${x.getDate()}.${x.getMonth() + 1}.`; };
   return head + `<div class="t-heft">${tag("Heute", heute)}${tag(isoDay(morgen) === naechst ? "Morgen" : WD[nx.getDay()], naechst)}
     ${bald.length ? `<div class="hf-tag bald"><div class="hf-t">Bald</div><ul>${bald.map(e => `<li><span class="hf-z" aria-hidden="true">${HF_ZEICHEN[e.type]}</span><span><i>${kurz(e.date)}</i> ${txt(e)}</span></li>`).join("")}</ul></div>` : ""}
-    ${HEFT.err ? `<div class="hf-leer">Das Heft konnte gerade nicht geladen werden.</div>` : ""}</div>`;
+    ${HEFT.err ? `<div class="hf-leer">Das Heft konnte gerade nicht geladen werden.</div>` : ""}
+    ${KN.heftUrl ? `<button class="hf-voll" data-hfvoll>Ganzes Heft zeigen</button>` : ""}</div>`;
 }
 function randNames(w){
   let names = (w.data.names || "").split("\n").map(s => s.trim()).filter(Boolean);
@@ -2046,14 +2085,21 @@ function musicRender(){
   const m = screen().music, c = musicChip();
   if (!m) { c.hidden = true; return; }
   c.hidden = false;
-  c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern">♪ ${esc(m.name || "Musik")}</span>`;
-  if (MUS.kind === "yt" && MUS.el && !c.contains(MUS.el)) c.appendChild(MUS.el);
+  c.innerHTML = `<button data-mtoggle aria-label="${MUS.playing ? "Pause" : "Abspielen"}">${MUS.playing ? "⏸" : "▶"}</button><span class="mt" data-medit title="Musik ändern" aria-label="Musik ändern">♪</span>`;
+  if (MUS.kind === "yt" && MUS.el && !MUS.el.isConnected) APP.appendChild(MUS.el);
 }
 function ytCmd(func){ try { MUS.el.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*"); } catch {} }
 function musicStop(){
   if (MUS.el) { try { if (MUS.kind === "file") { MUS.el.pause(); MUS.el.src = ""; } } catch {} MUS.el.remove?.(); }
   MUS.el = null; MUS.key = ""; MUS.kind = ""; MUS.playing = false;
 }
+// YouTube meldet, ob es wirklich spielt (1 = spielt, 3 = lädt)
+window.addEventListener("message", e => {
+  if (!MUS.el || MUS.kind !== "yt" || e.source !== MUS.el.contentWindow) return;
+  let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch { return; }
+  const st = d && d.info && d.info.playerState; if (st == null) return;
+  const p = st === 1 || st === 3; if (p !== MUS.playing) { MUS.playing = p; musicRender(); }
+});
 function musicToggle(){
   if (!MUS.el) { syncMusic(true); return; }
   if (MUS.kind === "file") { if (MUS.el.paused) MUS.el.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => {}); else { MUS.el.pause(); MUS.playing = false; musicRender(); } return; }
@@ -2067,13 +2113,15 @@ function syncMusic(force){
   if (m) {
     MUS.key = key; MUS.kind = m.type;
     if (m.type === "file") {
-      const a = new Audio(m.src); a.loop = true; MUS.el = a;
+      const a = new Audio(m.src); a.loop = m.loop !== false; MUS.el = a; a.addEventListener("ended", () => { MUS.playing = false; musicRender(); });
       a.play().then(() => { MUS.playing = true; musicRender(); }).catch(() => { MUS.playing = false; musicRender(); });
     } else {
       const f = document.createElement("iframe");
       f.className = "yt"; f.allow = "autoplay; encrypted-media"; f.title = "Musik";
-      f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1&loop=1&playlist=${m.id}&controls=0&enablejsapi=1&playsinline=1`;
-      MUS.el = f; MUS.playing = true;
+      f.referrerPolicy = "strict-origin-when-cross-origin";
+      f.src = `https://www.youtube-nocookie.com/embed/${m.id}?autoplay=1${m.loop === false ? "" : `&loop=1&playlist=${m.id}`}&controls=0&enablejsapi=1&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
+      f.addEventListener("load", () => { try { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch {} });
+      MUS.el = f; MUS.playing = false;
     }
   }
   musicRender();
@@ -2110,13 +2158,16 @@ setTimeout(autoScreen, 2500);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) autoScreen(); });
 function openMusic(s){
   const html = () => `<p class="hint">Die Musik läuft im Hintergrund, solange dieser Bildschirm offen ist. Unten links kannst du sie pausieren.</p>
-    ${s.music ? `<p style="margin:0 0 10px"><b>Jetzt:</b> ♪ ${esc(s.music.name || "Musik")} <button class="sbtn" data-mrm>Musik entfernen</button></p>` : ""}
+    ${s.music ? `<p style="margin:0 0 10px"><b>Jetzt:</b> ♪ ${esc(s.music.name || "Musik")} <button class="sbtn" data-mrm>Musik entfernen</button></p>
+      <label style="display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:17px"><input type="checkbox" data-mloop ${s.music.loop === false ? "" : "checked"} style="width:22px;height:22px"> Endlos wiederholen (sonst hört die Musik am Ende auf)</label>` : ""}
     <h3 class="sh3">YouTube-Link</h3><div class="addrow"><input type="text" id="mus-yt" placeholder="https://www.youtube.com/watch?v=…" aria-label="YouTube-Link"><button class="sbtn rose" data-myt>Übernehmen</button></div>
     <h3 class="sh3">Oder Audiodatei hochladen</h3><div class="addrow"><button class="sbtn" data-mup>🎵 Datei wählen (MP3, M4A …)</button></div>
     <input type="file" id="mus-file" accept="audio/*" hidden>`;
   const set = mus => { s.music = mus; save(); if (s.id === S.active) syncMusic(true); };
   sheet("Musik für «" + s.name + "»", html(), async (e, bg) => {
     const body = bg.querySelector(".body");
+    if (e.target.matches && e.target.matches("[data-mloop]")) { s.music.loop = e.target.checked; save();
+      if (s.id === S.active && MUS.el) { if (MUS.kind === "file") MUS.el.loop = s.music.loop; else syncMusic(true); } return; }
     if (e.target.closest("[data-mrm]")) { delete s.music; save(); if (s.id === S.active) syncMusic(true); body.innerHTML = html(); return; }
     if (e.target.closest("[data-myt]")) { const id = ytId($("#mus-yt").value); if (!id) { toast("Das ist kein YouTube-Link"); return; } set({ type: "yt", id, name: "YouTube" }); toast("Musik gespeichert ♪"); body.innerHTML = html(); return; }
     if (e.target.closest("[data-mup]")) {
