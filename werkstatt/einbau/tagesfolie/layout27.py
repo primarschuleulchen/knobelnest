@@ -1,4 +1,4 @@
-# 27) (Stand: Folie über den ganzen Bildschirm, in Bearbeiten und Vollbild gleich; Leisten liegen darüber. Bausteine
+# 27) (Stand: Folie = ganzes Fenster ohne Verkleinern (Wunsch der Lehrerin); Leisten liegen darüber. Bausteine
 #     ganz oben (.w.oben) haben ihre Werkzeugleiste unten; jeder Baustein lässt sich an freien Stellen greifen)
 #     Die Folie sieht beim Bearbeiten genau gleich aus wie im Vollbild:
 #     Die Fläche (#board) hat immer die Grösse, die sie im Vollbild auf diesem Bildschirm hätte (screen.width/height),
@@ -26,11 +26,8 @@ function fitBoard(){
   const tb = document.querySelector(".top"), th = tb ? Math.ceil(tb.offsetHeight) + 6 : 64; // Platz für die obere Leiste
   if (APP.style.getPropertyValue("--topH") !== th + "px") APP.style.setProperty("--topH", th + "px");
   const aw = wrap.clientWidth, ah = wrap.clientHeight; if (!aw || !ah) return;
-  const sw = Math.max(window.screen.width || 0, aw), sh = Math.max(window.screen.height || 0, ah); // window.screen: «screen» ist hier der aktuelle Bildschirm der Folie
-  const W = sw, H = sh; // ganzer Bildschirm, in beiden Ansichten gleich; die Leisten liegen darüber
-  const k = Math.min(aw / W, ah / H);
-  b.style.width = W + "px"; b.style.height = H + "px"; b.style.setProperty("--vh", (sh / 100) + "px");
-  b.style.transform = `translate(${((aw - W * k) / 2).toFixed(1)}px, ${((ah - H * k) / 2).toFixed(1)}px) scale(${k.toFixed(5)})`;
+  // Fläche = ganzes Fenster (ohne Verkleinern, ohne Rand); Schrift wächst mit der Fensterhöhe
+  b.style.width = aw + "px"; b.style.height = ah + "px"; b.style.setProperty("--vh", (ah / 100) + "px"); b.style.transform = "none";
 }
 try { new ResizeObserver(() => fitBoard()).observe(document.getElementById("bwrap")); } catch {}
 window.addEventListener("resize", fitBoard);
