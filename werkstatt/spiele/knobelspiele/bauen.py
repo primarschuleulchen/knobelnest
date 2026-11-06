@@ -614,6 +614,8 @@ knobel3.alle(spiel, logo, LOGO_CSS, HIER)
 knobel4.alle(spiel, logo, LOGO_CSS)
 import knobel5
 knobel5.alle(spiel, logo, LOGO_CSS)
+import knobel6
+knobel6.alle(spiel, logo, LOGO_CSS)
 
 # ================================================================== Kleiderschrank (Englisch, kleider.py)
 import kleider
@@ -682,7 +684,7 @@ def pruefen():
 
 # Stern in der Aufgabe wie beim Kleiderschrank (oben neben dem Ton): füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern.
 # Nur in der Klassenkiste (MODE url/srcdoc), die Werte (lv, box, per, max) kommen vom Portal (S.view()).
-STERN_SPIELE = {'rechen-rakete', 'uhr-lesen', 'kiosk', 'wort-raten', 'der-die-das', 'silben-puzzle', 'bilderraetsel', 'eulen-weg', 'bilder-sudoku', 'wasser-weg', 'kloetzli-turm', 'kisten-packen', 'laternen', 'schiebe-bild', 'zahlenmauer', 'geheimcode', 'irrgarten', 'spiegelbild', 'waage', 'zahlen-pfad'}
+STERN_SPIELE = {'rechen-rakete', 'uhr-lesen', 'kiosk', 'wort-raten', 'der-die-das', 'silben-puzzle', 'bilderraetsel', 'eulen-weg', 'bilder-sudoku', 'wasser-weg', 'kloetzli-turm', 'kisten-packen', 'laternen', 'schiebe-bild', 'zahlenmauer', 'geheimcode', 'irrgarten', 'spiegelbild', 'waage', 'zahlen-pfad', 'muster-reihe', 'brueche', 'lichtstrahl'}
 STERN_CSS = r"""
 .fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
 .fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}

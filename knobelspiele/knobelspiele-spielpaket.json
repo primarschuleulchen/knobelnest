@@ -182,6 +182,33 @@
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/zahlen-pfad.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Zahlen-Pfad</title></head><body><p>Zahlen-Pfad: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   },
   {
+   "title": "Muster-Reihe",
+   "description": "Erkennen, wie das Muster weitergeht.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 14,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/muster-reihe.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Muster-Reihe</title></head><body><p>Muster-Reihe: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Brüche",
+   "description": "Brüche an Pizza und Streifen erkennen, malen und vergleichen.",
+   "fach": "Mathematik",
+   "thema": "Brüche",
+   "stufe": "3.–6. Klasse",
+   "sort": 15,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/brueche.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Brüche</title></head><body><p>Brüche: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Lichtstrahl",
+   "description": "Spiegel drehen, bis das Licht den Kristall trifft.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 16,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/lichtstrahl.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Lichtstrahl</title></head><body><p>Lichtstrahl: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
    "title": "Kleiderschrank",
    "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»",
    "fach": "Englisch",
