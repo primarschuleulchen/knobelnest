@@ -17,12 +17,12 @@ def alle(spiel, logo, LOGO_CSS, hier):
     spiel(id='laternen', titel='Laternen', icon=logo('laternen'), fach='Knobelkiste', thema='Logik', stufe='2.–6. Klasse', sort=7, n=0,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},
           kurz='Ein Tipp schaltet eine Laterne und ihre Nachbarn um. Zünde alle an!',
-          intro='Tippst du auf eine Laterne, wechseln sie und ihre Nachbarn oben, unten, links und rechts: aus wird an, an wird aus. Schaffst du es, dass alle Laternen leuchten?',
-          levels=[dict(name='3 × 3, kurz', info='Mit 2 Tipps lösbar', n=3, k=2, ziel=5),
+          intro='Jede Laterne ist ein Schalter. Tippst du auf eine, wechselt sie selbst und die Laternen direkt daneben (oben, unten, links, rechts) – wie ein Kreuz. Aus wird an, an wird aus. Ziel: Alle Laternen leuchten!',
+          levels=[dict(name='Ein Tipp', info='Ein einziger Tipp genügt. Finde das dunkle Kreuz!', n=3, k=1, ziel=5),
+                  dict(name='Zwei Tipps', info='Mit 2 Tipps lösbar', n=3, k=2, ziel=5),
                   dict(name='3 × 3', info='Mit 3 bis 4 Tipps lösbar', n=3, k=4, ziel=5),
                   dict(name='4 × 4', info='Mit 3 bis 4 Tipps lösbar', n=4, k=4, ziel=5),
-                  dict(name='4 × 4, länger', info='Mit 5 bis 6 Tipps lösbar', n=4, k=6, ziel=5),
-                  dict(name='5 × 5', info='Mit bis zu 7 Tipps lösbar', n=5, k=7, ziel=5)],
+                  dict(name='5 × 5', info='Mit 5 bis 6 Tipps lösbar', n=5, k=6, ziel=5)],
           css=LOGO_CSS + r"""
 .la{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
 .la-nacht{display:grid;gap:12px;padding:18px;border-radius:26px;background:radial-gradient(circle at 30% 20%,#3a5f8f,#1d3557 70%);box-shadow:var(--sch);border:3px solid var(--gold)}
@@ -31,6 +31,13 @@ def alle(spiel, logo, LOGO_CSS, hier):
 .la-nacht button.an{background:radial-gradient(circle at 40% 35%,#fff5c4,#f3c64e 55%,#d99a2b);box-shadow:0 0 22px 6px rgba(255,214,102,.65),inset 0 -4px 0 rgba(0,0,0,.15)}
 .la-nacht button.an::after{background:#fffbe8}
 .la-nacht button:active{transform:scale(.94)}
+.la-nacht button.nb{outline:4px solid rgba(255,255,255,.75);outline-offset:3px}
+.la-nacht button.blitz{animation:laBlitz .45s ease-out}
+@keyframes laBlitz{0%{transform:scale(.8)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.la-nacht button.tipp{outline:5px solid #ffd666;outline-offset:4px;animation:laTipp 1s ease-in-out infinite}
+@keyframes laTipp{50%{outline-color:rgba(255,214,102,.25)}}
+.la-regel{display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:8px 16px;font-size:19px;box-shadow:var(--sch-k);max-width:560px}
+.la-regel svg{flex:none}
 .la-info{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .la-info span{background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 14px;font-size:20px;box-shadow:var(--sch-k)}
 .la-info b{font-weight:400;color:var(--sky-d);font-size:24px}
@@ -44,22 +51,35 @@ G.play = function (lv, api) {
     for (var i = 0; i < N * N; i++) feld.push(1);
     function kipp(f, k) { var y = Math.floor(k / N), x = k % N; [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) { var yy = y + d[0], xx = x + d[1]; if (yy >= 0 && xx >= 0 && yy < N && xx < N) f[yy * N + xx] ^= 1; }); }
     // aus dem Ziel (alle an) rückwärts: lv.k verschiedene Felder umschalten, dann ist es sicher lösbar
-    var k = lv.k > 2 ? rnd(lv.k - 1, lv.k) : lv.k;
-    pick(range(N * N), k).forEach(function (t) { kipp(feld, t); });
+    var k = lv.k > 2 ? rnd(lv.k - 1, lv.k) : lv.k, loes = pick(range(N * N), k), startLoes;
+    loes.forEach(function (t) { kipp(feld, t); });
+    startLoes = loes.slice();
     if (feld.every(function (v) { return v; })) return raetsel();
     start = feld.slice();
     var s = Math.floor(Math.min(84, (Math.min(window.innerWidth, 640) - 80) / N - 12, (window.innerHeight - 300) / N - 12)); s = Math.max(40, s);
-    wrap.innerHTML = '<div class="la-info"><span>Tipps <b class="zz">0</b></span></div>' +
+    // kleines Bild der Regel: Tipp in der Mitte schaltet das Kreuz um
+    var regel = '<div class="la-regel"><svg width="58" height="58" viewBox="0 0 30 30" aria-hidden="true">' + [0,1,2].map(function (y) { return [0,1,2].map(function (x) {
+      var kreuz = (x === 1 || y === 1); return '<circle cx="' + (5 + x * 10) + '" cy="' + (5 + y * 10) + '" r="4" fill="' + (kreuz ? '#f3c64e' : '#46597a') + '"/>'; }).join(''); }).join('') +
+      '<text x="15" y="18" font-size="8" text-anchor="middle">👆</text></svg><span>Ein Tipp schaltet die Laterne <b>und</b> ihre Nachbarn im Kreuz um.</span></div>';
+    wrap.innerHTML = regel + '<div class="la-info"><span>Tipps <b class="zz">0</b></span></div>' +
       '<div class="la-nacht" style="grid-template-columns:repeat(' + N + ',' + s + 'px);grid-auto-rows:' + s + 'px"></div>' +
-      '<div class="row"><button class="go alt" data-x="neu">↺ Nochmal von vorn</button></div>';
+      '<div class="row"><button class="go alt" data-x="hilfe">💡 Hilfe</button><button class="go alt" data-x="neu">↺ Nochmal von vorn</button></div>';
     var nacht = wrap.querySelector('.la-nacht'), zz = wrap.querySelector('.zz');
     for (i = 0; i < N * N; i++) nacht.insertAdjacentHTML('beforeend', '<button data-k="' + i + '" aria-label="Laterne ' + (i + 1) + '"></button>');
     function male() { Array.prototype.forEach.call(nacht.children, function (b, i) { b.classList.toggle('an', !!feld[i]); b.setAttribute('aria-pressed', String(!!feld[i])); }); zz.textContent = zuege; }
+    function kreuz(k) { var y = Math.floor(k / N), x = k % N, r = []; [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) { var yy = y + d[0], xx = x + d[1]; if (yy >= 0 && xx >= 0 && yy < N && xx < N) r.push(yy * N + xx); }); return r; }
+    function zeig(k) { Array.prototype.forEach.call(nacht.children, function (b) { b.classList.remove('nb'); }); if (k != null) kreuz(k).forEach(function (j) { nacht.children[j].classList.add('nb'); }); }
     male();
     api.msg('<span class="em">🏮</span> Zünde alle Laternen an!');
+    // Mit der Maus: beim Darüberfahren zeigen, welche Laternen mitwechseln
+    nacht.onpointerover = function (e) { var b = e.target.closest('button'); if (e.pointerType === 'mouse' && b) zeig(+b.dataset.k); };
+    nacht.onpointerleave = function () { zeig(null); };
     nacht.onclick = function (e) {
       var b = e.target.closest('button'); if (!b || fertig || RUN !== myRun) return;
-      kipp(feld, +b.dataset.k); zuege++; tone(500 + feld.filter(Boolean).length * 25, 0.06, 'sine', 0.08); male();
+      var t = +b.dataset.k; kipp(feld, t); zuege++; tone(500 + feld.filter(Boolean).length * 25, 0.06, 'sine', 0.08); male();
+      var li = loes.indexOf(t); if (li >= 0) loes.splice(li, 1); else loes.push(t);
+      Array.prototype.forEach.call(nacht.children, function (x) { x.classList.remove('tipp'); });
+      kreuz(t).forEach(function (j) { var x = nacht.children[j]; x.classList.remove('blitz'); void x.offsetWidth; x.classList.add('blitz'); });
       if (feld.every(function (v) { return v; })) {
         fertig = true; geloest++; good();
         api.msg('<span class="em">✨</span> Alle Laternen leuchten!' + (zuege <= k ? ' Mit nur ' + zuege + ' Tipps!' : ''));
@@ -68,7 +88,13 @@ G.play = function (lv, api) {
         api.later(raetsel, 1500);
       }
     };
-    wrap.querySelector('[data-x="neu"]').onclick = function () { if (fertig) return; feld = start.slice(); zuege = 0; male(); api.msg('<span class="em">🏮</span> Nochmal von vorn!'); };
+    wrap.querySelector('[data-x="neu"]').onclick = function () { if (fertig) return; feld = start.slice(); loes = startLoes.slice(); zuege = 0; male(); api.msg('<span class="em">🏮</span> Nochmal von vorn!'); };
+    // Hilfe: eine Laterne golden umranden, die zur Lösung gehört
+    wrap.querySelector('[data-x="hilfe"]').onclick = function () {
+      if (fertig || !loes.length) return;
+      Array.prototype.forEach.call(nacht.children, function (x) { x.classList.remove('tipp'); });
+      nacht.children[loes[0]].classList.add('tipp'); api.msg('<span class="em">💡</span> Tippe auf die Laterne mit dem goldenen Ring!');
+    };
   }
   raetsel();
 };
