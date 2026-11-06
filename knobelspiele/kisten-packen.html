@@ -92,14 +92,15 @@ button.card:active{transform:scale(.96)}
 .kp-kiste .z.weg{animation:weg .35s forwards}
 @keyframes weg{to{transform:scale(.2);opacity:0}}
 .kp-seite{display:flex;flex-direction:column;gap:16px;align-items:center}
-.kp-ablage{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:130px;background:#fff;border:2px dashed var(--line2);border-radius:20px;padding:14px 18px}
+.kp-ablage{display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:#fff;border:2px dashed var(--line2);border-radius:20px;padding:10px 14px}
+.kp-platz{display:grid;place-items:center;flex:none}
 .kp-teil{display:grid;gap:3px;cursor:grab;touch-action:none;padding:4px;border-radius:10px;transition:transform .12s}
 .kp-teil:hover{transform:scale(1.05)}
 .kp-teil.leer{visibility:hidden}
 .kp-teil.passt-nicht{opacity:.35}
 .kp-teil i{display:block}
 .kp-zieh{position:fixed;z-index:50;display:grid;gap:3px;pointer-events:none;filter:drop-shadow(0 10px 14px rgba(0,0,0,.25))}
-@media (max-width:760px){.kp{flex-direction:column;gap:14px}}
+@media (max-width:760px){.kp{flex-direction:column;gap:14px}.kp-ablage{flex-direction:row}}
 
 .fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
 .fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}
@@ -144,7 +145,8 @@ G.play = function (lv, api) {
   steine();
   var breit = window.innerWidth > 760, avH = window.innerHeight - (breit ? 200 : 380), avW = Math.min(window.innerWidth - 40, 1000) - (breit ? 360 : 0);
   var s = Math.floor(Math.min(58, (avH - 16) / N - 3, (avW - 16) / N - 3)); s = Math.max(28, s);
-  var ts = Math.max(18, Math.round(s * .55));
+  // Ablage: drei feste Plätze in gleicher Grösse (5 × 4 kleine Felder), damit nichts herumspringt
+  var ts = Math.max(14, Math.min(Math.round(s * .48), Math.floor((Math.min(window.innerWidth, 560) - 140) / 15) - 3)), platzB = 5 * (ts + 3) + 8, platzH = 4 * (ts + 3) + 8;
   var wrap = document.createElement('div'); wrap.className = 'kp';
   wrap.innerHTML = '<div class="kp-kiste" style="grid-template-columns:repeat(' + N + ',' + s + 'px);grid-auto-rows:' + s + 'px"></div>' +
     '<div class="kp-seite"><div class="kl-info"><span>Reihen <b class="lz">0</b> von ' + lv.ziel + '</span></div><div class="kp-ablage"></div></div>';
@@ -162,10 +164,13 @@ G.play = function (lv, api) {
     for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) { var v = kiste[y][x]; zellen[y * N + x].className = 'z' + (v === 's' ? ' stein' : v ? ' klotz k' + v : ''); }
     ablage.innerHTML = '';
     hand.forEach(function (h, i) {
-      var d = document.createElement('div'); d.className = 'kp-teil' + (h ? '' : ' leer'); d.dataset.i = i;
-      if (h) { var th = teilHtml(h.t, h.k, ts); d.style.gridTemplateColumns = 'repeat(' + th.cols + ',' + ts + 'px)'; d.innerHTML = th.html; if (!passtIrgendwo(h.t)) d.classList.add('passt-nicht'); }
-      else d.style.width = (ts * 2) + 'px';
-      ablage.appendChild(d);
+      var pl = document.createElement('div'); pl.className = 'kp-platz'; pl.style.width = platzB + 'px'; pl.style.height = platzH + 'px';
+      if (h) {
+        var d = document.createElement('div'); d.className = 'kp-teil'; d.dataset.i = i;
+        var th = teilHtml(h.t, h.k, ts); d.style.gridTemplateColumns = 'repeat(' + th.cols + ',' + ts + 'px)'; d.innerHTML = th.html; if (!passtIrgendwo(h.t)) d.classList.add('passt-nicht');
+        pl.appendChild(d);
+      }
+      ablage.appendChild(pl);
     });
   }
   nachfuellen(); male();
