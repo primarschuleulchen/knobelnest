@@ -436,5 +436,18 @@ rep("$$('[data-ren]').forEach(", "$$('[data-mvto]').forEach(b=>b.onclick=e=>{e.s
 rep("""${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}""",
     """${T&&node?`<div class="hbar"><div class="hgrp"><span class="hlab">Freigabe</span><div class="hrow"><button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'🔒 Für Kinder freigeben'}</button>${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'tplon':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}</div></div>${isPortion?`<div class="hgrp"><span class="hlab">Im Unterricht</span><div class="hrow">${KN?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}${wsTools()}</div></div>`:''}<div class="hgrp hedit"><span class="hlab">${isPortion?'Portion':'Ordner'}</span><div class="hrow"><button class="hb" id="dupNode">⧉ Duplizieren</button><button class="hb" id="ren">✎ Umbenennen</button><button class="hb" id="mvNode">📁 Verschieben</button><button class="hb del" id="delNode">🗑 Löschen</button></div></div></div>`:''}""")
 
+
+# 25) Startseite aufgeräumt: «Vorlesestimme» eingeklappt (Knopf ‹ zum Ausklappen), mehr Abstand unter «5. Klasse» usw.,
+#     und Ordnerfarbe: die Lehrperson wählt pro Ordner eine Farbe (n.farbe, vkFc() in vk_ordnen.js), Unterordner ohne
+#     eigene Farbe übernehmen sie. Knopf 🎨 auf der Ordner-Karte und «🎨 Farbe» im Kopf des Ordners.
+rep('<div class="sh"><h2 class="lbl">Vorlesestimme</h2><p class="hand">Es wird automatisch eine Frauenstimme gewählt.</p></div>',
+    '<details class="vdet"><summary class="sh"><h2 class="lbl">Vorlesestimme</h2><p class="hand">Es wird automatisch eine Frauenstimme gewählt.</p><span class="vchev" aria-hidden="true">‹</span></summary>')
+rep('${SPK} Probehören</button></div>`;', '${SPK} Probehören</button></div></details>`;')
+rep("""<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}">""", """<div class="${isP?'portion':'fold l'+(depth%3)} ${op?'':'closedn'}"${isP?'':vkFcStyle(n)}>""")
+rep("""title="In einen anderen Ordner verschieben">📁</button>""", """title="In einen anderen Ordner verschieben">📁</button>${isP?'':`<button class="ib" data-farbe="${n.id}" aria-label="Farbe" title="Farbe des Ordners">🎨</button>`}""")
+rep("$$('[data-mvto]').forEach(", "$$('[data-farbe]').forEach(b=>b.onclick=e=>{e.stopPropagation();vkFarbe(b.dataset.farbe,rerender)});$$('[data-mvto]').forEach(")
+rep('<div class="hrow"><button class="hb" id="dupNode">', """<div class="hrow">${isPortion?'':'<button class="hb" id="fcNode">🎨 Farbe</button>'}<button class="hb" id="dupNode">""")
+rep("$('#dupNode').onclick=()=>vkDup(id);", "const fcb=$('#fcNode');if(fcb)fcb.onclick=()=>vkFarbe(id,()=>goNode(id));$('#dupNode').onclick=()=>vkDup(id);")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
