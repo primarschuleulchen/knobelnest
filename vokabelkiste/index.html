@@ -850,6 +850,32 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .mvnew label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:15px}
 .mvnew select{flex:1}
 .mvnew .pill{align-self:flex-start}
+/* Kopf einer Portion / eines Ordners: Leiste mit Gruppen (Abschnitt 24) */
+.phead:has(.hbar){align-items:flex-end}
+.hbar{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:stretch;background:#fff;border:1.5px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:10px 6px;margin-top:2px}
+.hgrp{display:flex;flex-direction:column;gap:6px;padding:2px 14px;min-width:0}
+.hgrp+.hgrp{border-left:1.5px dashed var(--rule)}
+.hgrp.hedit{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 10px;border-left:0;border-top:1.5px dashed var(--rule);margin-top:8px;padding-top:6px}
+.hgrp.hedit .hlab{padding-left:4px}
+.hgrp.hedit .hrow{gap:2px}
+.hlab{font-size:14px;color:var(--muted);letter-spacing:.02em;padding-left:4px}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.hbar .pill{min-height:38px;font-size:16px;padding:0 14px}
+.hbar .pill.tool{border-color:var(--rule);box-shadow:0 2px 0 var(--line)}
+.hbar #wsBtn,.hbar #gapReview,.hbar #cpBtn{background:#fff;color:var(--sky-deep)}
+.hbar #wsBtn:hover,.hbar #gapReview:hover,.hbar #cpBtn:hover{background:var(--sky-soft)}
+.hbar .pill.tplon{background:var(--nut-soft);border-color:var(--gold);color:var(--ink)}
+.hb{border:0;background:transparent;border-radius:12px;min-height:38px;padding:0 10px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.hb:hover{background:var(--sky-soft)}
+.hb.del{color:var(--danger)}
+.hb.del:hover,.hb.del.sure{background:#fbe9e6}
+.hb.sure{font-weight:700}
+@media (max-width:760px){
+  .hbar{flex-direction:column;padding:6px 4px}
+  .hgrp{padding:8px 10px}
+  .hgrp+.hgrp{border-left:0;border-top:1.5px dashed var(--rule)}
+  .hgrp.hedit{margin-top:0;padding-top:8px}
+}
 @media (prefers-reduced-motion:reduce){.inner,.tile,.fach,.fold,.portion,.bar i,.toast{transition:none}}
 </style>
 <div id="vk-root"></div>
@@ -1287,7 +1313,7 @@ function goNode(id){
   const node=info&&info.node,kids=node?node.kids:s.tree,isPortion=!!(node&&node.words),ws=node?wordsOf(node):[];
   SET={key:id,label:node?node.name:s.name,words:ws};
   let h=crumbs(id);
-  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hact">${T&&isPortion?wsTools():''}${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'go':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}${KN&&isPortion?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}<button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'Für Kinder freigeben'}</button><span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span></div>`:''}</div>`;
+  h+=`<div class="phead"><h1 class="big">${esc(node?node.name:s.name)}</h1>${T&&node?`<div class="hbar"><div class="hgrp"><span class="hlab">Freigabe</span><div class="hrow"><button class="pill ${isOpen(node)?'go':'rose'}" id="relNode">${isOpen(node)?'✓ Für Kinder freigegeben':'🔒 Für Kinder freigeben'}</button>${KN_ADMIN?(()=>{const t=tplOf(id);return t===2?'<span class="pill" style="cursor:default">📤 Vorlage (ganzer Ordner)</span>':`<button class="pill ${t?'tplon':''}" id="tplNode">${t?'✓ Vorlage für Lehrpersonen':'📤 Als Vorlage freigeben'}</button>`})():''}</div></div>${isPortion?`<div class="hgrp"><span class="hlab">Im Unterricht</span><div class="hrow">${KN?'<button class="pill" id="cpBtn">📊 So wurde geübt</button>':''}${wsTools()}</div></div>`:''}<div class="hgrp hedit"><span class="hlab">${isPortion?'Portion':'Ordner'}</span><div class="hrow"><button class="hb" id="dupNode">⧉ Duplizieren</button><button class="hb" id="ren">✎ Umbenennen</button><button class="hb" id="mvNode">📁 Verschieben</button><button class="hb del" id="delNode">🗑 Löschen</button></div></div></div>`:''}</div>`;
   if(!node)h+=rootFeatures(s);
   if(kids&&node)h+=`<div class="sh"><h2 class="lbl">Inhalt</h2></div>`+folderGrid(kids,id,info.path.length);
   if(!node)h+=rootGroups(s);
