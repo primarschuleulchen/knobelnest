@@ -4116,8 +4116,35 @@
         '<button class="kk-los" data-a="kThema" data-t="' + h(k) + '">Öffnen</button></article>';
     }).join('') + '</div></div>', 'Zurück');
   };
+  // Rechenoperationen (Mathe 5.5): Übersicht wie im Spiel selbst und in der Eulenkiste (Kacheln mit Zeichen, Anforderungen, Filter)
+  var RO_KACHEL = {
+    'im kopf': ['45 + 8', '#dcf0fd', 'g'], 'halbschriftlich': ['→ 500', '#fbf3dc', 'ge'], 'schriftlich': ['+ − × :', '#e9f1e3', 'ge'],
+    'flexibel rechnen': ['× 99', '#efe7f7', 'ge'], 'fachwörter': ['Summe', '#fcefed', 'e'], 'merkblätter': ['Merk-<br>blatt', '#fff', '']
+  };
+  var RO_REIHE = ['im kopf', 'halbschriftlich', 'schriftlich', 'flexibel rechnen', 'fachwörter', 'merkblätter'];
+  function roKey(g) { return String(g.title || '').trim().toLowerCase(); }
+  K.view_ro = function (games) {
+    var f = K.roFilt || '';
+    var zeig = games.slice().sort(function (a, b) { return RO_REIHE.indexOf(roKey(a)) - RO_REIHE.indexOf(roKey(b)); })
+      .filter(function (g) { var x = RO_KACHEL[roKey(g)]; return !f || !x || !x[2] || x[2].indexOf(f) >= 0; });
+    var chip = function (c) { return '<span class="ro-anf">' + (c.indexOf('g') >= 0 ? '<span class="ro-lz g">Grundanforderungen</span>' : '') + (c.indexOf('e') >= 0 ? '<span class="ro-lz e">erweiterte Anforderungen</span>' : '') + '</span>'; };
+    return K.shell('<div class="ro">' +
+      '<div class="ro-kopf"><span class="ro-eule"><img src="bilder/eule.webp" alt="" draggable="false"></span><div><h1>Rechenoperationen</h1>' +
+      '<p>Addieren und Subtrahieren · Multiplizieren · Dividieren · Flexibel rechnen</p></div></div><div class="ro-deko">✦ ✧ ✦</div>' +
+      '<div class="ro-filter" role="group" aria-label="Anforderungen"><span>Zeigen:</span>' + [['', 'Alle', 'a'], ['g', 'Grundanforderungen', 'g'], ['e', 'Erweiterte Anforderungen', 'e']].map(function (x) {
+        return '<button class="ro-fk ' + x[2] + '" aria-pressed="' + (f === x[0]) + '" data-a="kRoFilt" data-k="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="ro-grid">' + zeig.map(function (g) {
+        var x = RO_KACHEL[roKey(g)] || ['+ −', '#dcf0fd', ''], a = g.award || {}, st = typeof a.stars === 'number' ? a.stars : awardSum(a);
+        var info = x[2] && a.max ? '★ ' + st + ' von ' + a.max : g.plays ? 'Schon ' + g.plays + '× geöffnet' : x[2] ? 'Noch nicht gespielt' : 'Theorie zum Nachschauen';
+        return '<button class="ro-k" data-a="kPlay" data-id="' + g.id + '"><span class="ro-ring" style="background:' + x[1] + '">' + x[0] + '</span><span class="ro-t"><b>' + h(g.title) + '</b>' +
+          (g.description ? '<span class="ro-i">' + h(g.description) + '</span>' : '') + (x[2] ? chip(x[2]) : '') + '<span class="ro-st' + (x[2] && a.max ? ' gold' : '') + '">' + h(info) + '</span></span></button>';
+      }).join('') + '</div>' +
+      '<div class="ro-fuss">Lernziele 5.5 · Grundanforderungen und erweiterte Anforderungen</div></div>', 'Zurück');
+  };
+  ACT.kRoFilt = function (el) { K.roFilt = el.dataset.k; K.render(); };
   K.view_games = function () {
     var k = K.thema || '', u = k.indexOf('U:') === 0 ? k.slice(2) : '';
+    if (!u && /^rechenoperationen$/i.test(thTeile(k).name.trim())) return K.view_ro(kidGames().filter(function (g) { return g.fach === K.fach && imOrdner(g, k); }));
     var games = kidGames().filter(function (g) { return g.fach === K.fach && imOrdner(g, k); });
     // Im Ordner eines Überthemas: Knöpfe pro Unterthema (z. B. «Unit 1»), wie in der Knobelkiste
     var subs = u ? uniq([].concat.apply([], games.map(function (g) { return unterthemen(g, u); }))) : [];
