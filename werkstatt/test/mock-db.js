@@ -2,7 +2,9 @@
 (function () {
   var uid = function () { return 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); }); };
   var now = function () { return new Date().toISOString(); };
-  var D = {
+  // Eingebettet (z. B. ganzes Heft in der Tagesfolie): dieselbe Schein-Datenbank wie das oberste Fenster
+  var TOP = null; try { TOP = window.top !== window && window.top.__D; } catch (e) {}
+  var D = TOP || {
     session: null,
     profiles: [{ id: 'u-admin-0000-0000-0000-000000000001', email: 'admin@x.ch', name: null, is_admin: true, created_at: now() },
                { id: 'u-lp-00000-0000-0000-000000000002', email: 'lp@x.ch', name: 'Herr Muster', is_admin: false, created_at: now(), valid_until: null }],

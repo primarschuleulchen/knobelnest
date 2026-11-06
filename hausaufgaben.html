@@ -586,7 +586,7 @@ function fit(){
 new ResizeObserver(() => fit()).observe(document.getElementById("book"));
 
 // ---------- Interaktion: Woche ----------
-if (KN) { const b = $("#knBack"); b.hidden = false; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
+if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
 $("#prev").onclick = () => { week = addDays(week, -7); render(); };
 $("#next").onclick = () => { week = addDays(week, 7); render(); };
 $("#todayBtn").onclick = () => { week = monday(new Date()); render(); };

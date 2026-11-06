@@ -44,7 +44,7 @@ rep('''  <div class="top" id="top">
     <button class="pill ic" id="prev"''', '''  <div class="top" id="top">
     <button class="pill" id="knBack" hidden>← Klassenkiste</button>
     <button class="pill ic" id="prev"''')
-rep('$("#prev").onclick = () =>', '''if (KN) { const b = $("#knBack"); b.hidden = false; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
+rep('$("#prev").onclick = () =>', '''if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed; if (KIDM) b.textContent = "← Zurück"; b.onclick = () => KN.back(); }
 $("#prev").onclick = () =>''')
 
 # 5) Klasse und Aussehen: Kinderliste kommt aus der Klassenkiste, dazu Import der alten Hausaufgabentafel
