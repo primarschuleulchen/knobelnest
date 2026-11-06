@@ -9,9 +9,10 @@
    Klassen-Ziel: C.ziel = {anzahl, belohnung, ab}; gezählt werden die Tagessterne aller Kinder seit «ab» (kid_vk_extra). */
 const EXTRA=KN&&KNI.settings&&KNI.settings.extra||{};
 const KIDNAME=KN&&KNI.name?String(KNI.name):'',KIDNAME_=KIDNAME;
-const ERSATZ=['🦊','🐼','🐸','🦁','🐙','🦄','🐢','🐝','🦋','🐬','🐧','🦒','🐨','🦔','🐳','🦜','🐞','🦀','🐿️','🦉'];
 let STK=((EXTRA.sticker&&Array.isArray(EXTRA.sticker.list))?EXTRA.sticker.list:[]).filter(x=>x&&x.id);
-const stkList=()=>STK.length?STK.map(x=>({id:x.id,img:'vk:'+x.id,name:x.name||''})):ERSATZ.map((e,i)=>({id:'e'+i,img:e,name:''}));
+/* Feste Sticker-Tiere der Lehrerin (vokabelkiste/sticker/<name>.webp), dazu die in «Belohnungen» hochgeladenen */
+const TIERE=['fuchs','baer','biene','delfin','eichhoernchen','eisbaer','esel','frosch','giraffe','hund','igel','katze'];
+const stkList=()=>TIERE.map(n=>({id:'t-'+n,img:'sticker/'+n+'.webp?v=1',name:n})).concat(STK.map(x=>({id:x.id,img:'vk:'+x.id,name:x.name||''})));
 const vkCount=(k,n=1)=>{P.cnt=P.cnt||{};P.cnt[k]=(P.cnt[k]||0)+n};
 /* richtig geschrieben / gesagt zählen (rec wird hier ergänzt) */
 {const r0=rec;rec=function(id,ok){r0(id,ok);if(!ok||!knMode)return;
