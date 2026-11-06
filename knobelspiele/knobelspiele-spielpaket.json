@@ -92,6 +92,69 @@
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wasser-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Wasser-Weg</title></head><body><p>Wasser-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   },
   {
+   "title": "Klötzli-Turm",
+   "description": "Fallende Klötzli drehen und schieben, bis Reihen voll sind.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 5,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kloetzli-turm.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Klötzli-Turm</title></head><body><p>Klötzli-Turm: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kisten-Packen",
+   "description": "Klötzli in die Kiste legen. Volle Reihen und Spalten verschwinden.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 6,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kisten-packen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Kisten-Packen</title></head><body><p>Kisten-Packen: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Laternen",
+   "description": "Ein Tipp schaltet eine Laterne und ihre Nachbarn um. Zünde alle an!",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 7,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/laternen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Laternen</title></head><body><p>Laternen: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Schiebe-Bild",
+   "description": "Die Teile eines Bildes zurückschieben, bis es wieder stimmt.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 8,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/schiebe-bild.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Schiebe-Bild</title></head><body><p>Schiebe-Bild: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Zahlenmauer",
+   "description": "Jeder Stein ist die Summe der zwei Steine darunter. Fülle die Lücken!",
+   "fach": "Mathematik",
+   "thema": "Rechnen",
+   "stufe": "1.–6. Klasse",
+   "sort": 4,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/zahlenmauer.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Zahlenmauer</title></head><body><p>Zahlenmauer: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Geheimcode",
+   "description": "Einen versteckten Farbcode aus Perlen knacken.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 9,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/geheimcode.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Geheimcode</title></head><body><p>Geheimcode: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Irrgarten",
+   "description": "Die Eule durch das Labyrinth nach Hause führen.",
+   "fach": "Knobelkiste",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 10,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/irrgarten.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Irrgarten</title></head><body><p>Irrgarten: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
    "title": "Kleiderschrank",
    "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»",
    "fach": "Englisch",
