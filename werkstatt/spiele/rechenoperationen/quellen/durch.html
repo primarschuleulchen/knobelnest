@@ -1,0 +1,597 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dividieren üben</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: kariertes Heftblatt wie «Multiplizieren üben»; Übersicht mit zwei Kacheln, jede öffnet eine Übungsansicht */
+:root{
+  --paper:#fbfcfe; --grid:#c4ddf4; --bg:#dfe9f6; --bg2:#e8eff9; --tile1:#faede4; --tile2:#e8f3ea; --ink:#1d2b53; --ink-soft:#5b6890;
+  --pen:#2752c9; --red:#c9372b; --green:#1b8048; --mark:#ffd84a;
+  --wash1:#fff3c7; --wash2:#dfeaff; --wash3:#dcf2e3; --card:#ffffff; --line:#c3cde3;
+  --pe:#1b8048; --pz:#2752c9; --ph:#8a3fb8; --we:#dcf2e3; --wz:#dfeaff; --wh:#efe2f8;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Andika","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131a2c; --grid:#1f2c48; --bg:#132038; --bg2:#18264a; --tile1:#3a2a22; --tile2:#1d3326; --ink:#e6ebf8; --ink-soft:#9ba7c8;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --card:#1a2238; --line:#36415f; --pe:#62d597; --pz:#93b2ff; --ph:#d6a6ff; --we:#143222; --wz:#182751; --wh:#2c1d40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#131a2c; --grid:#1f2c48; --bg:#132038; --bg2:#18264a; --tile1:#3a2a22; --tile2:#1d3326; --ink:#e6ebf8; --ink-soft:#9ba7c8;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --card:#1a2238; --line:#36415f; --pe:#62d597; --pz:#93b2ff; --ph:#d6a6ff; --we:#143222; --wz:#182751; --wh:#2c1d40; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background-color:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(160deg,var(--bg),var(--bg2));background-attachment:fixed;min-height:100%;}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,5vw,2.2rem);font-weight:800}
+.lead{color:var(--ink-soft);max-width:60ch;margin:.4rem 0 0}
+.hl-t{color:inherit}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Kacheln */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:28px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:14px;
+  border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;min-width:0}
+.tile:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile:focus-visible{outline:3px solid var(--pen);outline-offset:3px}
+.tile.t1{background:var(--tile1)} .tile.t2{background:var(--tile2)}
+.tile .kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700}
+.tile h3{font-family:var(--display);font-size:1.6rem;margin:0;line-height:1}
+.tile p{margin:0;color:var(--ink-soft);font-size:.95rem}
+.preview{background:var(--card);border-radius:10px;border:1.5px solid var(--line);min-height:150px;display:grid;place-items:center;padding:10px;font-variant-numeric:tabular-nums}
+.preview .big{font-family:var(--display);font-size:1.4rem;font-weight:800;text-align:center;line-height:1.3}
+.preview .big small{display:block;font-family:var(--body);font-weight:700;font-size:.85rem;color:var(--ink-soft)}
+.preview .strk{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px;color:var(--ink-soft)}
+.mini{display:grid;grid-template-columns:repeat(10,17px);font-size:.95rem;line-height:19px;text-align:center}
+.mini .ul{border-bottom:2px solid var(--ink)}
+.mini .q{color:var(--pe);font-weight:700} .mini .p{color:var(--pz);font-weight:700} .mini .d{color:var(--ph);font-weight:700}
+.go{font-weight:700;color:var(--pen)}
+
+/* Übungsansicht */
+.back{all:unset;cursor:pointer;font-weight:700;color:var(--pen);display:inline-flex;gap:6px;margin-bottom:14px}
+.back:focus-visible{outline:2px solid var(--pen);outline-offset:3px;border-radius:4px}
+.vhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.score{font-weight:700;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:4px 14px;font-variant-numeric:tabular-nums}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:18px 0}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card);flex-wrap:wrap}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-weight:700;font-size:.95rem}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:3px solid var(--pen);outline-offset:-3px}
+.bar label{font-size:.85rem;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.sheet{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:22px;box-shadow:4px 4px 0 var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{all:unset;cursor:pointer;padding:9px 18px;border-radius:10px;border:2px solid var(--ink);font-weight:700;background:var(--card)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--paper)}
+.btn:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.btn:hover{filter:brightness(1.06)}
+.msg{margin-top:16px;padding:10px 14px;border-radius:10px;font-weight:700;min-height:1.5em}
+.msg:empty{display:none}
+.msg.ok{background:var(--wash3);color:var(--green)}
+.msg.bad{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
+.msg.info{background:var(--wash1);color:var(--ink)}
+.note{color:var(--ink-soft);font-size:.92rem;margin:14px 0 0;max-width:62ch}
+
+input.cell, input.field{font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:8px;text-align:center;font-variant-numeric:tabular-nums}
+input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px color-mix(in srgb,var(--pen) 25%,transparent)}
+input.ok{border-color:var(--green);background:var(--wash3)}
+input.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+input.shown{color:var(--ink-soft);border-style:dashed}
+
+/* Nullentrick (Kopf) */
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink-soft)}
+.dot.now{border-color:var(--pen);background:color-mix(in srgb,var(--pen) 25%,transparent)}
+.dot.ok{background:var(--green);border-color:var(--green)}
+.dot.bad{background:var(--red);border-color:var(--red)}
+.task{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.6rem);display:flex;flex-wrap:wrap;align-items:center;gap:.3em;font-variant-numeric:tabular-nums}
+.task input.field{font-family:var(--display);font-weight:800;font-size:inherit;width:6.2em;padding:0 .2em}
+.task .z-strk{color:var(--red);text-decoration:line-through;text-decoration-thickness:4px}
+.task .z-fade{color:var(--ink-soft);opacity:.45}
+.core{margin-top:12px;font-weight:700;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-size:.95rem;border:1.5px solid var(--line);background:var(--paper)}
+.chip.s{border-color:var(--red);color:var(--red)}
+.chip.c{border-color:var(--pen);color:var(--pen)}
+.chip.f{color:var(--ink-soft)}
+.task input.field.bad{text-decoration:line-through;text-decoration-color:var(--red);width:4.5em}
+.task .sol{color:var(--green);background:var(--wash3);border:2px solid var(--green);border-radius:8px;padding:0 .3em}
+
+/* Schriftlich */
+.step{display:flex;gap:12px;align-items:flex-start;background:var(--wash1);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-weight:700}
+.step .nr{font-family:var(--display);font-weight:800;font-size:.85rem;white-space:nowrap;background:var(--ink);color:var(--paper);border-radius:999px;padding:1px 10px;margin-top:2px}
+.step.done{background:var(--wash3);color:var(--green)}
+.written{overflow-x:auto;padding:4px 0 8px}
+.dgrid{display:grid;grid-auto-rows:2.5rem;width:max-content;margin:0 auto;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.dgrid > div{width:2.3rem;display:grid;place-items:center}
+.dgrid .ex{font-weight:700}
+.dgrid .op{font-family:var(--display);font-weight:800}
+.dgrid .ul{border-bottom:3px solid var(--ink)}
+.dgrid .fut{visibility:hidden}
+.dgrid .mi{font-family:var(--display);font-weight:800;color:var(--pz)}
+.dgrid .rlab{font-family:var(--display);font-weight:800;color:var(--red);font-size:1.3rem}
+.dgrid input.cell{width:2rem;height:2rem;font-size:1.4rem;padding:0}
+.dgrid input.tq{color:var(--pe);background:var(--we);border-color:color-mix(in srgb,var(--pe) 40%,var(--line))}
+.dgrid input.tp{color:var(--pz);background:var(--wz);border-color:color-mix(in srgb,var(--pz) 40%,var(--line))}
+.dgrid input.td{color:var(--ph);background:var(--wh);border-color:color-mix(in srgb,var(--ph) 40%,var(--line))}
+.dgrid input.tr{color:var(--red)}
+.dgrid input[readonly]{cursor:default}
+.dgrid input.ok{border-color:var(--green)}
+.dgrid input.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+.dgrid input.cur{border-color:var(--pen);border-width:3px;box-shadow:0 0 0 3px color-mix(in srgb,var(--pen) 25%,transparent)}
+.dgrid .hl, .dgrid input.hl{background:var(--mark);color:#1d2b53;border-radius:6px}
+.sw{display:inline-block;width:.8em;height:.8em;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.sw.q{background:var(--pe)} .sw.p{background:var(--pz)} .sw.d{background:var(--ph)} .sw.m{background:var(--mark)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--ink-soft);margin-top:10px;justify-content:center}
+
+@media (max-width:480px){
+  .sheet{padding:16px}
+  .dgrid{font-size:1.35rem;grid-auto-rows:2.2rem}
+  .dgrid > div{width:1.95rem}
+  .dgrid input.cell{width:1.75rem;height:1.8rem;font-size:1.2rem}
+}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+
+<div class="wrap">
+
+<!-- ÜBERSICHT -->
+<section id="home">
+  <h1>Dividieren <span class="hl-t">bis 1 Million</span></h1>
+  <p class="lead">Wähle eine Kachel. Zuerst den Nullentrick im Kopf, dann schriftlich Schritt für Schritt.</p>
+  <div class="tiles">
+    <button class="tile t1" data-go="kopf">
+      <span class="kicker">Weg 1</span>
+      <h3>Nullentrick</h3>
+      <div class="preview"><span class="big num">21 00<span class="strk">0</span> : 7<span class="strk">0</span><small>Gleich viele Nullen streichen</small>21 : 7 = 3<small>2 Nullen wieder anhängen</small>300</span></div>
+      <p>Nullen wegdenken, mit dem Einmaleins rechnen, Nullen wieder anhängen. 10 Aufgaben pro Runde.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+    <button class="tile t2" data-go="schriftlich">
+      <span class="kicker">Weg 2</span>
+      <h3>Schriftlich</h3>
+      <div class="preview"><div class="mini num" id="mini" aria-hidden="true"></div></div>
+      <p>Mit «Weiter» wirst du Schritt für Schritt durch die Rechnung geführt.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+  </div>
+</section>
+
+<!-- NULLENTRICK -->
+<section id="kopf" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Nullentrick</h2><span class="score" id="k-score">Runde 1</span></div>
+  <div class="bar"><span><label>Schwierigkeit</label><span class="seg" data-for="kopf">
+    <button data-lv="1" aria-pressed="true">Leicht</button><button data-lv="2">Mittel</button><button data-lv="3">Schwer</button></span></span></div>
+  <div class="sheet">
+    <p class="note" id="k-level" style="margin:0 0 12px"></p>
+    <div class="dots" id="k-dots"></div>
+    <div id="k-body"></div>
+    <div class="msg" id="k-msg"></div>
+    <div class="btns" id="k-btns"></div>
+  </div>
+  <p class="note">Tipp: Hat die zweite Zahl Nullen, streichst du bei beiden Zahlen gleich viele Nullen. Dann denkst du die restlichen Nullen weg, rechnest die Einmaleins-Aufgabe und hängst die weggedachten Nullen ans Resultat. Achtung bei Aufgaben wie 4 000 : 5: Hier brauchst du 40 : 5, eine Null gehört zur Grundaufgabe!</p>
+</section>
+
+<!-- SCHRIFTLICH -->
+<section id="schriftlich" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Schriftlich dividieren</h2><span class="score" id="s-score">Richtig gelöst: 0</span></div>
+  <div class="bar">
+    <span><label>Aufgaben</label><span class="seg" data-for="slv">
+      <button data-v="1" aria-pressed="true">Durch 1-stellig</button><button data-v="2">Durch 2-stellig</button></span></span>
+  </div>
+  <div class="sheet">
+    <div class="step" id="s-step"><span class="nr" id="s-nr">Schritt 1</span><span id="s-text"></span></div>
+    <div class="written"><div class="dgrid" id="s-grid"></div></div>
+    <div class="legend">
+      <span><i class="sw m"></i>Damit rechnest du jetzt</span>
+      <span><i class="sw q"></i>Resultat</span>
+      <span><i class="sw p"></i>Malrechnung</span>
+      <span><i class="sw d"></i>Heruntergeholte Ziffer</span>
+      <span>Mehrstellige Zahlen von rechts nach links tippen</span>
+    </div>
+    <div class="btns">
+      <button class="btn primary" id="s-next">Weiter →</button>
+      <button class="btn" id="s-show">Schritt zeigen</button>
+      <button class="btn" id="s-new">Neue Rechnung</button>
+    </div>
+    <div class="msg" id="s-msg"></div>
+  </div>
+  <p class="note" id="s-note"></p>
+</section>
+
+</div>
+
+<script>
+// ---------- Hilfsfunktionen ----------
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const parse = s => { const t = String(s).replace(/[\s'’.  ]/g,''); return /^\d+$/.test(t) ? Number(t) : null; };
+const zerosOf = n => { let z=0; while(n>0 && n%10===0){ n/=10; z++; } return z; };
+const nullen = z => z===1 ? '1 Null' : z + ' Nullen';
+
+// Vorschau Schriftlich
+(function(){
+  const rows = [
+    ['','8','4','6',':','3','=','q2','q8','q2'],
+    ['-u','pu6','','','','','','','',''],
+    ['','2','d4','','','','','','',''],
+    ['-u','pu2','pu4','','','','','','',''],
+    ['','','0','d6','','','','','',''],
+    ['','','-u','pu6','','','','','',''],
+    ['','','','0','','','','','','']
+  ];
+  let h='';
+  rows.forEach(r => r.forEach(c => {
+    let cls='', t=c;
+    if(c[0]==='-'){ t='−'; cls='p'+(c.includes('u')?' ul':''); }
+    else if(c[0]==='q'){ cls='q'; t=c.slice(1); }
+    else if(c[0]==='d'){ cls='d'; t=c.slice(1); }
+    else if(c[0]==='p'){ cls='p ul'; t=c.slice(2); }
+    h += `<span class="${cls}">${t}</span>`;
+  }));
+  $('#mini').innerHTML = h;
+})();
+
+// ---------- Navigation ----------
+const views = ['home','kopf','schriftlich'];
+function show(id){
+  if(!views.includes(id)) id='home';
+  views.forEach(v => document.getElementById(v).hidden = v!==id);
+  window.scrollTo(0,0);
+  if(id==='kopf') focusKopf();
+  if(id==='schriftlich') sFocus();
+}
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  const id = b.dataset.go;
+  if(location.hash.slice(1)!==id) location.hash = id==='home' ? '' : id;
+  show(id);
+}));
+window.addEventListener('hashchange', () => show(location.hash.slice(1)||'home'));
+
+function seg(name, onChange){
+  const el = document.querySelector(`.seg[data-for="${name}"]`);
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+    onChange(b.dataset.lv ?? b.dataset.v);
+  }));
+  const cur = el.querySelector('[aria-pressed="true"]');
+  return cur.dataset.lv ?? cur.dataset.v;
+}
+function setMsg(el, text, kind){ el.textContent = text; el.className = 'msg ' + (kind||''); }
+
+// =========================================================
+// 1) NULLENTRICK
+// =========================================================
+const K = { lv: 1, tasks: [], i: 0, results: [], answered: false, round: 1, tip:false,
+  firsts: {1:[{a:21000,b:7},{a:2100,b:7}], 2:[{a:21000,b:70},{a:2100,b:70}], 3:[{a:4000,b:5},{a:30000,b:600}]} };
+const K_LEVEL_TEXT = {
+  1: 'Leicht: Nur die erste Zahl hat Nullen, z. B. 2 100 : 7 oder 21 000 : 7. Denk die Nullen weg und häng sie beim Resultat wieder an.',
+  2: 'Mittel: Beide Zahlen haben Nullen, z. B. 21 000 : 70. Streiche zuerst bei beiden Zahlen gleich viele Nullen.',
+  3: 'Schwer: Viele Nullen und Fallen, z. B. 4 000 : 5 oder 30 000 : 600.'
+};
+K.lv = Number(seg('kopf', v => { K.lv = Number(v); K.round = 1; kNewRound(); focusKopf(); }));
+
+// Zerlegt a : b in gestrichene Nullen (s), Grundaufgabe (base : d) und weggedachte Nullen (k)
+function analyse(a,b){
+  const s = zerosOf(b), A = a/10**s, d = b/10**s;
+  let k = zerosOf(A);
+  while(k>0 && (A/10**k) % d !== 0) k--;
+  const base = A/10**k;
+  return { s, k, A, d, base, q: base/d, ans: a/b };
+}
+function kGen(lv){
+  for(let t=0;t<500;t++){
+    let d = rnd(2,9), q = rnd(2,9), base = d*q, s = 0, k;
+    if(lv===1){ if(base%10===0) continue; k = rnd(1,4); }
+    else if(lv===2){ if(base%10===0) continue; s = rnd(1,3); k = rnd(0,3); }
+    else {
+      if(Math.random()<0.45){ const pr = pick([[5,2],[5,4],[5,6],[5,8],[2,5],[4,5],[6,5],[8,5]]); d = pr[0]; q = pr[1]; base = d*q; s = rnd(0,3); }
+      else { if(base%10===0) continue; s = rnd(1,3); }
+      k = rnd(1,3);
+    }
+    const a = base*10**(k+s), b = d*10**s;
+    if(a>1000000 || a<100) continue;
+    return {a,b};
+  }
+  return {a:2100,b:7};
+}
+function kNewRound(){
+  const seen = new Set(); K.tasks = [];
+  if(K.firsts[K.lv]){ K.firsts[K.lv].forEach(t => { K.tasks.push(t); seen.add(t.a+':'+t.b); }); K.firsts[K.lv] = null; }
+  let g=0; while(K.tasks.length<10 && g++<500){ const t = kGen(K.lv), key = t.a+':'+t.b; if(!seen.has(key)){ seen.add(key); K.tasks.push(t); } }
+  K.i = 0; K.results = []; K.answered = false;
+  $('#k-level').textContent = K_LEVEL_TEXT[K.lv];
+  kRender();
+}
+// Zahl mit gestrichenen (rot) und weggedachten (grau) Nullen
+function numHTML(n, strike, fade){
+  const s = String(n), L = s.length; let h = '';
+  for(let i=0;i<L;i++){
+    if(i>0 && (L-i)%3===0) h += ' ';
+    const r = L-1-i;
+    const cls = r<strike ? 'z-strk' : r<strike+fade ? 'z-fade' : '';
+    h += cls ? `<span class="${cls}">${s[i]}</span>` : s[i];
+  }
+  return h;
+}
+function kTask(marked){
+  const t = K.tasks[K.i], x = analyse(t.a,t.b);
+  $('#k-a').innerHTML = marked ? numHTML(t.a, x.s, x.k) : fmt(t.a);
+  $('#k-b').innerHTML = marked ? numHTML(t.b, x.s, 0) : fmt(t.b);
+  if(marked){
+    let h = '';
+    if(x.s) h += `<span class="chip s">${nullen(x.s)} gestrichen</span>`;
+    h += `<span class="chip c">Grundaufgabe: ${x.base} : ${x.d}</span>`;
+    if(x.k) h += `<span class="chip f">${nullen(x.k)} weggedacht</span>`;
+    $('#k-core').innerHTML = h;
+  }
+}
+function kRender(){
+  const dots = $('#k-dots'); dots.innerHTML = '';
+  K.tasks.forEach((_,j) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (K.results[j]===true?' ok':K.results[j]===false?' bad':j===K.i?' now':'');
+    dots.appendChild(d);
+  });
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+  const body = $('#k-body'), btns = $('#k-btns');
+  setMsg($('#k-msg'),'');
+  btns.innerHTML = '';
+  if(K.i >= K.tasks.length){
+    const n = K.results.filter(Boolean).length;
+    body.innerHTML = `<div class="task">${n} von 10 richtig</div>`;
+    setMsg($('#k-msg'), n>=9 ? 'Ausgezeichnet! Probiere die nächste Schwierigkeit.' : n>=6 ? 'Gut gemacht. Mit einer weiteren Runde wirst du noch sicherer.' : 'Übe noch eine Runde. Drück bei Unsicherheit auf «Tipp».', n>=6?'ok':'info');
+    const b = document.createElement('button'); b.className='btn primary'; b.textContent='Neue Runde';
+    b.onclick = () => { K.round++; kNewRound(); focusKopf(); };
+    btns.appendChild(b); b.focus(); return;
+  }
+  body.innerHTML = `<div class="task"><span class="num" id="k-a"></span><span>:</span><span class="num" id="k-b"></span><span>=</span><input class="field" id="k-in" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort"></div><div class="core" id="k-core"></div>`;
+  kTask(false);
+  const b = document.createElement('button'); b.className='btn primary'; b.id='k-go'; b.textContent='Prüfen';
+  b.onclick = kStep; btns.appendChild(b);
+  const tb = document.createElement('button'); tb.className='btn'; tb.id='k-tip'; tb.textContent='Tipp';
+  tb.onclick = kTip; btns.appendChild(tb);
+  $('#k-in').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); kStep(); } });
+  K.answered = false;
+}
+function kTip(){
+  const t = K.tasks[K.i], x = analyse(t.a,t.b);
+  kTask(true);
+  let s = '';
+  if(x.s) s += `Streiche bei beiden Zahlen ${nullen(x.s)} (rot). `;
+  s += x.k ? `Denk die grauen Nullen weg und rechne ${x.base} : ${x.d}. Die grauen Nullen hängst du am Schluss wieder an.` : `Rechne jetzt ${x.base} : ${x.d}.`;
+  setMsg($('#k-msg'), s, 'info');
+  $('#k-in').focus();
+}
+function kStep(){
+  if(K.answered){ if(Date.now() - K.at < 700) return; K.i++; kRender(); focusKopf(); return; }
+  const inp = $('#k-in'), v = parse(inp.value), t = K.tasks[K.i];
+  if(v===null){ setMsg($('#k-msg'),'Schreibe eine Zahl ins Feld.','info'); inp.focus(); return; }
+  const x = analyse(t.a,t.b), ok = v===x.ans;
+  K.results[K.i] = ok; K.answered = true; K.at = Date.now();
+  inp.classList.add(ok?'ok':'bad'); inp.readOnly = true;
+  if(!ok) inp.insertAdjacentHTML('afterend', `<span class="sol num" aria-label="Richtige Lösung">${fmt(x.ans)}</span>`);
+  kTask(true);
+  let how = '';
+  if(x.s) how += `Streiche bei beiden ${nullen(x.s)}: ${fmt(t.a/10**x.s)} : ${x.d}. `;
+  how += `${x.base} : ${x.d} = ${x.q}` + (x.k ? `, dazu ${nullen(x.k)} → ${fmt(x.ans)}.` : '.');
+  if(x.base%10===0) how += ` Achtung: Die Null in ${x.base} gehört zur Grundaufgabe.`;
+  setMsg($('#k-msg'), ok ? 'Richtig! ' + how : `Die richtige Lösung ist ${fmt(x.ans)}. So geht es: ` + how, ok?'ok':'info');
+  $('#k-tip')?.remove();
+  $('#k-go').textContent = K.i===9 ? 'Auswertung' : 'Weiter';
+  setTimeout(() => $('#k-go')?.focus(), 50);
+  $('#k-dots').children[K.i].className = 'dot ' + (ok?'ok':'bad');
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+}
+function focusKopf(){ setTimeout(() => $('#k-in')?.focus(), 30); }
+kNewRound();
+
+// =========================================================
+// 2) SCHRIFTLICH  (geführt: Weiter prüft das aktuelle Feld und springt zum nächsten)
+// =========================================================
+const S = { lv:'1', score:0, firsts:{'1':[846,3],'R':[847,3],'2':[966,23]} };
+S.lv = seg('slv', v => { S.lv = v; sNew(); });
+
+function sGen(lv){
+  if(S.firsts[lv]){ const f = S.firsts[lv]; S.firsts[lv] = null; return {a:f[0], d:f[1]}; }
+  for(let t=0;t<500;t++){
+    let d, a;
+    if(lv==='1'){ d = rnd(2,9); a = d * (Math.random()<0.6 ? rnd(102,999) : rnd(1001,2499)); }
+    else if(lv==='R'){ d = rnd(3,9); a = d * (Math.random()<0.6 ? rnd(102,999) : rnd(1001,2499)) + rnd(1,d-1); }
+    else { do{ d = rnd(12,48); }while(d%10===0 || d%11===0); a = d * rnd(12,349); }
+    if(a<100 || a>99999) continue;
+    return {a,d};
+  }
+  return {a:846,d:3};
+}
+function sNew(){
+  Object.assign(S, sGen(S.lv)); S.shown = false; S.done = false;
+  sBuild();
+  const D = S.d;
+  $('#s-note').textContent = S.lv==='2'
+    ? `Hilfe – die ${D}er-Reihe: ` + [1,2,3,4,5,6,7,8,9].map(i => `${i} · ${D} = ${i*D}`).join(', ') + '.'
+    : 'Der Ablauf wiederholt sich immer: Wie oft passt es hinein? – Malrechnen – Subtrahieren – nächste Ziffer herunterholen. Drück nach jedem Feld auf «Weiter» oder Enter.';
+}
+function sBuild(){
+  const as = String(S.a), L = as.length, ds = String(S.d), D = S.d;
+  let p = 1; while(Number(as.slice(0,p)) < D) p++;
+  const steps = []; let cur = Number(as.slice(0,p));
+  for(let e=p-1;e<L;e++){
+    const q = Math.floor(cur/D), prod = q*D, rem = cur-prod, w = String(cur).length;
+    const st = {e,cur,q,prod,rem,w};
+    if(e<L-1){ st.down = Number(as[e+1]); cur = rem*10 + st.down; }
+    steps.push(st);
+  }
+  const Q = Math.floor(S.a/D), R = S.a % D;
+  S.Q = Q; S.R = R;
+  const C = i => i+2; // Ziffer i des Dividenden → Spalte
+  let col = L+2; const cColon = col++, cDiv = col; col += ds.length; const cEq = col++, cQ = col; col += steps.length;
+  let cR = 0, cRest = 0; if(R>0){ cR = col++; cRest = col; col += ds.length; }
+  const g = $('#s-grid');
+  g.style.gridTemplateColumns = `repeat(${col-1}, auto)`;
+  let h = '';
+  const put = (r,c,inner,cls='',id='') => { h += `<div${id?` id="${id}"`:''} class="${cls}" style="grid-row:${r};grid-column:${c}">${inner}</div>`; };
+  const inp = (id, cls, label) => `<input class="cell ${cls}" id="${id}" inputmode="numeric" autocomplete="off" readonly aria-label="${label}">`;
+  // Aufgabe
+  for(let i=0;i<L;i++) put(1, C(i), as[i], 'ex', 's-a'+i);
+  put(1, cColon, ':', 'op');
+  for(let i=0;i<ds.length;i++) put(1, cDiv+i, ds[i], 'ex', 's-v'+i);
+  put(1, cEq, '=', 'op');
+  for(let j=0;j<steps.length;j++) put(1, cQ+j, inp('s-q'+j,'tq',`Resultat, Ziffer ${j+1}`), 'fut', 'b-s-q'+j);
+  if(R>0){
+    put(1, cR, 'R', 'rlab fut', 's-Rlab');
+    for(let i=0;i<ds.length;i++) put(1, cRest+i, inp('s-r'+i,'tr',`Rest, Ziffer ${i+1}`), 'fut', 'b-s-r'+i);
+  }
+  // Schritte
+  steps.forEach((st,j) => {
+    const rp = 2+2*j, rs = 3+2*j, left = st.e - st.w + 1;
+    put(rp, C(left)-1, '−', 'mi ul fut', 's-m'+j);
+    for(let i=0;i<st.w;i++){
+      put(rp, C(left+i), inp(`s-p${j}-${i}`,'tp',`Malrechnung Schritt ${j+1}`), 'ul fut', `b-s-p${j}-${i}`);
+      put(rs, C(left+i), inp(`s-s${j}-${i}`,'',`Subtraktion Schritt ${j+1}`), 'fut', `b-s-s${j}-${i}`);
+    }
+    if(st.down!==undefined) put(rs, C(st.e+1), inp('s-dn'+j,'td','Heruntergeholte Ziffer'), 'fut', 'b-s-dn'+j);
+  });
+  g.innerHTML = h;
+
+  // Felder in der richtigen Reihenfolge
+  const divIds = [...ds].map((_,i) => 's-v'+i);
+  const range = (n,f) => Array.from({length:n}, (_,i) => f(i));
+  const F = [];
+  let curIds = range(p, i => 's-a'+i);
+  steps.forEach((st,j) => {
+    const prodIds = range(st.w, i => `s-p${j}-${i}`), remIds = range(st.w, i => `s-s${j}-${i}`);
+    F.push({kind:'q', st, ids:['s-q'+j], exp:st.q, hl:[...curIds, ...divIds],
+      text: `Wie oft passt ${D} in ${st.cur}? Schreibe die Zahl ins grüne Feld beim Resultat.`});
+    F.push({kind:'p', st, ids:prodIds, exp:st.prod, hl:['s-q'+j, ...divIds], reveal:['s-m'+j],
+      text: `Rechne ${st.q} · ${D} und schreibe das Ergebnis unter ${st.cur}.`});
+    F.push({kind:'s', st, ids:remIds, exp:st.rem, hl:[...curIds, ...prodIds],
+      text: `Subtrahiere: ${st.cur} − ${st.prod}. Schreibe den Unterschied unter den Strich.`});
+    if(st.down!==undefined){
+      F.push({kind:'d', st, ids:['s-dn'+j], exp:st.down, hl:['s-a'+(st.e+1)],
+        text: `Hole die nächste Ziffer (gelb) herunter und schreibe sie neben ${st.rem}.`});
+      curIds = [...remIds, 's-dn'+j];
+    } else curIds = remIds;
+  });
+  if(R>0) F.push({kind:'r', ids:range(ds.length, i => 's-r'+i), exp:R, hl:curIds, reveal:['s-Rlab'],
+    text: `Es bleibt ${R} übrig, und ${R} ist kleiner als ${D}. Das ist der Rest. Schreibe ihn hinter das R.`});
+  S.F = F; S.fi = 0; S.tries = 0;
+
+  // Eingabeverhalten
+  g.querySelectorAll('input').forEach(el => {
+    el.addEventListener('focus', () => el.select());
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g,'').slice(-1);
+      el.classList.remove('bad');
+      const f = S.F[S.fi]; if(!f) return;
+      const k = f.ids.indexOf(el.id);
+      if(el.value!=='' && k>0) document.getElementById(f.ids[k-1]).focus();
+    });
+    el.addEventListener('keydown', e => {
+      const f = S.F[S.fi]; const k = f ? f.ids.indexOf(el.id) : -1;
+      if(e.key==='Enter'){ e.preventDefault(); sNext(); }
+      else if(k<0) return;
+      else if(e.key==='Backspace' && el.value==='' && k<f.ids.length-1){ e.preventDefault(); const nx = document.getElementById(f.ids[k+1]); nx.value=''; nx.focus(); }
+      else if(e.key==='ArrowLeft' && k>0){ e.preventDefault(); document.getElementById(f.ids[k-1]).focus(); }
+      else if(e.key==='ArrowRight' && k<f.ids.length-1){ e.preventDefault(); document.getElementById(f.ids[k+1]).focus(); }
+    });
+  });
+  $('#s-next').textContent = 'Weiter →';
+  $('#s-show').hidden = false;
+  setMsg($('#s-msg'),'');
+  sActivate();
+}
+function sActivate(){
+  const g = $('#s-grid');
+  g.querySelectorAll('.hl').forEach(x => x.classList.remove('hl'));
+  g.querySelectorAll('input.cur').forEach(x => { x.classList.remove('cur'); x.readOnly = true; });
+  const f = S.F[S.fi];
+  if(!f){ sFinish(); return; }
+  (f.reveal||[]).forEach(id => document.getElementById(id).classList.remove('fut'));
+  f.ids.forEach(id => { document.getElementById('b-'+id).classList.remove('fut'); const el = document.getElementById(id); el.readOnly = false; el.classList.add('cur'); });
+  f.hl.forEach(id => document.getElementById(id)?.classList.add('hl'));
+  $('#s-step').className = 'step';
+  $('#s-nr').textContent = `Schritt ${S.fi+1} von ${S.F.length}`;
+  $('#s-text').textContent = f.text;
+  S.tries = 0;
+  sFocus();
+}
+function sFocus(){
+  setTimeout(() => { const f = S.F && S.F[S.fi]; if(f) document.getElementById(f.ids[f.ids.length-1]).focus(); else $('#s-next').focus(); }, 30);
+}
+function sRead(ids){
+  const s = ids.map(id => document.getElementById(id).value || ' ').join('');
+  if(!s.trim()) return {empty:true};
+  return { empty:false, val:Number(s.replace(/ /g,'')), gap:/\d +\d/.test(s.trim()), endOk:s[s.length-1]!==' ' };
+}
+function sNext(){
+  if(S.done){ sNew(); return; }
+  const f = S.F[S.fi], D = S.d, msg = $('#s-msg'), x = sRead(f.ids);
+  if(x.empty){ setMsg(msg, 'Schreibe zuerst eine Zahl ins Feld mit dem blauen Rand.', 'info'); sFocus(); return; }
+  const good = !x.gap && x.endOk && x.val===f.exp;
+  if(good){
+    f.ids.forEach(id => { const el = document.getElementById(id); if(el.value!=='') el.classList.add('ok'); el.classList.remove('bad'); });
+    setMsg(msg, '');
+    S.fi++; sActivate(); return;
+  }
+  S.tries++;
+  f.ids.forEach(id => { const el = document.getElementById(id); if(el.value!=='') el.classList.add('bad'); });
+  const st = f.st, v = x.val;
+  let t;
+  if(x.gap) t = 'Da ist eine Lücke zwischen den Ziffern.';
+  else if(!x.endOk) t = 'Die Zahl muss ganz rechts im Feld enden.';
+  else if(f.kind==='q'){
+    t = v*D > st.cur ? `${v} · ${D} = ${v*D}. Das ist mehr als ${st.cur}. Nimm eine kleinere Zahl.`
+      : `${v} · ${D} = ${v*D}. Dann bleiben ${st.cur - v*D} übrig, und da passt die ${D} noch einmal hinein. Nimm eine grössere Zahl.`;
+  }
+  else if(f.kind==='p') t = `Rechne nochmals ${st.q} · ${D}.`;
+  else if(f.kind==='s') t = `Rechne nochmals ${st.cur} − ${st.prod}.`;
+  else if(f.kind==='d') t = 'Schau oben in der Rechnung: Die gelbe Ziffer kommt herunter.';
+  else t = 'Der Rest ist die Zahl, die ganz unten übrig bleibt.';
+  if(S.tries>=2) t += ' Mit «Schritt zeigen» siehst du die Lösung für dieses Feld.';
+  setMsg(msg, t, 'bad');
+  sFocus();
+}
+function sShowStep(){
+  const f = S.F[S.fi]; if(!f) return;
+  S.shown = true;
+  const s = String(f.exp);
+  f.ids.forEach((id,c) => { const el = document.getElementById(id); const k = c - (f.ids.length - s.length); el.value = k>=0 ? s[k] : ''; el.classList.remove('bad'); el.classList.add('shown'); });
+  setMsg($('#s-msg'), '');
+  S.fi++; sActivate();
+}
+function sFinish(){
+  S.done = true;
+  const D = S.d, Q = S.Q, R = S.R;
+  $('#s-step').className = 'step done';
+  $('#s-nr').textContent = 'Fertig';
+  $('#s-text').textContent = `${fmt(S.a)} : ${D} = ${fmt(Q)}` + (R ? ` Rest ${R}` : '');
+  const probe = `Probe: ${fmt(Q)} · ${D}` + (R ? ` + ${R}` : '') + ` = ${fmt(S.a)}.`;
+  if(!S.shown){
+    S.score++; $('#s-score').textContent = `Richtig gelöst: ${S.score}`;
+    setMsg($('#s-msg'), 'Super, alles richtig! ' + probe, 'ok');
+  } else setMsg($('#s-msg'), 'Geschafft, mit etwas Hilfe. ' + probe + ' Versuch die nächste Rechnung ganz allein.', 'info');
+  $('#s-next').textContent = 'Neue Rechnung →';
+  $('#s-show').hidden = true;
+  $('#s-next').focus();
+}
+$('#s-next').onclick = sNext;
+$('#s-show').onclick = sShowStep;
+$('#s-new').onclick = sNew;
+sNew();
+
+// Startansicht (Deep-Link per #kopf oder #schriftlich)
+show(location.hash.slice(1) || 'home');
+</script>
+
+</body></html>

@@ -1,0 +1,515 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Multiplizieren üben</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: kariertes Heftblatt wie die Plus & Minus Werkstatt; Übersicht mit zwei Kacheln, jede öffnet eine Übungsansicht */
+:root{
+  --paper:#e4eef9; --grid:#c4dcf3; --sky1:#d8e7f7; --sky2:#ecf3fb; --tile1:#fdeee3; --tile2:#e6f4ea; --ink:#1d2b53; --ink-soft:#5b6890;
+  --pen:#2752c9; --red:#c9372b; --green:#1b8048; --mark:#ffd84a;
+  --wash1:#fff3c7; --wash2:#dfeaff; --wash3:#dcf2e3; --card:#ffffff; --line:#c3cde3;
+  --pe:#1b8048; --pz:#2752c9; --ph:#8a3fb8; --we:#dcf2e3; --wz:#dfeaff; --wh:#efe2f8;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Andika","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131a2c; --grid:#1f2840; --ink:#e6ebf8; --ink-soft:#9ba7c8; --sky1:#111a2e; --sky2:#18233a; --tile1:#33261f; --tile2:#1b3227;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --card:#1a2238; --line:#36415f; --pe:#62d597; --pz:#93b2ff; --ph:#d6a6ff; --we:#143222; --wz:#182751; --wh:#2c1d40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#131a2c; --grid:#1f2840; --ink:#e6ebf8; --ink-soft:#9ba7c8; --sky1:#111a2e; --sky2:#18233a; --tile1:#33261f; --tile2:#1b3227;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --card:#1a2238; --line:#36415f; --pe:#62d597; --pz:#93b2ff; --ph:#d6a6ff; --we:#143222; --wz:#182751; --wh:#2c1d40; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(160deg,var(--sky1) 0%,var(--sky2) 100%);background-attachment:fixed;min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:28px 60px}
+h1,h2{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:800}
+h2{font-size:clamp(1.6rem,5vw,2.2rem);font-weight:800}
+.lead{color:var(--ink-soft);max-width:60ch;margin:.4rem 0 0}
+.hl{background:linear-gradient(transparent 55%,var(--mark) 55%);padding:0 .1em;color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hl{color:#1d2b53;background:var(--mark)}}
+:root[data-theme="dark"] .hl{color:#1d2b53;background:var(--mark)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Kacheln */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:28px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:14px;
+  border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;min-width:0}
+.tile:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile:focus-visible{outline:3px solid var(--pen);outline-offset:3px}
+.tile.t1{background:var(--tile1)} .tile.t2{background:var(--tile2)}
+.tile .kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700}
+.tile h3{font-family:var(--display);font-size:1.6rem;margin:0;line-height:1}
+.tile p{margin:0;color:var(--ink-soft);font-size:.95rem}
+.preview{background:var(--card);border-radius:10px;border:1.5px solid var(--line);min-height:110px;display:grid;place-items:center;padding:10px;font-variant-numeric:tabular-nums}
+.preview .big{font-family:var(--display);font-size:1.5rem;font-weight:800;text-align:center;line-height:1.3}
+.preview .big small{display:block;font-family:var(--body);font-weight:700;font-size:.85rem;color:var(--ink-soft)}
+.mini{display:grid;grid-template-columns:repeat(7,20px);font-size:1rem;line-height:20px;text-align:center}
+.mini .e{color:var(--pe);font-weight:700} .mini .z{color:var(--pz);font-weight:700}
+.mini .ln{grid-column:1/-1;border-top:2px solid var(--ink);height:0;margin:2px 0}
+.go{font-weight:700;color:var(--pen)}
+
+/* Übungsansicht */
+.back{all:unset;cursor:pointer;font-weight:700;color:var(--pen);display:inline-flex;gap:6px;margin-bottom:14px}
+.back:focus-visible{outline:2px solid var(--pen);outline-offset:3px;border-radius:4px}
+.vhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.score{font-weight:700;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:4px 14px;font-variant-numeric:tabular-nums}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:18px 0}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-weight:700;font-size:.95rem}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:3px solid var(--pen);outline-offset:-3px}
+.bar label{font-size:.85rem;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.sheet{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:22px;box-shadow:4px 4px 0 var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{all:unset;cursor:pointer;padding:9px 18px;border-radius:10px;border:2px solid var(--ink);font-weight:700;background:var(--card)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--paper)}
+.btn:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.btn:hover{filter:brightness(1.06)}
+.msg{margin-top:16px;padding:10px 14px;border-radius:10px;font-weight:700;min-height:1.5em}
+.msg:empty{display:none}
+.msg.ok{background:var(--wash3);color:var(--green)}
+.msg.bad{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
+.msg.info{background:var(--wash1);color:var(--ink)}
+.note{color:var(--ink-soft);font-size:.92rem;margin:14px 0 0;max-width:62ch}
+
+input.cell, input.field{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:8px;text-align:center;font-variant-numeric:tabular-nums}
+input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px color-mix(in srgb,var(--pen) 25%,transparent)}
+input.ok{border-color:var(--green);background:var(--wash3)}
+input.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+input.shown{color:var(--ink-soft);border-style:dashed}
+
+/* Nullentrick (Kopf) */
+.dots{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink-soft)}
+.dot.now{border-color:var(--pen);background:color-mix(in srgb,var(--pen) 25%,transparent)}
+.dot.ok{background:var(--green);border-color:var(--green)}
+.dot.bad{background:var(--red);border-color:var(--red)}
+.task{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.6rem);display:flex;flex-wrap:wrap;align-items:center;gap:.3em;font-variant-numeric:tabular-nums}
+.task input.field{font-family:var(--display);font-weight:800;font-size:inherit;width:6.2em;padding:0 .2em}
+
+/* Schriftlich */
+.written{overflow-x:auto;padding:4px 0}
+.wgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.wgrid > div{width:2.3rem;height:2.3rem;display:grid;place-items:center}
+.wgrid .mcr{height:1.9rem}
+.wgrid input.cc.t0{color:var(--pe)} .wgrid input.cc.t1{color:var(--pz)} .wgrid input.cc.t2{color:var(--ph)}
+.wgrid .opc{font-family:var(--display);font-weight:800}
+.wgrid .now{background:var(--mark);color:#1d2b53;border-radius:6px}
+.wgrid .pp{height:2.6rem}
+.wgrid .carry{height:1.9rem;border-bottom:3px solid var(--ink)}
+.wgrid input.cell{width:2rem;height:2rem;font-size:1.4rem;padding:0}
+.wgrid input.cc{width:1.45rem;height:1.45rem;font-size:.9rem;font-weight:700;color:var(--red);border-radius:6px;padding:0}
+.wgrid .res{padding-top:6px;height:2.7rem}
+.p0{color:var(--pe)} .p1{color:var(--pz)} .p2{color:var(--ph)}
+.wgrid .ex.p0,.wgrid .ex.p1,.wgrid .ex.p2{font-weight:800}
+.wgrid .zero{font-weight:700;opacity:.7}
+.wgrid input.t0{color:var(--pe);background:var(--we);border-color:color-mix(in srgb,var(--pe) 40%,var(--line))}
+.wgrid input.t1{color:var(--pz);background:var(--wz);border-color:color-mix(in srgb,var(--pz) 40%,var(--line))}
+.wgrid input.t2{color:var(--ph);background:var(--wh);border-color:color-mix(in srgb,var(--ph) 40%,var(--line))}
+.wgrid input.cell:focus{border-color:var(--pen)}
+.wgrid input.cell.ok{border-color:var(--green);background:var(--wash3)}
+.wgrid input.cell.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+.wgrid input.shown{border-style:dashed}
+.tag{font-family:var(--display);font-weight:800;font-size:.85rem;width:1.6rem;height:1.6rem;border-radius:50%;display:grid;place-items:center;color:var(--card)}
+.tag.t0{background:var(--pe)} .tag.t1{background:var(--pz)} .tag.t2{background:var(--ph)}
+.sw{display:inline-block;width:.8em;height:.8em;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.sw.t0{background:var(--pe)} .sw.t1{background:var(--pz)} .sw.t2{background:var(--ph)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--ink-soft);margin-top:10px;justify-content:center}
+.legend b{color:var(--red)}
+
+@media (max-width:480px){
+  .sheet{padding:16px}
+  .wgrid > div{width:2.05rem}
+  .wgrid input.cell{width:1.8rem}
+}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+
+<div class="wrap">
+
+<!-- ÜBERSICHT -->
+<section id="home">
+  <h1>Multiplizieren bis 1 Million</h1>
+  <p class="lead">Wähle eine Kachel. Zuerst den Nullentrick im Kopf, dann schriftlich mit immer grösseren Multiplikatoren.</p>
+  <div class="tiles">
+    <button class="tile t1" data-go="kopf">
+      <span class="kicker">Weg 1</span>
+      <h3>Nullentrick</h3>
+      <div class="preview"><span class="big num">30 · 80<small>3 · 8 = 24 → 2 Nullen anhängen</small>2 400</span></div>
+      <p>Zehner-, Hunderter- und Tausenderzahlen im Kopf malrechnen. 10 Aufgaben pro Runde.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+    <button class="tile t2" data-go="schriftlich">
+      <span class="kicker">Weg 2</span>
+      <h3>Schriftlich</h3>
+      <div class="preview">
+        <div class="mini num" aria-hidden="true">
+          <span></span><span class="z">1</span><span class="e">8</span><span>·</span><span>6</span><span>4</span><span>7</span>
+          <span></span><span></span><span></span><span class="e">5</span><span class="e">1</span><span class="e">7</span><span class="e">6</span>
+          <span></span><span></span><span></span><span class="z">6</span><span class="z">4</span><span class="z">7</span><span class="z">0</span>
+          <span class="ln"></span>
+          <span></span><span></span><span>1</span><span>1</span><span>6</span><span>4</span><span>6</span>
+        </div>
+      </div>
+      <p>Untereinander rechnen mit ein-, zwei- oder dreistelligem Multiplikator.</p>
+      <span class="go">Übung öffnen →</span>
+    </button>
+  </div>
+</section>
+
+<!-- NULLENTRICK -->
+<section id="kopf" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Nullentrick</h2><span class="score" id="k-score">Runde 1</span></div>
+  <div class="bar"><span><label>Schwierigkeit</label><span class="seg" data-for="kopf">
+    <button data-lv="1">Leicht</button><button data-lv="2" aria-pressed="true">Mittel</button><button data-lv="3">Schwer</button></span></span></div>
+  <div class="sheet">
+    <p class="note" id="k-level" style="margin:0 0 12px"></p>
+    <div class="dots" id="k-dots"></div>
+    <div id="k-body"></div>
+    <div class="msg" id="k-msg"></div>
+    <div class="btns" id="k-btns"></div>
+  </div>
+  <p class="note">Tipp: Lass zuerst alle Nullen weg und rechne das kleine Einmaleins. Zähle dann die Nullen beider Zahlen und hänge sie an. Achtung bei 5 · 2, 5 · 4, 5 · 6 und 5 · 8: Da entsteht noch eine Null dazu!</p>
+</section>
+
+<!-- SCHRIFTLICH -->
+<section id="schriftlich" hidden>
+  <button class="back" data-go="home">← Übersicht</button>
+  <div class="vhead"><h2>Schriftlich multiplizieren</h2><span class="score" id="w-score">Richtig gelöst: 0</span></div>
+  <div class="bar">
+    <span><label>Multiplikator</label><span class="seg" data-for="wlen">
+      <button data-v="1" aria-pressed="true">1-stellig</button><button data-v="2">2-stellig</button><button data-v="3">3-stellig</button></span></span>
+  </div>
+  <div class="sheet">
+    <div class="written"><div class="wgrid" id="w-grid"></div></div>
+    <div class="legend" id="w-legend"></div>
+    <div class="btns">
+      <button class="btn primary" id="w-check">Prüfen</button>
+      <button class="btn" id="w-show">Lösung zeigen</button>
+      <button class="btn" id="w-new">Neue Rechnung</button>
+    </div>
+    <div class="msg" id="w-msg"></div>
+  </div>
+  <p class="note" id="w-note"></p>
+</section>
+
+</div>
+
+<script>
+// ---------- Hilfsfunktionen ----------
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const parse = s => { const t = String(s).replace(/[\s'’.  ]/g,''); return /^\d+$/.test(t) ? Number(t) : null; };
+const zerosOf = n => { let z=0; while(n>0 && n%10===0){ n/=10; z++; } return z; };
+const core = n => n / 10**zerosOf(n);
+const nullen = z => z===1 ? '1 Null' : z + ' Nullen';
+
+// ---------- Navigation ----------
+const views = ['home','kopf','schriftlich'];
+function show(id){
+  if(!views.includes(id)) id='home';
+  views.forEach(v => document.getElementById(v).hidden = v!==id);
+  window.scrollTo(0,0);
+  if(id==='kopf') focusKopf();
+  if(id==='schriftlich') wFocusStart();
+}
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+  const id = b.dataset.go;
+  if(location.hash.slice(1)!==id) location.hash = id==='home' ? '' : id;
+  show(id);
+}));
+window.addEventListener('hashchange', () => show(location.hash.slice(1)||'home'));
+
+function seg(name, onChange){
+  const el = document.querySelector(`.seg[data-for="${name}"]`);
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+    onChange(b.dataset.lv ?? b.dataset.v);
+  }));
+  const cur = el.querySelector('[aria-pressed="true"]');
+  return cur.dataset.lv ?? cur.dataset.v;
+}
+function setMsg(el, text, kind){ el.textContent = text; el.className = 'msg ' + (kind||''); }
+
+// =========================================================
+// 1) NULLENTRICK
+// =========================================================
+const K = { lv: 2, tasks: [], i: 0, results: [], answered: false, round: 1, first: true };
+const K_LEVEL_TEXT = {
+  1: 'Leicht: Eine Zahl ist einstellig, z. B. 40 · 7 oder 3 · 600.',
+  2: 'Mittel: Beide Zahlen haben Nullen, z. B. 30 · 80 oder 500 · 60.',
+  3: 'Schwer: Viele Nullen und Fallen mit der 5, z. B. 600 · 600 oder 50 · 400.'
+};
+K.lv = Number(seg('kopf', v => { K.lv = Number(v); K.round = 1; kNewRound(); focusKopf(); }));
+
+function kGen(lv){
+  for(let t=0;t<500;t++){
+    let a, b;
+    if(lv===1){ a = rnd(2,9)*10**rnd(1,3); b = rnd(2,9); }
+    else if(lv===2){ const m1 = rnd(1,2), m2 = m1===2 ? 1 : rnd(1,2); a = rnd(2,9)*10**m1; b = rnd(2,9)*10**m2; }
+    else {
+      const m = rnd(3,5), m1 = rnd(1,m-1), m2 = m-m1;
+      let d1 = rnd(2,9), d2 = rnd(2,9);
+      if(Math.random()<0.4){ d1 = 5; d2 = pick([2,4,6,8]); }
+      a = d1*10**m1; b = d2*10**m2;
+    }
+    if(a*b >= 1000000) continue;
+    if(Math.random()<0.5) [a,b] = [b,a];
+    return {a,b};
+  }
+  return {a:30,b:80};
+}
+function kNewRound(){
+  const seen = new Set(); K.tasks = [];
+  if(K.first && K.lv===2){ K.tasks.push({a:30,b:80},{a:500,b:60}); seen.add('30x80'); seen.add('500x60'); }
+  K.first = false;
+  let g=0; while(K.tasks.length<10 && g++<500){ const t = kGen(K.lv), k = t.a+'x'+t.b; if(!seen.has(k)){ seen.add(k); K.tasks.push(t); } }
+  K.i = 0; K.results = []; K.answered = false;
+  $('#k-level').textContent = K_LEVEL_TEXT[K.lv];
+  kRender();
+}
+function kRender(){
+  const dots = $('#k-dots'); dots.innerHTML = '';
+  K.tasks.forEach((_,j) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (K.results[j]===true?' ok':K.results[j]===false?' bad':j===K.i?' now':'');
+    dots.appendChild(d);
+  });
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+  const body = $('#k-body'), btns = $('#k-btns');
+  setMsg($('#k-msg'),'');
+  btns.innerHTML = '';
+  if(K.i >= K.tasks.length){
+    const n = K.results.filter(Boolean).length;
+    body.innerHTML = `<div class="task">${n} von 10 richtig</div>`;
+    setMsg($('#k-msg'), n>=9 ? 'Ausgezeichnet! Probiere die nächste Schwierigkeit.' : n>=6 ? 'Gut gemacht. Mit einer weiteren Runde wirst du noch sicherer.' : 'Übe noch eine Runde. Denk an den Tipp unten.', n>=6?'ok':'info');
+    const b = document.createElement('button'); b.className='btn primary'; b.textContent='Neue Runde';
+    b.onclick = () => { K.round++; kNewRound(); focusKopf(); };
+    btns.appendChild(b); b.focus(); return;
+  }
+  const t = K.tasks[K.i];
+  body.innerHTML = `<div class="task"><span class="num">${fmt(t.a)}</span><span>·</span><span class="num">${fmt(t.b)}</span><span>=</span><input class="field" id="k-in" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort"></div>`;
+  const b = document.createElement('button'); b.className='btn primary'; b.id='k-go'; b.textContent='Prüfen';
+  b.onclick = kStep; btns.appendChild(b);
+  $('#k-in').addEventListener('keydown', e => { if(e.key==='Enter') kStep(); });
+  K.answered = false;
+}
+function kStep(){
+  if(K.answered){ K.i++; kRender(); focusKopf(); return; }
+  const inp = $('#k-in'), v = parse(inp.value), t = K.tasks[K.i];
+  if(v===null){ setMsg($('#k-msg'),'Schreibe eine Zahl ins Feld.','info'); inp.focus(); return; }
+  const ans = t.a*t.b, ok = v===ans;
+  K.results[K.i] = ok; K.answered = true;
+  inp.classList.add(ok?'ok':'bad'); inp.readOnly = true;
+  const ca = core(t.a), cb = core(t.b), z = zerosOf(t.a)+zerosOf(t.b);
+  const how = `${ca} · ${cb} = ${ca*cb}, dazu ${nullen(z)} → ${fmt(ans)}.`;
+  setMsg($('#k-msg'), ok ? 'Richtig! ' + how : 'Leider nein. ' + how, ok?'ok':'bad');
+  $('#k-go').textContent = K.i===9 ? 'Auswertung' : 'Weiter';
+  $('#k-go').focus();
+  $('#k-dots').children[K.i].className = 'dot ' + (ok?'ok':'bad');
+  $('#k-score').textContent = `Runde ${K.round} · ${K.results.filter(Boolean).length} richtig`;
+}
+function focusKopf(){ setTimeout(() => $('#k-in')?.focus(), 30); }
+kNewRound();
+
+// =========================================================
+// 2) SCHRIFTLICH  (kleine Zahl links · zuerst Einer, dann Zehner, dann Hunderter)
+// =========================================================
+const W = { len:1, score:0, solved:false, shown:false, firsts:{1:[8,647],2:[18,647],3:[590,622]} };
+const PL = ['E','Z','H'], PLN = ['Einer','Zehner','Hunderter'], PCOL = ['grün','blau','violett'];
+W.len = Number(seg('wlen', v => { W.len = Number(v); wNew(); }));
+
+function wGen(len){
+  if(W.firsts[len]){ const f = W.firsts[len]; W.firsts[len] = null; return {m:f[0], a:f[1]}; }
+  for(let t=0;t<500;t++){
+    let m, a;
+    if(len===1){ m = rnd(3,9); a = Math.random()<0.6 ? rnd(234,989) : rnd(1012,4987); }
+    else if(len===2){ do{ m = rnd(12,89); }while(m%10===0 || m%11===0); a = Math.random()<0.7 ? rnd(213,987) : rnd(1012,2987); }
+    else { m = Math.random()<0.25 ? rnd(2,8)*100 + rnd(1,9)*10 : rnd(213,789); a = rnd(Math.max(m+1,312), 989); }
+    if(a%10===0 || m>=a || m*a>=1000000) continue;
+    return {m,a};
+  }
+  return {m:8,a:647};
+}
+function wNote(){
+  if(W.len===1) return `Rechne von rechts nach links: zuerst ${W.m} · ${String(W.a).slice(-1)} Einer, dann die Zehner usw. Den Behalte schreibst du klein über den Strich, eine Spalte weiter links.`;
+  const used = W.rows.map(r => `${PLN[r.k]} (${PCOL[r.k]})`).join(', dann ');
+  return `Zuerst ${used}. Die Behalte vom Malrechnen schreibst du klein über den Strich, jeweils in die Reihe mit der passenden Farbe. In jeder neuen Zeile steht rechts eine Null mehr, sie ist schon eingetragen. Zum Schluss addierst du die Zeilen; diese Behalte kommen über den Schlussstrich.` + (String(W.m).includes('0') ? ' Die Null im Multiplikator braucht keine eigene Zeile.' : '');
+}
+function wNew(){
+  Object.assign(W, wGen(W.len)); W.solved=false; W.shown=false;
+  wBuild();
+  setMsg($('#w-msg'),'');
+  $('#w-note').textContent = wNote();
+}
+function wBuild(){
+  const ms = String(W.m), as = String(W.a), expr = ms + '·' + as, res = W.m*W.a;
+  const rows = [];
+  if(ms.length>1){
+    for(let k=0;k<ms.length;k++){ const d = +ms[ms.length-1-k]; if(d===0) continue; rows.push({k, d, exp:W.a*d, len:String(W.a*d).length + k}); }
+  }
+  const n = Math.max(expr.length, String(res).length, ...rows.map(r=>r.len)) + 1;
+  const exOff = n - expr.length;
+  const kcol = {}; for(let i=0;i<ms.length;i++) kcol[ms.length-1-i] = exOff + i;
+  W.rows = rows; W.res = res; W.n = n; W.kcol = kcol;
+
+  const g = $('#w-grid');
+  g.style.gridTemplateColumns = `repeat(${n}, auto) auto`;
+  let h = '';
+  // Aufgabe: kleine Zahl links
+  for(let c=0;c<n;c++){
+    const i = c - exOff, ch = i>=0 ? expr[i] : '';
+    let cls = 'ex';
+    if(ch==='·') cls += ' opc';
+    else if(i>=0 && i<ms.length) cls += ' p' + (ms.length-1-i);
+    h += `<div class="${cls}" id="w-x${c}">${ch}</div>`;
+  }
+  h += '<div class="ex"></div>';
+  // Teilprodukte: Einer, Zehner, Hunderter
+  // Alle Behalte vom Malrechnen über dem Strich unter der Aufgabe (eine farbige Reihe pro Zeile)
+  rows.forEach((r,ri) => {
+    const mc = ri===rows.length-1 ? 'carry' : 'mcr';
+    for(let c=0;c<n;c++) h += c < n-1-r.k
+      ? `<div class="${mc}"><input class="cc t${r.k}" id="w-m${ri}-${c}" data-row="m${ri}" data-c="${c}" inputmode="numeric" autocomplete="off" aria-label="Behalte ${PLN[r.k]}zeile, Spalte ${c+1}"></div>`
+      : `<div class="${mc}"></div>`;
+    h += `<div class="${mc}"></div>`;
+  });
+  rows.forEach((r,ri) => {
+    for(let c=0;c<n;c++){
+      if(c > n-1-r.k) h += `<div class="pp zero p${r.k}">0</div>`;
+      else h += `<div class="pp"><input class="cell t${r.k}" id="w-p${ri}-${c}" data-row="${ri}" data-c="${c}" inputmode="numeric" autocomplete="off" aria-label="${PLN[r.k]}zeile, Spalte ${c+1}"></div>`;
+    }
+    h += `<div class="pp"><span class="tag t${r.k}">${PL[r.k]}</span></div>`;
+  });
+  // Behalte über dem Strich
+  for(let c=0;c<n;c++) h += c<n-1
+    ? `<div class="carry"><input class="cc" id="w-c${c}" data-row="c" data-c="${c}" inputmode="numeric" autocomplete="off" aria-label="Behalte, Spalte ${c+1}"></div>`
+    : '<div class="carry"></div>';
+  h += '<div class="carry"></div>';
+  // Ergebnis
+  for(let c=0;c<n;c++) h += `<div class="res"><input class="cell" id="w-r${c}" data-row="r" data-c="${c}" inputmode="numeric" autocomplete="off" aria-label="Ergebnis, Spalte ${c+1}"></div>`;
+  h += '<div class="res"></div>';
+  g.innerHTML = h;
+
+  $('#w-legend').innerHTML = rows.length
+    ? '<span>Tippe von rechts nach links</span><span>Farbige kleine Felder über dem Strich = Behalte vom Malrechnen</span><span><i class="sw t0"></i>Einer</span><span><i class="sw t1"></i>Zehner</span>' + (ms.length>2 ? '<span><i class="sw t2"></i>Hunderter</span>' : '') + '<span><b>Behalte</b> vom Addieren = über dem Schlussstrich</span>'
+    : '<span>Tippe von rechts nach links</span><span>Gelb = die Ziffer, mit der du rechnest</span><span><b>Behalte</b> = kleines Feld über dem Strich</span>';
+
+  const rowIds = [...rows.map((_,i)=>'m'+i), ...rows.map((_,i)=>String(i)), 'c', 'r'];
+  const cellOf = (row, c) => document.getElementById(row==='c' ? 'w-c'+c : row==='r' ? 'w-r'+c : row[0]==='m' ? `w-m${row.slice(1)}-${c}` : `w-p${row}-${c}`);
+  g.querySelectorAll('input').forEach(i => {
+    const row = i.dataset.row, c = Number(i.dataset.c);
+    i.addEventListener('focus', () => {
+      i.select();
+      const r = rows[Number(row[0]==='m' ? row.slice(1) : row)];
+      if(r) document.getElementById('w-x'+kcol[r.k]).classList.add('now');
+      else if(!rows.length && row==='r') document.getElementById('w-x'+kcol[0]).classList.add('now');
+    });
+    i.addEventListener('blur', () => g.querySelectorAll('.now').forEach(x => x.classList.remove('now')));
+    i.addEventListener('input', () => {
+      i.value = i.value.replace(/\D/g,'').slice(-1);
+      i.classList.remove('ok','bad','shown');
+      if(i.value!=='' && row!=='c' && row[0]!=='m'){ const nx = cellOf(row, c-1); nx?.focus(); }
+    });
+    i.addEventListener('keydown', e => {
+      const ri = rowIds.indexOf(row);
+      const go = (r2, c2) => { const t = cellOf(r2, c2); if(t){ e.preventDefault(); t.focus(); } };
+      if(e.key==='Enter'){ e.preventDefault(); wCheck(); }
+      else if(e.key==='Backspace' && i.value===''){ const nx = cellOf(row, c+1); if(nx){ e.preventDefault(); nx.value=''; nx.focus(); } }
+      else if(e.key==='ArrowLeft') go(row, c-1);
+      else if(e.key==='ArrowRight') go(row, c+1);
+      else if(e.key==='ArrowUp' && ri>0) go(rowIds[ri-1], c);
+      else if(e.key==='ArrowDown' && ri<rowIds.length-1) go(rowIds[ri+1], c);
+    });
+  });
+  wFocusStart();
+}
+function wFocusStart(){
+  setTimeout(() => {
+    const first = W.rows && W.rows.length ? document.getElementById(`w-p0-${W.n-1-W.rows[0].k}`) : document.getElementById('w-r'+(W.n-1));
+    first?.focus();
+  }, 30);
+}
+function wRead(cells){
+  const s = cells.map(c => c.value || ' ').join('');
+  if(!s.trim()) return {empty:true};
+  return { empty:false, val:Number(s.replace(/ /g,'')), gap:/\d +\d/.test(s.trim()), endOk:s[s.length-1]!==' ' };
+}
+function wCarries(){
+  // erwartete Behalte, Spalte → Ziffer
+  const out = {}, n = W.n;
+  if(!W.rows.length){
+    const da = String(W.a).split('').reverse().map(Number); let c = 0;
+    da.forEach((x,p) => { c = Math.floor((W.m*x + c)/10); if(c) out[n-2-p] = c; });
+  } else {
+    const vals = W.rows.map(r => r.exp * 10**r.k); let c = 0;
+    for(let p=0;p<n;p++){ const s = vals.reduce((t,v) => t + Math.floor(v/10**p)%10, 0) + c; c = Math.floor(s/10); if(c && n-2-p>=0) out[n-2-p] = c; }
+  }
+  return out;
+}
+function wCheck(){
+  const msgs = []; let all = true, any = false;
+  const check = (cells, exp, label, endHint) => {
+    const x = wRead(cells);
+    cells.forEach(c => c.classList.remove('ok','bad','shown'));
+    if(x.empty){ all = false; msgs.push(label + ' fehlt noch.'); return; }
+    any = true;
+    const good = !x.gap && x.endOk && x.val===exp;
+    cells.forEach(c => { if(c.value!=='') c.classList.add(good ? 'ok' : 'bad'); });
+    if(good) return;
+    all = false;
+    if(!x.gap && !x.endOk && x.val===exp) msgs.push(label + ': Die Zahl stimmt, aber sie muss ' + endHint + ' enden.');
+    else if(x.gap) msgs.push(label + ': Da ist eine Lücke zwischen den Ziffern.');
+    else msgs.push(label + ' stimmt noch nicht.');
+  };
+  W.rows.forEach((r,ri) => {
+    const cells = []; for(let c=0;c<=W.n-1-r.k;c++) cells.push(document.getElementById(`w-p${ri}-${c}`));
+    check(cells, r.exp, `Die ${PLN[r.k]}zeile (${r.d} · ${W.a})`, r.k ? 'direkt vor der Null' : 'ganz rechts');
+  });
+  const rc = []; for(let c=0;c<W.n;c++) rc.push(document.getElementById('w-r'+c));
+  check(rc, W.res, 'Das Ergebnis', 'ganz rechts');
+  const msg = $('#w-msg');
+  if(!any){ setMsg(msg, W.rows.length ? 'Beginne mit der grünen Einerzeile ganz rechts.' : 'Beginne ganz rechts bei den Einern.', 'info'); return; }
+  if(all){
+    setMsg(msg, `Richtig! ${fmt(W.m)} · ${fmt(W.a)} = ${fmt(W.res)}`, 'ok');
+    if(!W.solved && !W.shown){ W.solved = true; W.score++; $('#w-score').textContent = `Richtig gelöst: ${W.score}`; }
+    return;
+  }
+  setMsg(msg, msgs.join(' ') + ' Schau dir die roten Felder nochmals an.', 'bad');
+}
+function wShow(){
+  W.shown = true;
+  const fill = (ids, val) => {
+    const s = String(val);
+    ids.forEach((id,c) => { const el = document.getElementById(id); const k = c - (ids.length - s.length); el.value = k>=0 ? s[k] : ''; el.classList.remove('ok','bad'); el.classList.add('shown'); });
+  };
+  W.rows.forEach((r,ri) => { const ids = []; for(let c=0;c<=W.n-1-r.k;c++) ids.push(`w-p${ri}-${c}`); fill(ids, r.exp); });
+  const ids = []; for(let c=0;c<W.n;c++) ids.push('w-r'+c); fill(ids, W.res);
+  const car = wCarries();
+  for(let c=0;c<W.n-1;c++){ const el = document.getElementById('w-c'+c); el.value = car[c] || ''; el.classList.add('shown'); }
+  W.rows.forEach((r,ri) => {
+    const da = String(W.a).split('').reverse().map(Number); let cc = 0;
+    da.forEach((x,p) => { cc = Math.floor((r.d*x + cc)/10); const el = document.getElementById(`w-m${ri}-${W.n-2-r.k-p}`); if(el){ el.value = cc || ''; el.classList.add('shown'); } });
+  });
+  setMsg($('#w-msg'), 'So sieht die Lösung aus. Vergleiche mit deinem Weg und versuche dann eine neue Rechnung.', 'info');
+}
+$('#w-check').onclick = wCheck;
+$('#w-show').onclick = wShow;
+$('#w-new').onclick = wNew;
+wNew();
+
+// Startansicht (Deep-Link per #kopf oder #schriftlich)
+show(location.hash.slice(1) || 'home');
+</script>
+
+</body></html>

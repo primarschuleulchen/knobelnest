@@ -1,0 +1,623 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Flexibel rechnen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&family=Fredoka:wght@400&display=swap">
+<style>
+/* Layout: kariertes Heftblatt wie «Multiplizieren üben» und «Dividieren üben»; Übersicht mit fünf Trick-Kacheln, jede öffnet eine Schritt-für-Schritt-Präsentation mit «Jetzt du» */
+:root{
+  --paper:#e6f0fc; --grid:#e1e8f4; --ink:#1d2b53; --ink-soft:#5b6890;
+  --pen:#2752c9; --red:#c9372b; --green:#1b8048; --mark:#ffd84a;
+  --wash1:#fff3c7; --wash2:#dfeaff; --wash3:#dcf2e3; --wash4:#efe2f8; --card:#ffffff; --line:#c3cde3;
+  --c1:#2752c9; --c2:#1b8048;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Andika","Segoe UI",system-ui,sans-serif;
+  --title:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131a2c; --grid:#1f2840; --ink:#e6ebf8; --ink-soft:#9ba7c8;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --wash4:#2c1d40; --card:#1a2238; --line:#36415f;
+  --c1:#93b2ff; --c2:#62d597; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#131a2c; --grid:#1f2840; --ink:#e6ebf8; --ink-soft:#9ba7c8;
+  --pen:#93b2ff; --red:#ff8577; --green:#62d597; --mark:#ffd84a;
+  --wash1:#30290f; --wash2:#182751; --wash3:#143222; --wash4:#2c1d40; --card:#1a2238; --line:#36415f;
+  --c1:#93b2ff; --c2:#62d597; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 16px}
+h1,h2,h3{font-family:var(--title);font-weight:400;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.8rem,5vw,2.6rem)}
+h2{font-size:clamp(1.35rem,3.6vw,1.9rem)}
+.lead{color:var(--ink-soft);max-width:70ch;margin:.3rem 0 0;font-size:.95rem}
+.hl-t{background:linear-gradient(transparent 55%,var(--mark) 55%);padding:0 .1em;color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hl-t{color:#1d2b53;background:var(--mark)}}
+:root[data-theme="dark"] .hl-t{color:#1d2b53;background:var(--mark)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+i.c1{font-style:normal;color:var(--c1);font-weight:800}
+i.c2{font-style:normal;color:var(--c2);font-weight:800}
+.strk{color:var(--red);text-decoration:line-through;text-decoration-thickness:.12em}
+
+/* Kacheln */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}
+.group{margin-top:16px}
+.group h2{font-size:clamp(1.2rem,3.4vw,1.5rem)}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:7px;padding:13px 15px;border-radius:14px;
+  border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;min-width:0}
+.tile:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tile:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tile:focus-visible{outline:3px solid var(--pen);outline-offset:3px}
+.tile.w1{background:var(--wash1)} .tile.w2{background:var(--wash2)} .tile.w3{background:var(--wash3)} .tile.w4{background:var(--wash4)}
+.kicker{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:700}
+.tile h3{font-size:1.2rem}
+.tile p{margin:0;color:var(--ink-soft);font-size:.86rem;line-height:1.35}
+.preview{background:var(--card);border-radius:10px;border:1.5px solid var(--line);padding:7px 8px;text-align:center;font-family:var(--display);font-weight:800;font-size:1rem;line-height:1.3;font-variant-numeric:tabular-nums}
+.preview small{display:block;font-family:var(--body);font-weight:700;font-size:.82rem;color:var(--ink-soft)}
+.go{font-weight:700;color:var(--pen);margin-top:auto}
+
+/* Präsentation */
+.back{all:unset;cursor:pointer;font-weight:700;color:var(--pen);display:inline-flex;gap:6px}
+.topbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-bottom:8px}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{all:unset;cursor:pointer;padding:5px 16px;font-weight:700;font-size:.95rem;color:var(--ink)}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:3px solid var(--pen);outline-offset:-3px}
+.choose{display:flex;flex-wrap:wrap;align-items:center;gap:8px 28px;margin-top:8px}
+.cgroup{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.cgroup[hidden]{display:none}
+.back:focus-visible{outline:2px solid var(--pen);outline-offset:3px;border-radius:4px}
+.vhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 16px}
+.vhead .kicker{display:block;margin-bottom:2px}
+.pill{font-weight:700;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:4px 14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sheet{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:16px 20px;box-shadow:4px 4px 0 var(--ink);margin-top:10px}
+.dots{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.dot{all:unset;cursor:pointer;width:16px;height:16px;border-radius:50%;border:2px solid var(--ink-soft)}
+.dot.done{background:var(--ink-soft)}
+.dot.now{border-color:var(--pen);background:var(--pen)}
+.dot:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+
+.boardwrap{overflow-x:auto;padding:6px 2px 10px}
+.board{display:grid;grid-template-columns:max-content max-content max-content;column-gap:.45em;row-gap:.25em;width:max-content;min-width:0;
+  font-family:var(--display);font-weight:600;font-size:clamp(1.3rem,min(4.4vw,4.8vh),2.4rem);line-height:1.3;font-variant-numeric:tabular-nums}
+.board .l{text-align:right;white-space:nowrap}
+.board .o{text-align:center;color:var(--ink-soft)}
+.board .r{white-space:nowrap}
+.board.ralign .r{text-align:right}
+.board .ul{border-bottom:3px solid var(--ink)}
+.board .aside{grid-column:1/-1;font-family:var(--body);font-weight:700;font-size:.55em;background:var(--wash2);border-radius:10px;padding:.35em .8em;justify-self:start;margin:.15em 0 .3em}
+.board .hot{background:color-mix(in srgb,var(--mark) 45%,transparent);border-radius:6px}
+.board .hot.aside{background:var(--wash1)}
+@media (prefers-reduced-motion:no-preference){.board .hot{animation:pop .45s ease-out}}
+@keyframes pop{from{background:var(--mark)}}
+.res{color:var(--red);font-weight:800;border-bottom:4px double var(--red)}
+
+.say{display:flex;gap:12px;align-items:flex-start;background:var(--wash1);border-radius:12px;padding:10px 14px;margin-top:8px;font-size:clamp(1rem,min(2.4vw,2.6vh),1.15rem)}
+.say .nr{font-family:var(--display);font-weight:800;font-size:.85rem;white-space:nowrap;background:var(--ink);color:var(--paper);border-radius:999px;padding:1px 10px;margin-top:3px}
+.say p{margin:0;min-width:0}
+.merke{margin-top:8px;border:2.5px dashed var(--green);border-radius:12px;padding:8px 14px;background:var(--wash3)}
+.merke b.t{font-family:var(--display);font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-size:.9rem;display:block}
+.merke p{margin:.2rem 0 0}
+
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.btn{all:unset;cursor:pointer;padding:9px 18px;border-radius:10px;border:2px solid var(--ink);font-weight:700;background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--paper)}
+.btn[disabled]{opacity:.35;cursor:default}
+.btn:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.btn:not([disabled]):hover{filter:brightness(1.06)}
+.btn.ghost{border-color:var(--line)}
+.btn.you{background:var(--green);border-color:var(--green);color:var(--card);font-family:var(--title);font-weight:400;font-size:1.15rem;padding:7px 22px;margin-left:auto}
+@media (max-width:560px){.btn.you{margin-left:0}}
+.keys{color:var(--ink-soft);font-size:.85rem;margin:10px 0 0}
+
+/* Jetzt du */
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-bottom:8px}
+.ptask{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,5vw,2.2rem);font-variant-numeric:tabular-nums}
+.prow{display:flex;flex-wrap:wrap;align-items:center;gap:.3em;font-family:var(--display);font-weight:600;font-size:clamp(1.15rem,3.8vw,1.6rem);margin:.4em 0;font-variant-numeric:tabular-nums}
+input.field{font:inherit;font-weight:800;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:8px;text-align:center;padding:0 .2em;font-variant-numeric:tabular-nums}
+input.field:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px color-mix(in srgb,var(--pen) 25%,transparent)}
+input.field.ok{border-color:var(--green);background:var(--wash3)}
+input.field.bad{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--paper))}
+input.field.shown{border-style:dashed;color:var(--ink-soft)}
+.msg{margin-top:14px;padding:10px 14px;border-radius:10px;font-weight:700}
+.msg:empty{display:none}
+.msg.ok{background:var(--wash3);color:var(--green)}
+.msg.bad{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
+.msg.info{background:var(--wash1);color:var(--ink)}
+
+@media (max-width:480px){.sheet{padding:16px}}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+
+<div class="wrap">
+
+<!-- ÜBERSICHT -->
+<section id="home">
+  <h1>Flexibel rechnen</h1>
+  <p class="lead">Beim flexiblen Rechnen kommst du schneller zum Resultat, weil du die Rechnung geschickt vereinfachst. Wähle einen Trick. Mit «Weiter» wird er Schritt für Schritt erklärt.</p>
+  <div class="group"><h2>Rechentricks</h2><div class="tiles" id="tiles-a"></div></div>
+  <div class="group"><h2>Verteilungsgesetze</h2><div class="tiles" id="tiles-b"></div></div>
+</section>
+
+<!-- PRÄSENTATION -->
+<section id="show" hidden>
+  <div class="topbar">
+    <button class="back" data-go="home">← Übersicht</button>
+  </div>
+  <div class="vhead">
+    <div><span class="kicker" id="v-kicker"></span><h2 id="v-title"></h2></div>
+    <span class="pill" id="v-count"></span>
+  </div>
+  <div class="choose">
+    <span class="cgroup" id="v-choose" hidden><span class="kicker">Rechnen mit</span><span class="seg" id="v-seg"></span></span>
+    <span class="cgroup"><span class="kicker">Schwierigkeit</span><span class="seg" id="v-lv"></span></span>
+  </div>
+  <div class="sheet" id="pane-e">
+    <div class="dots" id="v-dots"></div>
+    <div class="boardwrap"><div class="board" id="v-board"></div></div>
+    <div class="say"><span class="nr" id="v-nr"></span><p id="v-say"></p></div>
+    <div class="merke" id="v-merke" hidden><b class="t">Merke</b><p id="v-merke-t"></p></div>
+    <div class="btns">
+      <button class="btn" id="v-prev">← Zurück</button>
+      <button class="btn primary" id="v-next">Weiter →</button>
+      <button class="btn ghost" id="v-new">Anderes Beispiel</button>
+      <button class="btn ghost" id="v-full" hidden>Vollbild</button>
+      <button class="btn you" id="tab-p">Jetzt du! ✎</button>
+    </div>
+  </div>
+
+  <div id="pane-p" hidden>
+    <div class="sheet">
+      <div class="phead"><div class="ptask" id="p-task"></div><span class="pill" id="p-score">Richtig: 0</span></div>
+      <div id="p-body"></div>
+      <div class="btns">
+        <button class="btn primary" id="p-check">Prüfen</button>
+        <button class="btn" id="p-show">Lösung zeigen</button>
+        <button class="btn" id="p-new">Neue Aufgabe</button>
+        <button class="btn ghost" id="tab-e">← Zurück zur Erklärung</button>
+      </div>
+      <div class="msg" id="p-msg"></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- Hilfsfunktionen ----------
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const parse = s => { const t = String(s).replace(/[\s'’.  ]/g,''); return /^\d+$/.test(t) ? Number(t) : null; };
+const ZW = ['','eine Null','zwei Nullen','drei Nullen'];
+const zeros = n => { let z=0; while(n>0 && n%10===0){ n/=10; z++; } return z; };
+const c1 = x => `<i class="c1">${x}</i>`;
+const c2 = x => `<i class="c2">${x}</i>`;
+const res = x => `<span class="res">${x}</span>`;
+
+// Zerlegung für das Verteilungsgesetz: 84 = 80 + 4, 307 = 300 + 7, 640 = 600 + 40
+const splitB = b => b < 100 ? [b - b%10, b%10] : [b - b%100, b%100];
+const partNames = b => b < 100 ? 'Zehner und Einer' : (b%10===0 ? 'Hunderter und Zehner' : 'Hunderter und Einer');
+function expl(a, x){
+  const z = zeros(x);
+  if(z===0) return `${a} · ${x} = ${a*x} kennst du aus dem Einmaleins.`;
+  const k = x / 10**z;
+  return `${a} · ${fmt(x)} = ${fmt(a*x)}, denn ${a} · ${k} = ${a*k} und dann ${ZW[z]} anhängen.`;
+}
+
+// Baut die Schritte: jede Momentaufnahme der Tafel ist ein Schritt
+function builder(){
+  const R = [], S = [];
+  return { R, S, snap(say, hot){ S.push({ rows: R.map(r => ({...r})), say, hot }); } };
+}
+
+// =========================================================
+// Die fünf Tricks
+// =========================================================
+const TRICKS = [
+{
+  key:'t1', kicker:'Trick 1', title:'Verteilungsgesetz Multiplikation', wash:'w1',
+  preview:`7 · 84 = (7 · 80) + (7 · 4)<small>560 + 28</small>= 588`,
+  blurb:'Die grosse Zahl zerlegen, jeden Teil malrechnen, dann zusammenzählen.',
+  ex:{a:7,b:84},
+  rand(){
+    if(this.lv===1) return { a:rnd(2,5), b:rnd(1,4)*10 + rnd(1,9) };
+    if(this.lv===2) return { a:rnd(3,9), b:rnd(2,9)*10 + rnd(1,9) };
+    return { a:rnd(3,9), b:rnd(1,9)*100 + (Math.random()<.5 ? rnd(1,9) : rnd(1,9)*10) };
+  },
+  steps({a,b}){
+    const [t,u] = splitB(b), B = builder(), R = B.R;
+    R.push({l:`${a} · ${b}`, o:'=', r:'?'});
+    B.snap(`Wie viel ist <b>${a} · ${b}</b>? Im Kopf ist das schwierig. Wir machen die Rechnung einfacher.`, 0);
+    R.push({aside:`Zerlege ${b} in ${partNames(b)}: ${b} = ${c1(t)} + ${c2(u)}`});
+    B.snap(`Zerlege die grosse Zahl ${b} in zwei einfache Teile: ${c1(t)} und ${c2(u)}.`, 1);
+    R[0].r = `(${a} · ${c1(t)}) + (${a} · ${c2(u)})`;
+    B.snap(`Jetzt rechnest du <b>jeden Teil</b> mal ${a}. Die Klammern zeigen, was zusammengehört. Dazwischen steht ein Plus.`, 0);
+    R.push({l:'', o:'', r:`${c1(fmt(a*t))} + ${c2(fmt(a*u))}`});
+    B.snap(`${expl(a,t)} ${expl(a,u)}`, 2);
+    R[2].r += ` = ${res(fmt(a*b))}`;
+    B.snap(`Zum Schluss zählst du die Teilresultate zusammen: ${fmt(a*t)} + ${fmt(a*u)} = <b>${fmt(a*b)}</b>.`, 2);
+    return B.S;
+  },
+  merke:'Zerlege die grosse Zahl in einfache Teile (zum Beispiel Zehner und Einer). Rechne jeden Teil mal. Zähle die Teilresultate zusammen.',
+  practice(){
+    const {a,b} = this.rand(), [t,u] = splitB(b);
+    return {
+      task:`${a} · ${b} = ?`,
+      rows:[
+        [`${a} · ${b} = (${a} ·`, {k:'t', sol:t}, `) + (${a} ·`, {k:'u', sol:u}, `)`],
+        [`=`, {k:'pt', sol:a*t}, `+`, {k:'pu', sol:a*u}],
+        [`=`, {k:'r', sol:a*b}]
+      ],
+      check(V){ return {
+        t: V.t!==null && V.u!==null && V.t+V.u===b && V.t>0,
+        u: V.t!==null && V.u!==null && V.t+V.u===b && V.u>0,
+        pt: V.t!==null && V.pt===a*V.t,
+        pu: V.u!==null && V.pu===a*V.u,
+        r: V.r===a*b };
+      }
+    };
+  }
+},
+{
+  key:'t2', kicker:'Trick 2', title:'Trick mit 9 / 99 / 999', wash:'w2', align:'right',
+  preview:`9 · 142<small>10 · 142 − 1 · 142</small>1420 − 142 = 1278`,
+  blurb:'Mit 10, 100 oder 1000 rechnen und die Zahl einmal abziehen.',
+  ex:{f:9,n:142},
+  choices:[9,99,999], sel:0,
+  rand(){
+    const f = this.sel || pick([9,99,999]);
+    const R = { 9:[[11,49],[50,199],[200,999]], 99:[[11,30],[31,99],[100,499]], 999:[[2,9],[11,50],[51,250]] }[f][this.lv-1];
+    let n = rnd(R[0],R[1]); if(n%10===0) n++;
+    return { f, n };
+  },
+  steps({f,n}){
+    const P = f+1, B = builder(), R = B.R;
+    R.push({l:`${f} · ${n}`, o:'=', r:''});
+    B.snap(`Wie viel ist <b>${f} · ${n}</b>? Schau dir die ${f} genau an: Sie ist nur <b>1 weniger als ${fmt(P)}</b>. Mit ${fmt(P)} rechnet es sich viel leichter!`, 0);
+    R.push({l:`${c1(fmt(P))} · ${n}`, o:'=', r:fmt(P*n)});
+    B.snap(`Rechne zuerst mal ${fmt(P)} statt mal ${f}. Das ist leicht: ${ZW[zeros(P)]} anhängen. ${fmt(P)} · ${n} = ${fmt(P*n)}.`, 1);
+    R.push({l:`${c2('1')} · ${n}`, o:'=', r:`− ${fmt(n)}`, ul:true});
+    B.snap(`Aber du solltest nur ${f}-mal rechnen, nicht ${fmt(P)}-mal. Du hast ${n} also <b>einmal zu viel</b>. Darum ziehst du 1 · ${n} wieder ab.`, 2);
+    R.push({l:'', o:'', r:res(fmt(f*n))});
+    B.snap(`Subtrahiere: ${fmt(P*n)} − ${n} = <b>${fmt(f*n)}</b>. Fertig!`, 3);
+    return B.S;
+  },
+  merke:'Mal 9: rechne mal 10 und ziehe die Zahl einmal ab. Mal 99: rechne mal 100 und ziehe die Zahl einmal ab. Mal 999: rechne mal 1000 und ziehe die Zahl einmal ab.',
+  practice(){
+    const {f,n} = this.rand(), P = f+1;
+    return {
+      task:`${f} · ${n} = ?`,
+      rows:[
+        [`${fmt(P)} · ${n} =`, {k:'a', sol:P*n}],
+        [`1 · ${n} = −`, {k:'b', sol:n}],
+        [`${f} · ${n} =`, {k:'r', sol:f*n}]
+      ],
+      check(V){ return { a:V.a===P*n, b:V.b===n, r:V.r===f*n }; }
+    };
+  }
+},
+{
+  key:'t3', kicker:'Trick 3', title:'Verteilungsgesetz Division', wash:'w3',
+  preview:`594 : 6 = (600 : 6) − (6 : 6)<small>100 − 1</small>= 99`,
+  blurb:'Eine Nachbarzahl suchen, die sich leicht teilen lässt.',
+  ex:{d:6,m:100,j:1,s:'−'},
+  rand(){
+    for(;;){
+      const lv = this.lv;
+      const d = lv===1 ? rnd(2,5) : rnd(3,9);
+      const m = lv===1 ? pick([10,20,30,40,50]) : lv===2 ? pick([10,20,30,40,50,60,70,80,90,100]) : pick([100,200,300,400,500]);
+      const j = lv===1 ? 1 : lv===2 ? rnd(1,2) : rnd(1,3);
+      const s = pick(['−','−','+']);
+      if(s==='−' && m-j<2) continue;
+      return {d,m,j,s};
+    }
+  },
+  steps({d,m,j,s}){
+    const R0 = d*m, k = d*j, N = s==='−' ? R0-k : R0+k, q = N/d, B = builder(), R = B.R;
+    R.push({l:`${N} : ${d}`, o:'=', r:'?'});
+    B.snap(`Wie viel ist <b>${N} : ${d}</b>? Schau dir die Zahl ${N} genau an. Welche Zahl in der Nähe kannst du leicht durch ${d} teilen?`, 0);
+    R.push({aside:`${N} liegt nah bei ${R0}. Also: ${N} = ${c1(R0)} ${s} ${c2(k)}`});
+    B.snap(`${N} liegt ganz nah bei ${c1(R0)}. ${R0} kannst du leicht durch ${d} teilen. Es fehlen ${s==='−' ? 'nur' : 'noch'} ${c2(k)}: ${N} = ${R0} ${s} ${k}.`, 1);
+    R[0].r = `(${c1(R0)} : ${d}) ${s} (${c2(k)} : ${d})`;
+    B.snap(`Jetzt teilst du <b>beide Teile</b> durch ${d}. Das Rechenzeichen ${s} bleibt dazwischen stehen.`, 0);
+    R.push({l:'', o:'', r:`${c1(m)} ${s} ${c2(j)}`});
+    B.snap(`${R0} : ${d} = ${m}, denn ${d} · ${m} = ${R0}. Und ${k} : ${d} = ${j}.`, 2);
+    R[2].r += ` = ${res(q)}`;
+    B.snap(`Zum Schluss rechnest du ${m} ${s} ${j} = <b>${q}</b>. Fertig!`, 2);
+    return B.S;
+  },
+  merke:'Suche eine Nachbarzahl, die sich leicht teilen lässt. Teile beide Teile durch die gleiche Zahl. Rechne dann die Teilresultate minus (oder plus).',
+  practice(){
+    const {d,m,j,s} = this.rand(), R0 = d*m, k = d*j, N = s==='−' ? R0-k : R0+k, sg = s==='−' ? -1 : 1;
+    return {
+      task:`${N} : ${d} = ?`,
+      rows:[
+        [`${N} : ${d} = (`, {k:'a', sol:R0}, `: ${d}) ${s} (`, {k:'b', sol:k}, `: ${d})`],
+        [`=`, {k:'x', sol:m}, s, {k:'y', sol:j}],
+        [`=`, {k:'r', sol:N/d}]
+      ],
+      check(V){
+        const split = V.a!==null && V.b!==null && V.a + sg*V.b===N && V.a%d===0 && V.b%d===0 && V.b>0;
+        return { a:split, b:split, x:V.a!==null && V.x===V.a/d, y:V.b!==null && V.y===V.b/d, r:V.r===N/d };
+      }
+    };
+  }
+},
+{
+  key:'t4', kicker:'Trick 4', title:'Multiplizieren mit 5 / 50 / 500', wash:'w4',
+  preview:`50 · 862<small>100 · 862 = 86 200</small>86 200 : 2 = 43 100`,
+  blurb:'Mal 10, 100 oder 1000 rechnen und dann halbieren.',
+  ex:{f:50,n:862},
+  choices:[5,50,500], sel:0,
+  rand(){
+    const f = this.sel || pick([5,50,500]);
+    const R = { 5:[[12,98],[100,998],[1001,9999]], 50:[[12,98],[100,998],[1001,1999]], 500:[[2,20],[22,98],[101,999]] }[f][this.lv-1];
+    let n = rnd(R[0],R[1]);
+    if(this.lv<3 && n%2) n++;
+    if(this.lv===3 && Math.random()<.5 && n%2===0) n++;
+    return {f,n};
+  },
+  steps({f,n}){
+    const P = f*2, B = builder(), R = B.R;
+    R.push({l:`${f} · ${n}`, o:'=', r:''});
+    B.snap(`Wie viel ist <b>${f} · ${n}</b>? Mal ${f} ist schwierig. Aber: ${f} ist genau <b>die Hälfte von ${fmt(P)}</b>!`, 0);
+    R.push({l:`${c1(fmt(P))} · ${n}`, o:'=', r:fmt(P*n)});
+    B.snap(`Rechne zuerst mal ${fmt(P)}. Das ist leicht: ${ZW[zeros(P)]} anhängen. ${fmt(P)} · ${n} = ${fmt(P*n)}.`, 1);
+    R[1].r += ` ${c2(': 2')}`;
+    B.snap(`Mit ${fmt(P)} hast du <b>doppelt so viel</b> gerechnet wie mit ${f}. Darum musst du das Resultat jetzt halbieren: geteilt durch 2.`, 1);
+    R[1].r += ` = ${res(fmt(f*n))}`;
+    B.snap(`Die Hälfte von ${fmt(P*n)} ist <b>${fmt(f*n)}</b>. Fertig!`, 1);
+    return B.S;
+  },
+  merke:'Mal 5: rechne mal 10 und halbiere. Mal 50: rechne mal 100 und halbiere. Mal 500: rechne mal 1000 und halbiere.',
+  practice(){
+    const {f,n} = this.rand(), P = f*2;
+    return {
+      task:`${f} · ${n} = ?`,
+      rows:[
+        [`${fmt(P)} · ${n} =`, {k:'a', sol:P*n}],
+        [`Halbieren: … : 2 =`, {k:'r', sol:f*n}]
+      ],
+      check(V){ return { a:V.a===P*n, r:V.r===f*n }; }
+    };
+  }
+},
+{
+  key:'t5', kicker:'Trick 5', title:'Dividieren durch 5 / 50 / 500', wash:'w1',
+  preview:`12 000 : 50<small>12 000 · 2 = 24 000</small>24 0<span class="strk">00</span> : 1<span class="strk">00</span> = 240`,
+  blurb:'Zuerst verdoppeln, dann durch 10, 100 oder 1000 teilen.',
+  ex:{f:50,q:240},
+  choices:[5,50,500], sel:0,
+  rand(){
+    const f = this.sel || pick([5,50,500]);
+    const q = this.lv===1 ? rnd(2,20) : this.lv===2 ? rnd(21,99) : rnd(100, f===500 ? 400 : 999);
+    return {f,q};
+  },
+  steps({f,q}){
+    const P = f*2, N = f*q, D = 2*N, z = zeros(P), B = builder(), R = B.R;
+    const Ds = fmt(D), Ps = fmt(P);
+    const Dst = `${Ds.slice(0,-z)}<span class="strk">${Ds.slice(-z)}</span>`;
+    const Pst = `${Ps.slice(0,-z)}<span class="strk">${Ps.slice(-z)}</span>`;
+    R.push({l:`${fmt(N)} : ${f}`, o:'=', r:''});
+    B.snap(`Wie viel ist <b>${fmt(N)} : ${f}</b>? Durch ${f} teilen ist schwierig. Durch ${Ps} teilen ist leicht, da streicht man nur Nullen!`, 0);
+    R.push({l:`${fmt(N)} · ${c1('2')}`, o:'=', r:Ds});
+    B.snap(`Darum verdoppelst du zuerst die Zahl: ${fmt(N)} · 2 = ${Ds}.`, 1);
+    R[1].r += ` : ${c2(Ps)}`;
+    B.snap(`Weil du verdoppelt hast, teilst du jetzt durch ${c2(Ps)} statt durch ${f}. Das Resultat bleibt gleich, denn ${Ps} ist das Doppelte von ${f}.`, 1);
+    R[1].r = `${Dst} : ${Pst} = ${res(fmt(q))}`;
+    B.snap(`Durch ${Ps} teilen heisst: bei beiden Zahlen ${ZW[z]} streichen. ${fmt(N)} : ${f} = <b>${fmt(q)}</b>. Fertig!`, 1);
+    return B.S;
+  },
+  merke:'Durch 5: verdopple und teile durch 10. Durch 50: verdopple und teile durch 100. Durch 500: verdopple und teile durch 1000.',
+  practice(){
+    const {f,q} = this.rand(), P = f*2, N = f*q;
+    return {
+      task:`${fmt(N)} : ${f} = ?`,
+      rows:[
+        [`${fmt(N)} · 2 =`, {k:'a', sol:2*N}],
+        [`… : ${fmt(P)} =`, {k:'r', sol:q}]
+      ],
+      check(V){ return { a:V.a===2*N, r:V.r===q }; }
+    };
+  }
+}
+];
+
+// Reihenfolge: zuerst die drei Rechentricks, dann die zwei Verteilungsgesetze
+const ORDER = ['t2','t4','t5','t1','t3'];
+TRICKS.sort((a,b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
+const META = { t2:['Trick 1','w1'], t4:['Trick 2','w2'], t5:['Trick 3','w4'], t1:['Gesetz 1','w3'], t3:['Gesetz 2','w3'] };
+TRICKS.forEach(t => { [t.kicker, t.wash] = META[t.key]; t.lv = 1; });
+
+// ---------- Übersicht ----------
+const tileHtml = t => `
+  <button class="tile ${t.wash}" data-go="${t.key}">
+    <span class="kicker">${t.kicker}</span>
+    <h3>${t.title}</h3>
+    <div class="preview num">${t.preview}</div>
+    <p>${t.blurb}</p>
+  </button>`;
+$('#tiles-a').innerHTML = TRICKS.slice(0,3).map(tileHtml).join('');
+$('#tiles-b').innerHTML = TRICKS.slice(3).map(tileHtml).join('');
+
+// ---------- Präsentation ----------
+const V = { t:null, steps:[], i:0 };
+
+function renderStep(){
+  const st = V.steps[V.i], last = V.i === V.steps.length-1;
+  const board = $('#v-board');
+  board.className = 'board' + (V.t.align==='right' ? ' ralign' : '');
+  board.innerHTML = st.rows.map((r,idx) => {
+    const hot = idx===st.hot ? ' hot' : '';
+    if(r.aside) return `<div class="aside${hot}">${r.aside}</div>`;
+    return `<div class="l${hot}">${r.l}</div><div class="o${hot}">${r.o}</div><div class="r${hot}${r.ul?' ul':''}">${r.r}</div>`;
+  }).join('');
+  $('#v-say').innerHTML = st.say;
+  $('#v-nr').textContent = 'Schritt ' + (V.i+1);
+  $('#v-count').textContent = `Schritt ${V.i+1} von ${V.steps.length}`;
+  $('#v-merke').hidden = !last;
+  $('#v-merke-t').textContent = V.t.merke;
+  $('#v-dots').innerHTML = V.steps.map((_,k) =>
+    `<button class="dot ${k===V.i?'now':k<V.i?'done':''}" data-k="${k}" aria-label="Schritt ${k+1}"></button>`).join('');
+  $('#v-prev').disabled = V.i===0;
+  const ti = TRICKS.indexOf(V.t);
+  const nextBtn = $('#v-next');
+  if(last){
+    nextBtn.textContent = ti < TRICKS.length-1 ? 'Nächster Trick →' : 'Zur Übersicht';
+  } else nextBtn.textContent = 'Weiter →';
+}
+$('#v-dots').addEventListener('click', e => {
+  const b = e.target.closest('.dot'); if(!b) return;
+  V.i = Number(b.dataset.k); renderStep();
+});
+function next(){
+  if(V.i < V.steps.length-1){ V.i++; renderStep(); return; }
+  const ti = TRICKS.indexOf(V.t);
+  go(ti < TRICKS.length-1 ? TRICKS[ti+1].key : 'home');
+}
+function prev(){ if(V.i>0){ V.i--; renderStep(); } }
+$('#v-next').addEventListener('click', next);
+$('#v-prev').addEventListener('click', prev);
+$('#v-new').addEventListener('click', () => { V.steps = V.t.steps(V.t.rand()); V.i = 0; renderStep(); });
+document.addEventListener('keydown', e => {
+  if($('#show').hidden || $('#pane-e').hidden) return;
+  if(e.target.closest('input')) return;
+  if(e.key==='ArrowRight' || e.key==='PageDown'){ e.preventDefault(); next(); }
+  if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); prev(); }
+});
+// Vollbild für die Wandtafel (optional)
+try{
+  if(document.fullscreenEnabled){
+    const fb = $('#v-full'); fb.hidden = false;
+    fb.addEventListener('click', () => {
+      try{
+        const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+        if(p && p.catch) p.catch(()=>{ fb.hidden = true; });
+      }catch(_){ fb.hidden = true; }
+    });
+    document.addEventListener('fullscreenchange', () => { fb.textContent = document.fullscreenElement ? 'Vollbild beenden' : 'Vollbild'; });
+  }
+}catch(_){}
+
+// ---------- Jetzt du ----------
+const P = { task:null, score:0 };
+function newPractice(){
+  P.task = V.t.practice();
+  $('#p-task').textContent = P.task.task;
+  $('#p-body').innerHTML = P.task.rows.map(row => `<div class="prow">${row.map(seg => {
+    if(typeof seg === 'string') return `<span>${seg}</span>`;
+    const w = String(seg.sol).length + 2.2;
+    return `<input class="field" id="p-${seg.k}" data-k="${seg.k}" inputmode="numeric" autocomplete="off" style="width:${w}ch" aria-label="Feld">`;
+  }).join('')}</div>`).join('');
+  setMsg('', '');
+  P.solved = false;
+  const first = $('#p-body input'); if(first && !$('#show').hidden && document.activeElement && document.activeElement.closest('#pane-p')) first.focus();
+}
+function setMsg(t, k){ const m = $('#p-msg'); m.textContent = t; m.className = 'msg ' + (k||''); }
+function vals(){
+  const o = {};
+  document.querySelectorAll('#p-body input').forEach(i => o[i.dataset.k] = parse(i.value));
+  return o;
+}
+function checkPractice(){
+  const Vv = vals(), r = P.task.check(Vv);
+  let all = true, empty = false;
+  document.querySelectorAll('#p-body input').forEach(i => {
+    i.classList.remove('ok','bad','shown');
+    if(i.value.trim()===''){ empty = true; all = false; return; }
+    const ok = !!r[i.dataset.k];
+    i.classList.add(ok ? 'ok' : 'bad');
+    if(!ok) all = false;
+  });
+  if(all){
+    if(!P.solved){ P.score++; P.solved = true; $('#p-score').textContent = 'Richtig: ' + P.score; }
+    setMsg('Super, alles richtig! Klicke auf «Neue Aufgabe».', 'ok');
+  } else if(empty){
+    setMsg('Fülle zuerst alle Felder aus.', 'info');
+  } else {
+    setMsg('Rot markierte Felder stimmen noch nicht. Schau dir die Schritte oben nochmals an.', 'bad');
+  }
+}
+$('#p-check').addEventListener('click', checkPractice);
+$('#p-new').addEventListener('click', () => { newPractice(); const f = $('#p-body input'); if(f) f.focus(); });
+$('#p-show').addEventListener('click', () => {
+  P.task.rows.flat().forEach(seg => {
+    if(typeof seg === 'string') return;
+    const i = document.getElementById('p-' + seg.k);
+    i.value = fmt(seg.sol); i.classList.remove('ok','bad'); i.classList.add('shown');
+  });
+  P.solved = true;
+  setMsg('So geht die Lösung. Probiere danach eine neue Aufgabe.', 'info');
+});
+$('#p-body').addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  const ins = [...document.querySelectorAll('#p-body input')];
+  const ix = ins.indexOf(e.target);
+  if(ix > -1 && ix < ins.length-1){ ins[ix+1].focus(); } else checkPractice();
+});
+
+// ---------- Erklärung / Jetzt du ----------
+function tab(practice){
+  $('#pane-e').hidden = practice;
+  $('#pane-p').hidden = !practice;
+  $('#v-count').hidden = practice;
+  if(practice){ const f = $('#p-body input'); if(f) f.focus(); }
+}
+$('#tab-e').addEventListener('click', () => tab(false));
+$('#tab-p').addEventListener('click', () => tab(true));
+
+// ---------- Auswahl 9 / 99 / 999 bzw. 5 / 50 / 500 ----------
+function renderChoose(t){
+  $('#v-lv').innerHTML = [[1,'Leicht'],[2,'Mittel'],[3,'Schwer']].map(([v,l]) => `<button data-v="${v}" aria-pressed="${t.lv===v}">${l}</button>`).join('');
+  const box = $('#v-choose');
+  box.hidden = !t.choices;
+  if(!t.choices) return;
+  const opts = [...t.choices.map(c => [c, String(c)]), [0, 'Gemischt']];
+  $('#v-seg').innerHTML = opts.map(([v,l]) => `<button data-v="${v}" aria-pressed="${t.sel===v}">${l}</button>`).join('');
+}
+$('#v-seg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const t = V.t; t.sel = Number(b.dataset.v);
+  renderChoose(t);
+  V.steps = t.steps(t.rand()); V.i = 0;
+  renderStep(); newPractice();
+});
+$('#v-lv').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const t = V.t; t.lv = Number(b.dataset.v);
+  renderChoose(t);
+  V.steps = t.steps(t.rand()); V.i = 0;
+  renderStep(); newPractice();
+});
+
+// ---------- Navigation ----------
+function show(id){
+  const t = TRICKS.find(x => x.key===id);
+  $('#home').hidden = !!t;
+  $('#show').hidden = !t;
+  if(t){
+    V.t = t; V.steps = t.steps(t.ex); V.i = 0;
+    $('#v-kicker').textContent = t.kicker;
+    $('#v-title').textContent = t.title;
+    renderChoose(t); renderStep(); newPractice(); tab(false);
+  }
+  window.scrollTo(0,0);
+}
+function go(id){
+  const h = id==='home' ? '' : id;
+  if(location.hash.slice(1) !== h){ location.hash = h; } else show(id);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-go]'); if(!b) return;
+  go(b.dataset.go);
+});
+window.addEventListener('hashchange', () => show(location.hash.slice(1) || 'home'));
+show(location.hash.slice(1) || 'home');
+</script>
+
+</body></html>
