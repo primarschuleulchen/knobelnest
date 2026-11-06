@@ -18,7 +18,7 @@ HOLZ_CSS = r"""
 
 def alle(spiel, logo, LOGO_CSS):
     # ================================================================== Klötzli-Turm
-    spiel(id='kloetzli-turm', titel='Klötzli-Turm', icon=logo('kloetzli-turm'), fach='Knobeln', thema='Logik', stufe='2.–6. Klasse', sort=5, n=0,
+    spiel(id='kloetzli-turm', titel='Klötzli-Turm', icon=logo('kloetzli-turm'), fach='Knobelkiste', thema='Logik', stufe='2.–6. Klasse', sort=5, n=0,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Fallende Klötzli drehen und schieben, bis Reihen voll sind.',
           intro='Die Klötzli fallen von oben. Schiebe und drehe sie so, dass eine Reihe ganz voll wird. Volle Reihen verschwinden!',
@@ -172,7 +172,7 @@ G.play = function (lv, api) {
 """)
 
     # ================================================================== Kisten-Packen
-    spiel(id='kisten-packen', titel='Kisten-Packen', icon=logo('kisten-packen'), fach='Knobeln', thema='Logik', stufe='1.–6. Klasse', sort=6, n=0,
+    spiel(id='kisten-packen', titel='Kisten-Packen', icon=logo('kisten-packen'), fach='Knobelkiste', thema='Logik', stufe='1.–6. Klasse', sort=6, n=0,
           sterne={'modus': 'sammeln', 'pro': 10, 'max': 3, 'proLevel': True, 'proTag': False},  # je 10 richtige 1 Stern, pro Stufe bis 3
           kurz='Klötzli in die Kiste legen. Volle Reihen und Spalten verschwinden.',
           intro='Zieh die Klötzli in die Kiste. Ist eine Reihe oder eine Spalte ganz voll, verschwindet sie. Überlege gut, wohin jedes Teil passt!',
