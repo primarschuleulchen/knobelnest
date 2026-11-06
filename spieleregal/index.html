@@ -1,0 +1,1954 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spieleregal · Klassenkiste</title>
+<link rel="icon" href="../bilder/favicon.png">
+<link rel="stylesheet" href="../schriften/schriften.css">
+<!--
+  Spieleregal der Klassenkiste.
+  Daten: CATS (Spielart/Mechanik), GAMES (ein Eintrag pro Spiel, mit compute(n) = was bei n Personen bereitliegt),
+  EXTRA (pro Spiel: Kompetenzen k, Schwierigkeit s 1–3, Ziel in einem Satz, Tipp für die Schule).
+  Bilder liegen in spieleregal/img/. Ein neues Spiel = ein Eintrag in GAMES + einer in EXTRA.
+-->
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#f4f9fd; --ink:#1f2421; --soft:#5f6963; --line:#e1edf7; --line2:#c5d8e8;
+  --gold:#d6ad45; --gold-d:#c4952f; --sky:#dcf0fd; --sky-d:#3f78a8; --leaf:#e9f1e3; --rose:#fcefed; --sun:#fbf3dc; --ok:#5f9a4a;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);
+  --sch-h:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14);
+  --h:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --display:var(--h);
+  /* für den Tischplan */
+  --paper:#fff; --paper2:#f6f0e3; --muted:#6e6253; --table:#f7ead0; --tableline:#d9bf8c; --seat:#1f2421; --seatink:#fff; --cardback:#3a3d5c; --accent:#3f78a8;
+  --wood1:#ecc999; --wood2:#d5a46b; --wood3:#b07d45;
+  /* Schachtel-Farben */
+  --sab:#b8461f; --tt:#2c4a7c; --harm:#c98a1c; --sdw:#5c7a2c; --vir:#b0278a; --nm:#d23a2a; --ttt:#2a7ab8; --loc:#24407a; --dorf:#3f8a3a; --sak:#c94a7a; --lmw:#d0742a; --lf:#2f8a5a; --ev:#7a6a2a; --sav:#c9862a; --cal:#3a8a9a; --cat:#b82a1a; --noc:#3a3f7a; --reb:#5a8a3a; --crh:#b8952a; --crr:#2a7aa8; --nsl:#c42a7a; --nst:#2f8a4a; --nsp:#e2672a; --sev:#4a4f5a; --tuc:#1d8a87; --cas:#4f7d2c; --lmk:#2d7d94; --bomb:#e0611a; --pap:#c23a7e; --ban:#d98b10; --bis:#6553b0; --fie:#d01d24;
+  --c:var(--sky-d);
+}
+html,body{margin:0}
+body{background:radial-gradient(1200px 600px at 0% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 600px at 110% 100%,#fbf3dc 0%,transparent 60%),var(--bg);
+  color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;min-height:100vh}
+h1,h2,h3,h4{font-family:var(--h);font-weight:400;margin:0;line-height:1.05;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+img{max-width:100%}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* Kopfleiste */
+.top{position:sticky;top:0;z-index:20;background:rgba(244,249,253,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 1px 0 rgba(214,173,69,.35)}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px max(16px,env(safe-area-inset-left,0px));min-height:72px}
+.kn-back{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 13px;border-radius:999px;background:#fff;color:var(--ink);border:0;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif;box-shadow:0 4px 14px rgba(63,120,168,.2);flex:none}
+.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)}
+.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
+.marke{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none}
+.marke b{display:block;font-family:var(--h);font-weight:400;font-size:26px;line-height:1}
+.marke b i{font-style:normal;color:var(--gold);font-size:.55em;vertical-align:super;margin-left:4px}
+.marke small{color:var(--soft);font-size:14px;font-family:var(--h)}
+.tbtn{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border:2px solid var(--ink);border-radius:13px;background:#fff;font-family:var(--h);font-size:18px;text-decoration:none;box-shadow:0 4px 12px rgba(63,120,168,.14);white-space:nowrap}
+.tbtn:hover{transform:translateY(-1px)}
+.tbtn .zahl{background:var(--gold);color:#fff;border-radius:999px;min-width:22px;padding:0 6px;font-size:14px;line-height:22px;text-align:center}
+@media (max-width:560px){.marke small{display:none}.tbtn .lang{display:none}}
+
+main{max-width:1180px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left,0px)) 70px;display:flex;flex-direction:column;gap:22px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border:2px solid var(--ink);border-radius:14px;background:#fff;font-family:var(--h);font-size:20px;
+  box-shadow:var(--sch);transition:transform .15s,box-shadow .15s;text-decoration:none;color:var(--ink)}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--sch-h)}.btn:active{transform:translateY(1px)}
+.btn.sky{background:var(--sky)}.btn.sun{background:var(--sun)}
+.btn.sm{min-height:40px;font-size:17px;border-radius:11px;padding:0 14px;box-shadow:0 4px 12px rgba(63,120,168,.14)}
+.deko{text-align:center;color:var(--gold);letter-spacing:.4em;font-size:14px;margin:4px 0 -6px}
+
+/* Banner */
+.banner{display:flex;flex-wrap:wrap;gap:20px 28px;align-items:center;background:linear-gradient(180deg,#fff 0%,#f3faff 100%);border:1.5px solid var(--line);border-radius:32px;padding:24px 28px;box-shadow:var(--sch);position:relative;overflow:hidden}
+.ring{flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;font-size:60px;background:var(--sun);border:3px solid var(--gold);box-shadow:inset 0 0 0 7px #fff,0 8px 18px rgba(63,120,168,.18)}
+.banner .txt{flex:1 1 320px;min-width:0}
+.klein{font-family:var(--h);font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--sky-d)}
+.banner h1{margin:2px 0 6px;font-size:clamp(36px,6vw,48px)}
+.banner h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.banner p{margin:0;color:var(--soft);max-width:56ch}
+.banner .knoepfe{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.schachteln{flex:0 1 300px;height:170px;position:relative}
+.schachteln img{position:absolute;bottom:0;height:150px;width:auto;border-radius:4px;filter:drop-shadow(0 10px 12px rgba(31,36,33,.28));transition:transform .3s}
+.schachteln img:nth-child(1){left:0;transform:rotate(-10deg)}
+.schachteln img:nth-child(2){left:24%;transform:rotate(-3deg);bottom:10px}
+.schachteln img:nth-child(3){left:48%;transform:rotate(5deg);height:130px}
+.schachteln img:nth-child(4){left:70%;transform:rotate(11deg)}
+.schachteln:hover img{transform:none}
+@media (max-width:820px){.schachteln{display:none}}
+@media (max-width:560px){.banner .ring{display:none}.banner{padding:20px}}
+
+/* Filter */
+.filter{background:#fff;border:1.5px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:var(--sch);display:flex;flex-direction:column;gap:12px}
+.such{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.such input{flex:1 1 240px;min-width:0;font:inherit;padding:10px 16px;border:2px solid var(--line2);border-radius:14px;background:#fbfdff}
+.such input:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(214,173,69,.25)}
+.such select{font:inherit;padding:9px 12px;border:2px solid var(--line2);border-radius:14px;background:#fff}
+.frow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.flab{min-width:118px;font-family:var(--h);font-size:19px;color:var(--sky-d)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1.5px solid var(--line2);background:#fff;border-radius:999px;padding:4px 13px;font-size:15.5px;min-height:36px;white-space:nowrap}
+.pill:hover{border-color:var(--gold)}
+.pill[aria-pressed="true"]{background:var(--sky);border-color:var(--ink);font-weight:700}
+.mini{display:inline-flex;align-items:center;border:1.5px solid var(--line2);border-radius:999px;overflow:hidden;background:#fff}
+.mini button{border:0;background:none;width:38px;height:36px;font-size:20px;font-weight:700}
+.mini button:hover{background:var(--sky)}
+.mini output{min-width:84px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+details.mehr summary{cursor:pointer;font-family:var(--h);font-size:19px;color:var(--sky-d);list-style:none}
+details.mehr summary::before{content:"＋ ";color:var(--gold)}
+details.mehr[open] summary::before{content:"－ "}
+details.mehr > div{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.fmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--soft);border-top:1.5px dashed var(--line2);padding-top:10px}
+.fmeta b{color:var(--sky-d);font-family:var(--h);font-size:22px;font-weight:400}
+.link{border:0;background:none;color:var(--sky-d);text-decoration:underline;text-underline-offset:3px;padding:4px}
+@media (max-width:620px){.flab{min-width:100%;margin-bottom:-2px}}
+
+/* Regal */
+.regal{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:34px 24px;padding:4px 4px 0}
+.game{position:relative;display:flex;flex-direction:column;min-width:0}
+.game .stage{height:232px;display:flex;align-items:flex-end;justify-content:center}
+.game .stage img{display:block;max-height:220px;max-width:92%;width:auto;object-fit:contain;border-radius:4px;margin-bottom:-1px;
+  filter:drop-shadow(0 12px 12px rgba(31,36,33,.3));transform-origin:50% 100%;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.game:hover .stage img,.game:focus-within .stage img{transform:translateY(-8px) rotate(-3deg) scale(1.04)}
+.plank{height:15px;margin:-2px -12px 0;border-radius:3px;background:linear-gradient(var(--wood1),var(--wood2) 60%,var(--wood3));box-shadow:0 8px 14px -6px rgba(63,40,10,.45)}
+.game .info{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.game h3{font-size:25px}
+.game h3 a{text-decoration:none}
+.game h3 a::after{content:"";position:absolute;inset:0;z-index:1;border-radius:14px}
+.game h3 a:focus-visible{outline:none}
+.game:focus-within h3{text-decoration:underline;text-decoration-color:var(--gold)}
+.game .sub{font-size:15px;color:var(--soft);line-height:1.3}
+.facts{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:#fff;border:1.5px solid var(--line2);border-radius:999px;padding:1px 10px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kicons{display:flex;gap:4px;flex-wrap:wrap}
+.kicons span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;background:var(--sun);box-shadow:0 0 0 1.5px var(--gold) inset}
+.tag{border:1.5px solid var(--c);border-radius:6px;padding:0 7px;font-size:13px;font-weight:700;white-space:nowrap}
+.tag.main{background:var(--c);color:#fff}
+.stern{position:absolute;top:6px;right:0;z-index:2;width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);background:#fff;font-size:22px;line-height:1;color:var(--gold-d);box-shadow:0 4px 10px rgba(63,120,168,.18)}
+.stern[aria-pressed="true"]{background:var(--gold);color:#fff}
+.stufe{letter-spacing:1px;color:var(--gold-d)}
+.leer{padding:34px;text-align:center;color:var(--soft);border:2px dashed var(--line2);border-radius:22px;background:#fff}
+details.legende{background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:14px 20px}
+details.legende summary{cursor:pointer;font-family:var(--h);font-size:20px;color:var(--sky-d)}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px 22px;margin-top:12px}
+.lg div{font-size:15px;color:var(--soft)}
+.lg b{display:block;font-family:var(--h);font-weight:400;font-size:19px;color:var(--ink)}
+.lg h4{grid-column:1/-1;font-size:22px;color:var(--sky-d);margin-top:6px}
+
+/* Detail */
+.gamehero{background:linear-gradient(180deg,#fff 0%,color-mix(in srgb,var(--c) 9%,#fff) 100%);border:1.5px solid var(--line);border-radius:32px;padding:24px 28px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;box-shadow:var(--sch);position:relative}
+.gamehero::before{content:"";position:absolute;left:28px;right:28px;top:0;height:5px;border-radius:0 0 6px 6px;background:var(--c)}
+.gamehero .cover{height:220px;width:auto;max-width:38vw;object-fit:contain;transform:rotate(-4deg);filter:drop-shadow(0 14px 16px rgba(31,36,33,.3));cursor:zoom-in}
+.gamehero .txt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.gamehero h1{font-size:clamp(38px,7vw,56px)}
+.gamehero h1::after{content:" ✦";color:var(--gold);font-size:.45em;vertical-align:super}
+.gamehero .sub{color:var(--soft);font-size:18px;margin-top:-4px}
+.gamehero .knoepfe{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.cats{display:flex;gap:5px;flex-wrap:wrap}
+@media (max-width:640px){.gamehero{grid-template-columns:1fr;justify-items:center;text-align:center;padding:22px 18px}.gamehero .facts,.gamehero .cats,.gamehero .knoepfe{justify-content:center}.gamehero .cover{height:170px;max-width:70vw}}
+.ziel{background:var(--sun);border:1.5px dashed var(--gold);border-radius:22px;padding:14px 20px;display:flex;gap:14px;align-items:flex-start;color:#4a3d1a;font-size:18px}
+.ziel .em{font-size:30px;line-height:1}
+.ziel b{font-family:var(--h);font-weight:400;font-size:22px;display:block;color:var(--ink)}
+.panel{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:26px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:var(--sch)}
+.panel h2{font-size:30px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.panel h2 .ic{width:46px;height:46px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-size:22px;flex:none;border:2.5px solid var(--gold);box-shadow:inset 0 0 0 3px #fff}
+.panel h2 .rechts{margin-left:auto;font-family:var(--body);font-size:15px;color:var(--soft)}
+.panel h3{font-size:22px}
+.panel.steuer{position:sticky;top:78px;z-index:10;padding:12px 18px;flex-direction:row;flex-wrap:wrap;gap:12px 26px;align-items:flex-end;background:rgba(255,255,255,.95);backdrop-filter:blur(6px)}
+.ctl{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-family:var(--h);font-size:17px;color:var(--sky-d)}
+.stepper{display:flex;align-items:center;border:2.5px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff}
+.stepper button{border:0;background:none;width:50px;height:48px;font-size:28px;font-family:var(--h)}
+.stepper button:hover{background:var(--sky)}
+.stepper button:disabled{opacity:.25;cursor:default;background:none}
+.stepper output{min-width:64px;text-align:center;font-family:var(--h);font-size:32px;color:var(--c);font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:2px solid var(--line2);border-radius:12px;padding:7px 12px;font-weight:700;background:#fff;min-height:44px}
+.seg button[aria-pressed="true"]{border-color:var(--c);background:var(--c);color:#fff}
+@media (max-width:620px){.panel.steuer{position:static}}
+.tableplan{overflow-x:auto;background:linear-gradient(#fbf6ec,#fff);border-radius:18px}
+.tableplan svg{display:block;width:100%;min-width:520px;height:auto}
+.tableplan text{font-family:var(--body);fill:var(--ink)}
+.cap{font-size:15.5px;color:var(--soft);margin:0}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px}
+@media (max-width:820px){.cols{grid-template-columns:1fr}}
+.fortschritt{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.fortschritt i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--ok));border-radius:999px;transition:width .3s}
+.deal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.num{position:relative;text-align:left;border:1.5px solid var(--line2);border-radius:16px;padding:10px 12px 10px 12px;display:flex;flex-direction:column;gap:2px;background:#fff;transition:background .2s,opacity .2s}
+.num b{font-family:var(--h);font-weight:400;font-size:36px;line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
+.num small{color:var(--soft);font-size:14.5px;line-height:1.3}
+.num.main{grid-column:1/-1;flex-direction:row;align-items:center;gap:16px;background:color-mix(in srgb,var(--c) 12%,#fff);border-color:var(--c)}
+.num.main b{font-size:52px}.num.main small{color:var(--ink);font-size:16.5px}
+.haken{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);background:#fff;display:grid;place-items:center;font-size:15px;color:transparent}
+.ok .haken{background:var(--ok);border-color:var(--ok);color:#fff}
+.num.ok{background:var(--leaf)!important;opacity:.75}
+ol.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+ol.steps li button{width:100%;text-align:left;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;border:0;background:none;padding:6px 6px;border-radius:12px;line-height:1.4}
+ol.steps li button:hover{background:#f6fbff}
+ol.steps .nr{width:32px;height:32px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-family:var(--h);font-size:19px}
+ol.steps li.ok .nr{background:var(--ok)}
+ol.steps li.ok .nr::before{content:"✓"}
+ol.steps li.ok .nr span{display:none}
+ol.steps li.ok .t{text-decoration:line-through;text-decoration-color:rgba(95,154,74,.6);color:var(--soft)}
+.note{font-size:15.5px;color:#4a3d1a;background:var(--sun);border:1.5px dashed var(--gold);border-radius:16px;padding:10px 14px}
+.inhalt{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.inhalt li{background:#fbfdff;border:1.5px solid var(--line2);border-radius:10px;padding:3px 10px;font-size:15px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.gallery figure{margin:0;display:flex;flex-direction:column;gap:8px}
+.gallery .ph{background:var(--paper2);border-radius:14px;height:190px;display:grid;place-items:center;overflow:hidden;padding:10px}
+.gallery img{max-height:166px;max-width:100%;object-fit:contain;border-radius:6px;transition:transform .2s;cursor:zoom-in}
+.gallery figure:hover img{transform:scale(1.05) rotate(-2deg)}
+.gallery figcaption{font-size:15px;line-height:1.35}
+.gallery figcaption b{display:block;font-family:var(--h);font-weight:400;font-size:20px}
+.gallery figure.wide{grid-column:span 2}
+@media (max-width:420px){.gallery figure.wide{grid-column:auto}}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.photos figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.photos img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:14px;cursor:zoom-in;display:block;transition:transform .2s}
+.photos figure:hover img{transform:scale(1.02)}
+.photos figcaption{font-size:15px;color:var(--soft);font-weight:700}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;counter-reset:r}
+.rules > div{display:flex;flex-direction:column;gap:8px;min-width:0;background:#fbfdff;border:1.5px solid var(--line);border-radius:20px;padding:14px 16px;counter-increment:r}
+.rules h3::before{content:counter(r);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--sun);border:2px solid var(--gold);font-size:18px;margin-right:8px;vertical-align:2px}
+.rules ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.rules .pic{background:var(--paper2);border-radius:12px;padding:8px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rules .pic figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--soft)}
+.rules .pic img{max-height:130px;border-radius:6px;width:auto;max-width:100%;object-fit:contain;cursor:zoom-in}
+.komp{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.komp div{display:flex;gap:12px;align-items:flex-start;background:var(--sun);border-radius:16px;padding:10px 12px}
+.komp .e{flex:none;width:42px;height:42px;border-radius:50%;background:#fff;border:2px solid var(--gold);display:grid;place-items:center;font-size:21px}
+.komp b{display:block;font-family:var(--h);font-weight:400;font-size:20px;line-height:1.1}
+.komp small{color:#4a3d1a;font-size:14.5px}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.links a{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line2);border-radius:14px;padding:10px 12px;text-decoration:none;background:#fff}
+.links a:hover{border-color:var(--gold)}
+.links .ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center}
+.links b{display:block;line-height:1.25}
+.links small{color:var(--soft)}
+.lookup input{font:inherit;width:100%;max-width:380px;padding:10px 14px;border:2px solid var(--line2);border-radius:12px;background:#fff}
+.tasks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 20px}
+.tasks li{display:grid;grid-template-columns:34px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:15.5px}
+.tasks b{font-family:var(--h);font-weight:400;font-size:20px;color:var(--c);font-variant-numeric:tabular-nums;text-align:right}
+.blaettern{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.blaettern a{display:flex;align-items:center;gap:10px;text-decoration:none;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:8px 14px 8px 10px;box-shadow:var(--sch);max-width:48%}
+.blaettern a:last-child{margin-left:auto;flex-direction:row-reverse;padding:8px 10px 8px 14px;text-align:right}
+.blaettern img{height:54px;width:auto;border-radius:3px}
+.blaettern small{display:block;color:var(--soft);font-size:13px}
+.blaettern b{font-family:var(--h);font-weight:400;font-size:19px;line-height:1.1}
+
+/* Spielstationen */
+.wahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.wahl button{display:flex;align-items:center;gap:8px;text-align:left;border:1.5px solid var(--line2);border-radius:14px;background:#fff;padding:6px 8px;font-size:14.5px;line-height:1.15;min-height:54px}
+.wahl button img{height:40px;width:30px;object-fit:contain;flex:none}
+.wahl button small{display:block;color:var(--soft);font-size:12.5px}
+.wahl button[aria-pressed="true"]{background:var(--sky);border-color:var(--ink);font-weight:700}
+.stationen{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.station{background:#fff;border:1.5px solid var(--line);border-top:6px solid var(--c);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--sch);break-inside:avoid}
+.station .kopf{display:flex;gap:12px;align-items:center}
+.station .kopf img{height:72px;width:auto;max-width:64px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.2))}
+.station h3{font-size:24px}
+.station .gr{font-family:var(--h);font-size:20px;color:var(--c)}
+.station ul{margin:0;padding-left:18px;font-size:15px;display:flex;flex-direction:column;gap:3px}
+.warn{background:var(--rose);border:1.5px dashed #d98a7a;border-radius:16px;padding:10px 14px;color:#6a2a1a}
+
+/* Bild gross */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(31,36,33,.82);display:grid;place-items:center;padding:24px 16px;cursor:zoom-out;animation:lbIn .18s ease-out}
+.lb figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:min(1000px,100%)}
+.lb .lbimg{background:#fff;border-radius:18px;padding:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.8);display:grid;place-items:center;border:3px solid var(--gold)}
+.lb img{border-radius:8px;max-width:min(1100px,86vw);max-height:72vh;width:auto;height:auto;object-fit:contain}
+.lb figcaption{color:#fff;font-family:var(--h);font-size:24px;text-align:center}
+.lb button{position:absolute;top:14px;right:16px;width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid var(--gold);display:grid;place-items:center;font-size:22px;font-weight:800}
+@keyframes lbIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Drucken: Spickzettel */
+.nurdruck{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;font-size:12.5px}
+  .top,.nodruck,.stern,.blaettern,.lb{display:none!important}
+  .nurdruck{display:block}
+  main{padding:0;gap:10px;max-width:none}
+  .panel,.gamehero,.station,.ziel{box-shadow:none;border-color:#ccc;break-inside:avoid;padding:10px 14px;border-radius:12px}
+  .panel.steuer{position:static}
+  .gamehero .cover{height:110px}
+  .gamehero h1{font-size:34px}
+  .tableplan svg{min-width:0;max-height:300px}
+  .cols{grid-template-columns:1fr 1.2fr}
+  .haken{display:none}
+  .num.ok{opacity:1;background:#fff!important}
+  ol.steps li.ok .t{text-decoration:none;color:inherit}
+  .photos,.gallery,.links,.lookup,.komp-panel{display:none!important}
+  .panel.druckweg{display:none!important}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="kn-back" id="zur" href="../" aria-label="Zurück">←<img src="../bilder/eule.webp" alt=""></a>
+    <a class="marke" href="#"><span><b>Spieleregal<i>✦</i></b><small>Brettspiele der Klassenkiste</small></span></a>
+    <a class="tbtn" href="#stationen" id="tStat">🏫 <span class="lang">Spielstationen</span></a>
+    <a class="tbtn" href="#" id="tMerk" aria-label="Merkliste">⭐ <span class="zahl" id="merkZahl">0</span></a>
+  </div>
+</header>
+<main id="app"></main>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Bild gross"><button id="lbx" aria-label="Schliessen">✕</button><figure><div class="lbimg"><img id="lbimg" alt=""></div><figcaption id="lbcap"></figcaption></figure></div>
+<script>
+/* ---------- Kategorien ---------- */
+const CATS = {
+  koop:   {n:"Kooperativ", d:"Alle spielen zusammen gegen das Spiel. Gemeinsam gewinnen oder verlieren.", group:"mit"},
+  semi:   {n:"Semi-kooperativ", d:"Man arbeitet im Team zusammen, am Ende gewinnt aber eine einzelne Person.", group:"mit"},
+  komp:   {n:"Jeder gegen jeden", d:"Kompetitiv: jede Person spielt für sich allein.", group:"mit"},
+  rollen: {n:"Geheime Rollen", d:"Niemand weiss sicher, wer zu welchem Team gehört.", group:"art"},
+  deduk:  {n:"Deduktion", d:"Aus Hinweisen etwas herausfinden, zum Beispiel wer der Saboteur ist.", group:"art"},
+  lege:   {n:"Legespiel", d:"Karten oder Plättchen passend aneinanderlegen.", group:"art"},
+  zahl:   {n:"Zahlenspiel", d:"Zählen und mit Zahlen umgehen steht im Mittelpunkt.", group:"art"},
+  merk:   {n:"Merkspiel", d:"Sich Regeln, Karten oder Abfolgen merken.", group:"art"},
+  reakt:  {n:"Reaktionsspiel", d:"Schnell sein und blitzschnell richtig reagieren.", group:"art"},
+  beweg:  {n:"Bewegungsspiel", d:"Gesten, Posen und Geräusche gehören zum Spiel.", group:"art"},
+  write:  {n:"Roll & Write", d:"Würfeln oder Karten aufdecken, dann malen oder zeichnen alle auf ihrem eigenen Bogen.", group:"art"},
+  mission:{n:"Missionen", d:"Viele Missionen nacheinander, die immer schwieriger werden.", group:"art"},
+  solo:   {n:"Solo möglich", d:"Kann auch allein gespielt werden.", group:"art"},
+  erw:    {n:"Erweiterung", d:"Braucht das Grundspiel.", group:"art"},
+  kommun: {n:"Kommunikation", d:"Ohne oder mit wenigen Worten verständigen, zum Beispiel mit Ein-Wort-Hinweisen.", group:"art"},
+  kampagne:{n:"Kampagne", d:"Mehrere Partien bauen aufeinander auf, Neues wird freigespielt.", group:"art"},
+  deck:   {n:"Deckbau", d:"Den eigenen Kartenstapel im Laufe des Spiels verbessern.", group:"art"},
+  worker: {n:"Arbeiter einsetzen", d:"Figuren auf Orte setzen, um Aktionen auszuführen.", group:"art"},
+  handel: {n:"Handeln", d:"Mit den anderen tauschen und verhandeln.", group:"art"},
+  bieten: {n:"Bieten", d:"Um Dinge bieten, wer am meisten gibt, bekommt sie.", group:"art"}
+};
+const PLACES = {
+  tisch:  "Am Tisch",
+  gross:  "Grosser Tisch",
+  kreis:  "Sitzkreis / Boden",
+  weg:    "Unterwegs"
+};
+const DURS = [["all","Alle"],["15","bis 15 Min."],["20","bis 20 Min."],["30","bis 30 Min."],["60","bis 60 Min."],["90","bis 90 Min."]];
+
+/* ---------- Spiele ---------- */
+const GAMES = [
+ { id:"saboteur", name:"Saboteur", sub:"Goldsucher gegen Saboteure", c:"--sab", cover:"img/cover_sab.webp",
+   videos:[["Erklärvideo vom Verlag","https://youtu.be/o_b-8VcUnwk","AMIGO · YouTube"]],
+   min:3, max:10, age:"ab 8", time:"ca. 30 Min.", minutes:30,
+   cats:["semi","rollen","deduk","lege"], places:["tisch","gross"],
+   material:"44 Wegekarten, 27 Aktionskarten, 28 Goldkarten, 7 Goldsucher, 4 Saboteure",
+   compute(n){
+     const roles={3:[1,3],4:[1,4],5:[2,4],6:[2,5],7:[3,5],8:[3,6],9:[3,7],10:[4,7]}[n];
+     const hand = n<=5?6 : n<=7?5 : 4;
+     const pile = 67 - hand*n;
+     return {
+       hand, roles, pile, seatLabel:`${hand}`,
+       deal:[
+         {v:hand, t:"Handkarten pro Person (Wege + Aktion gemischt)", main:true},
+         {v:roles[0]+roles[1], t:`Zwergenkarten mischen: ${roles[0]} Saboteur${roles[0]>1?"e":""} + ${roles[1]} Goldsucher`},
+         {v:1, t:"Zwergenkarte bleibt verdeckt übrig"},
+         {v:pile, t:"Karten bleiben als Zugstapel"}
+       ],
+       steps:[
+         `Karten sortieren: Weg-, Aktions-, Gold- und Zwergenkarten getrennt.`,
+         `Zwergenkarten: ${roles[0]} Saboteur${roles[0]>1?"e":""} und ${roles[1]} Goldsucher mischen. Jede Person bekommt eine und schaut sie geheim an. Eine bleibt verdeckt übrig.`,
+         `Startkarte (mit Leiter) hinlegen. Rechts davon 7 Kartenbreiten Platz lassen. Dann die 3 Zielkarten verdeckt untereinander legen, mit je einer Kartenlänge Abstand.`,
+         `Die übrigen 40 Wegekarten und alle 27 Aktionskarten mischen. Jede Person bekommt ${hand} Karten.`,
+         `Die restlichen ${pile} Karten kommen als verdeckter Zugstapel hinter die Zielkarten.`,
+         `Goldkarten mischen und verdeckt neben die übrige Zwergenkarte legen.`,
+         `Die jüngste Person beginnt, dann geht es im Uhrzeigersinn weiter.`
+       ],
+       note: n===10 ? "Bei 10 Personen werden alle 11 Zwergenkarten benutzt." : (n<=4 ? "Bei 3–4 Personen kann es sein, dass gar kein Saboteur mitspielt." : "")
+     };
+   },
+   center(r){
+     const cw=27,ch=40, x0=165, cy=272;
+     let s="";
+     s+=card(x0,cy-ch/2,cw,ch,"var(--c)","",{ladder:true});
+     s+=lbl(x0+cw/2,cy+ch/2+16,"Start");
+     for(let i=1;i<=7;i++) s+=`<rect x="${x0+i*(cw+4)}" y="${cy-ch/2}" width="${cw}" height="${ch}" rx="4" fill="none" stroke="var(--tableline)" stroke-dasharray="4 3"/><text x="${x0+i*(cw+4)+cw/2}" y="${cy+5}" text-anchor="middle" font-size="12" fill="var(--muted)" style="fill:var(--muted)">${i}</text>`;
+     const gx=x0+8*(cw+4);
+     [-2,0,2].forEach(k=>{ s+=card(gx,cy-ch/2+k*ch,cw,ch,"var(--cardback)","?",{}); });
+     s+=lbl(gx+cw/2,cy-2*ch-ch/2-8,"3 Zielkarten");
+     s+=lbl(x0+4*(cw+4)+cw/2,cy-ch/2-10,"7 Karten Platz lassen",11);
+     s+=stack(gx+60,cy-24,cw,ch,"var(--cardback)",r.pile,"Zugstapel");
+     s+=stack(gx+60,cy+80,cw,ch,"#c9a227","",`Goldkarten`);
+     s+=card(gx+60,cy-130,cw,ch,"var(--cardback)","",{}) + lbl(gx+60+cw/2,cy-130+ch+15,"1 Zwerg übrig",11);
+     return s;
+   },
+   gallery:[
+     ["img/sab_path.webp","Wegekarten","Bauen den Weg vom Start zum Gold."],
+     ["img/sab_broken.webp","Sabotage-Karten","Kaputte Lampe, Lore oder Hacke: Wer sie vor sich liegen hat, darf keine Wegekarte legen."],
+     ["img/sab_repair.webp","Reparatur-Karten","Reparieren das passende kaputte Werkzeug wieder."],
+     ["img/sab_rock.webp","Steinschlag","Nimmt eine Wegekarte wieder aus dem Labyrinth."],
+     ["img/sab_map.webp","Schatzkarte","Heimlich unter eine Zielkarte schauen."],
+     ["img/sab_repair2.webp","Doppel-Reparatur","Repariert eines von zwei Werkzeugen, du darfst wählen."],
+     ["img/sab_gs.webp","Goldsucher","Wollen den Weg zum Gold bauen."],
+     ["img/sab_sab.webp","Saboteur","Will das heimlich verhindern."],
+     ["img/sab_gold.webp","Goldkarten","Belohnung nach jeder Runde."]
+   ],
+   rules:[
+     ["Dein Zug",["Eine Karte ausspielen: Wegekarte anlegen, Aktionskarte vor jemanden legen oder passen (1 Karte verdeckt abwerfen).","Danach 1 Karte nachziehen. Ist der Stapel leer, entfällt das."]],
+     ["Wege richtig legen",["Alle Wege müssen an allen Seiten passen.","Jede neue Karte muss mit der Startkarte verbunden sein.","Karten nie quer legen."],[["img/sab_lay.webp","Richtig und FALSCH"]]],
+     ["Ende & Gold",["Runde endet, wenn das Gold erreicht ist oder niemand mehr Karten hat.","Dann werden die Rollen aufgedeckt und Gold verteilt.","Nach 3 Runden gewinnt, wer am meisten Gold hat."]]
+   ]
+ },
+ { id:"bandido", photos:[["img/ph_ban1.webp", "Tunnel am Tisch"], ["img/ph_ban2.webp", "Alle Tunnel blockiert"], ["img/ph_ban3.webp", "Superkarte und Schachtel"]], name:"Bandido", sub:"Gemeinsam alle Tunnel blockieren", c:"--ban", cover:"img/cover_ban.webp",
+   min:1, max:4, age:"ab 6", time:"ca. 15 Min.", minutes:15,
+   cats:["koop","lege","solo"], places:["gross","kreis"],
+   material:"69 Karten, 1 Superkarte",
+   opts:{key:"level", label:"Schwierigkeit", choices:[["easy","Einfach · 5 Ausgänge"],["normal","Normal · 6 Ausgänge"]], def:"easy"},
+   compute(n, opt){
+     const pile = 69 - 3*n, hard = opt.level==="normal";
+     return {
+       pile, exits:hard?6:5, seatLabel:"3",
+       deal:[
+         {v:3, t:"Karten pro Person", main:true},
+         {v:pile, t:"Karten bleiben als Stapel"},
+         {v:hard?6:5, t:`Ausgänge auf der Superkarte (${hard?"normale":"einfache"} Seite)`}
+       ],
+       steps:[
+         `Superkarte in die Tischmitte legen, ${hard?"normale Seite (6 Ausgänge)":"einfache Seite (5 Ausgänge)"} nach oben. Ihr braucht viel Platz rundherum.`,
+         `Alle 69 Karten mischen und verdeckt stapeln.`,
+         `Jede Person nimmt 3 Karten.`,
+         `Die jüngste Person beginnt.`
+       ],
+       note: n===1 ? "Solo: Du spielst allein mit 3 Karten auf der Hand." : "Kooperativ: Ihr dürft besprechen, was ihr macht, aber keine Karten zeigen oder beschreiben."
+     };
+   },
+   center(r){
+     const cx=400, cy=262, w=130, h=64;
+     let s=`<rect x="${cx-w/2}" y="${cy-h/2}" width="${w}" height="${h}" rx="5" fill="#7a3e14" stroke="#4a230a" stroke-width="2"/>`;
+     s+=`<rect x="${cx-26}" y="${cy-22}" width="52" height="44" rx="3" fill="#f0a92a" stroke="#555" stroke-width="2"/>`;
+     for(let i=0;i<5;i++) s+=`<line x1="${cx-20+i*10}" y1="${cy-20}" x2="${cx-20+i*10}" y2="${cy+20}" stroke="#555" stroke-width="2"/>`;
+     s+=`<circle cx="${cx}" cy="${cy-4}" r="8" fill="#222"/>`;
+     // Ausgänge
+     const ex = r.exits===6
+       ? [[cx-w/2,cy,-1,0],[cx+w/2,cy,1,0],[cx-35,cy-h/2,0,-1],[cx+35,cy-h/2,0,-1],[cx-35,cy+h/2,0,1],[cx+35,cy+h/2,0,1]]
+       : [[cx-w/2,cy,-1,0],[cx+w/2,cy,1,0],[cx-35,cy-h/2,0,-1],[cx+35,cy+h/2,0,1],[cx+35,cy-h/2,0,-1]];
+     ex.forEach(([x,y,dx,dy])=>{ s+=`<line x1="${x}" y1="${y}" x2="${x+dx*26}" y2="${y+dy*26}" stroke="var(--c)" stroke-width="4" stroke-dasharray="5 4"/><circle cx="${x+dx*30}" cy="${y+dy*30}" r="5" fill="var(--c)"/>`; });
+     s+=lbl(cx,cy+h/2+52,`Superkarte · ${r.exits} Tunnel blockieren`);
+     s+=stack(cx+150,cy-30,36,56,"var(--cardback)",r.pile,"Stapel");
+     return s;
+   },
+   gallery:[
+     ["img/ban_super.jpg","Superkarte","Liegt in der Mitte. Von hier gehen die Fluchttunnel aus."]
+   ],
+   rules:[
+     ["Dein Zug",["Eine Karte so anlegen, dass alle Tunnel perfekt passen.","Danach 1 Karte nachziehen.","Geht gar nichts mehr: Handkarten unter den Stapel, 3 neue oben ziehen."],[["img/ban_play.jpg","✔ passt"],["img/ban_wrong.jpg","✘ passt nicht"]]],
+     ["Aufpassen",["Nie eine Karte so legen, dass sich ein Tunnel nicht mehr schliessen lässt."]],
+     ["Ende",["Gewonnen: alle Tunnel sind blockiert.","Verloren: Stapel leer und ein Tunnel ist noch offen."],[["img/ban_win.jpg","Tunnel zu"]]]
+   ]
+ },
+ { id:"biss20", photos:[["img/ph_bis1.webp", "Schachtel und Material"], ["img/ph_bis2.webp", "Karten und Edelsteine"]], name:"Biss 20", sub:"Zählen bis 20, mit Aufgaben", c:"--bis", cover:"img/cover_bis.jpg",
+   videos:[["Erklärvideo vom Verlag","https://www.youtube.com/watch?v=gQ3KAZXE5fU","Drei Magier / Schmidt Spiele · YouTube"]],
+   lookup:["Zeige die Zahl mit den Fingern an (bei 12: zuerst 10 Finger, dann 2).","Zeichne die Zahl mit dem Finger auf den Tisch, statt sie zu sagen.","Steh auf.","Schnippe mit dem Finger.","Schreie die Zahl.","Sagt alle gemeinsam „Fledermaus“.","Forme deine Arme zu einer Elefantennase.","Gähne.","Verbeuge dich.","Klopfe einmal auf den Tisch.","Halte dir die Ohren zu.","Halte dir die Augen zu.","Hände hoch.","Winke.","Verschränke deine Arme.","Reibe dir das Kinn.","Forme ein Herz mit deinen Fingern.","Mache das „Daumen hoch“-Zeichen.","Flüstere die Zahl.","Kraule dich unter den Achseln.","Stampfe einmal mit dem Fuss auf.","Schweige.","Sage „Gelb“.","Klatsche einmal in die Hände.","Richtungswechsel: Zahl normal sagen, dann geht es gegen den Uhrzeigersinn weiter, bis ihr wieder bei dieser Zahl seid.","Schneide eine Grimasse.","Strecke deine Zunge raus.","Stupse einen Mitspieler an.","Sage „Blau“.","Sage „Kikeriki“.","Sage „Blubb“.","Sage „Muh“.","Singe die Zahl.","Verschränke deine Finger.","Mache eine Pose, als hättest du eine Idee.","Klatsche einen Mitspieler ab.","Sage „Rot“.","Kratze dich am Kopf.","Schüttle den Kopf.","Zeige eine Brille vor deinen Augen."],
+   min:2, max:8, age:"ab 7", time:"ca. 20 Min.", minutes:20,
+   cats:["koop","zahl","merk","beweg"], places:["kreis","tisch","weg"],
+   material:"20 Zahlenkarten, 40 Aufgabenkarten, 20 Edelsteine",
+   opts:{key:"level", label:"Stufe", choices:[["1","1 · 6"],["2","2 · 10"],["3","3 · 14"],["4","4 · 18"]], def:"1"},
+   opts2:{key:"mode", label:"Spielart", choices:[["team","Gemeinsam"],["solo","Jeder gegen Jeden"]], def:"team"},
+   compute(n, opt){
+     const lv = Number(opt.level||1), tasks = {1:6,2:10,3:14,4:18}[lv];
+     const base = [`Zahlenkarten mischen und verdeckt in die Mitte legen.`];
+     const tail = [
+       `Aufgabenkarten mischen, ${tasks} Stück als verdeckten Stapel daneben legen. Der Rest bleibt in der Schachtel.`,
+       `2 Zahlenkarten aufdecken: diese beiden Zahlen werden beim Zählen vertauscht.`,
+       `Die jüngste Person beginnt mit „eins“.`];
+     if(opt.mode==="solo"){
+       const each = Math.floor(20/n), rest = 20 - each*n;
+       return { tasks, gems:each, solo:true, seatLabel:`${each} 💎`,
+         deal:[
+           {v:each, t:"Edelsteine pro Person", main:true},
+           {v:rest, t:"Edelsteine zurück in die Schachtel"},
+           {v:tasks, t:`Aufgabenkarten als Stapel (Stufe ${lv})`},
+           {v:2, t:"Zahlenkarten aufdecken (werden vertauscht)"}
+         ],
+         steps:[...base, `Alle 20 Edelsteine gleichmässig verteilen: je ${each}${rest?`, ${rest} zurück in die Schachtel`:""}.`, ...tail],
+         note:"Variante „Jeder gegen Jeden“ (empfohlen für 2–6). Wer einen Fehler macht, gibt einen eigenen Edelstein ab. Ende, sobald jemand keinen mehr hat." };
+     }
+     const gems = n<=3?13 : n<=6?16 : 20;
+     return { tasks, gems, seatLabel:"0",
+       deal:[
+         {v:gems, t:"Edelsteine in den gemeinsamen Vorrat", main:true},
+         {v:tasks, t:`Aufgabenkarten als Stapel (Stufe ${lv})`},
+         {v:2, t:"Zahlenkarten aufdecken (werden vertauscht)"},
+         {v:0, t:"Handkarten: niemand bekommt Karten"}
+       ],
+       steps:[...base, `${gems} Edelsteine als gemeinsamen Vorrat in die Mitte legen.`, ...tail],
+       note: lv===1 ? "Für die erste Partie wird Stufe 1 empfohlen." : "" };
+   },
+   center(r){
+     const cy=262; let s="";
+     s+=stack(215,cy-34,40,62,"var(--c)","","Zahlenstapel");
+     s+=card(300,cy-34,40,62,"#efe9c4","3",{big:true}) + card(346,cy-34,40,62,"#efe9c4","16",{big:true});
+     s+=lbl(343,cy+50,"vertauschen ⇄");
+     s+=stack(440,cy-34,40,62,"var(--cardback)",r.tasks,"Aufgaben");
+     // Edelsteine
+     const g = r.solo?0:r.gems;
+     if(g){ for(let i=0;i<g;i++){ const x=560+(i%5)*16, y=cy-30+Math.floor(i/5)*16; s+=`<path d="M${x} ${y-7} l7 5 -3 8 h-8 l-3 -8z" fill="var(--c)" stroke="#fff" stroke-width="1"/>`; }
+       s+=lbl(592,cy+58,`${g} Edelsteine`); }
+     return s;
+   },
+   gallery:[
+     ["img/bis_numbers.webp","20 Zahlenkarten","Zwei davon werden am Anfang vertauscht, später kommt pro Runde eine dazu."],
+     ["img/bis_tasks.webp","40 Aufgabenkarten","Fritz „the bat“ zeigt, was ihr statt der Zahl macht."],
+     ["img/bis_gems.webp","20 Edelsteine","Für jeden Fehler geht einer zurück in die Schachtel."],
+     ["img/bis_swap.webp","Erste Aufgabe","Zwei Zahlen werden beim Zählen vertauscht."],
+     ["img/bis_wave.webp","Neue Aufgabe","Statt „7“ wird jetzt gewinkt."]
+   ],
+   rules:[
+     ["So wird gezählt",["Reihum im Uhrzeigersinn von 1 bis 20 zählen.","Fehlerfrei bis 20: neue Zahlen- und Aufgabenkarte aufdecken. Statt dieser Zahl macht man jetzt die Aufgabe."],[["img/bis_swap.webp","1 – 2 – 16 – 4 …"],["img/bis_wave.webp","… 6 – winken – 8 …"]]],
+     ["Fehler",["Zahl vergessen zu ersetzen, falsch gesagt oder länger als 3 Sekunden: 1 Edelstein in die Schachtel.","Wer den Fehler gemacht hat, beginnt neu bei „eins“. Keine neue Aufgabe."]],
+     ["Ende",["Gewonnen: alle Aufgabenkarten sind vergeben.","Verloren: der letzte Edelstein ist weg."]]
+   ]
+ },
+ { id:"fiese7", photos:[["img/ph_fie1.webp", "Die Karten"], ["img/ph_fie2.webp", "Schachtel und Karten"]], name:"Die fiesen 7", sub:"Ein Versprecher kommt selten allein", c:"--fie", cover:"img/cover_fie.webp",
+   min:2, max:6, age:"ab 8", time:"15–20 Min.", minutes:20,
+   cats:["komp","reakt","zahl"], places:["tisch","kreis","weg"],
+   material:"110 Spielkarten",
+   compute(n){
+     const each = Math.floor(110/n), rest = 110 - each*n;
+     return { each, rest, seatLabel:`${each}`, seatStack:true,
+       deal:[
+         {v:each, t:"Karten pro Person (als verdeckter Stapel)", main:true},
+         {v:rest, t:"übrige Karten zurück in die Schachtel"}
+       ],
+       steps:[
+         `Alle 110 Karten verdeckt mischen.`,
+         `Je ${each} Karten an alle verteilen${rest?`. ${rest} übrige Karten zurück in die Schachtel`:""}.`,
+         `Alle halten ihre Karten als verdeckten Stapel in der Hand, ohne hinzuschauen.`,
+         `In der Mitte Platz für den Ablagestapel lassen.`,
+         `Die jüngste Person beginnt, dann im Uhrzeigersinn.`
+       ],
+       note:"Für Jüngere: alle Doppelkarten vorher aussortieren." };
+   },
+   center(r){
+     let s=`<rect x="340" y="215" width="120" height="96" rx="8" fill="none" stroke="var(--tableline)" stroke-width="2" stroke-dasharray="6 4"/>`;
+     s+=card(370,228,30,46,"#fff","1",{tilt:-8}) + card(386,232,30,46,"#fff","2",{tilt:6}) + card(402,230,30,46,"#fff","3",{tilt:-2});
+     s+=lbl(400,330,"Ablagestapel (offen)");
+     return s;
+   },
+   gallery:[
+     ["img/fie_g.webp","Ganove","Nächste Zahl laut rufen."],
+     ["img/fie_h.webp","Handy","Statt der Zahl „hmmmrrr“ räuspern."],
+     ["img/fie_p.webp","Pistole","Statt der Zahl nichts sagen."],
+     ["img/fie_dg.webp","Doppel-Ganove","Zwei Zahlen rufen, nächste Person aussetzen."],
+     ["img/fie_dh.webp","Doppel-Handy","Zweimal räuspern, nächste Person aussetzen."]
+   ],
+   rules:[
+     ["Dein Zug",["Oberste Karte zu den anderen hin aufdecken und in die Mitte legen.","Gezählt wird 1 bis 7, dann wieder runter bis 1, dann wieder hoch.","Jeder Ganove zählt mit, auch bei Handy und Pistole."],[["img/fie_row.webp","1 – 2 – (3) – 4 – (5) – 6 – 7,6 – 5 – (4,3) – 2"]]],
+     ["Fehler",["Falsche Zahl, falsches Geräusch oder länger als 3 Sekunden: alle Karten aus der Mitte unter den eigenen Stapel.","Wer den Fehler gemacht hat, beginnt die nächste Runde."]],
+     ["Ende",["Wer zuerst keine Karten mehr hat, gewinnt.","Profis: Fiesenregel. Wer als Erstes ein Handy legt, erfindet ein neues Geräusch."]]
+   ]
+ },
+ { id:"tucana", photos:[["img/ph_tuc1.webp", "So wird gespielt"]], name:"Trails of Tucana", sub:"Wege auf einer Insel zeichnen", c:"--tuc", cover:"img/cover_tuc.webp",
+   videos:[["Teaser vom Verlag","https://www.youtube.com/watch?v=_N9Q60KLcyk","Pegasus Spiele · YouTube"]],
+   min:1, max:8, age:"ab 8", time:"15–30 Min.", minutes:30,
+   cats:["komp","write","solo"], places:["tisch"],
+   material:"Block mit 100 Inselplänen, 27 Geländekarten, 13 Aufbaukarten, 10 blaue und 5 rote Bonuskarten, 8 Stifte",
+   compute(n){
+     const bonus = n<=4 ? 5 : 10;
+     return { bonus, seatLabel:"1 Plan", hint:"Jede Person bekommt 1 Inselplan und 1 Stift. Alle zeichnen gleichzeitig.",
+       deal:[
+         {v:1, t:"Inselplan und 1 Stift pro Person (Seite „Isla Petit“ nach oben)", main:true},
+         {v:27, t:"Geländekarten als verdeckter Stapel beim Oberhaupt"},
+         {v:1, t:"Aufbaukarte aufdecken: Buchstaben für die Dörfer"},
+         {v:bonus, t: n<=4 ? "blaue Bonuskarten mit „#1“ offen in die Mitte" : "blaue Bonuskarten: 5 Stapel A–E, „#1“ jeweils oben"}
+       ],
+       steps:[
+         `Jede Person nimmt 1 Inselplan und 1 Stift. Die Seite „Isla Petit“ liegt oben.`,
+         `Eine Person ist das Oberhaupt. Sie mischt die 27 Geländekarten und legt sie verdeckt vor sich.`,
+         `Das Oberhaupt mischt die Aufbaukarten, deckt 1 auf und liest die 10 Buchstaben vor: zuerst den roten, dann im Uhrzeigersinn.`,
+         `Alle schreiben die Buchstaben in dieser Reihenfolge an ihre Dörfer. Das Oberhaupt beginnt bei Dorf 1, die Person links davon bei Dorf 2 usw.`,
+         `Die Aufbaukarten kommen zurück in die Schachtel.`,
+         n<=4 ? `Die 5 blauen Bonuskarten mit „#1“ offen in die Mitte legen, sortiert nach Buchstaben. Die „#2“-Karten bleiben in der Schachtel.` : `Alle 10 blauen Bonuskarten zu 5 Stapeln A–E sortieren. Die Karten mit „#1“ liegen jeweils oben.`,
+         `Die roten Bonuskarten bleiben in der Schachtel (ausser bei der Variante „Spezial-Bonus“).`
+       ],
+       note: n===1 ? "Solo: Die Anleitung hat auf Seite 8 eigene Änderungen für Aufbau und Ablauf." : "Alle spielen gleichzeitig. Es gibt keine Handkarten." };
+   },
+   center(r){
+     const cy=262; let s="";
+     s+=stack(180,cy-40,40,60,"var(--cardback)",27,"Geländestapel");
+     s+=card(280,cy-40,40,60,"#e7c98a","",{}) + card(326,cy-40,40,60,"#7cc3d6","",{});
+     s+=lbl(323,cy+42,"2 Karten aufdecken");
+     for(let i=0;i<5;i++){ s+= r.bonus===10 ? card(430+i*36,cy-36,30,44,"#2f6db5","",{}) : ""; s+=card(426+i*36,cy-40,30,44,"#2f6db5","ABCDE"[i],{}); }
+     s+=lbl(512,cy+28,`${r.bonus} Bonuskarten`);
+     return s;
+   },
+   seat(hx,hy,rot){ return `<g transform="rotate(${rot} ${hx} ${hy})"><rect x="${hx-15}" y="${hy-18}" width="30" height="36" rx="3" fill="#f3e3bf" stroke="#8a6a3a" stroke-width="1.2"/><circle cx="${hx-6}" cy="${hy-6}" r="3" fill="#7cc3d6"/><circle cx="${hx+5}" cy="${hy+3}" r="3" fill="#8bb26a"/><path d="M${hx-6} ${hy-6} L${hx+5} ${hy+3}" stroke="#333" stroke-width="1.4"/><line x1="${hx+11}" y1="${hy-16}" x2="${hx+19}" y2="${hy+14}" stroke="#c98a2a" stroke-width="3"/></g>`; },
+   gallery:[
+     ["img/tuc_plan.webp","Inselplan","Jede Person bekommt einen. Darauf liegen Dörfer und Sehenswürdigkeiten."],
+     ["img/tuc_cards.webp","Geländekarten","Wüste, Wald, Gebirge, See und „beliebiges Gelände“."],
+     ["img/tuc_setup.webp","Aufbaukarte","Bestimmt, welcher Buchstabe an welches Dorf kommt."],
+     ["img/tuc_bonus.webp","Bonuskarten","Wer zuerst zwei gleiche Dörfer verbindet, bekommt Extrapunkte."]
+   ],
+   rules:[
+     ["Ein Zug",["Das Oberhaupt deckt 2 Geländekarten auf und sagt sie laut an.","Alle zeichnen gleichzeitig 1 Weg zwischen 2 benachbarten Feldern mit genau diesen Geländen.","Geht das nicht, zeichnest du in diesem Zug keinen Weg."],[["img/tuc_draw.webp","2 Karten → 1 Weg"]]],
+     ["Punkte sammeln",["Verbinde Sehenswürdigkeiten mit einem Dorf: Wert umrahmen.","Bei der zweiten gleichen Sehenswürdigkeit darfst du sofort einen Extra-Weg zeichnen.","Verbinde Dörfer mit gleichem Buchstaben."],[["img/tuc_setup.webp","Buchstaben an die Dörfer"]]],
+     ["Ende",["Das Spiel hat 2 Runden mit je 13 Zügen.","Eine Runde endet, wenn nur noch 1 Karte im Stapel liegt.","Wer die meisten Punkte hat, gewinnt."]]
+   ]
+ },
+ { id:"cascadia", photos:[["img/ph_cas1.webp", "Das ganze Material"], ["img/ph_cas2.webp", "Am Spieltisch"]], name:"Cascadia", sub:"Landschaften und Tiere legen", c:"--cas", cover:"img/cover_cas.webp",
+   videos:[["Spielvorstellung vom Verlag","https://www.youtube.com/watch?v=W0khdh0OKFo","KOSMOS · YouTube"]],
+   min:1, max:4, age:"ab 10", time:"30–60 Min.", minutes:60,
+   cats:["komp","lege","solo"], places:["tisch","gross"],
+   material:"85 Wildnisplättchen, 5 Start-Landschaften, 100 Tiere, 21 Wertungskarten, 25 Zapfen, 1 Stoffbeutel, 1 Wertungsblock",
+   compute(n){
+     const tiles = n===1 ? 43 : 20*n+3;
+     return { tiles, seatLabel:"Start", hint:"Jede Person bekommt 1 Start-Landschaft. Alles andere liegt in der Mitte.",
+       deal:[
+         {v:tiles, t:`Wildnisplättchen zufällig abzählen (${85-tiles} zurück in die Schachtel)`, main:true},
+         {v:1, t:"Start-Landschaft pro Person (das grosse Plättchen aus 3 Feldern)"},
+         {v:5, t:"Wertungskarten: 1 pro Tierart. Für den Anfang die Karten mit „A“"},
+         {v:4, t:"Wildnisplättchen + 4 Tiere als Auslage"}
+       ],
+       steps:[
+         `Alle Tiere in den Beutel geben und gut mischen.`,
+         `${tiles} Wildnisplättchen zufällig abzählen, ohne die Vorderseiten anzuschauen${n===1?" (solo wie zu zweit)":""}. Mischen und in ein paar verdeckten Stapeln bereitlegen. Der Rest kommt in die Schachtel.`,
+         `5 Wertungskarten offen an den Rand legen, 1 pro Tierart. In den ersten Partien die Karten mit „A“.`,
+         `Jede Person bekommt 1 zufällige Start-Landschaft und legt sie offen vor sich.`,
+         `4 Wildnisplättchen aufdecken und in eine Reihe legen.`,
+         `4 Tiere einzeln aus dem Beutel ziehen und je eines zu einem Plättchen legen.`,
+         `Die Zapfen als Vorrat bereitlegen.`
+       ],
+       note: n===1 ? "Solo: Vor dem Auffüllen fliegt jeweils das Paar ganz rechts aus dem Spiel, die anderen rutschen nach rechts." : "Für jüngere Kinder gibt es eine einfache Wertungskarte, die alle Tiere gleich wertet." };
+   },
+   center(r){ return cascCenter(r); },
+   seat(hx,hy,rot){ return casSeat(hx,hy,rot); },
+   gallery:[
+     ["img/cas_start.webp","Start-Landschaften","Jede Person beginnt mit einer davon."],
+     ["img/cas_tiles.webp","Wildnisplättchen","Gebirge, Wald, Prärie, Feuchtgebiet und Fluss."],
+     ["img/cas_animals.webp","Tiere","Bär, Hirsch, Lachs, Bussard und Fuchs."],
+     ["img/cas_cards.webp","Wertungskarten","Zeigen, wie die Tiere Punkte bringen."],
+     ["img/cas_cones.webp","Zapfen","Damit darfst du freier wählen. Am Ende 1 Punkt pro Zapfen."]
+   ],
+   rules:[
+     ["Dein Zug",["Zuerst prüfen: 4 gleiche Tiere in der Auslage werden ausgetauscht, bei 3 gleichen darfst du tauschen.","Nimm 1 Plättchen mit dem Tier darunter.","Lege das Plättchen an deine Landschaft und setze das Tier auf ein Feld, das dieses Tier zeigt.","Auslage wieder auffüllen."],[["img/cas_setup.webp","So sieht der Aufbau aus"]]],
+     ["Zapfen",["Setzt du ein Tier auf ein Plättchen mit Zapfensymbol, bekommst du 1 Zapfen.","Mit 1 Zapfen darfst du Plättchen und Tier frei kombinieren oder Tiere austauschen."]],
+     ["Ende & Wertung",["Alle sind 20-mal am Zug.","Punkte für Tiere laut Wertungskarten.","Punkte für die grössten Gebiete jeder Landschaft, dazu 1 Punkt pro Zapfen."]]
+   ]
+ },
+ { id:"cascadia-lm", photos:[["img/ph_lmk1.webp", "Landmarken für Bonuspunkte"]], name:"Cascadia: Landmarks", sub:"Erweiterung für bis zu 6 Personen", c:"--lmk", cover:"img/cover_lmk.webp",
+   min:1, max:6, age:"ab 10", time:"ca. 60 Min.", minutes:60,
+   cats:["komp","lege","solo","erw"], places:["gross"],
+   material:"45 Wildnisplättchen, 5 Start-Landschaften, 35 Tiere, 15 Zapfen, 15 Tier-Wertungskarten, 30 Landmarken, 60 Landmarken-Wertungskarten, 1 Wertungsblock. Nur mit dem Grundspiel spielbar.",
+   opts:{key:"module", label:"Landmarken-Modul", choices:[["off","Ohne"],["on","Mit Landmarken"]], def:"on"},
+   compute(n, opt){
+     const mod = opt.module==="on";
+     const tiles = (mod?[44,45,66,87,108,129]:[43,43,63,83,103,123])[n-1];
+     const deal=[
+       {v:tiles, t:`Wildnisplättchen aus Grundspiel + Erweiterung zufällig abzählen (${130-tiles} zurück)`, main:true},
+       {v:1, t:"Start-Landschaft pro Person"},
+       {v:4, t:"Wildnisplättchen + 4 Tiere als Auslage"}];
+     if(mod){ deal.push({v:n===1?10:5*n, t:n===1?"Landmarken-Wertungskarten: 2 pro Landschaft":`Landmarken-Wertungskarten: ${n} pro Landschaft`}); }
+     const steps=[
+       `Grundspiel und Erweiterung zusammen benutzen. Alle Tiere in den Beutel.`,
+       `${tiles} Wildnisplättchen zufällig abzählen, mischen und verdeckt stapeln.`,
+       `5 Tier-Wertungskarten auslegen (aus A–D oder den neuen E–G).`,
+       `Jede Person bekommt 1 zufällige Start-Landschaft.`];
+     if(mod){
+       steps.push(`Plättchen aufdecken, bis ${n} mit Zapfensymbol ausliegen. Rechts von der Startperson beginnend wählt jede Person eines davon und legt es an. Die anderen zurück in den Vorrat mischen.`);
+       steps.push(`Landmarken-Wertungskarten nach Landschaft in 5 Stapel sortieren, mischen und je ${n===1?2:n} aufdecken.`);
+       steps.push(`Von jeder Landmarken-Art so viele Holzfiguren neben die Karten legen, wie die Anleitung für eure Personenzahl angibt.`);
+     }
+     steps.push(`Auslage: 4 Plättchen aufdecken, 4 Tiere dazulegen. Zapfen bereitlegen.`);
+     return { tiles, mod, n, seatLabel:"Start", hint:"Jede Person bekommt 1 Start-Landschaft. Alles andere liegt in der Mitte.", deal, steps,
+       note: n>=5 ? "Mit 5–6 Personen empfiehlt die Anleitung die Regeln für ein schnelleres Spiel: jede Person bekommt 5 eigene Plättchen-Tier-Paare und darf zwischen den Zügen eines davon legen." : "Die Plättchen aus Grundspiel und Erweiterung dürfen gemischt bleiben." };
+   },
+   center(r){ return cascCenter(r); },
+   seat(hx,hy,rot){ return casSeat(hx,hy,rot); },
+   gallery:[
+     ["img/lmk_tiles.webp","Neue Wildnisplättchen","Mit mehreren Landschaften auf einem Zapfen-Plättchen."],
+     ["img/lmk_marks.webp","Landmarken","Holzfiguren für grosse Gebiete ab 5 Feldern."],
+     ["img/lmk_cards.webp","Landmarken-Wertungskarten","Bonuspunkte am Ende für die Landmarken."],
+     ["img/lmk_start.webp","Neue Start-Landschaften","5 weitere, damit bis zu 6 Personen spielen können."],
+     ["img/lmk_tcards.webp","Neue Tier-Wertungskarten","Die Karten E, F und G für neue Herausforderungen."]
+   ],
+   rules:[
+     ["Was ist neu?",["Bis zu 6 Personen.","Neue Plättchen, Tiere und Wertungskarten E–G.","Alles andere wie im Grundspiel."]],
+     ["Landmarken",["Wird ein Gebiet einer Landschaft 5 Felder oder grösser, darfst du eine passende Landmarke auf das eben gelegte Plättchen setzen.","Landmarken bringen am Ende Punkte laut ihrer Wertungskarte."]],
+     ["Schneller spielen",["Jede Person hat 5 eigene Paare aus Plättchen und Tier.","1-mal pro Runde darfst du zwischen deinen Zügen eines davon legen.","Dafür bist du nur 15-mal statt 20-mal am Zug."]]
+   ]
+ },
+ { id:"bombbusters", photos:[["img/ph_bomb3.webp", "Am Spieltisch"], ["img/ph_bomb1.webp", "Missionen und Kabel"], ["img/ph_bomb2.webp", "Kabelhalter und Ausrüstung"]], name:"Bomb Busters", sub:"Gemeinsam die Bombe entschärfen", c:"--bomb", cover:"img/cover_bomb.jpg",
+   videos:[["Teaser vom Verlag","https://www.youtube.com/watch?v=UeuNvNzAG2c","Pegasus Spiele · YouTube"]],
+   min:2, max:5, age:"ab 10", time:"20–40 Min.", minutes:40,
+   cats:["koop","deduk","mission"], places:["tisch"],
+   material:"1 Spielplan mit Zeiger, 70 Kabelplättchen (48 blau, 11 rot, 11 gelb), 5 Kabelhalter, 25 Karten, 7 Figuren, 40 Marker, 5 Überraschungsboxen",
+   opts:{key:"mission", label:"Mission", choices:[["1","Mission 1"],["4","Ab Mission 4"]], def:"1"},
+   compute(n, opt){
+     const holders = n===2?[2,2] : n===3?[2,1,1] : Array(n).fill(1);
+     const totalH = holders.reduce((a,b)=>a+b,0);
+     const m1 = opt.mission==="1";
+     const wires = m1 ? 24 : 48;
+     const per = wires/totalH;
+     const perTxt = Number.isInteger(per) ? `${per}` : `${Math.floor(per)}–${Math.ceil(per)}`;
+     let hk=0; const base=Math.floor(wires/totalH), extra=wires%totalH;
+     const seatLabels = holders.map(h=>{ let c=0; for(let q=0;q<h;q++){ c+= base + (hk<extra?1:0); hk++; } return m1 ? `${c}` : `${h}×`; });
+     return { holders, seatLabels, seatLabel:"x", n, hint: m1 ? "Die Zahl neben jedem Platz zeigt, wie viele Kabel diese Person bekommt." : "Die Zahl neben jedem Platz zeigt, wie viele Kabelhalter diese Person bekommt.",
+       deal:[
+         {v:totalH, t:`Kabelhalter: ${n===2?"je 2":n===3?"Captain 2, alle anderen 1":"je 1"}`, main:true},
+         {v: m1 ? perTxt : "ca. "+perTxt, t: m1 ? "Kabel pro Kabelhalter (nur die blauen 1–6, je 4×)" : "blaue Kabel pro Kabelhalter, dazu die roten/gelben laut Missionskarte"},
+         {v:n, t:"Charakterkarten, eine davon ist der Captain"},
+         {v:m1?0:n, t: m1 ? "Ausrüstungskarten (gibt es erst ab Mission 3)" : "Ausrüstungskarten offen auf den Spielplan, 1 pro Person"},
+         {v:1, t:"Infomarker pro Person vor ein eigenes Kabel"}
+       ],
+       steps:[
+         `Wer zuletzt wegen etwas in die Luft gegangen ist, wird Captain. Alle anderen bekommen eine zufällige Charakterkarte.`,
+         `Der Captain liest die Missionskarte vor${m1?" (Mission 1: „Kabel durchschneiden für Dummies“)":""}.`,
+         `Kabelhalter nehmen: ${n===2?"jede Person 2":n===3?"der Captain 2, alle anderen 1":"jede Person 1"}.`,
+         m1 ? `Nur die blauen Kabel 1 bis 6 nehmen (24 Stück), verdeckt mischen.` : `Alle 48 blauen Kabel nehmen. Dazu so viele rote und gelbe Kabel ziehen, wie die Missionskarte sagt, ihre Werte mit den Figuren auf der Prüfleiste markieren. Alles verdeckt mischen.`,
+         `Die Kabel möglichst gleichmässig auf alle Kabelhalter verteilen. Jede Person sortiert ihre Kabel aufsteigend von links nach rechts, ohne sie zu zeigen.`,
+         `Den Zeiger auf das Zeitfeld für ${n} Personen stellen.${m1?"":" Pro Person 1 Ausrüstungskarte offen auf den Spielplan legen (grüne Häkchen verdeckt)."}`,
+         `Infomarker auf das blaue Feld, Bestätigungsmarker auf das grüne Feld legen.`,
+         `Beim Captain beginnend legt jede Person 1 Infomarker vor ein eigenes Kabel mit demselben Wert.`
+       ],
+       note:"Spielt die Missionen der Reihe nach. Die Missionen 1–3 sind ein Training, nach Mission 8 öffnet ihr die erste Überraschungsbox." };
+   },
+   center(r){
+     const cy=258; let s="";
+     s+=`<rect x="250" y="${cy-55}" width="300" height="90" rx="8" fill="#e9eef2" stroke="#2a2724" stroke-opacity=".5" stroke-width="1.5"/>`;
+     for(let i=0;i<12;i++) s+=`<rect x="${262+i*20}" y="${cy-10}" width="16" height="16" rx="2" fill="#fff" stroke="#9aa7b2"/><text x="${270+i*20}" y="${cy+3}" text-anchor="middle" font-size="9" font-weight="700">${i+1}</text>`;
+     s+=`<circle cx="520" cy="${cy-30}" r="16" fill="#fff" stroke="#c0392b" stroke-width="3"/><line x1="520" y1="${cy-30}" x2="530" y2="${cy-40}" stroke="#c0392b" stroke-width="3"/>`;
+     s+=lbl(400,cy+55,"Spielplan mit Zünder und Prüfleiste");
+     return s;
+   },
+   seat(hx,hy,rot,i,r){ const h=r.holders[i]; let s=`<g transform="rotate(${rot} ${hx} ${hy})">`; for(let k=0;k<h;k++){ const ox=(k-(h-1)/2)*30; s+=`<rect x="${hx+ox-13}" y="${hy-6}" width="26" height="12" rx="2" fill="#2b2b33"/>`; for(let j=0;j<5;j++) s+=`<rect x="${hx+ox-11+j*5}" y="${hy-16}" width="3.5" height="12" fill="#3d7bd9"/>`; } return s+`</g>`; },
+   gallery:[
+     ["img/bomb_wires.webp","Kabel","Blaue Kabel 1–12 (je 4×), gefährliche rote und gelbe Kabel."],
+     ["img/bomb_cards.webp","Karten","Ausrüstung, Charaktere und Missionen."]
+   ],
+   rules:[
+     ["Dein Zug",["Duo-Schnitt: Zeige auf ein Kabel einer anderen Person und tippe den Wert. Du musst diesen Wert selbst haben.","Richtig: Beide Kabel offen auslegen.","Falsch: Zeiger 1 Feld weiter, die Person legt einen Infomarker mit dem echten Wert davor."]],
+     ["Weitere Aktionen",["Solo-Schnitt: Hast du alle restlichen Kabel eines Werts, legst du sie alle aus.","Rote Kabel sichern: Hast du nur noch rote Kabel, legst du sie offen aus.","Ausrüstung wird frei, sobald 2 Kabel ihres Werts durchgeschnitten sind."]],
+     ["Reden & Ende",["Nicht über eigene Kabel sprechen oder Hinweise geben.","Gewonnen: Alle Kabelhalter sind leer.","Verloren: Ein rotes Kabel wird durchgeschnitten oder der Zeiger erreicht das letzte Feld."]]
+   ]
+ },
+ { id:"pickapen", name:"Pick a Pen: Gärten", sub:"Gärten bunt ausmalen", c:"--pap", cover:"img/cover_pap.webp",
+   videos:[["AMIGO erklärt „Pick a Pen: Gärten“","https://www.youtube.com/watch?v=qqdY4P2B2p8","AMIGO · YouTube"]],
+   min:2, max:4, age:"ab 8", time:"ca. 30 Min.", minutes:30,
+   cats:["komp","write"], places:["tisch","weg"],
+   material:"5 Buntstifte (Seiten 1, 1, 2, 3, 4, 5), Spielbögen mit 3 Leveln",
+   opts:{key:"level", label:"Level", choices:[["1","1 · Kleine Gärten"],["2","2 · Blumen"],["3","3 · Bäume"]], def:"1"},
+   compute(n, opt){
+     const lv=opt.level||"1";
+     return { seatLabel:"1 Bogen", hint:"Jede Person bekommt 1 Spielbogen. Die 5 Stifte liegen in der Mitte.",
+       deal:[
+         {v:1, t:`Spielbogen Level ${lv} pro Person`, main:true},
+         {v:5, t:"Buntstifte in die Tischmitte. Sie sind Würfel und Malstift zugleich"}
+       ],
+       steps:[
+         `Die 5 Buntstifte in die Tischmitte legen.`,
+         `Gemeinsam ein Level wählen. Jede Person bekommt einen Spielbogen von Level ${lv}${lv==="1"?" (perfekt für die erste Partie)":""}.`,
+         `Wer am buntesten angezogen ist, beginnt.`
+       ],
+       note:"Die Stifte sind auch die Würfel: Sie haben 6 Seiten mit den Zahlen 1, 1, 2, 3, 4 und 5." };
+   },
+   center(r){
+     const cols=["#2f6db5","#3a9a3a","#d23b3b","#ef8a17","#8a4fb8"]; let s="";
+     cols.forEach((c,i)=>{ const x=300+i*45, y=230+(i%2)*28, rot=-30+i*17; s+=`<g transform="rotate(${rot} ${x} ${y})"><rect x="${x-40}" y="${y-7}" width="80" height="14" rx="3" fill="${c}"/><path d="M${x+40} ${y-7} l14 7 -14 7z" fill="#f2d3a0"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="11" font-weight="800" style="fill:#fff">${[3,1,5,2,4][i]}</text></g>`; });
+     s+=lbl(400,320,"5 Buntstifte würfeln");
+     return s;
+   },
+   seat(hx,hy,rot){ return `<g transform="rotate(${rot} ${hx} ${hy})"><rect x="${hx-14}" y="${hy-19}" width="28" height="38" rx="3" fill="#7cc06a" stroke="#3e7a32" stroke-width="1.2"/><rect x="${hx-9}" y="${hy-13}" width="18" height="18" rx="2" fill="#fff"/><rect x="${hx-9}" y="${hy+8}" width="18" height="6" fill="#fff"/></g>`; },
+   gallery:[
+     ["img/pap_sheet.webp","Spielbogen","Gärten zum Ausmalen und unten die Punkte-Kästchen."]
+   ],
+   rules:[
+     ["Eine Runde",["Würfle die 5 Stifte in die Tischmitte.","Reihum nimmt jede Person 1 Stift und sagt Farbe und Zahl laut, z. B. „Rot, Drei“.","Male so viele Felder in dieser Farbe aus.","Sind alle Stifte weg, würfelt die nächste Person neu."]],
+     ["Ausmalen",["Alle neuen Felder müssen zusammenhängen.","Ab der zweiten Farbe musst du an schon ausgemalte Felder anschliessen.","Passt die Zahl nicht, malst du stattdessen ein Stift-Symbol aus (Minuspunkte)."]],
+     ["Punkte & Ende",["Ein Garten in einer Farbe: Punkte in dieser Farbe.","Ein Garten mit allen 5 Farben: bunte Punkte.","Das Spiel endet sofort, wenn jemand das letzte Feld oder das letzte Stift-Symbol ausmalt."]]
+   ]
+ },
+ { id:"taketime", name:"Take Time", sub:"Gemeinsam Uhren lösen, ohne zu reden", c:"--tt", cover:"img/cover_tt.webp",
+   videos:[["Trailer vom Verlag (englisch)","https://www.youtube.com/watch?v=xg3W7DxxU4U","Libellud · YouTube"]],
+   min:2, max:4, age:"ab 10", time:"ca. 30 Min.", minutes:30,
+   cats:["koop","kommun","zahl"], places:["tisch"],
+   material:"24 Karten (12 Sonnen, 12 Monde, je 1–12), 3 Aufdeckplättchen, 3 Bonusplättchen, 10 Kapitel mit je 4 Uhren, 1 Uhrzeiger, Astrolabium- und Zeitsprung-Umschlag",
+   compute(n){
+     const hand={2:6,3:4,4:3}[n];
+     return { hand, seatLabel:String(hand),
+       deal:[
+         {v:hand, t:n===2?"Karten pro Person (als 2 Stapel: 4 und 2 Karten)":"Karten pro Person, verdeckt", main:true},
+         {v:12, t:"Karten werden verteilt, die anderen 12 kommen zur Seite"},
+         {v:1, t:`Aufdeckplättchen für ${n} Personen neben die Uhr`},
+         {v:3, t:"Bonusplättchen verdeckt auf das Aufdeckplättchen"}
+       ],
+       steps:[
+         `Erste Partie: Umschlag von Kapitel 1 öffnen. Die 4 Uhren verdeckt stapeln, Uhr 1 oben und Uhr 4 unten.`,
+         `Die oberste Uhr aufdecken und in die Tischmitte legen.`,
+         `Das Aufdeckplättchen für ${n} Personen neben die Uhr legen, die anderen zurück in die Schachtel. Die 3 Bonusplättchen verdeckt darauf legen.`,
+         `Alle Sonnen- und Mondkarten mischen und 12 Karten verdeckt verteilen: je ${hand}${n===2?" (ein Stapel mit 4 und einer mit 2 Karten)":""}. Die übrigen Karten zur Seite legen.`,
+         `Wichtig: Die Vorderseiten der Karten noch nicht anschauen.`,
+         `Ab Kapitel 3 zusätzlich den Uhrzeiger bereitlegen.`
+       ],
+       note:"Bei späteren Partien macht ihr mit dem Kapitel weiter, bei dem ihr aufgehört habt." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Uhr mit 6 Segmenten",w:120,h:110,fill:"#2c3e66",inner:(x,y,w,h)=>`<circle cx="${x+w/2}" cy="${y+h/2}" r="42" fill="#e9d9a6" stroke="#b08a3a" stroke-width="3"/>`+[0,1,2,3,4,5].map(i=>`<line x1="${x+w/2}" y1="${y+h/2}" x2="${x+w/2+42*Math.cos(i*Math.PI/3)}" y2="${y+h/2+42*Math.sin(i*Math.PI/3)}" stroke="#b08a3a" stroke-width="2"/>`).join("")},{t:"stack",label:"Weitere Uhren",count:3,fill:"#2c3e66"},{t:"stack",label:"Aufdeckplättchen",count:"",fill:"#b08a3a"}]); },
+   rules:[
+     ["1. Vorbesprechung",["Schaut nur die Rückseiten eurer Karten an: Sonne oder Mond.","Besprecht die allgemeinen Regeln und die Sonderregeln der Uhr und plant eine Strategie."]],
+     ["2. Platzierung",["Ab jetzt wird nicht mehr gesprochen.","Reihum legt ihr eure Karten verdeckt an die 6 Segmente der Uhr."]],
+     ["3. Auflösung",["Alle Karten aufdecken.","An jedem Segment liegt mindestens 1 Karte, kein Segment hat mehr als 24.","Die Summen steigen im Uhrzeigersinn ab dem Startsegment an, dazu gelten die Sonderregeln der Uhr. Stimmt alles, ist die Uhr gelöst."]]
+   ]
+ },
+ { id:"harmonies", photos:[["img/ph_harm1.webp", "Schachtel und Material"]], name:"Harmonies", sub:"Landschaften bauen, Tiere ansiedeln", c:"--harm", cover:"img/cover_harm.webp",
+   videos:[["Trailer vom Verlag (englisch)","https://www.youtube.com/watch?v=8tnOAFMw_jQ","Libellud · YouTube"]],
+   min:1, max:4, age:"ab 10", time:"30–45 Min.", minutes:45,
+   cats:["komp","lege","solo"], places:["tisch"],
+   material:"1 gemeinsamer Spielplan, 4 persönliche Spielpläne, 4 Wertungsübersichten, 120 Spielsteine, 66 Tierwürfel, 32 Tierkarten, 10 Naturgeistkarten, 4 Naturgeistwürfel, 1 Beutel, 1 Wertungsblock",
+   compute(n){
+     return { seatLabel:"1 Plan",
+       deal:[
+         {v:1, t:"persönlicher Spielplan und 1 Wertungsübersicht pro Person", main:true},
+         {v:5, t:"Tierkarten offen neben den gemeinsamen Spielplan"},
+         {v:15, t:"Spielsteine: 3 auf jedes der 5 Felder"},
+         {v:0, t:"Handkarten: niemand bekommt Karten"}
+       ],
+       steps:[
+         `Den gemeinsamen Spielplan mit der Seite für 2–4 Personen in die Tischmitte legen.`,
+         `Alle Spielsteine in den Beutel geben und jedes der 5 Felder mit 3 zufälligen Steinen füllen.`,
+         `Tierkarten mischen, 5 offen auslegen, den Rest als verdeckten Stapel daneben. Tierwürfel bereitlegen.`,
+         `Jede Person nimmt einen persönlichen Spielplan und eine Wertungsübersicht. Alle spielen mit derselben Seite, für die ersten Partien Seite A.`,
+         `Naturgeistkarten und -würfel bleiben in den ersten Partien in der Schachtel.`,
+         `Wer zuletzt eine atemberaubende Landschaft gesehen hat, beginnt. Der Pfeil des gemeinsamen Plans zeigt auf diese Person.`
+       ],
+       note: n===1 ? "Solo: Die Anleitung beschreibt eigene Änderungen für das Spiel allein." : "" };
+   },
+   center(r){ return genCenter([{t:"board",label:"Gemeinsamer Plan: 5 Felder à 3 Steine",w:190,h:64,fill:"#d7c79a",inner:(x,y,w,h)=>[0,1,2,3,4].map(i=>[0,1,2].map(j=>`<circle cx="${x+22+i*36+(j-1)*8}" cy="${y+h/2+(j%2)*6-3}" r="6" fill="${["#4f9ac2","#8f8f8f","#9a6a3a","#5b8f3a","#e2c14a","#c94a3a"][(i+j*2)%6]}"/>`).join("")).join("")},{t:"bag",label:"Beutel"},{t:"cards",n:5,label:"5 Tierkarten",fill:"#efe6d0"},{t:"dice",n:4,label:"Tierwürfel",cols:["#e88a2c","#8b5a2b","#4f9ac2"]}]); },
+   seat(hx,hy,rot){ return seatKind("board",hx,hy,rot,"#7fae6a"); },
+   rules:[
+     ["Dein Zug",["Pflicht: Nimm die 3 Spielsteine von einem Feld des gemeinsamen Plans und lege sie auf deinen Plan.","Steine dürfen auf 1 oder 2 Steine gestapelt werden: so entstehen Bäume, Gebäude und Berge.","Am Ende 3 neue Steine aus dem Beutel nachfüllen."]],
+     ["Tiere",["Freiwillig, 1-mal pro Zug: Nimm 1 der 5 Tierkarten und lege so viele Tierwürfel darauf, wie sie Felder zeigt. Höchstens 4 Tierkarten gleichzeitig.","Bildest du das Muster der Karte, setzt du einen Tierwürfel auf den markierten Stein."]],
+     ["Ende",["Am Ende eines Zuges hat jemand höchstens 2 freie Felder auf seinem Plan.","Die Runde wird zu Ende gespielt, dann zählt ihr Landschaften und Tiere. Die meisten Punkte gewinnen."]]
+   ]
+ },
+ { id:"schaetze", photos:[["img/ph_sdw1.webp", "Das ganze Material"]], name:"Schätze des Waldes", sub:"Pilze sammeln und ihren Wert erraten", c:"--sdw", cover:"img/cover_sdw.webp",
+   min:2, max:5, age:"ab 8", time:"ca. 20 Min.", minutes:20,
+   cats:["komp","deduk"], places:["tisch"],
+   material:"35 Körbe in 5 Farben, 56 Pilze (je 14 Pfifferlinge, Morcheln, Steinpilze, Parasole), 4 Pilztafeln, 16 Pilzkarten (Werte 1, 3, 5, 7), 1 Startspielermarker",
+   compute(n){
+     const pilze={2:8,3:10,4:12,5:14}[n], hand={2:4,3:4,4:3,5:2}[n];
+     const rest = n===2 ? "4 Karten als Nachziehstapel" : n===5 ? "2 Karten verdeckt zurück in die Schachtel" : "keine Karten übrig";
+     return { hand, seatLabel:String(hand),
+       deal:[
+         {v:hand, t:"Pilzkarten pro Person, verdeckt", main:true},
+         {v:5, t:"Körbe pro Person (2 weitere jeder Farbe in die Tischmitte)"},
+         {v:pilze, t:"Pilze jeder Sorte unter ihre Pilztafel"},
+         {v:4, t:"Pilzkarten verdeckt unter die Tafeln (1 je Sorte)"}
+       ],
+       steps:[
+         `Jede Person nimmt 7 Körbe einer Farbe, behält 5 und legt 2 in die Tischmitte. Nicht benutzte Farben zurück in die Schachtel.`,
+         `Die 4 Pilztafeln in die Mitte legen.`,
+         `Unter jede Tafel ${pilze} Pilze ihrer Sorte legen. Übrige Pilze zurück in die Schachtel.`,
+         `Pilzkarten nach Sorten sortieren, jeden Stapel mischen und je 1 Karte ungesehen verdeckt unter die passende Tafel legen. Sie zeigt den Wert am Spielende.`,
+         `Die übrigen 12 Pilzkarten mischen und je ${hand} verteilen. Rest: ${rest}.`,
+         `Wer zuletzt Pilze gesammelt hat, bekommt den Startspielermarker.`
+       ],
+       note: n===2 ? "Zu zweit wird am Ende jeder Phase 2 zusätzlich eine Karte vom Stapel für alle aufgedeckt." : "" };
+   },
+   center(r){ return genCenter([{t:"board",label:"4 Pilztafeln",w:200,h:60,fill:"#3e5a33",inner:(x,y,w,h)=>[0,1,2,3].map(i=>`<rect x="${x+8+i*48}" y="${y+8}" width="42" height="${h-16}" rx="4" fill="${["#e2b84a","#8a5a2a","#b07a4a","#f1ead6"][i]}"/>`).join("")},{t:"cards",n:4,label:"4 Karten verdeckt darunter",fill:"var(--cardback)"},{t:"tokens",n:8,label:"Pilze",fill:"#c9a26a"}]); },
+   rules:[
+     ["Phase 1: Pilze sammeln",["Wähle eine Tafel und fülle mit deinen Körben die Spalte, die am weitesten links noch frei ist.","Dafür nimmst du genau 1 Pilz dieser Sorte.","Wer nicht mehr legen kann oder will, passt. Danach gibt es Bonuspilze für die meisten Körbe auf einer Tafel."]],
+     ["Phase 2: Informationen",["Reihum legst du 1 Pilzkarte verdeckt vor dich und bekommst dafür 1 zusätzlichen Korb, oder du passt.","Danach werden diese Karten für alle aufgedeckt."]],
+     ["Ende",["Sobald unter 2 Tafeln keine Pilze mehr liegen, wird Phase 1 noch beendet.","Die Karten unter den Tafeln zeigen, was jede Pilzsorte wert ist. Der höchste Gesamtwert gewinnt."]]
+   ]
+ },
+ { id:"virus", name:"Virus!", sub:"Vier gesunde Organe sammeln", c:"--vir", cover:"img/cover_vir.webp",
+   min:2, max:6, age:"ab 8", time:"ca. 20 Min.", minutes:20,
+   cats:["komp"], places:["tisch","weg"],
+   material:"68 Karten: Organe, Viren, Medikamente und Operationen",
+   compute(n){
+     return { n, seatLabel:"3",
+       deal:[
+         {v:3, t:"Handkarten pro Person", main:true},
+         {v:68-3*n, t:"Karten als verdeckter Nachziehstapel"},
+         {v:"alle", t:"leeren Karten zurück in die Schachtel"}
+       ],
+       steps:[
+         `Die leeren Karten aussortieren.`,
+         `Alle anderen Karten mischen und als verdeckten Nachziehstapel in die Mitte legen.`,
+         `Jede Person zieht 3 Karten. Vor jeder Person bleibt Platz für ihren „Körper“.`,
+         `Wer zuletzt krank im Bett lag, beginnt.`
+       ],
+       note:"" };
+   },
+   center(r){ return genCenter([{t:"stack",label:"Nachziehstapel",count:68-3*r.n,fill:"#2f6db5"},{t:"stack",label:"Ablagestapel",count:"",fill:"#efe6d0"}]); },
+   rules:[
+     ["Dein Zug",["Spiele genau 1 Karte aus oder wirf beliebig viele Handkarten ab.","Ziehe nach, bis du wieder 3 Karten hast."]],
+     ["Die Karten",["Organe legst du in einen Körper, jede Farbe nur einmal.","Viren infizieren ein Organ derselben Farbe. Ein zweiter Virus zerstört es.","Medikamente impfen oder heilen. Zwei Medikamente machen ein Organ immun.","Operationen wirken sofort und kommen auf die Ablage."]],
+     ["Ende",["Wer zuerst 4 gesunde Organe vor sich liegen hat, gewinnt sofort."]]
+   ]
+ },
+ { id:"nochmal", name:"Noch mal!", sub:"Würfeln und Kästchen ankreuzen", c:"--nm", cover:"img/cover_nm.webp",
+   min:1, max:6, age:"ab 8", time:"ca. 20 Min.", minutes:20,
+   cats:["komp","write","solo"], places:["tisch","weg"],
+   material:"3 Farbwürfel, 3 Zahlenwürfel, 1 Block, 6 Stifte",
+   compute(n){
+     return { seatLabel:"1 Blatt",
+       deal:[
+         {v:1, t:"Spielblatt und 1 Stift pro Person", main:true},
+         {v:6, t:"Würfel: 3 Farbwürfel und 3 Zahlenwürfel"},
+         {v:0, t:"Karten: keine"}
+       ],
+       steps:[
+         `Jede Person bekommt ein Spielblatt und einen Stift.`,
+         `Die 6 Würfel bereitlegen.`,
+         `Startspieler bestimmen.`
+       ],
+       note:"In den ersten 3 Würfen dürfen alle aus allen 6 Würfeln wählen." };
+   },
+   center(r){ return genCenter([{t:"dice",n:6,label:"3 Farb- + 3 Zahlenwürfel",cols:["#e94b3c","#3a9a3a","#2f6db5","#fff","#fff","#fff"]},{t:"sheet",label:"Block"}]); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#e94b3c"); },
+   rules:[
+     ["Ein Wurf",["Die aktive Person würfelt alle 6 Würfel und wählt 1 Farb- und 1 Zahlenwürfel.","Alle anderen wählen aus den übrigen 4 Würfeln.","Passen ist immer erlaubt."]],
+     ["Ankreuzen",["So viele zusammenhängende Kästchen in der gewählten Farbe ankreuzen, wie der Zahlenwürfel zeigt.","Start in Spalte H, danach immer angrenzend an schon angekreuzte Kästchen."]],
+     ["Ende",["Sobald jemand 2 Farben ganz angekreuzt hat, endet das Spiel nach diesem Wurf.","Punkte für volle Spalten und Farben, Joker und Sterne zählen mit."]]
+   ]
+ },
+ { id:"tictactown", photos:[["img/ph_ttt1.webp", "Aufbau"], ["img/ph_ttt2.webp", "Am Spieltisch"]], name:"Tic Tac Town", sub:"Würfel legen, Aufgaben erfüllen", c:"--ttt", cover:"img/cover_ttt.webp",
+   min:2, max:4, age:"ab 8", time:"10–20 Min.", minutes:20,
+   cats:["komp","zahl"], places:["tisch","weg"],
+   material:"1 doppelseitiges Tableau, 12 Würfel, 72 Aufgabenkarten (1er, 2er, 3er)",
+   compute(n){
+     const rounds = n===2?4:n;
+     return { n, seatLabel:"4",
+       deal:[
+         {v:4, t:"Aufgabenkarten pro Person: je 1 aus jedem Stapel plus 1 frei gewählt", main:true},
+         {v:n===2?"3×3":"4×4", t:"Seite des Tableaus"},
+         {v:12, t:"Würfel"},
+         {v:rounds, t:"Runden"}
+       ],
+       steps:[
+         `Das Tableau in die Mitte legen, ${n===2?"mit dem 3×3-Raster":"mit dem 4×4-Raster"} nach oben.`,
+         `Die 12 Würfel bereitlegen.`,
+         `Die Aufgabenkarten nach Rückseiten in 3 Stapel sortieren (1er, 2er, 3er) und jeden Stapel mischen.`,
+         `Jede Person nimmt 1 Karte von jedem Stapel und eine vierte von einem beliebigen Stapel. Die Karten verdeckt vor sich legen, man darf sie geheim ansehen.`,
+         `Alle würfeln einmal, die höchste Zahl beginnt.`
+       ],
+       note:"" };
+   },
+   center(r){ return genCenter([{t:"grid",k:r.n===2?3:4,w:r.n===2?84:96,label:"Tableau"},{t:"dice",n:6,label:"12 Würfel"},{t:"stack",label:"1er",count:"",fill:"#5aa0d8"},{t:"stack",label:"2er",count:"",fill:"#e2a23a"},{t:"stack",label:"3er",count:"",fill:"#c94a7a"}]); },
+   rules:[
+     ["Eine Runde",["Die Startperson würfelt alle 12 Würfel und darf 1-mal alle neu würfeln.","Reihum nimmt jede Person 1 Würfel und setzt ihn auf ein freies Feld, ohne die Zahl zu ändern.","Sind keine Würfel mehr da, endet die Runde. Alle füllen auf 4 Aufgabenkarten auf."]],
+     ["Aufgaben",["Ist eine deiner Aufgaben auf dem Tableau erfüllt, deckst du sie auf und legst sie auf deinen Punktestapel.","Auch die Würfel der anderen können deine Aufgabe erfüllen."]],
+     ["Ende",["Jede Person beginnt einmal eine Runde, zu zweit spielt ihr 4 Runden.","Punkte laut Rückseite, dazu 3 Bonuspunkte für je 3 gleiche Kartentypen."]]
+   ]
+ },
+ { id:"locus", photos:[["img/ph_loc1.webp", "Formen und Wertungsbogen"]], name:"Locus", sub:"Formen in Farbzonen einzeichnen", c:"--loc", cover:"img/cover_loc.webp",
+   videos:[["Video vom Verlag (englisch)","https://www.youtube.com/watch?v=vwRDLD4JoR4","Wise Wizard Games · YouTube"]],
+   min:1, max:5, age:"ab 8", time:"ca. 20 Min.", minutes:20,
+   cats:["komp","write","solo"], places:["tisch"],
+   material:"Block mit Wertungsbögen, 48 Formkarten, 5 Übersichtskarten, 1 Solo-Wertungskarte, 1 Startspieler-Stern",
+   compute(n){
+     const rounds={1:"–",2:8,3:5,4:4,5:3}[n];
+     return { seatLabel:"1 Bogen",
+       deal:[
+         {v:1, t:"Wertungsbogen, Übersichtskarte und Stift pro Person", main:true},
+         {v:n===1?"2":n+1, t:n===1?"Karten pro Zug (1 vorher verdeckt abgelegt)":"Formkarten werden pro Zug offen ausgelegt"},
+         {v:rounds, t:n===1?"Runden: bis der Stapel leer ist":"Runden"}
+       ],
+       steps:[
+         `Jede Person braucht einen Stift, einen Wertungsbogen und eine Übersichtskarte.`,
+         `Die Formkarten mischen und verdeckt in die Mitte legen.`,
+         n===1?`Solo: Lege vor jedem Zug die oberste Karte ungesehen ab, dann decke 2 Karten auf und wähle eine.`:`Wer als Nächstes Geburtstag hat, bekommt den Startspieler-Stern.`,
+         n>1?`Ihr spielt ${rounds} Runden. Kreist die Rundenzahl auf euren Bögen ein.`:`Das Spiel endet, wenn der Stapel aufgebraucht ist.`
+       ],
+       note:"Jede Person beginnt mit 1 Münze auf ihrem Bogen." };
+   },
+   center(r){ return genCenter([{t:"stack",label:"Formkarten",count:48,fill:"#1c2f5c"},{t:"cards",n:Math.min(r.n+1,6),label:r.n>1?`${r.n+1} Karten offen`:"2 Karten offen",fill:"#1c2f5c"}]); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#2a6fd6"); },
+   rules:[
+     ["Ein Zug",["Die Startperson legt so viele Formkarten offen aus, wie Personen mitspielen, plus 1.","Reihum nimmt jede Person 1 Karte und zeichnet die Form in eine ihrer 5 Farbzonen ein.","Statt zu zeichnen darfst du die Karte abwerfen und bekommst 2 Münzen."]],
+     ["Einzeichnen",["Die ganze Form muss passen, drehen und spiegeln ist erlaubt.","Gelb, Lila, Grün und Blau: Die Form muss ein fett umrandetes Feld oder eine schon gezeichnete Form berühren. Rot: überall.","Münzen kannst du für Sonderaktionen ausgeben."]],
+     ["Ende",["Nach der letzten Runde werden die Zonen gewertet.","Die schlechteste Zone zählt doppelt. Die meisten Punkte gewinnen."]]
+   ]
+ }
+,
+ { id:"dorfromantik", photos:[["img/ph_dorf1.webp", "Am Spieltisch"], ["img/ph_dorf2.webp", "Die Landschaft wächst"]], name:"Dorfromantik", sub:"Gemeinsam eine Landschaft legen", c:"--dorf", cover:"img/cover_dorf.webp",
+   videos:[["Teaser vom Verlag","https://www.youtube.com/watch?v=3sQM1HObbds","Pegasus Spiele · YouTube"]],
+   min:1, max:6, age:"ab 8", time:"30–60 Min.", minutes:60,
+   cats:["koop","lege","solo","kampagne"], places:["tisch","gross"],
+   material:"Landschafts- und Auftragsplättchen, 25 Auftragsmarker in 5 Farben, 5 verschlossene Schachteln, Wertungs- und Kampagnenblock",
+   compute(n){ return dorfCompute(n,5,"Gleis"); },
+   center(r){ return dorfCenter(); },
+   seat(hx,hy,rot){ return ""; },
+   rules:[
+     ["Dein Zug",["Liegen weniger als 3 offene Aufträge aus, deckst du ein Auftragsplättchen auf, legst einen passenden Marker darauf und legst es an.","Sonst deckst du ein Landschaftsplättchen auf und legst es an.","Ihr beratet gemeinsam, am Ende entscheidet, wer am Zug ist."]],
+     ["Aufträge",["Die Zahl auf dem Marker sagt, aus wie vielen Plättchen das Gebiet, Gleis oder der Fluss genau bestehen muss.","Erfüllte Aufträge bringen Punkte, bei zu grossen Gebieten ist der Auftrag verloren."]],
+     ["Ende & Kampagne",["Die Partie endet, wenn ihr ein Landschaftsplättchen ziehen müsstet, aber keines mehr da ist.","Punkte auf dem Wertungsblatt eintragen, danach auf dem Kampagnenblatt. So öffnet ihr nach und nach die Schachteln."]]
+   ]
+ },
+ { id:"sakura", photos:[["img/ph_sak1.webp", "Schachtel und Material"], ["img/ph_sak2.webp", "Plättchen anlegen"]], name:"Dorfromantik: Sakura", sub:"Japanische Landschaft legen", c:"--sak", cover:"img/cover_sak.webp",
+   videos:[["Teaser vom Verlag","https://www.youtube.com/watch?v=pBXK31-MB8w","Pegasus Spiele · YouTube"]],
+   min:1, max:6, age:"ab 10", time:"30–90 Min.", minutes:90,
+   cats:["koop","lege","solo","kampagne"], places:["tisch","gross"],
+   material:"Landschafts- und Auftragsplättchen, Auftragsmarker in 5 Farben, 6 verschlossene Schachteln, Wertungs- und Kampagnenblock",
+   compute(n){ return dorfCompute(n,6,"Strasse"); },
+   center(r){ return dorfCenter(); },
+   seat(hx,hy,rot){ return ""; },
+   rules:[
+     ["Dein Zug",["Liegen weniger als 3 offene Aufträge aus, deckst du ein Auftragsplättchen auf, legst einen passenden Marker darauf und legst es an.","Sonst deckst du ein Landschaftsplättchen auf und legst es an.","Ihr beratet gemeinsam, am Ende entscheidet, wer am Zug ist."]],
+     ["Wer Dorfromantik kennt",["Die Grundregeln sind gleich. Statt Gleisen gibt es Strassen.","Ihr könnt direkt losspielen. Das Kampagnenblatt wird ab Seite 10 erklärt."]],
+     ["Ende & Kampagne",["Die Partie endet, wenn ihr ein Landschaftsplättchen ziehen müsstet, aber keines mehr da ist.","Punkte auf Wertungs- und Kampagnenblatt eintragen und so 6 Schachteln freispielen."]]
+   ]
+ },
+ { id:"landmarks-pg", photos:[["img/ph_lmw1.webp", "Die Karte von Montana"], ["img/ph_lmw2.webp", "Hinweise aufschreiben"]], name:"Landmarks", sub:"Mit Ein-Wort-Hinweisen durch den Dschungel", c:"--lmw", cover:"img/cover_lmw.webp",
+   videos:[["Teaser vom Verlag","https://www.youtube.com/watch?v=tWerI2i13Zs","Pegasus Spiele · YouTube"],["Let's Play vom Verlag","https://www.youtube.com/watch?v=xd22ATDPd4w","Pegasus Spiele · YouTube"]],
+   min:2, max:10, age:"ab 10", time:"15–25 Min.", minutes:25,
+   cats:["koop","kommun","deduk"], places:["tisch","kreis"],
+   material:"1 doppelseitige Landkarte, 1 Übersichtstafel, Plättchen zum Beschreiben, Karten in 3 Schwierigkeitsstufen, 1 Standfuss, 1 Stift",
+   compute(n){
+     return { n, seatLabel:"0",
+       deal:[
+         {v:1, t:"Person ist Montana Bones und gibt die Hinweise", main:true},
+         {v:n-1, t:n-1===1?"Person ist die Expedition":"Personen bilden die Expedition und raten gemeinsam"},
+         {v:7, t:"Plättchen als Wasserreserve auf die Übersichtstafel"},
+         {v:3, t:"Plättchen mit den Starthinweisen auf die Landkarte"}
+       ],
+       steps:[
+         `Eine Person wird Montana Bones. Alle anderen sind die Expedition.`,
+         `Die Landkarte in die Mitte legen (welche Seite ist egal) und die Übersichtstafel mit der Standardseite daneben.`,
+         `7 Plättchen als Wasserreserve oben auf die Übersichtstafel legen. Die übrigen Plättchen als Vorrat an den Rand.`,
+         `Montana nimmt den Stift und zieht 1 zufällige Karte der gewählten Schwierigkeit. Sie kommt in den Standfuss, nur Montana sieht die Vorderseite.`,
+         `Montana schreibt die 3 Starthinweise der Karte auf 3 Plättchen aus dem Vorrat und legt sie auf die Startfelder der Landkarte.`
+       ],
+       hint:"Montana sitzt mit der geheimen Karte im Standfuss. Alle anderen sind die Expedition.",
+       note:"Für den Teammodus gegeneinander gibt es am Ende der Anleitung eigene Regeln." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Landkarte",w:150,h:96,fill:"#cfe0b0",inner:(x,y,w,h)=>[0,1,2,3,4,5,6,7].map(i=>hex(x+24+(i%4)*34,y+28+Math.floor(i/4)*34+(i%2)*8,14,i<3?"#fff":"#9fbf7a")).join("")},{t:"board",label:"Übersicht + 7 Wasser",w:96,h:60,fill:"#e8dcc0",inner:(x,y,w,h)=>[0,1,2,3,4,5,6].map(i=>`<rect x="${x+8+(i%4)*21}" y="${y+8+Math.floor(i/4)*22}" width="17" height="17" rx="3" fill="#7cc3d6"/>`).join("")},{t:"stack",label:"Vorrat",count:"",fill:"#f3ead2"}]); },
+   seat(hx,hy,rot,i){ return i===0 ? `<g transform="rotate(${rot} ${hx} ${hy})"><rect x="${hx-14}" y="${hy-18}" width="28" height="36" rx="3" fill="#2d6b4f" stroke="#fff" stroke-width="1.5"/><text x="${hx}" y="${hy+5}" text-anchor="middle" font-size="12" font-weight="800" style="fill:#fff">?</text></g>` : ""; },
+   rules:[
+     ["Eine Runde",["Montana schreibt genau 1 Wort auf ein Plättchen aus der Wasserreserve.","Die Expedition überlegt gemeinsam, wohin Montana sie führen will, und legt das Plättchen an.","Montana sagt, was dort entdeckt wurde: Schatz, Quelle, Falle, Fluch, Amulett oder das Basislager."]],
+     ["Hinweise",["Das Wort muss mit Hinweisen zu tun haben, die schon auf der Karte liegen.","Nicht erlaubt: Reime, Anzahl Buchstaben oder Hinweise auf Positionen."]],
+     ["Ende",["Gewonnen: Ihr findet das Basislager, nachdem ihr Schätze gesammelt habt.","Verloren: Das Wasser geht aus, bevor ihr das Basislager findet, oder ein Fluch kann nicht aufgehoben werden."]]
+   ]
+ },
+ { id:"livingforest", photos:[["img/ph_lf1.webp", "Schachtel und Material"], ["img/ph_lf2.webp", "Wald und Tiere"]], name:"Living Forest", sub:"Den heiligen Wald vor Onibi retten", c:"--lf", cover:"img/cover_lf.webp",
+   videos:[["Teaser mit Kurzerklärung vom Verlag","https://www.youtube.com/watch?v=DfbJVnOY6Tg","Pegasus Spiele · YouTube"]],
+   min:2, max:4, age:"ab 10", time:"30–60 Min.", minutes:60,
+   cats:["komp","deck"], places:["tisch","gross"],
+   material:"130 Karten (56 Start-Tiere, 51 Tiere Stufe 1–3, 23 Feuer-Warane), 39 Bäume, 4 Start-Bäume, 4 Wald-Spielpläne, Steinkreis, Tier-Spielplan, Feuer-Waran-Spielplan, 58 Flammen, 20 Magie-Fragmente, 12 Bonus-Plättchen, 4 Figuren, 1 Geweihter Baum, 2 Baum-Halter",
+   compute(n){
+     const remove = n===3 ? "6 Bäume zurück (je 1 mit Kosten 3, 4, 5)" : n===2 ? "15 Bäume zurück (je 2 mit Kosten 3, 4, 5 und je 1 mit Kosten 6, 7, 8)" : "alle Bäume im Spiel";
+     return { n, seatLabel:"14",
+       deal:[
+         {v:14, t:"Start-Tiere pro Person als eigener verdeckter Stapel", main:true},
+         {v:12, t:"Tiere offen auf dem Tier-Spielplan (4 je Stufe)"},
+         {v:3, t:"Bonus-Plättchen pro Person, dazu Wald-Spielplan, Start-Baum und Figur"},
+         {v:n===4?39:n===3?33:24, t:`Bäume in den Haltern: ${remove}`}
+       ],
+       steps:[
+         `Jede Person wählt einen Naturgeist und nimmt Wald-Spielplan, Start-Baum (in die Mitte des Waldes), 3 Bonus-Plättchen (links daneben) und Figur.`,
+         `Die 14 Start-Tiere mischen und verdeckt rechts neben den Wald legen. Das ist dein Nachziehstapel.`,
+         `Den Steinkreis in die Mitte legen. Die Startperson nimmt den Geweihten Baum. Die Figuren nach den grünen Symbolen für ${n} Personen auf die Steine stellen.`,
+         `Den Tier-Spielplan daneben legen, die Flammen nach Wert 2, 3, 4 sortiert darauf.`,
+         `Die Tiere nach Stufe 1, 2, 3 trennen, mischen und auf den Plan legen. Von jedem Stapel 4 Tiere offen daneben.`,
+         `1 Flamme mit Wert 2 in die Mitte des Steinkreises legen.`,
+         `Die Bäume nach Kosten aufsteigend in die Halter stecken. ${n<4?remove.charAt(0).toUpperCase()+remove.slice(1)+".":""}`,
+         `Den Feuer-Waran-Spielplan mit allen Waranen und Magie-Fragmenten daneben legen.`
+       ],
+       note:"" };
+   },
+   center(r){ return genCenter([{t:"board",label:"Steinkreis",w:100,h:100,fill:"#b9c7a0",inner:(x,y,w,h)=>[...Array(12)].map((_,i)=>`<circle cx="${x+w/2+38*Math.cos(i*Math.PI/6)}" cy="${y+h/2+38*Math.sin(i*Math.PI/6)}" r="7" fill="#8a8f86"/>`).join("")+`<circle cx="${x+w/2}" cy="${y+h/2}" r="10" fill="#e2583c"/>`},{t:"board",label:"Tier-Spielplan: 3×4 Tiere",w:150,h:70,fill:"#e9e0c8",inner:(x,y,w,h)=>[0,1,2].map(j=>[0,1,2,3,4].map(i=>`<rect x="${x+8+i*28}" y="${y+6+j*21}" width="22" height="17" rx="2" fill="${i===0?"var(--cardback)":["#fff","#f2d36b","#e2583c"][j]}"/>`).join("")).join("")},{t:"board",label:"Bäume",w:70,h:50,fill:"#5b8f3a"}]); },
+   seat(hx,hy,rot){ return seatKind("board",hx,hy,rot,"#5b8f3a"); },
+   rules:[
+     ["A: Tierphase",["Alle decken gleichzeitig Tiere von ihrem Stapel auf.","Du darfst jederzeit aufhören. Hast du 3 Einzelgänger-Symbole mehr als Geselligkeitssymbole, musst du aufhören."]],
+     ["B: Aktionsphase",["Reihum, beginnend beim Geweihten Baum.","Weniger als 3 Einzelgänger übrig: 2 verschiedene Aktionen. Genau 3: nur 1 Aktion.","Aktionen: Magie-Fragment nehmen, Tiere anlocken, Brände löschen, auf dem Steinkreis bewegen, Baum pflanzen.","C: Rundenende: Flammen abwehren, neue Flammen, Tiere auffüllen, Karten ablegen, Geweihten Baum weitergeben."]],
+     ["Ende",["Wer 12 verschiedene Bäume, 12 gelöschte Brände oder 12 Heilige Blumen hat, löst das Ende aus.","Die Runde wird beendet. Wer die höchste Summe aus allen drei Zielen hat, gewinnt."]]
+   ]
+ },
+ { id:"everdell", photos:[["img/ph_ev1.webp", "Karten und Ressourcen"], ["img/ph_ev2.webp", "Der Immerbaum"]], name:"Everdell", sub:"Eine Stadt für Waldbewohner bauen", c:"--ev", cover:"img/cover_ev.webp",
+   min:1, max:4, age:"ab 10", time:"40–80 Min.", minutes:80,
+   cats:["komp","worker","solo"], places:["gross"],
+   material:"Spielplan, 3D-Immerbaum, Karten mit Wesen und Bauwerken, Wald-Karten, Besonderes-Ereignis-Karten, 4 Einfaches-Ereignis-Plättchen, Arbeiter in 4 Farben, Ressourcen (Zweige, Harz, Kiesel, Beeren), Punkte- und Besetzt-Marker",
+   compute(n){
+     const start=["5","6","7","8"].slice(0,n);
+     return { n, seatLabels:start, seatLabel:"x",
+       deal:[
+         {v:"5–8", t:`Startkarten: ${start.map((c,i)=>`Person ${i+1} bekommt ${c}`).join(", ")}`, main:true},
+         {v:2, t:"Arbeiter pro Person zum Start, 4 weitere auf den Immerbaum"},
+         {v:n===2?3:4, t:"Wald-Karten offen auf die Lichtungen"},
+         {v:8, t:"Karten offen auf die Wiese"},
+         {v:4, t:"Besonderes-Ereignis-Karten offen auf die unteren Zweige"}
+       ],
+       steps:[
+         `Den Spielplan auslegen und den Immerbaum auf den Baumstumpf stellen.`,
+         `Zweige, Harz, Kiesel und Beeren auf ihre Plätze am Fluss legen. Punkte- und Besetzt-Marker daneben.`,
+         `Wald-Karten mischen und ${n===2?"3":"4"} offen auf die Lichtungen legen. Den Rest aus dem Spiel nehmen.`,
+         `Die 4 Einfaches-Ereignis-Plättchen an den Fluss legen. 4 Besonderes-Ereignis-Karten offen auf die unteren Zweige des Baums.`,
+         `Den Kartenstapel mischen, 8 Karten offen auf die Wiese, den Rest verdeckt unten in den Immerbaum.`,
+         `Jede Person wählt eine Farbe und nimmt 2 Arbeiter. Die anderen 4 auf die oberen Zweige: 1 Frühling, 1 Sommer, 2 Herbst.`,
+         `Die genügsamste Person beginnt und zieht 5 Karten, die nächsten im Uhrzeigersinn ${start.slice(1).join(", ")||"–"}.`
+       ],
+       hint:"Die Zahl neben jedem Platz zeigt die Startkarten dieser Person.",
+       note:"" };
+   },
+   center(r){ return genCenter([{t:"board",label:"Spielplan mit Immerbaum",w:200,h:100,fill:"#c9d79a",inner:(x,y,w,h)=>`<path d="M${x+w/2} ${y+10} l18 30 h-10 l14 24 h-12 l12 22 h-44 l12 -22 h-12 l14 -24 h-10z" fill="#5d7a3a"/>`+[0,1,2,3,4,5,6,7].map(i=>`<rect x="${x+8+(i%4)*14}" y="${y+60+Math.floor(i/4)*18}" width="11" height="15" rx="2" fill="#efe6d0"/>`).join("")},{t:"tokens",n:12,label:"Ressourcen",fill:"#a9744a"}]); },
+   rules:[
+     ["Dein Zug",["Wähle 1 von 3 Aktionen: 1 Arbeiter einsetzen, 1 Karte ausspielen oder dich auf die nächste Jahreszeit vorbereiten.","Arbeiter holen Ressourcen, Karten oder erledigen Ereignisse.","Karten bezahlst du mit Ressourcen und legst sie in deine Stadt (höchstens 15 Karten)."]],
+     ["Jahreszeiten",["Hast du keine Arbeiter mehr frei, bereitest du dich auf die nächste Jahreszeit vor: Arbeiter zurückholen und neue vom Immerbaum dazunehmen.","Im Frühling und Herbst werden grüne Karten erneut aktiviert, im Sommer nimmst du Karten von der Wiese."]],
+     ["Ende",["Hast du nach dem Herbst nichts mehr zu tun, bist du fertig. Die anderen spielen weiter.","Punkte für Karten, Punktemarker, Ereignisse und Bonuskarten. Die meisten Punkte gewinnen."]]
+   ]
+ }
+,
+ { id:"savannah", photos:[["img/ph_sav1.webp", "Am Spieltisch"]], name:"Savannah Park", sub:"Tiere im eigenen Park zu Herden ordnen", c:"--sav", cover:"img/cover_sav.webp",
+   videos:[["Teaser vom Verlag (englisch)","https://www.youtube.com/watch?v=Sid4tNwtWl4","Deep Print Games · YouTube"]],
+   min:1, max:4, age:"ab 8", time:"20–40 Min.", minutes:40,
+   cats:["komp","lege","solo"], places:["tisch"],
+   material:"4 Parks, 4 Faltschachteln, je Farbe 33 Tier-, 6 Baum- und 3 Buschbrand-Plättchen, 4 Erdmännchen, 4 Rangerinnen, 4 Löwen, 1 Wertungstafel",
+   compute(n){
+     return { n, seatLabel:"33",
+       deal:[
+         {v:33, t:"Tier-Plättchen pro Person, alle mit gelber Vorderseite in den eigenen Park", main:true},
+         {v:1, t:"Park, Erdmännchen und Rangerin pro Person"},
+         {v:1, t:"Löwe neben die Wertungstafel"},
+         {v:0, t:"Baum- und Buschbrand-Plättchen: nur für Varianten"}
+       ],
+       steps:[
+         `Jede Person wählt eine Farbe, nimmt die Schachtel dieser Farbe und legt den Park mit der Vorderseite (Erdmännchenhöhle in ihrer Farbe) vor sich.`,
+         `Alle Plättchen mit der eigenen Farbe auf der Rückseite nehmen. Die 3 Buschbrand- und 6 Baum-Plättchen zurück in die Schachtel.`,
+         `Die 33 Tier-Plättchen mischen und stapeln, gelbe Seite oben. Von links oben nach rechts unten je eines auf jedes Sandfeld legen. Buschbrand-Felder, Fels, Baum- und Grasfelder bleiben frei.`,
+         `Die restlichen Plättchen kommen auf die 6 äusseren Grasfelder.`,
+         `Wertungstafel in die Mitte, jede Rangerin auf die Hütte neben „0“. Ein Löwe daneben.`,
+         `Jedes Erdmännchen auf seine Höhle im eigenen Park.`
+       ],
+       note: n===1 ? "Solo: Du wählst jede Runde selbst, welches Plättchen du versetzt." : "Alle haben genau dieselben 33 Plättchen, nur anders verteilt." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Wertungstafel",w:150,h:50,fill:"#e8d39a",inner:(x,y,w,h)=>[...Array(10)].map((_,i)=>`<rect x="${x+8+i*14}" y="${y+18}" width="11" height="14" rx="2" fill="#fff"/>`).join("")},{t:"tokens",n:1,label:"Löwe",fill:"#e2b84a"}]); },
+   seat(hx,hy,rot){ return seatKind("board",hx,hy,rot,"#d9a64a"); },
+   rules:[
+     ["Eine Runde",["Die Startperson wählt ein Tier-Plättchen mit gelber Seite aus ihrem Park und sagt es laut an.","Alle nehmen genau dieses Plättchen auf und markieren das Feld mit ihrem Erdmännchen.","Alle drehen das Plättchen um und legen es auf ein freies Sand-, Baum- oder Grasfeld."]],
+     ["Wichtig",["Auf jedem Feld liegt höchstens 1 Plättchen.","Fels und Buschbrand-Felder bleiben immer frei.","Danach wird die nächste Person Startperson."]],
+     ["Ende",["Sobald alle Tiere einen neuen Platz haben, wird gewertet.","Punkte für grosse Herden, Wasserstellen, Bäume und Gräser. Die meisten Punkte gewinnen."]]
+   ]
+ },
+ { id:"caldera", photos:[["img/ph_cal2.webp", "Am Spieltisch"], ["img/ph_cal1.webp", "Plättchen"]], name:"Caldera Park", sub:"Tierfamilien im Nationalpark bilden", c:"--cal", cover:"img/cover_cal.webp",
+   min:1, max:4, age:"ab 10", time:"30–40 Min.", minutes:40,
+   cats:["komp","lege","solo"], places:["tisch"],
+   material:"4 Parks, 4 Faltschachteln, je Tierspur 35 Tier- und 10 Wetterplättchen, 1 Aktionstafel, 7 Aktionsplättchen, 1 Murmeltier, 1 Wertungsblock",
+   compute(n){
+     return { n, seatLabel:"7",
+       deal:[
+         {v:7, t:"Tierplättchen offen in deiner Auslage (von deinen 35)", main:true},
+         {v:6, t:"Wetterplättchen in deiner Auslage: 1 Sonne offen, 5 verdeckt"},
+         {v:1, t:"Wetterplättchen offen auf ein nebliges Wetterfeld deines Parks"},
+         {v:5, t:"Durchgänge mit je 7 Aktionsrunden"}
+       ],
+       steps:[
+         `Jede Person wählt eine Tierspur, nimmt die passende Schachtel und legt ihren Park mit dem Fluss-Schild nach oben.`,
+         `Die eigenen 35 Tierplättchen mischen und verdeckt rechts oberhalb des Parks stapeln. 7 aufdecken und an die obere Kante legen.`,
+         `Aus den 10 Wetterplättchen die Sonne heraussuchen und offen an die untere Kante legen. Die anderen mischen und 5 verdeckt dazulegen, den Rest ungesehen zurück.`,
+         `Eines dieser 6 Wetterplättchen offen auf ein beliebiges der 6 nebligen Wetterfelder legen.`,
+         `Die Aktionstafel mit den 7 Aktionsplättchen in die Mitte. Das Murmeltier zeigt, wer beginnt.`
+       ],
+       note:"Für Kinder: Ohne Wetter-Effekte spielen, wie in der Anleitung beschrieben." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Aktionstafel mit 7 Plättchen",w:180,h:56,fill:"#c9b48a",inner:(x,y,w,h)=>[...Array(7)].map((_,i)=>`<rect x="${x+8+i*24}" y="${y+16}" width="20" height="20" rx="3" fill="#6b8f4a"/>`).join("")},{t:"tokens",n:1,label:"Murmeltier",fill:"#9a6a3a"}]); },
+   seat(hx,hy,rot){ return seatKind("board",hx,hy,rot,"#6b8f4a"); },
+   rules:[
+     ["Ein Durchgang",["Zuerst legt jede Person 1 Wetterplättchen aus ihrer Auslage auf das nächste freie Wetterfeld (im Uhrzeigersinn).","Dann folgen 7 Aktionsrunden."]],
+     ["Eine Aktionsrunde",["Wer das Murmeltier hat, schiebt 1 Aktionsplättchen nach oben und sagt die Bedingung an, zum Beispiel „Ein Bär muss auf ein Feld mit Fluss!“.","Alle legen ein passendes Tierplättchen aus ihrer Auslage in ihren Park.","Dann füllen alle ihre Auslage wieder auf 7 auf."]],
+     ["Ende",["Nach 5 Durchgängen wird gewertet.","Schlechtes Wetter vertreibt angrenzende Tiere, die Sonne vergrössert Familien. Die meisten Punkte gewinnen."]]
+   ]
+ },
+ { id:"catan", photos:[["img/ph_cat1.webp", "Die Insel"], ["img/ph_cat2.webp", "Am Spieltisch"]], name:"CATAN", sub:"Siedeln, handeln, bauen", c:"--cat", cover:"img/cover_cat.webp",
+   videos:[["Video vom Verlag","https://www.youtube.com/watch?v=OGHmlI1bOI0","KOSMOS · YouTube"]],
+   min:3, max:4, age:"ab 10", time:"ca. 75 Min.", minutes:75,
+   cats:["komp","handel"], places:["gross"],
+   material:"Rahmen, 19 Landschaftsfelder, 18 Zahlenchips, 95 Rohstoffkarten, 25 Entwicklungskarten, 2 Sondersiegpunkttafeln, 4 Baukostenübersichten, Spielfiguren in 4 Farben, 1 Räuber, 2 Würfel, 2 Kartenhalter",
+   compute(n){
+     return { n, seatLabel:"1–3",
+       deal:[
+         {v:"1–3", t:"Start-Rohstoffkarten pro Person: je 1 für jede Landschaft an der Siedlung mit Stern", main:true},
+         {v:2, t:"Siedlungen und 2 Strassen pro Person schon auf dem Plan"},
+         {v:"3 / 13 / 4", t:"Siedlungen, Strassen und Städte pro Person im Vorrat"},
+         {v:25, t:"Entwicklungskarten verdeckt im Kartenhalter"}
+       ],
+       steps:[
+         `Rahmen zusammensetzen, sodass gleiche Zahlen aneinander passen.`,
+         `Die 19 Landschaftsfelder wie in der Anleitung abgebildet auslegen. Die Zahlenchips darauf, die Wüste bekommt keinen.`,
+         `Den Räuber auf die Wüste stellen.`,
+         `Jede Person wählt eine Farbe und stellt 2 Siedlungen und 2 Strassen auf die vorgegebenen Plätze.${n===3?" Zu dritt bleiben die weissen Figuren weg.":""} Den Rest (3 Siedlungen, 13 Strassen, 4 Städte) vor sich legen.`,
+         `Rohstoffkarten nach Sorte offen in die Kartenhalter. Entwicklungskarten mischen und verdeckt dazu. Jede Person nimmt eine Baukostenübersicht.`,
+         `Die 2 Sondersiegpunkttafeln und die 2 Würfel bereitlegen.`,
+         `Für die Siedlung mit dem Stern bekommt jede Person je 1 Rohstoff von jeder angrenzenden Landschaft.`,
+         `Reihum würfeln, die höchste Zahl beginnt.`
+       ],
+       hint:"Die Zahl neben jedem Platz zeigt die Start-Rohstoffe. Sie hängt von der Siedlung mit Stern ab.",
+       note: n===3 ? "Mit der Erweiterung für 5–6 Personen geht es auch in grösserer Runde." : "" };
+   },
+   center(r){ return genCenter([{t:"board",label:"Insel mit 19 Feldern",w:150,h:120,fill:"#4f9ac2",inner:(x,y,w,h)=>{ let s=""; const rows=[3,4,5,4,3]; const col=["#c9714a","#3c7a3a","#9fcf6a","#e2c14a","#8f8f8f","#e8d8a0"]; let k=0; rows.forEach((c,ri)=>{ for(let i=0;i<c;i++){ s+=hex(x+w/2+(i-(c-1)/2)*24,y+18+ri*21,12,col[(k++)%6]); } }); return s; }},{t:"stack",label:"Rohstoffe",count:95,fill:"#e9e0c8"},{t:"stack",label:"Entwicklung",count:25,fill:"#6a4a9a"},{t:"dice",n:2,label:"2 Würfel",cols:["#e94b3c","#e2c14a"]}]); },
+   rules:[
+     ["Dein Zug",["Würfle: Alle Felder mit dieser Zahl bringen Rohstoffe für angrenzende Siedlungen (1) und Städte (2).","Handle mit den anderen oder 4:1 mit der Bank, an Häfen günstiger.","Baue Strassen, Siedlungen, Städte oder kaufe Entwicklungskarten."]],
+     ["Die 7",["Wer mehr als 7 Karten hat, gibt die Hälfte ab.","Du versetzt den Räuber und ziehst 1 Karte von einer Person, die dort angrenzt."]],
+     ["Ende",["Wer zuerst 10 Siegpunkte hat, gewinnt.","Punkte gibt es für Siedlungen (1), Städte (2), Siegpunktkarten, Längste Handelsroute und Grösste Rittermacht (je 2)."]]
+   ]
+ },
+ { id:"nocturne", photos:[["img/ph_noc1.webp", "Mixturen und Ziele"], ["img/ph_noc2.webp", "Zaubermarker"], ["img/ph_noc3.webp", "Spielmaterial"]], name:"Nocturne", sub:"Zutaten bieten, Mixturen brauen", c:"--noc", cover:"img/cover_noc.webp",
+   min:1, max:4, age:"ab 12", time:"45–60 Min.", minutes:60,
+   cats:["komp","bieten","solo"], places:["tisch"],
+   material:"50 Zaubermarker, 80 Objekt-Plättchen, Charakterkarten, Mixturkarten, Dämmerung- und Mondlicht-Zielkarten, Schatten-Zaubermarker, Waldgeist-Tafel, Gepasst-Marker",
+   compute(n){
+     const grid={1:"–",2:"4×4 = 16",3:"4×5 = 20",4:"5×5 = 25"}[n];
+     const ret = n===2?"alle Zaubermarker im Spiel": n===3?"pro Farbe 1 Zaubermarker „3“ zurück":"pro Farbe je 1 Zaubermarker „3“ und „4“ zurück";
+     return { n, seatLabel:"1",
+       deal:[
+         {v:1, t:"geheime Start-Mixturkarte pro Person", main:true},
+         {v:grid, t:"Objekt-Plättchen offen als Raster"},
+         {v:n+2, t:"Objekt-Plättchen offen auf die Waldgeist-Tafel"},
+         {v:3, t:"Dämmerung-Zielkarten offen, darüber 3 Mondlicht-Zielkarten verdeckt"}
+       ],
+       steps:[
+         `Jede Person wählt eine Farbe und nimmt Charakterkarte (Seite A), alle Zaubermarker und den Gepasst-Marker dieser Farbe.`,
+         `Zaubermarker je nach Personenzahl: ${ret}. Die eigenen Marker aufsteigend vor sich legen.`,
+         `Die grauen Mixturkarten mischen und als verdeckten Stapel bereitlegen.`,
+         `3 Dämmerung-Zielkarten offen auslegen, 3 Mondlicht-Zielkarten verdeckt darüber. Übrige Zielkarten zurück.`,
+         `Die lila Start-Mixturkarten mischen, jede Person zieht 1 und hält sie geheim.`,
+         `Die Schatten-Zaubermarker in einer Reihe über die Zielkarten legen. Sie kommen erst im Mondlicht ins Spiel.`,
+         `Die 80 Objekt-Plättchen mischen und ${grid} Plättchen offen als Raster auslegen, mit etwas Abstand.`,
+         `Die Waldgeist-Tafel darunter legen und ${n+2} Plättchen offen darauf.`
+       ],
+       note: n===1 ? "Solo: Die Anleitung hat eigene Regeln für das Spiel allein." : "Gespielt werden 2 Durchgänge: Dämmerung und Mondlicht." };
+   },
+   center(r){ const k=r.n===4?5:4, m=r.n===2?4:5; return genCenter([{t:"board",label:"Raster aus Objekt-Plättchen",w:k*22+16,h:m*22+12,fill:"#22264a",inner:(x,y,w,h)=>{ let s=""; for(let i=0;i<k;i++) for(let j=0;j<m;j++) s+=`<rect x="${x+8+i*22}" y="${y+6+j*22}" width="18" height="18" rx="3" fill="#8a7ad0"/>`; return s; }},{t:"cards",n:3,label:"Zielkarten",fill:"#7cc3d6"},{t:"stack",label:"Mixturen",count:"",fill:"#8f8f8f"}]); },
+   rules:[
+     ["Eine Runde",["Wer beginnt, legt einen Zaubermarker auf ein Plättchen im Raster. In der allerersten Runde den niedrigsten.","Reihum legst du einen höheren Marker auf ein freies Plättchen direkt neben dem höchsten Marker (nicht diagonal) oder passt.","Haben alle bis auf eine Person gepasst, gewinnt der höchste Marker sein Plättchen. Diese Person beginnt die nächste Runde."]],
+     ["Waldgeist & Mixturen",["Wer nicht gewinnt, darf einen platzierten Marker dem Waldgeist widmen.","Gesammelte Objekte erfüllen deine geheimen Mixturkarten.","Der Sternzauber ist höher als jede Zahl und gewinnt sofort."]],
+     ["Ende",["Ein Durchgang endet, wenn alle Plättchen gewonnen sind oder alle nacheinander passen.","Nach Dämmerung und Mondlicht zählen Plättchen, Mixturen und Zielkarten. Die meisten Punkte gewinnen."]]
+   ]
+ },
+ { id:"rebirth", name:"Rebirth", sub:"Schottland neu aufbauen", c:"--reb", cover:"img/cover_reb.webp",
+   min:2, max:4, age:"ab 8", time:"45–60 Min.", minutes:60,
+   cats:["komp","lege"], places:["tisch"],
+   material:"1 doppelseitiger Spielplan (Schottland / Irland), 32 Missionskarten, 4 Wertungsübersichten, 32 Kathedralen, 48 Burgen, 144 Plättchen (36 pro Farbe), Punktemarker",
+   compute(n){
+     const tiles = n===4 ? 36-9 : 36;
+     return { n, seatLabel:"1",
+       deal:[
+         {v:1, t:"Plättchen auf der Hand pro Person (geheim)", main:true},
+         {v:2, t:"Plättchen pro Person ungesehen beiseite, nicht im Spiel"},
+         {v:tiles-3, t:`Plättchen als eigener verdeckter Vorrat${n===4?" (9 vorher zurück in die Schachtel)":""}`},
+         {v:n===2?32:0, t:n===2?"Plättchen einer unbenutzten Farbe verdeckt auf die ?-Felder":"Plättchen auf den ?-Feldern"}
+       ],
+       steps:[
+         `Den Spielplan mit Schottland nach oben in die Mitte legen. In der ersten Partie unbedingt Schottland spielen.`,
+         `Die Missionskarten Schottland mischen und auf ihren Platz auf dem Plan legen.`,
+         `Jede Person wählt eine Farbe, stellt ihren Punktemarker auf 0 und nimmt alle Burgen und Kathedralen ihrer Farbe.`,
+         n===2?`Zu zweit: 32 Plättchen einer unbenutzten Farbe verdeckt auf die ?-Felder legen.`:`Die ?-Felder bleiben frei.`,
+         n===4?`Zu viert: Jede Person legt 3 Energie-Anlagen, 3 Nahrungs-Anlagen und je 1 Siedlung mit 2, 3 und 4 zurück in die Schachtel.`:`Alle Plättchen der eigenen Farbe nehmen.`,
+         `Die eigenen Plättchen verdeckt mischen. 2 davon ansehen und verdeckt zum 200er/300er-Marker legen, sie werden nicht benutzt.`,
+         `1 Plättchen auf die Hand nehmen. Wer zuletzt in Schottland war, beginnt.`
+       ],
+       note:"Die Irland-Seite ist für spätere Partien." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Spielplan Schottland",w:170,h:110,fill:"#9fbf8a",inner:(x,y,w,h)=>[...Array(18)].map((_,i)=>hex(x+20+(i%6)*26+(Math.floor(i/6)%2)*13,y+22+Math.floor(i/6)*28,12,i%5===0?"#8f8f8f":"#cfe0b0")).join("")},{t:"stack",label:"Missionen",count:32,fill:"#4a6a8a"}]); },
+   rules:[
+     ["Dein Zug",["1. Platziere dein Handplättchen auf dem Plan: Energie-Anlage, Nahrungs-Anlage oder Siedlung.","2. Werte das Plättchen sofort.","3. Ziehe 1 neues Plättchen aus deinem Vorrat."]],
+     ["Burgen & Kathedralen",["An Kathedralen sammelst du Missionen, die am Ende Punkte bringen.","Am Ende gibt es Punkte für die Kontrolle der Burgen."]],
+     ["Ende",["Die Partie endet, wenn alle ihre Plättchen platziert haben.","Die meisten Punkte gewinnen."]]
+   ]
+ }
+,
+ { id:"rollinghills", photos:[["img/ph_crh1.webp", "Spielmaterial"], ["img/ph_crh2.webp", "4 Umgebungsbögen"]], name:"Cascadia Rolling Hills", sub:"Würfeln und Lebensräume ankreuzen", c:"--crh", cover:"img/cover_crh.webp",
+   min:1, max:4, age:"ab 10", time:"ca. 30 Min.", minutes:30,
+   cats:["komp","write","solo"], places:["tisch"],
+   material:"3 Zentralwürfel, 1 Spezialwürfel, 8 persönliche Würfel, 30 Lebensraumkarten (2 Stufen), 12 Abschlusskarten, Block mit Zählbögen, Block mit Umgebungsbögen A–D, 4 Übersichtskarten",
+   compute(n){ return rollingCompute(n,"Rivers"); },
+   center(r){ return rollingCenter("#e2b84a"); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#5b8f3a"); },
+   rules: rollingRules()
+ },
+ { id:"rollingrivers", photos:[["img/ph_crr1.webp", "Spielmaterial"], ["img/ph_crr2.webp", "4 Umgebungsbögen"]], name:"Cascadia Rolling Rivers", sub:"Würfeln und Flüsse entlang ankreuzen", c:"--crr", cover:"img/cover_crr.webp",
+   min:1, max:4, age:"ab 10", time:"ca. 30 Min.", minutes:30,
+   cats:["komp","write","solo"], places:["tisch"],
+   material:"3 Zentralwürfel, 1 Spezialwürfel, 8 persönliche Würfel, 30 Lebensraumkarten (2 Stufen), 12 Abschlusskarten, Block mit Zählbögen, Block mit Umgebungsbögen A–D, 4 Übersichtskarten",
+   compute(n){ return rollingCompute(n,"Hills"); },
+   center(r){ return rollingCenter("#4f9ac2"); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#4f9ac2"); },
+   rules: rollingRules()
+ },
+ { id:"ns-london", name:"Next Station London", sub:"U-Bahn-Linien zeichnen", c:"--nsl", cover:"img/cover_nsl.webp",
+   videos:[["Video vom Verlag (englisch)","https://www.youtube.com/watch?v=vbZOyNfwxc8","Blue Orange · YouTube"]],
+   min:1, max:4, age:"ab 8", time:"ca. 25 Min.", minutes:25,
+   cats:["komp","write","solo"], places:["tisch","weg"],
+   material:"Block mit Stadtplänen von London, 4 Farbstifte, 11 Stationskarten (6 Strasse, 5 U-Bahn), 5 gemeinsame Zielkarten, 4 Stift-Fähigkeitskarten",
+   compute(n){ return nsCompute(n,"London","U-Bahn","5 gemeinsamen Zielkarten und die 4 Stift-Fähigkeitskarten"); },
+   center(r){ return nsCenter(); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#c94a8a"); },
+   rules: nsRules("U-Bahn")
+ },
+ { id:"ns-tokyo", name:"Next Station Tokyo", sub:"U-Bahn-Linien zeichnen", c:"--nst", cover:"img/cover_nst.webp",
+   videos:[["Video vom Verlag (englisch)","https://www.youtube.com/watch?v=9FZ6jOHf-6w","Blue Orange · YouTube"]],
+   min:1, max:4, age:"ab 8", time:"ca. 25 Min.", minutes:25,
+   cats:["komp","write","solo"], places:["tisch","weg"],
+   material:"Block mit Stadtplänen von Tokio, 4 Farbstifte, 11 Stationskarten, 5 gemeinsame Zielkarten, 8 Spezial-Stationskarten",
+   compute(n){ return nsCompute(n,"Tokio","U-Bahn","5 gemeinsamen Zielkarten und die 8 Spezial-Stationskarten"); },
+   center(r){ return nsCenter(); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#2f9a5a"); },
+   rules: nsRules("U-Bahn")
+ },
+ { id:"ns-paris", name:"Next Station Paris", sub:"Metro-Linien zeichnen", c:"--nsp", cover:"img/cover_nsp.webp",
+   videos:[["Video vom Verlag (englisch)","https://www.youtube.com/watch?v=pqqxtp21iRE","Blue Orange · YouTube"]],
+   min:1, max:4, age:"ab 8", time:"ca. 25 Min.", minutes:25,
+   cats:["komp","write","solo"], places:["tisch","weg"],
+   material:"Block mit Stadtplänen von Paris, 4 Farbstifte, 11 Stationskarten (6 Strasse, 5 Metro), 5 gemeinsame Zielkarten, 8 Stadttor-Karten",
+   compute(n){ return nsCompute(n,"Paris","Metro","5 gemeinsamen Zielkarten und die 8 Stadttor-Karten"); },
+   center(r){ return nsCenter(); },
+   seat(hx,hy,rot){ return seatKind("sheet",hx,hy,rot,"#e2833a"); },
+   rules: nsRules("Metro")
+ },
+ { id:"severton", photos:[["img/ph_sev1.webp", "Das ganze Material"], ["img/ph_sev2.webp", "Der Spielplan"]], name:"Severton", sub:"Gemeinsam durch die Gassen von Severton", c:"--sev", cover:"img/cover_sev.webp",
+   videos:[["Trailer vom Verlag (englisch)","https://www.youtube.com/watch?v=Y-FoERsPKUw","ALBI · YouTube"]],
+   min:1, max:5, age:"ab 12", time:"ab 60 Min.", minutes:90,
+   cats:["koop","kampagne","solo"], places:["gross"],
+   material:"1 Spielplan, 5 Fortschrittstableaus, Charakterkarten, Aktionskarten, Vonts-Karten, Aufgaben-Karten, Charakter- und Vonts-Marker, 5 Schlossplättchen, 15 Aufgabenwürfel, 4 Szenarioumschläge, Szenarienheft, Chronikbogen",
+   compute(n){
+     const chars = n===5 ? "Jede Person spielt 1 Charakter." : n===4 ? "Eine Person spielt den Doppelcharakter (2 Figuren), die anderen je 1." : n===1 ? "Allein: Doppelcharakter und 3 einzelne Charaktere, oder alle 5 einzeln." : `Eine Person spielt den Doppelcharakter, alle anderen je 1. Die übrigen Charaktere bleiben offen liegen, ihr entscheidet gemeinsam über sie.`;
+     return { n, seatLabel:"0", hint:"Immer sind alle 5 Charaktere der Geschichte im Spiel, egal wie viele mitspielen.",
+       deal:[
+         {v:5, t:"Charaktere sind immer im Spiel", main:true},
+         {v:n===5?"–":1, t:n===5?"Doppelcharakter: nicht nötig":"Doppelcharakter (2 Charaktere auf einer Karte)"},
+         {v:5, t:"Schlossplättchen auf die Geheimgänge"},
+         {v:2, t:"Hälften des Fortschrittstableaus für das aktuelle Szenario"}
+       ],
+       steps:[
+         `Den Spielplan auslegen. Je 1 Schlossplättchen auf die 5 Geheimgänge (violette Linien).`,
+         `Alle 5 Charakter-Marker auf Ort 1.`,
+         `Die 2 Hälften des Fortschrittstableaus mit dem Symbol des aktuellen Szenarios nehmen. Seite nach Schwierigkeit wählen (1 Stern für den Anfang).`,
+         `Unruhe-Marker auf das unterste Feld der rechten Leiste, Schnelle-Pfeile-Marker auf das unterste Feld der linken Leiste.`,
+         `Vonts-Gruppen-Karten und Vonts-Bewegungskarten getrennt mischen und verdeckt auf ihre Felder legen.`,
+         `Die Vonts-Marker mit den Buchstaben laut Unruhe-Leiste auf die passenden Felder stellen.`,
+         `Charaktere verteilen: ${chars}`,
+         `Den Rest laut Anleitung ab Seite 5 und dem Szenarioumschlag aufbauen.`
+       ],
+       note:"Ihr beginnt mit Szenario 1. Jedes Szenario bringt neues Material und neue Regeln." };
+   },
+   center(r){ return genCenter([{t:"board",label:"Spielplan Severton",w:180,h:110,fill:"#3a4250",inner:(x,y,w,h)=>[...Array(12)].map((_,i)=>`<circle cx="${x+20+(i%6)*28}" cy="${y+28+Math.floor(i/6)*50}" r="7" fill="#c9b48a"/>`).join("")+`<path d="M${x+20} ${y+28} L${x+160} ${y+78}" stroke="#8a6ad0" stroke-width="3" stroke-dasharray="5 4"/>`},{t:"board",label:"Fortschritt",w:60,h:96,fill:"#6b5a3a"},{t:"stack",label:"Vonts",count:"",fill:"#2a3a5a"}]); },
+   seat(hx,hy,rot){ return ""; },
+   rules:[
+     ["Spielziel",["Ihr spielt alle zusammen und gewinnt oder verliert gemeinsam.","Erledigt die Aufgaben des Szenarios, bevor die Unruhe in Severton zu gross wird."]],
+     ["Fortschritt",["Erreicht der Schnelle-Pfeile-Marker das oberste Feld, gewinnt ihr.","Erreicht der Unruhe-Marker das oberste Feld, verliert ihr."]],
+     ["Szenarien",["Es gibt 5 Szenarien, die aufeinander aufbauen.","Neue Regeln stehen im Szenarienheft und im Kapitel „Zusätzliche Spielkonzepte“."]]
+   ]
+ }
+];
+
+/* ---------- SVG-Helfer ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function lbl(x,y,t,fs=13){ return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs}" font-weight="700">${esc(t)}</text>`; }
+function card(x,y,w,h,fill,txt,o={}){
+  const tr = o.tilt?` transform="rotate(${o.tilt} ${x+w/2} ${y+h/2})"`:"";
+  let s=`<g${tr}><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${fill}" stroke="#2a2724" stroke-opacity=".5" stroke-width="1.5"/>`;
+  if(o.ladder){ const cx=x+w/2; s+=`<line x1="${cx-5}" y1="${y+8}" x2="${cx-5}" y2="${y+h-8}" stroke="#fff" stroke-width="2"/><line x1="${cx+5}" y1="${y+8}" x2="${cx+5}" y2="${y+h-8}" stroke="#fff" stroke-width="2"/>`; for(let i=0;i<4;i++) s+=`<line x1="${cx-5}" y1="${y+13+i*7}" x2="${cx+5}" y2="${y+13+i*7}" stroke="#fff" stroke-width="2"/>`; }
+  if(txt!=="") s+=`<text x="${x+w/2}" y="${y+h/2+(o.big?7:5)}" text-anchor="middle" font-size="${o.big?18:14}" font-weight="800" style="fill:${fill==="var(--cardback)"?"#fff":"#2a2724"}">${esc(txt)}</text>`;
+  return s+`</g>`;
+}
+function stack(x,y,w,h,fill,count,label){
+  let s=""; for(let i=3;i>=0;i--) s+=`<rect x="${x+i*3}" y="${y-i*3}" width="${w}" height="${h}" rx="4" fill="${fill}" stroke="#2a2724" stroke-opacity=".5" stroke-width="1.5"/>`;
+  if(count!=="" && count!=null) s+=`<text x="${x+w/2}" y="${y+h/2+6}" text-anchor="middle" font-size="16" font-weight="800" style="fill:#fff">${count}</text>`;
+  return s + lbl(x+w/2+4,y+h+18,label,12);
+}
+function hex(x,y,r,fill){ let p=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); p.push((x+r*Math.cos(a)).toFixed(1)+","+(y+r*Math.sin(a)).toFixed(1)); } return `<polygon points="${p.join(" ")}" fill="${fill}" stroke="#fff" stroke-width="1.5"/>`; }
+function cascCenter(r){
+  const cy=262; let s=""; const land=["#5b8f3a","#d9b44a","#8fa4b5","#4f9ac2","#7fb07a"], ani=["#6b4a2b","#b5895a","#e05d7a","#6aa9d9","#e88a2c"];
+  s+=`<path d="M190 ${cy-30} q-8 40 6 52 h36 q14-12 6-52z" fill="#5f7d4e"/><rect x="196" y="${cy-38}" width="36" height="10" rx="4" fill="#4b6640"/>`+lbl(214,cy+40,"Beutel",12);
+  s+=stack(262,cy-38,34,34,"#3e5a40",r.tiles,"Plättchen");
+  for(let i=0;i<4;i++){ const x=345+i*44; s+=hex(x,cy-22,19,land[i]); s+=`<circle cx="${x}" cy="${cy+16}" r="10" fill="${ani[i]}" stroke="#fff" stroke-width="1.5"/>`; }
+  s+=lbl(411,cy+44,"Auslage: 4 Plättchen + 4 Tiere",12);
+  for(let i=0;i<5;i++) s+=card(285+i*30,cy-112,24,34,"#efe6d0","",{});
+  s+=lbl(345,cy-62,"5 Wertungskarten",12);
+  for(let i=0;i<6;i++) s+=`<path d="M${540+(i%3)*12} ${cy+(i>2?14:0)} l6 -9 6 9 -6 9z" fill="#3c6a37"/>`;
+  s+=lbl(553,cy+44,"Zapfen",12);
+  if(r.mod){ for(let i=0;i<5;i++){ s+=stack(450+i*30,cy-112,22,30,land[i],"",""); } s+=lbl(520,cy-62,"Landmarken-Karten",12); }
+  return s;
+}
+function casSeat(hx,hy,rot){ return `<g transform="rotate(${rot} ${hx} ${hy})">${hex(hx-9,hy+6,10,"#5b8f3a")}${hex(hx+9,hy+6,10,"#4f9ac2")}${hex(hx,hy-9,10,"#d9b44a")}</g>`; }
+/* ---------- Allgemeiner Tischplan für weitere Spiele ---------- */
+function genItemW(it){ return it.t==="board"?(it.w||150): it.t==="dice"?Math.max(60,Math.min(it.n||3,6)*20): it.t==="tokens"?78: it.t==="cards"?Math.max(60,(it.n||3)*28+10): it.t==="grid"?(it.w||90): 58; }
+function genItem(it,x,cy){
+  const L=(t)=>lbl(x+genItemW(it)/2, cy+52, t, 12);
+  let s="";
+  if(it.t==="stack"){ s+=stack(x+10,cy-30,34,50,it.fill||"var(--cardback)",it.count==null?"":it.count,it.label); return s; }
+  if(it.t==="board"){ const w=it.w||150,h=it.h||70; s+=`<rect x="${x}" y="${cy-h/2-6}" width="${w}" height="${h}" rx="8" fill="${it.fill||"#e9eef2"}" stroke="#2a2724" stroke-opacity=".45" stroke-width="1.5"/>`; if(it.inner) s+=it.inner(x,cy-h/2-6,w,h); return s+lbl(x+w/2,cy+h/2+12,it.label,12); }
+  if(it.t==="bag"){ s+=`<path d="M${x+10} ${cy-22} q-8 40 6 52 h26 q14-12 6-52z" fill="${it.fill||"#7a5a3a"}"/><rect x="${x+14}" y="${cy-30}" width="30" height="9" rx="4" fill="#00000033"/>`; return s+L(it.label); }
+  if(it.t==="dice"){ const n=Math.min(it.n||3,6), cols=it.cols||["#fff"]; for(let i=0;i<n;i++){ const dx=x+i*20; s+=`<rect x="${dx}" y="${cy-12+(i%2)*6}" width="17" height="17" rx="4" fill="${cols[i%cols.length]}" stroke="#2a2724" stroke-opacity=".6"/><circle cx="${dx+8.5}" cy="${cy-3.5+(i%2)*6}" r="2.2" fill="#2a2724"/>`; } return s+L(it.label); }
+  if(it.t==="tokens"){ const n=Math.min(it.n||8,12); for(let i=0;i<n;i++){ s+=`<circle cx="${x+10+(i%4)*19}" cy="${cy-18+Math.floor(i/4)*17}" r="8" fill="${it.fill||"#d9b44a"}" stroke="#fff" stroke-width="1.2"/>`; } return s+L(it.label); }
+  if(it.t==="cards"){ const n=Math.min(it.n||3,6); for(let i=0;i<n;i++) s+=card(x+5+i*28,cy-28,24,36,it.fill||"#efe6d0",it.txt?it.txt[i]||"":"",{}); return s+L(it.label); }
+  if(it.t==="grid"){ const k=it.k||3, w=it.w||90, c=w/k; for(let i=0;i<k;i++) for(let j=0;j<k;j++) s+=`<rect x="${x+i*c}" y="${cy-w/2+j*c}" width="${c-3}" height="${c-3}" rx="3" fill="#fff" stroke="#2a2724" stroke-opacity=".35"/>`; return s+lbl(x+w/2,cy+w/2+16,it.label,12); }
+  if(it.t==="sheet"){ s+=`<rect x="${x+8}" y="${cy-30}" width="40" height="52" rx="3" fill="#fff" stroke="#2a2724" stroke-opacity=".45"/>`; for(let i=0;i<5;i++) s+=`<line x1="${x+14}" y1="${cy-20+i*9}" x2="${x+42}" y2="${cy-20+i*9}" stroke="#bbb"/>`; return s+L(it.label); }
+  return s;
+}
+function genCenter(items){
+  const gap=18, maxW=470; const rows=[[]]; let w=0;
+  items.forEach(it=>{ const iw=genItemW(it); if(w+iw>maxW && rows[rows.length-1].length){ rows.push([]); w=0; } rows[rows.length-1].push(it); w+=iw+gap; });
+  let s=""; const rh=rows.length>1?96:0;
+  rows.forEach((row,ri)=>{ const tw=row.reduce((a,it)=>a+genItemW(it)+gap,-gap); let x=400-tw/2; const cy=262-rh/2+ri*rh+(rows.length>1?-4:0);
+    row.forEach(it=>{ s+=genItem(it,x,cy); x+=genItemW(it)+gap; }); });
+  return s;
+}
+function seatKind(kind,hx,hy,rot,col){
+  col=col||"var(--c)";
+  if(kind==="sheet") return `<g transform="rotate(${rot} ${hx} ${hy})"><rect x="${hx-13}" y="${hy-18}" width="26" height="34" rx="2" fill="#fff" stroke="#2a2724" stroke-opacity=".5"/><line x1="${hx-8}" y1="${hy-9}" x2="${hx+8}" y2="${hy-9}" stroke="#bbb"/><line x1="${hx-8}" y1="${hy-2}" x2="${hx+8}" y2="${hy-2}" stroke="#bbb"/><line x1="${hx-8}" y1="${hy+5}" x2="${hx+8}" y2="${hy+5}" stroke="#bbb"/><line x1="${hx+14}" y1="${hy-16}" x2="${hx+20}" y2="${hy+12}" stroke="${col}" stroke-width="3"/></g>`;
+  if(kind==="board") return `<g transform="rotate(${rot} ${hx} ${hy})"><rect x="${hx-19}" y="${hy-15}" width="38" height="30" rx="4" fill="${col}" stroke="#fff" stroke-width="1.5"/><rect x="${hx-13}" y="${hy-9}" width="26" height="18" rx="2" fill="#ffffff55"/></g>`;
+  if(kind==="tiles") return `<g transform="rotate(${rot} ${hx} ${hy})">${hex(hx-9,hy+6,10,"#5b8f3a")}${hex(hx+9,hy+6,10,"#4f9ac2")}${hex(hx,hy-9,10,"#d9b44a")}</g>`;
+  if(kind==="hex") return `<g transform="rotate(${rot} ${hx} ${hy})">${hex(hx,hy,15,"#7fb07a")}</g>`;
+  if(kind==="tokens") return `<g>${[0,1,2,3,4].map(i=>`<circle cx="${hx-14+(i%3)*14}" cy="${hy-6+Math.floor(i/3)*13}" r="6" fill="${col}" stroke="#fff" stroke-width="1"/>`).join("")}</g>`;
+  return "";
+}
+function dorfCompute(n,boxes,line){
+  return { n, seatLabel:"0", hint:"Alle legen gemeinsam an einer Landschaft in der Mitte. Niemand hat eigene Karten.",
+    deal:[
+      {v:0, t:"Handkarten: alle Plättchen liegen für alle in der Mitte", main:true},
+      {v:3, t:"Landschaftsplättchen ungesehen zurück in die Schachtel"},
+      {v:3, t:"Auftragsplättchen in den ersten 3 Zügen"},
+      {v:boxes, t:"verschlossene Schachteln: erst öffnen, wenn das Spiel es sagt"}
+    ],
+    steps:[
+      `Alle Landschaftsplättchen verdeckt mischen, 3 davon ungesehen zurück in die Schachtel legen. Den Rest in ein paar verdeckten Stapeln an den Rand.`,
+      `Alle Auftragsplättchen verdeckt mischen und als eigene Stapel daneben legen.`,
+      `Die Auftragsmarker nach den 5 Farben trennen, jeweils verdeckt mischen und neben die Auftragsstapel legen.`,
+      `Wertungs- und Kampagnenblock zur Seite legen.`,
+      `Bestimmen, wer beginnt. In den ersten 3 Zügen wird je 1 Auftragsplättchen aufgedeckt.`
+    ],
+    note: n===1 ? "Solo spielt sich genau gleich." : `Die ${boxes} Schachteln erst öffnen, wenn das Kampagnenblatt es erlaubt.` };
+}
+function dorfCenter(){ return genCenter([{t:"board",label:"Gemeinsame Landschaft",w:150,h:90,fill:"#e9e0c8",inner:(x,y,w,h)=>[0,1,2,3,4,5,6].map(i=>hex(x+40+(i%3)*30+(Math.floor(i/3)%2)*15,y+24+Math.floor(i/3)*26,15,["#5b8f3a","#e2c14a","#c9714a","#4f9ac2","#8bb26a","#e2c14a","#5b8f3a"][i])).join("")},{t:"stack",label:"Landschaft",count:"",fill:"#6b8f4a"},{t:"stack",label:"Aufträge",count:"",fill:"#b9864a"},{t:"tokens",n:10,label:"Auftragsmarker",fill:"#f2e7c9"}]); }
+function rollingCompute(n,other){
+  return { n, seatLabel:"2", hint:"Die Zahl neben jedem Platz zeigt die persönlichen Würfel dieser Person.",
+    deal:[
+      {v:2, t:"persönliche Würfel pro Person: 1 mit Bär und 1 mit Lachs/Bussard", main:true},
+      {v:1, t:"Zählbogen, Umgebungsbogen (A, B, C oder D) und Übersichtskarte pro Person"},
+      {v:20, t:"Lebensraumkarten als Stapel (je 10 aus Stufe 1 und 2), 10 zurück in die Schachtel"},
+      {v:4, t:"Abschlusskarten offen über oder unter die Kartenplätze"},
+      {v:4, t:"Zentralwürfel in die Mitte (3 normale + 1 Spezialwürfel)"}
+    ],
+    steps:[
+      `Jede Person bekommt 2 persönliche Würfel (einen mit Bär, einen mit Lachs/Bussard), einen Zählbogen, eine Übersichtskarte und einen Stift.`,
+      `Gemeinsam einen Umgebungsbogen wählen (A, B, C oder D, mit 1 bis 3 Sternen). Alle bekommen denselben.`,
+      `Die 4 Zentralwürfel in die Mitte legen.`,
+      `Lebensraumkarten nach Stufe 1 und 2 trennen. Aus jedem Stapel je 1 Karte jeder der 5 Lebensräume entfernen. Jeden Stapel mischen, Stufe 2 nach unten, Stufe 1 oben drauf: 20 Karten.`,
+      `1 Lebensraumkarte offen rechts neben den Stapel legen.`,
+      `4 Abschlusskarten aufdecken: blaue (Rabatt) über, braune (Bonus) unter die Kartenplätze. Für die erste Partie die 4 Einsteiger-Karten nehmen.`
+    ],
+    note:`Zusammen mit Cascadia Rolling ${other} können bis zu 8 Personen mitspielen.` };
+}
+function rollingCenter(col){ return genCenter([{t:"dice",n:4,label:"4 Zentralwürfel",cols:[col,col,col,"#fff"]},{t:"stack",label:"20 Lebensraumkarten",count:20,fill:"#3e5a40"},{t:"cards",n:4,label:"Kartenplätze + Abschlusskarten",fill:"#e9e0c8"}]); }
+function rollingRules(){ return [
+  ["Eine Runde",["Eine Person würfelt die 4 Zentralwürfel, alle würfeln gleichzeitig ihre 2 eigenen Würfel.","Wähle meist 1 Tierart und nimm alle Tiere dieser Art aus den Würfeln. Spezialwürfel und Würfelaktionen helfen.","Trage die Tiere auf deinem Zählbogen ein."]],
+  ["Lebensraum erfüllen",["Freiwillig, 1-mal pro Runde: Bezahle die Tiere einer offenen Lebensraumkarte.","Kreuze Lebensraum und Zahl auf deinem Umgebungsbogen an und nimm Boni."]],
+  ["Ende",["Nach 20 Runden ist der Stapel leer.","Gewertet wird laut Umgebungsbogen. Bei Gleichstand zählen übrige Naturplättchen."]]
+]; }
+function nsCompute(n,city,line,adv){
+  const extra = n===3 ? "Der 4. Stift liegt zwischen zwei Personen." : n===2 ? "Die 2 übrigen Stifte liegen je links neben einer Person." : n===1 ? "Solo: eigene Regeln am Ende der Anleitung." : "Jede Person hat 1 Stift.";
+  return { n, seatLabel:"1 Plan", hint:"Jede Person zeichnet auf ihrem eigenen Stadtplan.",
+    deal:[
+      {v:1, t:`Stadtplan von ${city} und 1 Farbstift pro Person`, main:true},
+      {v:11, t:`Stationskarten: werden jede Runde neu gemischt`},
+      {v:4, t:`Runden, in jeder Runde eine neue Linienfarbe`},
+      {v:0, t:`Erweiterungskarten in der ersten Partie: in der Schachtel`}
+    ],
+    steps:[
+      `Jede Person nimmt einen Stadtplan von ${city} und einen Farbstift. ${extra}`,
+      `Für die erste Partie die ${adv} in der Schachtel lassen.`,
+      `Wer zuletzt ${line} gefahren ist, verwaltet in der ersten Runde die Karten.`,
+      `Diese Person mischt die 11 Stationskarten und legt sie verdeckt in die Mitte.`
+    ],
+    note:"Nach jeder Runde werden die Stifte weitergegeben, so zeichnet jede Person 4 Linien in 4 Farben." };
+}
+function nsCenter(){ return genCenter([{t:"stack",label:"11 Stationskarten",count:11,fill:"#2b2f5a"},{t:"cards",n:3,label:"aufgedeckt",fill:"#efe6d0",txt:["▲","■","●"]},{t:"dice",n:4,label:"4 Farbstifte",cols:["#c94a8a","#2f6db5","#3a9a3a","#8a4fb8"]}]); }
+function nsRules(line){ return [
+  ["Eine Runde",[`Jede Person startet an der Station in der Farbe ihres Stifts.`,"Die Karten-Person deckt eine Stationskarte nach der anderen auf.",`Alle zeichnen gleichzeitig eine gerade Verbindung zu einer Station mit dem gezeigten Symbol, am Anfang oder Ende ihrer Linie.`]],
+  ["Regeln beim Zeichnen",["Jede Strecke ist gerade (waagrecht, senkrecht oder diagonal) entlang der grauen Linien.","Strecken dürfen keine andere Station durchqueren und keine gezeichnete Strecke kreuzen, auch nicht von früheren Linien.","Zeichnen ist freiwillig.",`Mit der 5. ${line}-Karte endet die Runde. Danach wird die Linie gewertet und die Stifte wandern weiter.`]],
+  ["Ende",["Nach 4 Runden hat jede Person 4 Linien gezeichnet.","Jede Linie bringt Punkte für ihre Route und Sonderfelder der Stadt, dazu Punkte am Spielende. Die meisten Punkte gewinnen."]]
+]; }
+function tablePlan(g,n,r){
+  const W=800,H=540,cx=400,cy=270;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tischplan für ${n} Personen"><ellipse cx="${cx}" cy="${cy}" rx="310" ry="185" fill="var(--table)" stroke="var(--tableline)" stroke-width="3"/>`;
+  s+=g.center(r);
+  for(let i=0;i<n;i++){
+    const a = Math.PI/2 + (2*Math.PI*i)/n;   // Person 1 unten
+    const sx=cx+360*Math.cos(a), sy=cy+235*Math.sin(a);
+    const hx=cx+298*Math.cos(a), hy=cy+178*Math.sin(a);
+    const rot = a*180/Math.PI - 90;
+    // Handkarten
+    if(g.seat){ s+=g.seat(hx,hy,rot,i,r); }
+    else if(r.seatLabel!=="0"){
+      if(r.seatStack){ for(let k=2;k>=0;k--) s+=`<rect x="${hx-11+k*2}" y="${hy-16-k*2}" width="22" height="32" rx="3" fill="var(--cardback)" stroke="#fff" stroke-width="1" transform="rotate(${rot} ${hx} ${hy})"/>`; }
+      else if(!r.solo){ const k=Math.min(Number(r.seatLabel)||3,6); for(let j=0;j<k;j++){ const t=(j-(k-1)/2)*11; s+=`<rect x="${hx-10}" y="${hy-15}" width="20" height="30" rx="3" fill="var(--c)" stroke="#fff" stroke-width="1" transform="rotate(${rot+t} ${hx} ${hy+20})"/>`; } }
+      else { for(let j=0;j<3;j++) s+=`<path d="M${hx-10+j*10} ${hy-6} l6 4 -2 7 h-8 l-2 -7z" fill="var(--c)" stroke="#fff" stroke-width="1"/>`; }
+    }
+    s+=`<circle cx="${sx}" cy="${sy}" r="21" fill="var(--seat)"/><text x="${sx}" y="${sy+6}" text-anchor="middle" font-size="16" font-weight="800" style="fill:var(--seatink)">${i+1}</text>`;
+    const lab = r.seatLabels ? r.seatLabels[i] : r.seatLabel; if(lab!=="0"){ const bw=String(lab).length*8+16; let bx=sx+24; if(bx+bw>796) bx=sx-24-bw+4; const by=sy-18; s+=`<rect x="${bx-4}" y="${by-13}" width="${bw}" height="20" rx="10" fill="var(--c)"/><text x="${bx+3}" y="${by+2}" font-size="13" font-weight="800" style="fill:#fff">${esc(lab)}</text>`; }
+  }
+  return s+`</svg>`;
+}
+
+/* ---------- Kompetenzen, Schwierigkeit, Ziel, Tipp ---------- */
+const KOMP = {
+  zahl:   {n:"Zählen & Rechnen", e:"🔢", d:"Mit Zahlen umgehen, zählen, vergleichen und Punkte zusammenrechnen."},
+  raum:   {n:"Räumlich denken", e:"🧩", d:"Formen, Wege und Plättchen passend legen, drehen oder einzeichnen."},
+  logik:  {n:"Logisch schliessen", e:"🔍", d:"Aus Hinweisen Schlüsse ziehen und Möglichkeiten ausschliessen."},
+  strat:  {n:"Planen & Strategie", e:"♟️", d:"Vorausdenken, Möglichkeiten abwägen und einen Plan verfolgen."},
+  merk:   {n:"Merken & Konzentration", e:"🧠", d:"Regeln und Abfolgen im Kopf behalten und dranbleiben."},
+  reakt:  {n:"Schnell reagieren", e:"⚡", d:"Blitzschnell und trotzdem richtig reagieren."},
+  sprache:{n:"Sprechen & Erklären", e:"💬", d:"Sich ausdrücken, begründen, beschreiben und verhandeln."},
+  team:   {n:"Zusammenarbeiten", e:"🤝", d:"Gemeinsam ein Ziel erreichen und sich gut absprechen."},
+  persp:  {n:"Sich in andere hineindenken", e:"👀", d:"Überlegen, was die anderen wissen, wollen oder meinen."},
+  motorik:{n:"Zeichnen & Feinmotorik", e:"✏️", d:"Genau zeichnen, ankreuzen oder ausmalen."}
+};
+const STUFEN = {1:"Einfach", 2:"Mittel", 3:"Anspruchsvoll"};
+const ALTER = [[0,"egal"],[6,"6–7 Jahre"],[8,"8–9 Jahre"],[10,"10–11 Jahre"],[12,"ab 12"]];
+const ART = {koop:"Alle zusammen", semi:"Team, aber einer gewinnt", komp:"Jede/r für sich"};
+
+const EXTRA = {
+  saboteur:{k:["persp","logik","raum","sprache"], s:2,
+    ziel:"Die Goldsucher bauen zusammen einen Weg zum Gold. Doch heimlich spielen Saboteure mit, die das verhindern wollen. Wer gehört zu wem?",
+    tipp:"Vorher klären: Geheime Rollen sind Teil des Spiels, nach dem Spiel ist niemand «gemein» gewesen. Gut für grosse Gruppen."},
+  bandido:{k:["raum","team","strat"], s:1,
+    ziel:"Bandido will aus dem Gefängnis ausbrechen. Ihr legt gemeinsam Karten so an, dass jeder Fluchttunnel in einer Sackgasse endet.",
+    tipp:"Ideal als Einstieg in kooperative Spiele. Viel Platz einplanen, am besten am Boden."},
+  biss20:{k:["zahl","merk","reakt","team"], s:1,
+    ziel:"Alle zählen zusammen von 1 bis 20. Doch immer mehr Zahlen werden durch Aufgaben ersetzt, zum Beispiel winken statt «7». Schafft ihr es ohne Fehler?",
+    tipp:"Geht auch ohne Tisch im Sitzkreis mit der ganzen Klasse. Mit Stufe 1 beginnen."},
+  fiese7:{k:["zahl","reakt","merk"], s:1,
+    ziel:"Reihum wird eine Karte aufgedeckt und gezählt: 1 bis 7 und wieder zurück. Bei manchen Karten macht man statt der Zahl ein Geräusch. Wer zuerst keine Karten mehr hat, gewinnt.",
+    tipp:"Für Jüngere die Doppelkarten weglassen. Es wird laut, also nicht neben einer Stillarbeit."},
+  tucana:{k:["raum","strat","motorik"], s:2,
+    ziel:"Alle zeichnen auf ihrer eigenen Insel Wege zwischen Dörfern und Sehenswürdigkeiten. Welche Wege erlaubt sind, zeigen die aufgedeckten Karten.",
+    tipp:"Alle spielen gleichzeitig, es gibt kaum Wartezeit."},
+  cascadia:{k:["raum","strat"], s:2,
+    ziel:"Jede Person baut eine eigene Landschaft aus Sechseck-Plättchen und siedelt Tiere darin an. Punkte gibt es für grosse Gebiete und für Tiere in der richtigen Anordnung.",
+    tipp:"Für jüngere Kinder die einfache Wertungskarte nehmen, die alle Tiere gleich zählt."},
+  "cascadia-lm":{k:["raum","strat"], s:3,
+    ziel:"Die Erweiterung zu Cascadia: Platz für 5 und 6 Personen, neue Plättchen und Landmarken für grosse Gebiete.",
+    tipp:"Erst spielen, wenn das Grundspiel gut sitzt."},
+  bombbusters:{k:["logik","team","zahl","persp"], s:2,
+    ziel:"Ihr seid ein Team und entschärft eine Bombe. Jede Person sieht nur ihre eigenen Kabel. Durch geschicktes Tippen findet ihr heraus, wo welche Zahl liegt.",
+    tipp:"Mit Mission 1 beginnen und die Missionen der Reihe nach spielen. Auf einem Zettel notieren, wo ihr seid."},
+  pickapen:{k:["raum","zahl","motorik","strat"], s:1,
+    ziel:"Gewürfelt wird mit Buntstiften: Farbe und Zahl sagen, wie viele Felder du in welcher Farbe ausmalst. Wer seine Gärten am geschicktesten füllt, gewinnt.",
+    tipp:"Für die erste Partie Level 1 nehmen."},
+  taketime:{k:["zahl","team","persp","logik"], s:2,
+    ziel:"Ihr legt gemeinsam Karten an eine Uhr, sodass die Summen im Uhrzeigersinn grösser werden. Das Schwierige: Beim Legen darf niemand reden.",
+    tipp:"Die Regel «nicht reden» vorher kurz üben. Die Kapitel bauen aufeinander auf."},
+  harmonies:{k:["raum","strat"], s:2,
+    ziel:"Jede Person baut aus bunten Steinen Felder, Wälder, Berge und Flüsse. Passt die Landschaft, ziehen Tiere ein und bringen Punkte.", tipp:""},
+  schaetze:{k:["logik","strat","zahl"], s:2,
+    ziel:"Mit Körben sammelt ihr Pilze im Wald. Wie viel jede Pilzsorte wert ist, verraten erst die Karten am Schluss. Wer gut kombiniert, sammelt die wertvollsten.", tipp:""},
+  virus:{k:["strat","persp"], s:1,
+    ziel:"Sammle vier gesunde Organe in verschiedenen Farben. Die anderen versuchen, sie mit Viren krank zu machen, du heilst sie mit Medikamenten.",
+    tipp:"Schnell erklärt. Man spielt Karten direkt gegen andere, darum vorher über faires Verlieren reden."},
+  nochmal:{k:["strat","zahl","raum","motorik"], s:1,
+    ziel:"Alle kreuzen gleichzeitig Kästchen auf ihrem Blatt an. Die Würfel bestimmen Farbe und Anzahl. Wer Spalten und Farben zuerst füllt, bekommt mehr Punkte.",
+    tipp:"Kurze Runden, gut als Einstieg in Würfel-und-Ankreuz-Spiele."},
+  tictactown:{k:["zahl","raum","logik"], s:1,
+    ziel:"Reihum werden Würfel auf ein Raster gelegt. Wer dort seine geheimen Aufgaben entdeckt, zum Beispiel drei gleiche Zahlen in einer Reihe, sammelt Punkte.",
+    tipp:"Kurz und gut zum Üben von Zahlen und Mustern."},
+  locus:{k:["raum","strat","motorik"], s:2,
+    ziel:"Alle zeichnen Formen in fünf Farbzonen ihres Bogens ein. Wer alle Zonen gut füllt und keine vernachlässigt, gewinnt.", tipp:""},
+  dorfromantik:{k:["raum","team","strat"], s:1,
+    ziel:"Alle legen zusammen eine grosse Landschaft mit Wäldern, Feldern, Dörfern, Flüssen und Gleisen. Aufträge bringen Punkte, und nach jeder Partie wird Neues freigespielt.",
+    tipp:"Ruhig und kooperativ, gut für gemischte Gruppen. Das Kampagnenblatt in der Schachtel lassen, dann macht die nächste Gruppe weiter."},
+  sakura:{k:["raum","team","strat"], s:2,
+    ziel:"Wie Dorfromantik, aber in einer japanischen Landschaft mit Kirschblüten und Strassen. Gemeinsam spielt ihr nach und nach 6 Schachteln frei.", tipp:""},
+  "landmarks-pg":{k:["sprache","team","persp","logik"], s:2,
+    ziel:"Eine Person kennt den Weg durch den Dschungel und darf nur mit einzelnen Wörtern Hinweise geben. Alle anderen raten gemeinsam, wohin es weitergeht.",
+    tipp:"Gut für den Wortschatz. Die Hinweis-Person sollte sprachlich sicher sein."},
+  livingforest:{k:["strat","zahl"], s:3,
+    ziel:"Als Naturgeist schützt du den Wald vor dem Feuer. Mit deinen Tierkarten pflanzt du Bäume, löschst Brände und sammelst Heilige Blumen.", tipp:""},
+  everdell:{k:["strat","zahl"], s:3,
+    ziel:"Mit deinen Arbeitern sammelst du Zweige, Harz, Kiesel und Beeren und baust damit eine Stadt aus Bauwerken und Waldbewohnern.",
+    tipp:"Braucht viel Zeit und Platz. Gut für eine Doppellektion mit einer erwachsenen Person zum Erklären."},
+  savannah:{k:["raum","strat"], s:2,
+    ziel:"Alle haben dieselben Tiere im Park, nur anders verteilt. Nach und nach verschiebt ihr sie so, dass grosse Herden entstehen.",
+    tipp:"Alle ziehen gleichzeitig, es gibt kaum Wartezeit."},
+  caldera:{k:["raum","strat"], s:2,
+    ziel:"Jede Person siedelt Tierfamilien in ihrem Nationalpark an. Die Ansagen bestimmen, wohin das nächste Tier muss.",
+    tipp:"Für Kinder ohne Wetter-Effekte spielen."},
+  catan:{k:["strat","sprache","zahl"], s:3,
+    ziel:"Auf einer Insel baut ihr Strassen, Siedlungen und Städte. Rohstoffe bekommt ihr durch Würfeln und durch Handeln mit den anderen.",
+    tipp:"Lange Spieldauer. Gut für eine Doppellektion oder einen Spielnachmittag."},
+  nocturne:{k:["strat","persp","zahl"], s:3,
+    ziel:"Mit Zaubermarkern bietet ihr um Zutaten. Wer die richtigen Zutaten sammelt, braut Mixturen und erfüllt Ziele.", tipp:""},
+  rebirth:{k:["raum","strat"], s:2,
+    ziel:"Ihr baut Schottland neu auf: mit Siedlungen, Anlagen, Burgen und Kathedralen. Jedes gelegte Plättchen bringt sofort Punkte.",
+    tipp:"In der ersten Partie unbedingt die Schottland-Seite spielen."},
+  rollinghills:{k:["strat","zahl","motorik"], s:2,
+    ziel:"Die Würfel-Variante von Cascadia: Tiere würfeln, auf dem Bogen eintragen und damit Lebensräume ankreuzen.", tipp:""},
+  rollingrivers:{k:["strat","zahl","motorik"], s:2,
+    ziel:"Die Würfel-Variante von Cascadia mit Flüssen: Tiere würfeln, auf dem Bogen eintragen und damit Lebensräume ankreuzen.", tipp:""},
+  "ns-london":{k:["raum","strat","motorik"], s:2,
+    ziel:"Alle zeichnen gleichzeitig U-Bahn-Linien auf ihren Stadtplan von London. Die aufgedeckte Karte zeigt, zu welcher Station die nächste Strecke führt.",
+    tipp:"Alle spielen gleichzeitig, es gibt kaum Wartezeit."},
+  "ns-tokyo":{k:["raum","strat","motorik"], s:2,
+    ziel:"Alle zeichnen gleichzeitig U-Bahn-Linien auf ihren Stadtplan von Tokio. Die aufgedeckte Karte zeigt, zu welcher Station die nächste Strecke führt.",
+    tipp:"Alle spielen gleichzeitig, es gibt kaum Wartezeit."},
+  "ns-paris":{k:["raum","strat","motorik"], s:2,
+    ziel:"Alle zeichnen gleichzeitig Metro-Linien auf ihren Stadtplan von Paris. Die aufgedeckte Karte zeigt, zu welcher Station die nächste Strecke führt.",
+    tipp:"Alle spielen gleichzeitig, es gibt kaum Wartezeit."},
+  severton:{k:["team","strat","logik"], s:3,
+    ziel:"Ihr spielt alle zusammen die Figuren einer Geschichte und erledigt in mehreren Szenarien Aufgaben, bevor die Unruhe in der Stadt zu gross wird.",
+    tipp:"Ein Szenario dauert lange. Am besten mit einer festen Gruppe über mehrere Male spielen."}
+};
+GAMES.forEach(g=>{
+  const x = EXTRA[g.id]||{};
+  g.komp = x.k||[]; g.stufe = x.s||2; g.ziel = x.ziel||""; g.tipp = x.tipp||"";
+  g.ageN = parseInt(String(g.age).replace(/\D/g,""),10)||0;
+  g.art = g.cats.find(c=>CATS[c] && CATS[c].group==="mit") || "komp";
+});
+
+/* ---------- Zustand ---------- */
+function load(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+const LEER = {q:"", players:null, age:0, dur:"all", art:[], komp:[], stufe:[], places:[], cats:[], sort:"name", merk:false};
+const F = Object.assign({}, LEER, load("sr2-filter",{}));
+F.q = "";
+let MERK = load("sr2-merk", []).filter(id=>GAMES.some(g=>g.id===id));
+const ST = load("sr2-stationen", {kinder:20, games:null});
+const state = {};
+const app = document.getElementById("app");
+const byId = id => GAMES.find(g=>g.id===id);
+
+function norm(s){ return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
+function matches(g){
+  if(F.q){ const hay = norm([g.name,g.sub,g.ziel,g.material,...g.cats.map(c=>CATS[c].n),...g.komp.map(k=>KOMP[k].n)].join(" ")); if(!norm(F.q).split(/\s+/).every(w=>hay.includes(w))) return false; }
+  if(F.players && (F.players<g.min || F.players>g.max)) return false;
+  if(F.age && g.ageN>F.age) return false;
+  if(F.dur!=="all" && g.minutes>Number(F.dur)) return false;
+  if(F.art.length && !F.art.includes(g.art)) return false;
+  if(F.komp.length && !F.komp.every(k=>g.komp.includes(k))) return false;
+  if(F.stufe.length && !F.stufe.includes(String(g.stufe))) return false;
+  if(F.places.length && !F.places.some(p=>g.places.includes(p))) return false;
+  if(F.cats.length && !F.cats.every(c=>g.cats.includes(c))) return false;
+  if(F.merk && !MERK.includes(g.id)) return false;
+  return true;
+}
+const SORT = {
+  name:  ["A bis Z", (a,b)=>a.name.localeCompare(b.name,"de")],
+  kurz:  ["Kürzeste zuerst", (a,b)=>a.minutes-b.minutes || a.name.localeCompare(b.name,"de")],
+  alter: ["Jüngste zuerst", (a,b)=>a.ageN-b.ageN || a.stufe-b.stufe || a.name.localeCompare(b.name,"de")],
+  stufe: ["Einfachste zuerst", (a,b)=>a.stufe-b.stufe || a.minutes-b.minutes || a.name.localeCompare(b.name,"de")],
+  viele: ["Für viele Personen", (a,b)=>b.max-a.max || a.name.localeCompare(b.name,"de")]
+};
+function liste(){ return GAMES.filter(matches).sort((SORT[F.sort]||SORT.name)[1]); }
+const tags = g => g.cats.map(c=>`<span class="tag${CATS[c].group==="mit"?" main":""}">${CATS[c].n}</span>`).join("");
+const stufeTxt = s => `<span class="stufe" aria-hidden="true">${"●".repeat(s)}${"○".repeat(3-s)}</span> ${STUFEN[s]}`;
+const kicons = g => g.komp.map(k=>`<span title="${KOMP[k].n}" role="img" aria-label="${KOMP[k].n}">${KOMP[k].e}</span>`).join("");
+function setMerk(id,on){ MERK = on ? [...new Set([...MERK,id])] : MERK.filter(x=>x!==id); save("sr2-merk",MERK); merkZahl(); }
+function merkZahl(){ document.getElementById("merkZahl").textContent = MERK.length; }
+
+/* ---------- Regal ---------- */
+function renderShelf(){
+  document.title = "Spieleregal · Klassenkiste";
+  app.style.removeProperty("--c");
+  document.getElementById("zur").setAttribute("href","../");
+  const usedCats = Object.keys(CATS).filter(c=>CATS[c].group!=="mit" && GAMES.some(g=>g.cats.includes(c)));
+  const pill = (grp,v,l,on)=>`<button class="pill" data-grp="${grp}" data-v="${v}" aria-pressed="${on}">${l}</button>`;
+  const anz = (grp)=>F[grp].length;
+  app.innerHTML = `
+    <section class="banner">
+      <div class="ring" aria-hidden="true">🎲</div>
+      <div class="txt">
+        <span class="klein">Unser Spieleregal</span>
+        <h1>Was spielen wir heute?</h1>
+        <p>Spiel aussuchen, Anzahl Personen einstellen und los geht’s. Du siehst sofort, wie der Tisch aussieht, was du bereitlegen musst und wie das Spiel geht.</p>
+        <div class="knoepfe">
+          <button class="btn sun" id="dice">🎲 Überrasch mich!</button>
+          <a class="btn sky" href="#stationen">🏫 Spielstationen planen</a>
+        </div>
+      </div>
+      <div class="schachteln" aria-hidden="true">${["cascadia","bombbusters","saboteur","biss20"].map(byId).map(g=>`<img src="${g.cover}" alt="">`).join("")}</div>
+    </section>
+    <div class="deko" aria-hidden="true">✦ ✧ ✦</div>
+    <section class="filter" aria-label="Spiele suchen und filtern">
+      <div class="such">
+        <input id="q" type="search" placeholder="Spiel suchen, z. B. Zahlen, Würfel, Saboteur" aria-label="Spiel suchen" value="${esc(F.q)}">
+        <label><span class="eyebrow" style="font-size:16px">Ordnen: </span><select id="sort">${Object.entries(SORT).map(([k,[l]])=>`<option value="${k}"${F.sort===k?" selected":""}>${l}</option>`).join("")}</select></label>
+      </div>
+      <div class="frow"><span class="flab">👥 Wir sind</span>
+        <div class="mini"><button id="pm" aria-label="weniger">−</button><output id="pv">${F.players?F.players+" Pers.":"egal"}</output><button id="pp" aria-label="mehr">+</button></div>
+      </div>
+      <div class="frow"><span class="flab">🎂 Alter</span><div class="pills">${ALTER.map(([v,l])=>pill("age",v,l,F.age===v)).join("")}</div></div>
+      <div class="frow"><span class="flab">⏱ Dauer</span><div class="pills">${DURS.map(([v,l])=>pill("dur",v,l,F.dur===v)).join("")}</div></div>
+      <div class="frow"><span class="flab">🎯 Kompetenzen</span><div class="pills">${Object.entries(KOMP).map(([k,o])=>pill("komp",k,`${o.e} ${o.n}`,F.komp.includes(k))).join("")}</div></div>
+      <details class="mehr"${anz("art")+anz("stufe")+anz("places")+anz("cats")?" open":""}><summary>Mehr Filter: Spielart, Schwierigkeit, Ort</summary><div>
+        <div class="frow"><span class="flab">Spielart</span><div class="pills">${Object.entries(ART).map(([k,l])=>pill("art",k,l,F.art.includes(k))).join("")}</div></div>
+        <div class="frow"><span class="flab">Schwierigkeit</span><div class="pills">${Object.entries(STUFEN).map(([k,l])=>pill("stufe",k,l,F.stufe.includes(k))).join("")}</div></div>
+        <div class="frow"><span class="flab">Spielort</span><div class="pills">${Object.entries(PLACES).map(([v,l])=>pill("places",v,l,F.places.includes(v))).join("")}</div></div>
+        <div class="frow"><span class="flab">So geht’s</span><div class="pills">${usedCats.map(c=>pill("cats",c,CATS[c].n,F.cats.includes(c))).join("")}</div></div>
+      </div></details>
+      <div class="fmeta"><span id="treffer"></span>
+        <span><button class="pill" data-grp="merk" data-v="1" aria-pressed="${F.merk}">⭐ Nur Merkliste</button> <button class="link" id="reset">Filter zurücksetzen</button></span></div>
+    </section>
+    <div id="regal"></div>
+    <details class="legende"><summary>Was bedeuten die Kompetenzen und Spielarten?</summary>
+      <div class="lg"><h4>Kompetenzen</h4>${Object.values(KOMP).map(c=>`<div><b>${c.e} ${c.n}</b>${c.d}</div>`).join("")}
+      <h4>Spielarten</h4>${Object.values(CATS).map(c=>`<div><b>${c.n}</b>${c.d}</div>`).join("")}
+      <h4>Schwierigkeit</h4><div><b>${stufeTxt(1)}</b>In wenigen Minuten erklärt, gut für Jüngere.</div><div><b>${stufeTxt(2)}</b>Ein paar Regeln mehr, nach einer Probe-Runde klar.</div><div><b>${stufeTxt(3)}</b>Viel Material und Regeln, am besten mit einer erwachsenen Person erklären.</div></div>
+    </details>`;
+  const upd=()=>{ const keep={...F}; keep.q=""; save("sr2-filter",keep); renderList(); };
+  document.getElementById("dice").onclick=()=>{ const l=liste(), pool=l.length?l:GAMES; go(pool[Math.floor(Math.random()*pool.length)].id); };
+  const pv=document.getElementById("pv");
+  document.getElementById("pm").onclick=()=>{ F.players = !F.players||F.players<=1 ? null : F.players-1; pv.textContent=F.players?F.players+" Pers.":"egal"; upd(); };
+  document.getElementById("pp").onclick=()=>{ F.players = Math.min(10,(F.players||0)+1); pv.textContent=F.players+" Pers."; upd(); };
+  document.getElementById("q").oninput=e=>{ F.q=e.target.value; renderList(); };
+  document.getElementById("sort").onchange=e=>{ F.sort=e.target.value; upd(); };
+  document.getElementById("reset").onclick=()=>{ Object.assign(F,LEER); save("sr2-filter",LEER); renderShelf(); };
+  app.querySelectorAll(".filter .pill").forEach(b=>b.onclick=()=>{
+    const g=b.dataset.grp, v=b.dataset.v;
+    if(g==="dur") F.dur=v; else if(g==="age") F.age=Number(v); else if(g==="merk") F.merk=!F.merk;
+    else F[g] = F[g].includes(v) ? F[g].filter(x=>x!==v) : [...F[g],v];
+    app.querySelectorAll(`.filter .pill[data-grp="${g}"]`).forEach(p=>{
+      const on = g==="dur" ? F.dur===p.dataset.v : g==="age" ? F.age===Number(p.dataset.v) : g==="merk" ? F.merk : F[g].includes(p.dataset.v);
+      p.setAttribute("aria-pressed", on);
+    });
+    upd();
+  });
+  renderList();
+}
+function renderList(){
+  const list = liste(), box = document.getElementById("regal"); if(!box) return;
+  document.getElementById("treffer").innerHTML = `<b>${list.length}</b> von ${GAMES.length} Spielen passen`;
+  box.innerHTML = list.length ? `<div class="regal">${list.map(g=>`
+    <article class="game" style="--c:var(${g.c})">
+      <button class="stern" data-merk="${g.id}" aria-pressed="${MERK.includes(g.id)}" aria-label="${esc(g.name)} auf die Merkliste">${MERK.includes(g.id)?"★":"☆"}</button>
+      <div class="stage"><img src="${g.cover}" alt="" loading="lazy"></div>
+      <div class="plank"></div>
+      <div class="info">
+        <h3><a href="#${g.id}">${esc(g.name)}</a></h3><div class="sub">${esc(g.sub)}</div>
+        <div class="facts"><span class="chip">👥 ${g.min}–${g.max}</span><span class="chip">⏱ ${esc(g.time)}</span><span class="chip">🎂 ${esc(g.age)}</span></div>
+        <div class="facts"><span class="chip">${stufeTxt(g.stufe)}</span></div>
+        <div class="kicons">${kicons(g)}</div>
+      </div>
+    </article>`).join("")}</div>`
+    : `<div class="leer">${F.merk&&!MERK.length?"Deine Merkliste ist noch leer. Tippe bei einem Spiel auf ☆, dann erscheint es hier.":"Kein Spiel passt zu diesen Filtern. Lass einen Filter weg oder setze alle zurück."}</div>`;
+  box.querySelectorAll(".stern").forEach(b=>b.onclick=()=>{ const on=b.getAttribute("aria-pressed")!=="true"; setMerk(b.dataset.merk,on); b.setAttribute("aria-pressed",on); b.textContent=on?"★":"☆"; if(F.merk) renderList(); });
+}
+
+/* ---------- Ein Spiel ---------- */
+function prep(g, n){
+  if(!state[g.id]){
+    const saved = load("sr2-"+g.id,{});
+    const pref = F.players && F.players>=g.min && F.players<=g.max ? F.players : null;
+    state[g.id] = { n: pref || Math.min(g.max, Math.max(g.min, saved.n || Math.min(4,g.max))), done:{} };
+    if(g.opts) state[g.id][g.opts.key] = saved[g.opts.key] || g.opts.def;
+    if(g.opts2) state[g.id][g.opts2.key] = saved[g.opts2.key] || g.opts2.def;
+  }
+  if(n && n>=g.min && n<=g.max && n!==state[g.id].n){ state[g.id].n=n; state[g.id].done={}; }
+  return state[g.id];
+}
+function seg(g,o){
+  const cur = state[g.id][o.key];
+  return `<div class="ctl"><span class="eyebrow">${o.label}</span><div class="seg" data-key="${o.key}">${o.choices.map(([v,l])=>`<button aria-pressed="${cur===v}" data-v="${v}">${l}</button>`).join("")}</div></div>`;
+}
+function renderGame(g){
+  const s = state[g.id], r = g.compute(s.n, s);
+  document.title = g.name + " · Spieleregal";
+  app.style.setProperty("--c", `var(${g.c})`);
+  document.getElementById("zur").setAttribute("href","#");
+  const seatHint = r.hint ? r.hint : r.seatLabel==="0" ? "Niemand bekommt Karten. In der Mitte liegt alles für alle." :
+    r.solo ? `Die Zahl neben jedem Platz zeigt die Edelsteine pro Person.` :
+    `Die Zahl neben jedem Platz zeigt, wie viele Karten diese Person bekommt.`;
+  const total = r.deal.length + r.steps.length;
+  const fertig = Object.keys(s.done).filter(k=>s.done[k]).length;
+  const l = liste(), i = l.findIndex(x=>x.id===g.id);
+  const prev = i>0 ? l[i-1] : null, next = i>=0 && i<l.length-1 ? l[i+1] : null;
+  const material = String(g.material).split(/,\s*(?![^()]*\))/).map(t=>t.trim()).filter(Boolean);
+  app.innerHTML = `
+    <header class="gamehero">
+      <img class="cover" src="${g.cover}" alt="Schachtel von ${esc(g.name)}">
+      <div class="txt">
+        <span class="klein">Spieleregal</span>
+        <h1>${esc(g.name)}</h1>
+        <div class="sub">${esc(g.sub)}</div>
+        <div class="facts"><span class="chip">👥 ${g.min}–${g.max} Personen</span><span class="chip">⏱ ${esc(g.time)}</span><span class="chip">🎂 ${esc(g.age)}</span><span class="chip">${stufeTxt(g.stufe)}</span>${g.places.map(p=>`<span class="chip">📍 ${PLACES[p]}</span>`).join("")}</div>
+        <div class="cats">${tags(g)}</div>
+        <div class="knoepfe nodruck">
+          <button class="btn sm" id="merk" aria-pressed="${MERK.includes(g.id)}">${MERK.includes(g.id)?"★ Auf der Merkliste":"☆ Merken"}</button>
+          <button class="btn sm" id="druck">🖨 Spickzettel drucken</button>
+        </div>
+      </div>
+    </header>
+    ${g.ziel?`<div class="ziel"><span class="em" aria-hidden="true">🦉</span><div><b>Worum geht’s?</b>${esc(g.ziel)}</div></div>`:""}
+    <section class="panel steuer nodruck" aria-label="Einstellungen">
+      <div class="ctl"><span class="eyebrow">Wie viele spielen?</span>
+        <div class="stepper"><button id="minus" aria-label="Eine Person weniger" ${s.n<=g.min?"disabled":""}>−</button><output id="n" aria-live="polite">${s.n}</output><button id="plus" aria-label="Eine Person mehr" ${s.n>=g.max?"disabled":""}>+</button></div>
+      </div>
+      ${g.opts?seg(g,g.opts):""}${g.opts2?seg(g,g.opts2):""}
+    </section>
+    <div class="nurdruck"><b>Für ${s.n} ${s.n===1?"Person":"Personen"}</b>${g.opts?` · ${g.opts.label}: ${(g.opts.choices.find(c=>c[0]===s[g.opts.key])||["",""])[1]}`:""}${g.opts2?` · ${g.opts2.label}: ${(g.opts2.choices.find(c=>c[0]===s[g.opts2.key])||["",""])[1]}`:""}</div>
+    <section class="panel">
+      <h2><span class="ic">🪑</span>So sieht der Tisch aus</h2>
+      <div class="tableplan">${tablePlan(g,s.n,r)}</div>
+      <p class="cap">${seatHint} Die Plätze 1 bis ${s.n} sind die Mitspielenden.</p>
+    </section>
+    <section class="panel nodruck" style="gap:8px">
+      <h2 style="font-size:24px"><span class="ic">✅</span>Bereit zum Spielen? <span class="rechts" id="stand">${fertig} von ${total} erledigt</span></h2>
+      <div class="fortschritt"><i id="balken" style="width:${Math.round(fertig/total*100)}%"></i></div>
+      <p class="cap">Tippe auf eine Karte oder einen Schritt, wenn er erledigt ist. <button class="link" id="neu">Alles wieder offen</button></p>
+    </section>
+    <div class="cols">
+      <section class="panel">
+        <h2><span class="ic">🃏</span>Das legst du bereit</h2>
+        <div class="deal">${r.deal.map((d,k)=>`<button class="num${d.main?" main":""}${s.done["d"+k]?" ok":""}" data-done="d${k}" aria-pressed="${!!s.done["d"+k]}"><span class="haken">✓</span><b>${esc(d.v)}</b><small>${esc(d.t)}</small></button>`).join("")}</div>
+        ${r.note?`<div class="note">💡 ${esc(r.note)}</div>`:""}
+      </section>
+      <section class="panel">
+        <h2><span class="ic">🧩</span>So baust du auf</h2>
+        <ol class="steps">${r.steps.map((t,k)=>`<li class="${s.done["s"+k]?"ok":""}"><button data-done="s${k}" aria-pressed="${!!s.done["s"+k]}"><span class="nr"><span>${k+1}</span></span><span class="t">${esc(t)}</span></button></li>`).join("")}</ol>
+      </section>
+    </div>
+    <section class="panel">
+      <h2><span class="ic">💡</span>So wird gespielt</h2>
+      <div class="rules">${g.rules.map(([h,items,pics])=>`<div><h3>${esc(h)}</h3><ul>${items.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>${pics?`<div class="pic">${pics.map(([src,c])=>`<figure><img src="${src}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure>`).join("")}</div>`:""}</div>`).join("")}</div>
+      ${g.tipp?`<div class="note">🍎 <b>Tipp für die Schule:</b> ${esc(g.tipp)}</div>`:""}
+    </section>
+    ${g.gallery?`<section class="panel">
+      <h2><span class="ic">🖼</span>Diese Karten gibt es</h2>
+      <div class="gallery">${g.gallery.map(([src,t,d])=>`<figure><div class="ph"><img src="${src}" alt="${esc(t)}" loading="lazy" onload="if(this.naturalWidth/this.naturalHeight>1.6)this.closest('figure').classList.add('wide')"></div><figcaption><b>${esc(t)}</b>${esc(d)}</figcaption></figure>`).join("")}</div>
+    </section>`:""}
+    ${g.photos?`<section class="panel">
+      <h2><span class="ic">📷</span>So sieht das Spiel aus</h2>
+      <div class="photos">${g.photos.map(([src,t])=>`<figure><img src="${src}" alt="${esc(t)}" loading="lazy"><figcaption>${esc(t)}</figcaption></figure>`).join("")}</div>
+    </section>`:""}
+    ${g.lookup?`<section class="panel lookup">
+      <h2><span class="ic">🔎</span>Alle ${g.lookup.length} Aufgaben zum Nachschlagen</h2>
+      <p class="cap">Die Nummer steht unten rechts auf jeder Aufgabenkarte.</p>
+      <input id="q2" type="search" placeholder="Nummer oder Wort suchen, z. B. 14 oder Kopf" aria-label="Aufgabe suchen">
+      <ol class="tasks" id="tasks">${g.lookup.map((t,k)=>`<li data-s="${k+1} ${esc(t.toLowerCase())}"><b>${k+1}</b><span>${esc(t)}</span></li>`).join("")}</ol>
+    </section>`:""}
+    <section class="panel druckweg">
+      <h2><span class="ic">📦</span>In der Schachtel</h2>
+      <ul class="inhalt">${material.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    </section>
+    ${g.komp.length?`<section class="panel komp-panel">
+      <h2><span class="ic">🎯</span>Das üben die Kinder</h2>
+      <div class="komp">${g.komp.map(k=>`<div><span class="e">${KOMP[k].e}</span><span><b>${KOMP[k].n}</b><small>${KOMP[k].d}</small></span></div>`).join("")}</div>
+    </section>`:""}
+    ${g.videos?`<section class="panel">
+      <h2><span class="ic">▶</span>Videos</h2>
+      <div class="links">${g.videos.map(([t,u,src])=>`<a href="${u}" target="_blank" rel="noopener"><span class="ic">▶</span><span><b>${esc(t)}</b><small>${esc(src)}</small></span></a>`).join("")}</div>
+    </section>`:""}
+    <nav class="blaettern" aria-label="Weitere Spiele">
+      ${prev?`<a href="#${prev.id}"><img src="${prev.cover}" alt=""><span><small>← vorheriges</small><b>${esc(prev.name)}</b></span></a>`:""}
+      ${next?`<a href="#${next.id}"><img src="${next.cover}" alt=""><span><small>nächstes →</small><b>${esc(next.name)}</b></span></a>`:""}
+    </nav>`;
+  const q=document.getElementById("q2");
+  if(q) q.oninput=()=>{ const v=q.value.trim().toLowerCase(); app.querySelectorAll("#tasks li").forEach(li=>{ const t=li.dataset.s; li.hidden = !!v && (/^\d+$/.test(v) ? t.split(" ")[0]!==v : !t.includes(v)); }); };
+  const keep=()=>{ const o={n:s.n}; if(g.opts) o[g.opts.key]=s[g.opts.key]; if(g.opts2) o[g.opts2.key]=s[g.opts2.key]; save("sr2-"+g.id,o); };
+  const set=(k,v,focusId)=>{ s[k]=v; s.done={}; keep(); try{ history.replaceState(null,"","#"+g.id+(k==="n"?"/"+v:"")); }catch(e){} const y=window.scrollY; renderGame(g); window.scrollTo(0,y); const f=focusId&&document.getElementById(focusId); if(f&&!f.disabled) f.focus(); };
+  document.getElementById("minus").onclick=()=>set("n",Math.max(g.min,s.n-1),"minus");
+  document.getElementById("plus").onclick=()=>set("n",Math.min(g.max,s.n+1),"plus");
+  app.querySelectorAll(".seg").forEach(el=>el.querySelectorAll("button").forEach(b=>b.onclick=()=>set(el.dataset.key,b.dataset.v)));
+  const stand=()=>{ const f=Object.values(s.done).filter(Boolean).length; document.getElementById("stand").textContent=`${f} von ${total} erledigt${f===total?" · Viel Spass! 🎉":""}`; document.getElementById("balken").style.width=Math.round(f/total*100)+"%"; };
+  app.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.done; s.done[k]=!s.done[k]; b.setAttribute("aria-pressed",s.done[k]);
+    (b.closest("li")||b).classList.toggle("ok",s.done[k]); stand();
+  });
+  document.getElementById("neu").onclick=()=>{ s.done={}; app.querySelectorAll("[data-done]").forEach(b=>{ b.setAttribute("aria-pressed",false); (b.closest("li")||b).classList.remove("ok"); }); stand(); };
+  stand();
+  document.getElementById("merk").onclick=e=>{ const on=!MERK.includes(g.id); setMerk(g.id,on); e.currentTarget.setAttribute("aria-pressed",on); e.currentTarget.textContent=on?"★ Auf der Merkliste":"☆ Merken"; };
+  document.getElementById("druck").onclick=()=>window.print();
+}
+
+/* ---------- Spielstationen für die Klasse ---------- */
+function verteile(kinder, games){
+  const drin=[...games], weg=[];
+  while(drin.length && drin.reduce((a,g)=>a+g.min,0)>kinder) weg.unshift(drin.pop());
+  const size = drin.map(g=>g.min);
+  let rest = kinder - size.reduce((a,b)=>a+b,0);
+  while(rest>0){
+    let best=-1;
+    drin.forEach((g,i)=>{ if(size[i]<g.max && (best<0 || size[i]<size[best])) best=i; });
+    if(best<0) break;
+    size[best]++; rest--;
+  }
+  return {drin, size, weg, rest};
+}
+function renderStationen(){
+  document.title = "Spielstationen · Spieleregal";
+  app.style.removeProperty("--c");
+  document.getElementById("zur").setAttribute("href","#");
+  if(!Array.isArray(ST.games)) ST.games = MERK.length ? [...MERK] : [];
+  ST.games = ST.games.filter(id=>byId(id));
+  const gew = ST.games.map(byId);
+  const v = verteile(ST.kinder, gew);
+  const sortiert = [...GAMES].sort((a,b)=>a.name.localeCompare(b.name,"de"));
+  const platz = gew.reduce((a,g)=>a+g.max,0);
+  let warn = "";
+  if(!gew.length) warn = "Wähle unten die Spiele aus, die ihr aufstellen wollt (oder setze sie vorher auf die Merkliste ⭐).";
+  else if(v.rest>0) warn = `Es fehlen Plätze für ${v.rest} ${v.rest===1?"Kind":"Kinder"}. Die gewählten Spiele haben zusammen höchstens ${platz} Plätze. Wählt noch ein Spiel dazu.`;
+  if(v.weg.length) warn += (warn?" ":"") + `Für ${v.weg.map(g=>g.name).join(", ")} sind es zu wenige Kinder, ${v.weg.length===1?"es fällt":"sie fallen"} weg.`;
+  app.innerHTML = `
+    <section class="banner">
+      <div class="ring" aria-hidden="true">🏫</div>
+      <div class="txt">
+        <span class="klein">Spieleregal</span>
+        <h1>Spielstationen planen</h1>
+        <p>Gib ein, wie viele Kinder mitspielen, und wähle die Spiele. Die Klassenkiste verteilt die Kinder gleichmässig auf die Stationen und zeigt pro Station, was du bereitlegen musst.</p>
+        <div class="knoepfe nodruck"><button class="btn sun" id="druck">🖨 Stationen drucken</button><a class="btn" href="#">← Zum Regal</a></div>
+      </div>
+    </section>
+    <section class="panel nodruck">
+      <div class="ctl"><span class="eyebrow">Wie viele Kinder?</span>
+        <div class="stepper" style="align-self:flex-start"><button id="km" aria-label="Ein Kind weniger" ${ST.kinder<=2?"disabled":""}>−</button><output aria-live="polite">${ST.kinder}</output><button id="kp" aria-label="Ein Kind mehr" ${ST.kinder>=40?"disabled":""}>+</button></div>
+      </div>
+      <div class="ctl"><span class="eyebrow">Welche Spiele stellt ihr auf? (${gew.length} gewählt)</span>
+        <div class="knoepfe" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px">
+          <button class="btn sm" id="ausMerk" ${MERK.length?"":"disabled"}>⭐ Merkliste übernehmen</button>
+          <button class="btn sm" id="keine">Keine</button>
+        </div>
+        <div class="wahl">${sortiert.map(g=>`<button data-g="${g.id}" aria-pressed="${ST.games.includes(g.id)}"><img src="${g.cover}" alt=""><span>${esc(g.name)}<small>👥 ${g.min}–${g.max} · ${esc(g.time)}</small></span></button>`).join("")}</div>
+      </div>
+    </section>
+    ${warn?`<div class="warn">${esc(warn)}</div>`:""}
+    ${v.drin.length?`<div class="nurdruck"><b>${ST.kinder} Kinder · ${v.drin.length} Stationen</b></div><div class="stationen">${v.drin.map((g,i)=>{ const n=v.size[i]; const st=prep(g); const r=g.compute(n, Object.assign({}, st, {n})); const main=r.deal.find(d=>d.main)||r.deal[0];
+      return `<article class="station" style="--c:var(${g.c})">
+        <div class="kopf"><img src="${g.cover}" alt=""><div><small class="klein">Station ${i+1}</small><h3>${esc(g.name)}</h3><div class="gr">${n} Kinder · ${esc(g.time)}</div></div></div>
+        <ul><li><b>${esc(main.v)}</b> ${esc(main.t)}</li>${r.deal.filter(d=>d!==main).slice(0,3).map(d=>`<li><b>${esc(d.v)}</b> ${esc(d.t)}</li>`).join("")}</ul>
+        <a class="btn sm nodruck" href="#${g.id}/${n}">Aufbau für ${n} ansehen →</a>
+      </article>`; }).join("")}</div>`:""}`;
+  const keep=()=>{ save("sr2-stationen",ST); const y=window.scrollY; renderStationen(); window.scrollTo(0,y); };
+  document.getElementById("km").onclick=()=>{ ST.kinder=Math.max(2,ST.kinder-1); keep(); document.getElementById("km").focus(); };
+  document.getElementById("kp").onclick=()=>{ ST.kinder=Math.min(40,ST.kinder+1); keep(); document.getElementById("kp").focus(); };
+  document.getElementById("ausMerk").onclick=()=>{ ST.games=[...MERK]; keep(); };
+  document.getElementById("keine").onclick=()=>{ ST.games=[]; keep(); };
+  document.getElementById("druck").onclick=()=>window.print();
+  app.querySelectorAll(".wahl button").forEach(b=>b.onclick=()=>{ const id=b.dataset.g; ST.games = ST.games.includes(id) ? ST.games.filter(x=>x!==id) : [...ST.games,id]; keep(); });
+}
+
+/* ---------- Seiten wechseln (Adresse #spiel, #spiel/4, #stationen, #merkliste) ---------- */
+let letzte = "";
+function route(){
+  const h = decodeURIComponent((location.hash||"").slice(1));
+  const [id, n] = h.split("/");
+  const war = letzte; letzte = h;
+  if(id==="stationen"){ renderStationen(); }
+  else if(id==="merkliste"){ F.merk = true; renderShelf(); }
+  else if(byId(id)){ const g=byId(id); prep(g, Number(n)||0); renderGame(g); }
+  else { renderShelf(); }
+  if(war.split("/")[0]!==id) window.scrollTo(0,0);
+}
+function go(id){ location.hash = id; }
+document.getElementById("tMerk").onclick=e=>{ e.preventDefault(); F.merk = true; save("sr2-filter",{...F,q:""}); if(location.hash && location.hash!=="#") location.hash=""; else renderShelf(); };
+window.addEventListener("hashchange", route);
+merkZahl();
+route();
+
+/* ---------- Bild gross ---------- */
+(function(){
+  const lb=document.getElementById("lb"), li=document.getElementById("lbimg"), lc=document.getElementById("lbcap");
+  let last=null;
+  function show(img,cap){ last=document.activeElement; li.style.maxWidth=""; li.onload=()=>{ const nw=li.naturalWidth; if(nw) li.style.maxWidth=Math.min(nw*1.4, window.innerWidth*0.86)+"px"; }; li.src=img.currentSrc||img.src; li.alt=img.alt||""; lc.textContent=cap||img.alt||""; lb.hidden=false; document.getElementById("lbx").focus(); }
+  function hide(){ lb.hidden=true; li.removeAttribute("src"); if(last&&last.focus) last.focus(); }
+  document.addEventListener("click",e=>{
+    const img=e.target.closest(".gallery img, .rules .pic img, .gamehero .cover, .photos img");
+    if(img){ const fig=img.closest("figure"); const cap=fig&&(fig.querySelector("figcaption b")||fig.querySelector("figcaption")); show(img, cap?cap.textContent:img.alt); return; }
+    if(!lb.hidden && (e.target===lb || e.target.id==="lbx" || e.target.closest(".lb"))) hide();
+  });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!lb.hidden) hide(); });
+})();
+</script>
+</body>
+</html>
