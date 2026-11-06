@@ -12,9 +12,12 @@ rep('function rerender(w){', r'''// Lautstärke: Maus über dem Teich zeigt die 
 (() => {
   const layer = document.getElementById("otterLayer"); if (!layer) return; let t = 0;
   const w = () => document.querySelector("#board .w.otter");
-  layer.addEventListener("pointerenter", () => { clearTimeout(t); w()?.classList.add("hov"); });
+  // Darüberfahren holt den Teich nach vorne, auch wenn ein anderer Baustein darüber liegt (dann ist seine Leiste erreichbar)
+  const vor = () => { clearTimeout(t); const el = w(); if (!el) return; el.classList.add("hov");
+    const d = findW(el); if (d && (d.z || 1) < topZ()) { d.z = topZ() + 1; el.style.zIndex = d.z; save(); } };
+  layer.addEventListener("pointerenter", vor);
   layer.addEventListener("pointerleave", () => { clearTimeout(t); t = setTimeout(() => { const x = w(); if (x && !x.matches(":hover")) x.classList.remove("hov"); }, 900); });
-  document.addEventListener("pointerover", e => { const x = w(); if (x && e.target.closest && e.target.closest(".w.otter .chrome")) { clearTimeout(t); x.classList.add("hov"); } });
+  document.addEventListener("pointerover", e => { if (!APP.classList.contains("dragging") && e.target.closest && e.target.closest(".w.otter")) vor(); });
 })();
 function rerender(w){''')
 
