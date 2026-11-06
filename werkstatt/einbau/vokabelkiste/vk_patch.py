@@ -416,5 +416,11 @@ rep('<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>',
 rep("""<button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button>""",
     """<span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span>""")
 
+
+# 22) Portionen und Ordner duplizieren und in einen anderen Ordner verschieben (Code vk_ordnen.js, nur Lehrperson)
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_ordnen.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+rep("""<span class="hcol"><button class="pill" id="ren">Umbenennen</button>""", """<span class="hcol hgrid"><button class="pill sm" id="dupNode">⧉ Duplizieren</button><button class="pill sm" id="ren">Umbenennen</button><button class="pill sm" id="mvNode">📁 Verschieben</button>""")
+rep("$('#ren').onclick=", "$('#dupNode').onclick=()=>vkDup(id);$('#mvNode').onclick=()=>vkMove(id);$('#ren').onclick=")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
