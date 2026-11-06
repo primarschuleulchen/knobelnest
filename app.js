@@ -4058,30 +4058,43 @@
     var bild = fachBild(f);
     return bild ? '<span class="kk-ic kk-fbild">' + bild + '</span>' : '<span class="kk-ic kk-fbuchst" style="background:' + fachColor(f) + '">' + h(String(f).charAt(0)) + '</span>';
   }
+  // Ordner eines Fachs für die Kinder: Themen mit Überthema kommen in einen Ordner «U:<Überthema>» (z. B. alle Spiele von «Young World 3»)
+  function kidOrdner(games) {
+    var o = []; alleThemen(games).forEach(function (t) { var u = thTeile(t).ueber, k = u ? 'U:' + u : t; if (o.indexOf(k) < 0) o.push(k); }); return o;
+  }
+  function imOrdner(g, k) { return k.indexOf('U:') === 0 ? themen(g).some(function (t) { return thTeile(t).ueber === k.slice(2); }) : hatThema(g, k); }
+  function unterthemen(g, u) { return themen(g).filter(function (t) { return thTeile(t).ueber === u; }).map(function (t) { return thTeile(t).name; }); }
   K.view_thema = function () {
     var games = kidGames().filter(function (g) { return g.fach === K.fach; });
-    var thl = alleThemen(games), ues = uniq(thl.map(function (t) { return thTeile(t).ueber; }).filter(Boolean));
-    if (ues.indexOf(K.ueArt) < 0) K.ueArt = 'alle';
-    var zeig = thl.filter(function (t) { return K.ueArt === 'alle' || thTeile(t).ueber === K.ueArt; });
-    var knoepfe = ues.length ? '<div class="kk-arten" role="group" aria-label="Welche Themen?">' + ['alle'].concat(ues).map(function (u) {
-      return '<button class="kk-art' + (K.ueArt === u ? ' on' : '') + '" aria-pressed="' + (K.ueArt === u) + '" data-a="kUeArt" data-k="' + h(u) + '">' + (u === 'alle' ? 'Alle' : h(u)) + '</button>'; }).join('') + '</div>' : '';
-    return K.shell('<div class="kk">' + kkKopf(K.fach, K.fach, 'Wähle ein Thema.') + knoepfe + '<div class="kk-spiele">' + zeig.map(function (t) {
-      var gs = games.filter(function (g) { return hatThema(g, t); });
+    return K.shell('<div class="kk">' + kkKopf(K.fach, K.fach, 'Wähle ein Thema.') + '<div class="kk-spiele">' + kidOrdner(games).map(function (k) {
+      var u = k.indexOf('U:') === 0 ? k.slice(2) : '', gs = games.filter(function (g) { return imOrdner(g, k); });
       var played = gs.filter(function (g) { return g.plays; }).length;
       var stars = gs.reduce(function (n, g) { var a = g.award || {}; return n + (typeof a.stars === 'number' ? a.stars : awardSum(a)); }, 0);
-      return '<article class="kk-karte">' + (themaBild(t) ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + themaBild(t) + '.webp" alt="" draggable="false"></span>' : kkIc(K.fach)) + '<span class="kk-fach">' + h(thTeile(t).ueber || 'Thema') + '</span><b>' + h(thTeile(t).name) + '</b><p>' + plural(gs.length, 'Spiel', 'Spiele') + ' · ' +
-        (played ? 'schon gespielt: ' + played + ' von ' + gs.length : 'noch nichts gespielt') + '</p>' + (stars ? '<span class="kk-stand">⭐ ' + stars + ' Sterne</span>' : '') +
-        '<button class="kk-los" data-a="kThema" data-t="' + h(t) + '">Öffnen</button></article>';
+      var subs = u ? uniq([].concat.apply([], gs.map(function (g) { return unterthemen(g, u); }))) : [];
+      var bild = !u && themaBild(k);
+      return '<article class="kk-karte">' + (bild ? '<span class="kk-ic kk-fbild"><img src="bilder/spiele/' + bild + '.webp" alt="" draggable="false"></span>' : kkIc(K.fach)) +
+        '<span class="kk-fach">Thema</span><b>' + h(u || thTeile(k).name) + '</b>' + (subs.length ? '<p class="kk-subs">' + h(subs.join(' · ')) + '</p>' : '') +
+        '<p>' + plural(gs.length, 'Spiel', 'Spiele') + ' · ' + (played ? 'schon gespielt: ' + played + ' von ' + gs.length : 'noch nichts gespielt') + '</p>' + (stars ? '<span class="kk-stand">⭐ ' + stars + ' Sterne</span>' : '') +
+        '<button class="kk-los" data-a="kThema" data-t="' + h(k) + '">Öffnen</button></article>';
     }).join('') + '</div></div>', 'Zurück');
   };
   K.view_games = function () {
-    var games = kidGames().filter(function (g) { return g.fach === K.fach && hatThema(g, K.thema); });
-    return K.shell('<div class="kk">' + kkKopf(K.fach, thTeile(K.thema).name, h(K.fach) + (thTeile(K.thema).ueber ? ' · ' + h(thTeile(K.thema).ueber) : '') + ' · Wähle ein Spiel.', themaBild(K.thema)) + '<div class="kk-spiele">' + games.map(function (g) {
+    var k = K.thema || '', u = k.indexOf('U:') === 0 ? k.slice(2) : '';
+    var games = kidGames().filter(function (g) { return g.fach === K.fach && imOrdner(g, k); });
+    // Im Ordner eines Überthemas: Knöpfe pro Unterthema (z. B. «Unit 1»), wie in der Knobelkiste
+    var subs = u ? uniq([].concat.apply([], games.map(function (g) { return unterthemen(g, u); }))) : [];
+    if (subs.indexOf(K.unitArt) < 0) K.unitArt = 'alle';
+    var zeig = u && K.unitArt !== 'alle' ? games.filter(function (g) { return unterthemen(g, u).indexOf(K.unitArt) >= 0; }) : games;
+    var knoepfe = subs.length > 1 ? '<div class="kk-arten" role="group" aria-label="Welches Unterthema?">' + ['alle'].concat(subs).map(function (x) {
+      return '<button class="kk-art' + (K.unitArt === x ? ' on' : '') + '" aria-pressed="' + (K.unitArt === x) + '" data-a="kUnitArt" data-k="' + h(x) + '">' + (x === 'alle' ? 'Alle' : h(x)) + '</button>'; }).join('') + '</div>' : '';
+    var kopf = u ? kkKopf(K.fach, u, h(K.fach) + ' · Wähle ein Spiel.') : kkKopf(K.fach, thTeile(k).name, h(K.fach) + ' · Wähle ein Spiel.', themaBild(k));
+    return K.shell('<div class="kk">' + kopf + knoepfe + '<div class="kk-spiele">' + zeig.map(function (g) {
       var p = pct(g), l = lvlInfo(g)[0];
       var label = l ? 'Zuletzt: ' + l.name + ' · ' + (l.t ? (l.d || 0) + ' von ' + l.t + ' geschafft' : plural(l.c, 'Aufgabe', 'Aufgaben') + ' richtig') :
         g.total ? (g.done || 0) + ' von ' + g.total + ' geschafft' : g.attempts ? g.correct + ' Aufgaben richtig gelöst' : g.plays ? 'Schon ' + g.plays + '× gespielt' : 'Noch nicht gespielt';
       var extra = /zusatz/i.test(g.stufe || ''), st = awardText(g.award);
-      return '<article class="kk-karte' + (extra ? ' extra' : '') + '">' + (spielBild(g) || kkIc(g.fach)) + '<span class="kk-fach">' + h(thTeile(K.thema).name) + (extra ? ' · ★ Zusatz' : '') + '</span>' +
+      var oben = u ? unterthemen(g, u).join(' · ') : thTeile(k).name;
+      return '<article class="kk-karte' + (extra ? ' extra' : '') + '">' + (spielBild(g) || kkIc(g.fach)) + '<span class="kk-fach">' + h(oben) + (extra ? ' · ★ Zusatz' : '') + '</span>' +
         '<b>' + h(g.title) + '</b>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
         (st ? '<span class="kk-stand">' + h(st) + '</span>' : '') + vbHTML(g.award) +
         (p == null ? '' : '<span class="kbar"><i style="width:' + p + '%"></i></span>') + '<span class="kk-info">' + h(label) + '</span>' +
@@ -4199,10 +4212,10 @@
       LS.set('kn_kid', K.sess); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
     } finally { K.busy = false; }
   };
-  ACT.kFach = function (el) { K.fach = el.dataset.f; var th = alleThemen(kidGames().filter(function (g) { return g.fach === K.fach; }));
+  ACT.kFach = function (el) { K.fach = el.dataset.f; K.unitArt = 'alle'; var th = kidOrdner(kidGames().filter(function (g) { return g.fach === K.fach; }));
     if (th.length === 1) { K.thema = th[0]; K.step = 'games'; } else K.step = 'thema'; K.render(); };
-  ACT.kUeArt = function (el) { K.ueArt = el.dataset.k; K.render(); };
-  ACT.kThema = function (el) { K.thema = el.dataset.t; K.step = 'games'; K.render(); };
+  ACT.kUnitArt = function (el) { K.unitArt = el.dataset.k; K.render(); };
+  ACT.kThema = function (el) { K.thema = el.dataset.t; K.unitArt = 'alle'; K.step = 'games'; K.render(); };
   ACT.kBack = async function () {
     stopTimers(); K.err = '';
     switch (K.step) {
@@ -4212,7 +4225,7 @@
         if (K.sess) await DB.kidLogout(K.sess.token);
         LS.del('kn_kid'); K.sess = null; K.home = null; return K.start();
       case 'thema': K.step = 'home'; break;
-      case 'games': var th = alleThemen(kidGames().filter(function (g) { return g.fach === K.fach; }));
+      case 'games': var th = kidOrdner(kidGames().filter(function (g) { return g.fach === K.fach; }));
         K.step = th.length === 1 ? 'home' : 'thema'; break;
       case 'tafel': K.step = 'home'; K.tafel = null; K.loadHome(); break;
       case 'heft': K.step = 'home'; K.render(); break;
