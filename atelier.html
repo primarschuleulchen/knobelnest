@@ -153,7 +153,7 @@ button{cursor:pointer}
 
 
 /* ===== Knobelnest: 12 Kinder pro Liste, grosser Weg ===== */
-@media (min-width:901px){
+@media (min-width:700px){
   .stage{grid-template-columns:minmax(290px,1fr) minmax(0,1.7fr) minmax(290px,1fr)}
   .facts:not([style]){grid-template-columns:minmax(0,1.25fr) minmax(0,1.25fr) minmax(0,.8fr)}
   .facts i{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,7 +182,7 @@ button{cursor:pointer}
 :root:fullscreen .stage{padding-top:14px}
 :root:fullscreen .fsx{display:inline-flex}
 :root:fullscreen .fsx:hover,:root:fullscreen .fsx:focus-visible{opacity:1}
-@media (max-width:900px){
+@media (max-width:699px){
   body{overflow:auto}
   .app{height:auto;min-height:100%}
   .stage{grid-template-columns:1fr;--planW:auto}
@@ -190,6 +190,15 @@ button{cursor:pointer}
   .plan{width:min(100%,520px)}
   .park{flex:none;width:min(100%,520px)}
   .list{max-height:none}
+}
+@media (min-width:700px) and (max-width:1000px){
+  .stage{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);gap:10px}
+  .facts:not([style]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .facts:not([style])>:nth-child(n+3){display:none}
+  .kid{grid-template-columns:calc(var(--r) * 1.05) minmax(0,1fr);gap:0 6px;padding:calc(var(--r) * .05) 4px}
+  .kname{font-size:clamp(14px,calc(var(--r) * .3),22px)}
+  .kname .st{display:none}
+  .lhead{font-size:20px;padding:6px 10px 2px}
 }
 @media (max-width:480px){.facts{grid-template-columns:1fr 1fr}.dlg .grid2{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -384,7 +393,7 @@ function render(){
   fitPark();
 }
 function fitPark(){
-  if(innerWidth<=900){park.style.removeProperty('--pb');return}
+  if(innerWidth<700){park.style.removeProperty('--pb');return}
   const bs=[...park.querySelectorAll('.bike')], n=bs.length; if(!n){park.style.removeProperty('--pb');park.classList.remove('tight');return}
   const W=park.clientWidth-20, H=park.clientHeight-8, lbl=park.querySelector('.lbl');
   let best=30;

@@ -159,5 +159,6 @@ rep('''  try{db=window.claude&&window.claude.use?await window.claude.use('db'):n
 exec(open(__file__.rsplit('/',1)[0]+'/sec9.py',encoding='utf-8').read())
 exec(open(__file__.rsplit('/',1)[0]+'/sec10.py',encoding='utf-8').read())
 exec(open(__file__.rsplit('/',1)[0]+'/sec11.py',encoding='utf-8').read())
+exec(open(__file__.rsplit('/',1)[0]+'/sec12.py',encoding='utf-8').read())
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

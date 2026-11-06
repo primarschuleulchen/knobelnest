@@ -1424,3 +1424,32 @@ body.kidv .kk-tile{background:#F6E7C8}
 .sp-btn:hover{background:#f4f8fc}
 .sp-btn.on{background:#dcf0fd;box-shadow:inset 0 0 0 2px #d6ad45}
 @media (max-width:700px){.games.sp-5 .kkt .btn,.games.sp-6 .kkt .btn{font-size:inherit;padding:0 16px}.games.sp-5 .kkt b,.games.sp-6 .kkt b{font-size:24px}}
+/* Arbeitsstand der Kinder am iPad: Fachnamen ganz sichtbar, hochkant Bild über dem Namen */
+.board.kid .matrix{grid-template-columns:minmax(150px,.9fr) repeat(var(--ncol,3),minmax(0,1fr))}
+.board.kid .mx-subj{font-size:clamp(16px,min(2.2vw,calc((100dvh - 250px) / var(--rows,4) / 3.2)),24px);gap:10px;padding:8px 10px}
+.board.kid .mx-subj>span:last-child{min-width:0;overflow-wrap:anywhere;hyphens:auto}
+.board.kid .mx-bild{width:clamp(36px,min(6vw,9vh),64px);height:clamp(36px,min(6vw,9vh),64px)}
+@media (max-width:1000px) and (orientation:portrait){
+  .board.kid .matrix{grid-template-columns:minmax(118px,.62fr) repeat(var(--ncol,3),minmax(0,1fr))}
+  .board.kid .mx-subj{flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:8px 6px}
+  .board.kid .mx-bild{width:clamp(44px,8vw,72px);height:clamp(44px,8vw,72px)}
+  .board.kid .mx-h{padding:6px 10px 6px 6px!important}
+}
+@media (max-width:1000px){
+  .board.kid .board-head p{font-size:17px}
+  .board.kid .mine{font-size:17px}
+}
+/* Startseite der Kinder am iPad: Fächer zu dritt nebeneinander, etwas kompakter */
+@media (max-width:1000px){
+  body.kidv .big-tiles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+  body.kidv .big-tile{min-height:0;padding:20px 20px 18px;gap:8px}
+}
+@media (max-width:1000px) and (orientation:portrait){.board.kid .mx-subj{font-size:clamp(17px,2.7vw,24px)}}
+/* Werkzeug-Kacheln der Kinder: ab Tablet-Breite zu dritt, Querformat am iPad ohne Scrollen */
+@media (min-width:900px){body.kidv .tile-pair{grid-template-columns:repeat(3,minmax(0,1fr))}body.kidv .tile-pair .tafel-tile b{font-size:clamp(21px,2.1vw,28px);white-space:nowrap}body.kidv .tile-pair .tafel-tile span span{font-size:16px}body.kidv .tile-pair .tafel-tile{gap:12px;padding:14px 16px}}
+@media (orientation:landscape) and (max-height:850px){
+  body.kidv .big-tile{min-height:0;padding:16px 20px 14px;gap:6px}
+  body.kidv .big-tile .ic.ic-bild{width:76px!important;height:76px!important}
+  body.kidv .tafel-tile{padding:14px 18px;gap:14px}
+}
+@media (orientation:landscape) and (max-height:850px){body.kidv .kk-bild{width:92px;height:92px}body.kidv .kk-kopf h1{font-size:46px}}
