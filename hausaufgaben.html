@@ -319,6 +319,46 @@ textarea.inp{min-height:110px;resize:vertical;font-family:var(--hand);font-size:
 }
 /* Knobelnest */
 #knBack{font-weight:700}
+/* ===== Klassenkiste-Stil ===== */
+:root{--ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;--gold:#d6ad45;--gold-d:#a87c1f;--sun:#fbf3dc;--himmel:#dcf0fd;--blau:#3f78a8;--line2:#c5d8e8;
+  --sch:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);--sch-k:0 4px 12px rgba(63,120,168,.14);--leaf-soft:#eaf5fe}
+body{font-size:17px}
+:focus-visible{outline:3px solid var(--gold)!important;outline-offset:2px}
+.bg{background:radial-gradient(1200px 600px at 10% -10%,#e3f1fc 0%,transparent 60%),radial-gradient(900px 500px at 110% 110%,#fbf3dc 0%,transparent 60%),#f4f9fd!important}
+/* Leiste oben: weisse Pillen mit feinem Rand, Hauptknopf hellblau */
+.pill{border:1.5px solid var(--line2);font-weight:400;font-size:18px;height:40px;box-shadow:var(--sch-k)}
+.pill:hover{background:var(--himmel)}
+.pill.ic{width:40px;font-weight:400}
+.pill.rose{background:var(--himmel);border:2px solid var(--ink);color:var(--ink)}
+.pill.rose:hover{background:#c9e5fa}
+.wk{font-size:28px}
+.wk small,.status{font-family:var(--ui);font-weight:400;font-size:15px}
+/* Buch: Umschlag «Eule» hell mit goldenen Stichen */
+.book{box-shadow:var(--sch),inset 0 0 0 2px rgba(255,255,255,.4)}
+.book.eule{background:radial-gradient(circle,rgba(214,173,69,.55) 1.4px,transparent 2px) 0 0/16px 16px,linear-gradient(160deg,var(--cover),var(--cover2));box-shadow:var(--sch),inset 0 0 0 3px #fff,inset 0 0 0 5px rgba(214,173,69,.6)}
+.ribbon{background:repeating-linear-gradient(170deg,#e2bd5c 0 3px,#d6ad45 3px 6px)}
+/* Titel «November» / «Woche 45»: ruhige Handschrift mit Gold-Stern statt Umriss-Schrift */
+.big,.rtop h1{font-family:var(--ui)!important;font-weight:400!important;color:var(--ink)!important;text-shadow:none!important;letter-spacing:.01em}
+.big::after,.rtop h1::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.klasse{font-family:var(--ui)}
+/* Tage: Name in Blau, heute als goldene Pille */
+.dname{font-family:var(--ui);font-weight:400;letter-spacing:.08em;color:var(--blau);font-size:clamp(13px,calc(var(--lh)*.48),20px)}
+.today .dname{background:var(--sun);color:var(--ink);box-shadow:0 0 0 1.5px var(--gold);padding:1px 12px 0}
+.dadd:hover{background:var(--himmel)}
+/* Seitenleiste zum Bearbeiten und Fenster */
+.panel{font-family:var(--ui)}
+.ph h2::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.lbl{font-weight:400;font-size:14px;letter-spacing:.1em;color:var(--blau)}
+.opt,.btn{font-weight:400;font-size:17px;border:1.5px solid var(--line2)}
+.opt:hover,.btn:hover{background:var(--himmel)}
+.opt.on{background:var(--sun);border-color:var(--gold);color:var(--ink);box-shadow:0 0 0 1px var(--gold) inset}
+.btn.go{background:var(--himmel);border:2px solid var(--ink);color:var(--ink)}
+.btn.go:hover{background:#c9e5fa}
+.toast{font-weight:400;font-size:17px}
+.tile .tn{font-family:var(--ui)!important;font-weight:400!important}
+.ptab,.seg button{font-weight:400;font-size:17px}
+.ptab{border:1.5px solid var(--line2)}
+.ptab.on,.seg button.on{background:var(--himmel);border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
 .kidmode #who,.kidmode #repBtn,.kidmode #klasseBtn,.kidmode #beamerBtn,.kidmode #status{display:none!important}
 .kidmode .e{cursor:default}
 .embed .top{display:none}
@@ -427,7 +467,7 @@ const KIND = {
 const INKS = { blau:"#27489a", schwarz:"#24272b", rot:"#c23a33", gruen:"#2f7a45" };
 const MARKS = { gelb:"rgba(244,247,80,.85)", gruen:"rgba(160,236,110,.7)", rosa:"rgba(255,160,200,.7)", blau:"rgba(140,210,255,.7)", orange:"rgba(255,190,100,.75)", rot:"rgba(255,110,100,.6)" };
 const FAECHER = ["D","M","F","E","NMG","BG","TTG","MU","BS"];
-const COVERS = { gruen:["#87ad74","#6f9a5f"], rose:["#e9a49b","#d9867c"], himmel:["#8fb0cf","#6f93b8"], lila:["#a690cf","#8a73b8"], sand:["#d6ad6e","#c0924f"], petrol:["#5f9a98","#4a817f"] };
+const COVERS = { eule:["#d9ebfa","#bcd8f1"], gruen:["#87ad74","#6f9a5f"], rose:["#e9a49b","#d9867c"], himmel:["#8fb0cf","#6f93b8"], lila:["#a690cf","#8a73b8"], sand:["#d6ad6e","#c0924f"], petrol:["#5f9a98","#4a817f"] };
 const FONTS = { "Patrick Hand":'"Patrick Hand","Comic Sans MS",cursive', "Playpen Sans":'"Playpen Sans","Comic Sans MS",cursive', "Andika":'"Andika",system-ui,sans-serif', "Comic Neue":'"Comic Neue","Comic Sans MS",cursive' };
 
 // ---------- Datum ----------
@@ -441,7 +481,7 @@ const longDate = s => { const d = parse(s); return `${WD[d.getDay()]}, ${d.getDa
 const shortDate = s => { const d = parse(s); return `${WD[d.getDay()].slice(0,2)} ${d.getDate()}.${d.getMonth()+1}.`; };
 
 // ---------- Zustand ----------
-const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse", sus:[], settings:{ lines:8, font:"Patrick Hand", cover:"gruen" }, entries:[] });
+const EMPTY = () => ({ klasse:(KN && KN.className) || "Meine Klasse", sus:[], settings:{ lines:8, font:"Patrick Hand", cover:"eule" }, entries:[] });
 let S = EMPTY(), week = monday(new Date()), who = KIDM ? KN.kidId : "", beamer = false;
 let store = { mode:"local", ref:null }, loaded = false, assets = null;
 const LS = "hausaufgabentafel1" + (KN ? "-" + KN.key : "");
@@ -572,9 +612,9 @@ function render(){
   const sun = addDays(week, 6), kw = isoWeek(week);
   const m1 = MO[week.getMonth()], m2 = MO[sun.getMonth()];
   $("#wk").innerHTML = `Woche ${kw}<small>${week.getDate()}.${week.getMonth()+1}. – ${sun.getDate()}.${sun.getMonth()+1}.${sun.getFullYear()}</small>`;
-  const c = COVERS[S.settings.cover] || COVERS.gruen;
+  const c = COVERS[S.settings.cover] || COVERS.eule;
   const book = $("#book");
-  book.style.setProperty("--cover", c[0]); book.style.setProperty("--cover2", c[1]);
+  book.classList.toggle("eule", !COVERS[S.settings.cover] || S.settings.cover === "eule"); book.style.setProperty("--cover", c[0]); book.style.setProperty("--cover2", c[1]);
   document.documentElement.style.setProperty("--hand", FONTS[S.settings.font] || FONTS["Patrick Hand"]);
   $("#spread").innerHTML = `
     <div class="page l"><div class="phead"><span class="big">${m1 === m2 ? m1 : m1 + "/" + m2}</span></div>
