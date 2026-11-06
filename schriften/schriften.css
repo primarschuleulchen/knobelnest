@@ -1,0 +1,16 @@
+/* Alle Schriften der Eulenkiste, lokal abgelegt (SIL Open Font License). Nur «latin»-Zeichen, das reicht für Deutsch und Französisch. */
+@font-face{font-family:"Nunito";src:url(nunito.woff2) format("woff2");font-weight:400 800;font-display:swap}
+@font-face{font-family:"Patrick Hand";src:url(patrick-hand.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Amatic SC";src:url(amatic-sc-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Andika";src:url(andika-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Andika";src:url(andika-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Atkinson Hyperlegible";src:url(atkinson-hyperlegible-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Atkinson Hyperlegible";src:url(atkinson-hyperlegible-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Comic Neue";src:url(comic-neue-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Comic Neue";src:url(comic-neue-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Fredoka";src:url(fredoka-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Playpen Sans";src:url(playpen-sans-400-600.woff2) format("woff2");font-weight:400 600;font-display:swap}
+@font-face{font-family:"Delius";src:url(delius-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Mali";src:url(mali-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Mali";src:url(mali-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Quicksand";src:url(quicksand-400-700.woff2) format("woff2");font-weight:400 700;font-display:swap}
