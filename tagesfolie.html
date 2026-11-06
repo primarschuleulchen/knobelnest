@@ -206,6 +206,10 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
 .bwrap{position:relative;flex:1;min-height:0;margin-top:30px;margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px))}
 #board{position:absolute;left:0;top:0;flex:none;margin:0;transform-origin:0 0;--vh:1vh}
+.app:not(.voll) #board{box-shadow:0 0 0 1.5px rgba(214,173,69,.55),0 10px 34px rgba(63,120,168,.14);border-radius:6px}
+.app.voll .bwrap{position:absolute;inset:0;margin:0}
+.app.voll .top{position:absolute;top:0;left:0;right:0}
+.app.voll .dock{position:absolute;bottom:0;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px)}
 .app.dragging .top,.app.dragging .dock,.app.dragging .music-chip,.app.dragging .w .chrome,.app.dragging .w .rs,.app.dragging .w .rse,.app.dragging .w .rsb{opacity:0!important;pointer-events:none}
 .app.dragging .lfoot,.app.dragging .mnote.empty,.app.dragging .itools,.app.dragging .pl-ops{display:none!important}
 .app.dragging .w.sel .card{outline:0}
@@ -1322,14 +1326,14 @@ function fitBoard(){
   const wrap = document.getElementById("bwrap"), b = document.getElementById("board"); if (!wrap || !b) return;
   const aw = wrap.clientWidth, ah = wrap.clientHeight; if (!aw || !ah) return;
   const sw = Math.max(window.screen.width || 0, aw), sh = Math.max(window.screen.height || 0, ah); // window.screen: «screen» ist hier der aktuelle Bildschirm der Folie
-  const W = Math.max(aw, sw - (APP.clientWidth - aw)), H = Math.max(ah, sh - (APP.clientHeight - ah));
+  const W = sw, H = sh; // ganzer Bildschirm: im Vollbild bis an den Rand, Leisten liegen darüber
   const k = Math.min(aw / W, ah / H);
   b.style.width = W + "px"; b.style.height = H + "px"; b.style.setProperty("--vh", (sh / 100) + "px");
   b.style.transform = `translate(${((aw - W * k) / 2).toFixed(1)}px, ${((ah - H * k) / 2).toFixed(1)}px) scale(${k.toFixed(5)})`;
 }
 try { new ResizeObserver(() => fitBoard()).observe(document.getElementById("bwrap")); } catch {}
 window.addEventListener("resize", fitBoard);
-document.addEventListener("fullscreenchange", () => setTimeout(fitBoard, 60));
+document.addEventListener("fullscreenchange", () => { APP.classList.toggle("voll", !!document.fullscreenElement); setTimeout(fitBoard, 60); });
 function renderBoard(){
   const sc = screen();
   $("#board").innerHTML = sc.widgets.length ? sc.widgets.map(widgetHTML).join("") : `<div class="board-empty">Unten ein Widget wählen, um diesen Bildschirm zu füllen.</div>`;
