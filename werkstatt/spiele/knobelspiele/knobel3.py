@@ -60,17 +60,17 @@ G.play = function (lv, api) {
     // kleines Bild der Regel: Tipp in der Mitte schaltet das Kreuz um
     var regel = '<div class="la-regel"><svg width="58" height="58" viewBox="0 0 30 30" aria-hidden="true">' + [0,1,2].map(function (y) { return [0,1,2].map(function (x) {
       var kreuz = (x === 1 || y === 1); return '<circle cx="' + (5 + x * 10) + '" cy="' + (5 + y * 10) + '" r="4" fill="' + (kreuz ? '#f3c64e' : '#46597a') + '"/>'; }).join(''); }).join('') +
-      '<text x="15" y="18" font-size="8" text-anchor="middle">👆</text></svg><span>Ein Tipp schaltet die Laterne <b>und</b> ihre Nachbarn im Kreuz um.</span></div>';
+      '<circle cx="15" cy="15" r="2.2" fill="#fff" stroke="#c4952f" stroke-width="1"/></svg><span>Ein Tipp schaltet die Laterne <b>und</b> ihre Nachbarn im Kreuz um.</span></div>';
     wrap.innerHTML = regel + '<div class="la-info"><span>Tipps <b class="zz">0</b></span></div>' +
       '<div class="la-nacht" style="grid-template-columns:repeat(' + N + ',' + s + 'px);grid-auto-rows:' + s + 'px"></div>' +
-      '<div class="row"><button class="go alt" data-x="hilfe">💡 Hilfe</button><button class="go alt" data-x="neu">↺ Nochmal von vorn</button></div>';
+      '<div class="row"><button class="go alt" data-x="hilfe">Hilfe</button><button class="go alt" data-x="neu">↺ Nochmal von vorn</button></div>';
     var nacht = wrap.querySelector('.la-nacht'), zz = wrap.querySelector('.zz');
     for (i = 0; i < N * N; i++) nacht.insertAdjacentHTML('beforeend', '<button data-k="' + i + '" aria-label="Laterne ' + (i + 1) + '"></button>');
     function male() { Array.prototype.forEach.call(nacht.children, function (b, i) { b.classList.toggle('an', !!feld[i]); b.setAttribute('aria-pressed', String(!!feld[i])); }); zz.textContent = zuege; }
     function kreuz(k) { var y = Math.floor(k / N), x = k % N, r = []; [[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(function (d) { var yy = y + d[0], xx = x + d[1]; if (yy >= 0 && xx >= 0 && yy < N && xx < N) r.push(yy * N + xx); }); return r; }
     function zeig(k) { Array.prototype.forEach.call(nacht.children, function (b) { b.classList.remove('nb'); }); if (k != null) kreuz(k).forEach(function (j) { nacht.children[j].classList.add('nb'); }); }
     male();
-    api.msg('<span class="em">🏮</span> Zünde alle Laternen an!');
+    api.msg('Zünde alle Laternen an!');
     // Mit der Maus: beim Darüberfahren zeigen, welche Laternen mitwechseln
     nacht.onpointerover = function (e) { var b = e.target.closest('button'); if (e.pointerType === 'mouse' && b) zeig(+b.dataset.k); };
     nacht.onpointerleave = function () { zeig(null); };
@@ -82,18 +82,18 @@ G.play = function (lv, api) {
       kreuz(t).forEach(function (j) { var x = nacht.children[j]; x.classList.remove('blitz'); void x.offsetWidth; x.classList.add('blitz'); });
       if (feld.every(function (v) { return v; })) {
         fertig = true; geloest++; good();
-        api.msg('<span class="em">✨</span> Alle Laternen leuchten!' + (zuege <= k ? ' Mit nur ' + zuege + ' Tipps!' : ''));
+        api.msg('Alle Laternen leuchten!' + (zuege <= k ? ' Mit nur ' + zuege + ' Tipps!' : ''));
         api.answer(true, true);
         if (geloest >= lv.ziel) { api.later(function () { api.done('Du hast ' + geloest + ' Rätsel gelöst!', 1); }, 1300); return; }
         api.later(raetsel, 1500);
       }
     };
-    wrap.querySelector('[data-x="neu"]').onclick = function () { if (fertig) return; feld = start.slice(); loes = startLoes.slice(); zuege = 0; male(); api.msg('<span class="em">🏮</span> Nochmal von vorn!'); };
+    wrap.querySelector('[data-x="neu"]').onclick = function () { if (fertig) return; feld = start.slice(); loes = startLoes.slice(); zuege = 0; male(); api.msg('Nochmal von vorn!'); };
     // Hilfe: eine Laterne golden umranden, die zur Lösung gehört
     wrap.querySelector('[data-x="hilfe"]').onclick = function () {
       if (fertig || !loes.length) return;
       Array.prototype.forEach.call(nacht.children, function (x) { x.classList.remove('tipp'); });
-      nacht.children[loes[0]].classList.add('tipp'); api.msg('<span class="em">💡</span> Tippe auf die Laterne mit dem goldenen Ring!');
+      nacht.children[loes[0]].classList.add('tipp'); api.msg('Tippe auf die Laterne mit dem goldenen Ring!');
     };
   }
   raetsel();
@@ -149,7 +149,7 @@ G.play = function (lv, api) {
     }
     function setz() { pos.forEach(function (tt, p) { if (tt === N * N - 1) return; var b = teile[tt]; b.style.left = (5 + (p % N) * (t + 4)) + 'px'; b.style.top = (5 + Math.floor(p / N) * (t + 4)) + 'px'; }); }
     setz();
-    api.msg('<span class="em">🧩</span> Schiebe die Teile, bis das Bild stimmt!');
+    api.msg('Schiebe die Teile, bis das Bild stimmt!');
     rahmen.onclick = function (e) {
       var b = e.target.closest('.sb-teil'); if (!b || fertig || RUN !== myRun) return;
       var p = pos.indexOf(+b.dataset.t), ly = Math.floor(leer / N), lx = leer % N, py = Math.floor(p / N), px = p % N;
@@ -160,7 +160,7 @@ G.play = function (lv, api) {
       tone(520, 0.05, 'sine', 0.07); setz();
       if (pos.every(function (tt, i) { return tt === i; })) {
         fertig = true; geloest++; good(); rahmen.classList.add('sb-fertig');
-        api.msg('<span class="em">🎉</span> Das Bild ist wieder ganz!');
+        api.msg('Das Bild ist wieder ganz!');
         api.answer(true, true);
         if (geloest >= lv.ziel) { api.later(function () { api.done('Du hast ' + geloest + ' Bilder geschafft!', 1); }, 1600); return; }
         api.later(raetsel, 1800);
@@ -234,7 +234,7 @@ G.play = function (lv, api) {
     function waehle(b) { if (sel) sel.classList.remove('sel'); sel = b; eingabe = ''; if (b) { b.classList.add('sel'); b.textContent = '?'; } }
     function naechster() { var l = m.querySelector('.zm-stein.leer'); waehle(l); }
     naechster();
-    api.msg('<span class="em">🧱</span> Welche Zahl fehlt? <small>Unten zwei Steine zusammen = der Stein darüber.</small>');
+    api.msg('Welche Zahl fehlt? <small>Unten zwei Steine zusammen = der Stein darüber.</small>');
     m.onclick = function (e) { var b = e.target.closest('.zm-stein.leer'); if (!b || RUN !== myRun) return; if (sel && sel !== b) sel.textContent = ''; waehle(b); };
     wrap.querySelector('.zm-tasten').onclick = function (e) {
       var t = e.target.closest('[data-z]'); if (!t || !sel || RUN !== myRun) return;
@@ -247,16 +247,16 @@ G.play = function (lv, api) {
         sel.classList.remove('leer', 'sel'); sel.classList.add('ok'); sel.textContent = w[r2][i2]; auf[r2][i2] = true; sel = null; offen--;
         api.answer(true);
         if (!offen) {
-          geloest++; api.msg('<span class="em">🎉</span> Die Mauer steht!');
+          geloest++; api.msg('Die Mauer steht!');
           if (geloest >= lv.ziel) { api.later(function () { api.done('Du hast ' + geloest + ' Mauern gebaut!', 1); }, 1400); return; }
           api.later(mauer, 1600); return;
         }
-        api.msg('<span class="em">✨</span> Richtig!'); naechster();
+        api.msg('Richtig!'); naechster();
       } else {
         api.answer(false); var b2 = sel; b2.classList.remove('falsch'); void b2.offsetWidth; b2.classList.add('falsch');
         eingabe = ''; b2.textContent = '?';
         var hilf = r2 > 0 && auf[r2 - 1][i2] && auf[r2 - 1][i2 + 1] ? 'Rechne die zwei Steine darunter zusammen.' : 'Tipp: Stein oben minus der Nachbar unten.';
-        api.msg('<span class="em">🤔</span> Das stimmt noch nicht. <small>' + hilf + '</small>');
+        api.msg('Das stimmt noch nicht. <small>' + hilf + '</small>');
       }
     };
   }

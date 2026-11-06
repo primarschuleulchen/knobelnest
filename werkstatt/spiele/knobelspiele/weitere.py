@@ -122,10 +122,10 @@ G.play = function (lv, api) {
     var nachm = t === 4 && Math.random() < .5, big = Math.min(240, window.innerHeight - 380, window.innerWidth - 60), small = Math.max(84, Math.min(150, (window.innerHeight - 330) / 2 - 20));
     var wort = t <= 2 && art === 'zeigen' && Math.random() < .6 ? zeitWort(z.h, z.m) : null;
     if (art === 'lesen') {
-      api.msg('<span class="em">🕰️</span> Wie spät ist es?');
+      api.msg('Wie spät ist es?');
       wrap.innerHTML = '<div class="frage">' + uhrSvg(z.h, z.m, Math.max(150, big)) + '</div><div class="wahl"></div>';
     } else {
-      api.msg('<span class="em">👆</span> Welche Uhr zeigt diese Zeit?' + (nachm ? ' <small>Am Nachmittag: 15 Uhr ist 3 Uhr.</small>' : ''));
+      api.msg('Welche Uhr zeigt diese Zeit?' + (nachm ? ' <small>Am Nachmittag: 15 Uhr ist 3 Uhr.</small>' : ''));
       wrap.innerHTML = '<div class="frage">' + (wort ? '<span class="wort">' + h(wort) + '</span>' : '<span class="dig">' + dig(nachm ? z.h % 12 + 12 : z.h, z.m) + '</span>') + '</div><div class="wahl"></div>';
     }
     var wahl = wrap.querySelector('.wahl'), lock = false;
@@ -137,7 +137,7 @@ G.play = function (lv, api) {
         b.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(wahl.children, function (c, i) { if (opts[i].h === z.h && opts[i].m === z.m) c.classList.add('hint'); });
         var w = zeitWort(z.h, z.m);
-        api.msg(ok ? '<span class="em">🎉</span> Richtig, es ist ' + dig(z.h, z.m) + (w ? ' (' + h(w) + ')' : '') + '.' : '<span class="em">💡</span> Es ist ' + dig(z.h, z.m) + (w ? ', also ' + h(w) : '') + '.');
+        api.msg(ok ? 'Richtig, es ist ' + dig(z.h, z.m) + (w ? ' (' + h(w) + ')' : '') + '.' : 'Es ist ' + dig(z.h, z.m) + (w ? ', also ' + h(w) : '') + '.');
         if (api.answer(ok)) api.later(next, ok ? 1100 : 2300);
       };
       wahl.appendChild(b);
@@ -205,8 +205,8 @@ G.play = function (lv, api) {
       var c = [rueck + 10, rueck - 10, rueck + 50, rueck - 50, rueck + 100, rueck - 100], o = [rueck];
       shuffle(c).forEach(function (x) { if (o.length < 4 && x > 0 && o.indexOf(x) < 0) o.push(x); });
       o = shuffle(o);
-      api.msg('<span class="em">🧾</span> Du bezahlst mit ' + (bez >= 1000 ? 'einer ' + (bez / 100) + '-Franken-Note' : 'einem 5-Fränkler') + '. Wie viel Rückgeld bekommst du?');
-      wrap.innerHTML = '<div class="ware"><span class="em2">' + w[0] + '</span><span class="wn">' + h(w[1]) + '</span><span class="schild">' + fr(p) + '</span></div>' +
+      api.msg('Du bezahlst mit ' + (bez >= 1000 ? 'einer ' + (bez / 100) + '-Franken-Note' : 'einem 5-Fränkler') + '. Wie viel Rückgeld bekommst du?');
+      wrap.innerHTML = '<div class="ware"><span class="wn">' + h(w[1]) + '</span><span class="schild">' + fr(p) + '</span></div>' +
         '<div class="theke" aria-label="Bezahlt">' + stueck(bez) + '</div><div class="wahl"></div>';
       var wahl = wrap.querySelector('.wahl');
       o.forEach(function (x) {
@@ -215,7 +215,7 @@ G.play = function (lv, api) {
           if (lock) return; lock = true; var ok = x === rueck;
           b.classList.add(ok ? 'ok' : 'no');
           if (!ok) Array.prototype.forEach.call(wahl.children, function (c2, i) { if (o[i] === rueck) c2.classList.add('hint'); });
-          api.msg(ok ? '<span class="em">🎉</span> Genau! ' + fr(bez) + ' − ' + fr(p) + ' = ' + fr(rueck) : '<span class="em">💡</span> ' + fr(bez) + ' − ' + fr(p) + ' = <b>' + fr(rueck) + '</b>');
+          api.msg(ok ? 'Genau! ' + fr(bez) + ' − ' + fr(p) + ' = ' + fr(rueck) : '' + fr(bez) + ' − ' + fr(p) + ' = <b>' + fr(rueck) + '</b>');
           if (api.answer(ok)) api.later(next, ok ? 1500 : 2800);
         };
         wahl.appendChild(b);
@@ -223,8 +223,8 @@ G.play = function (lv, api) {
       return;
     }
     var gelegt = [];
-    api.msg('<span class="em">🛒</span> Bezahle genau ' + fr(p) + '.');
-    wrap.innerHTML = '<div class="ware"><span class="em2">' + w[0] + '</span><span class="wn">' + h(w[1]) + '</span><span class="schild">' + fr(p) + '</span></div>' +
+    api.msg('Bezahle genau ' + fr(p) + '.');
+    wrap.innerHTML = '<div class="ware"><span class="wn">' + h(w[1]) + '</span><span class="schild">' + fr(p) + '</span></div>' +
       '<div class="theke" aria-label="Theke"></div><div class="summe"></div><div class="boerse" aria-label="Portemonnaie">' +
       SORTEN[t].map(function (v) { return '<button data-v="' + v + '" aria-label="' + GELD[v][0] + (v >= 1000 ? ' Franken' : '') + ' hinlegen">' + stueck(v) + '</button>'; }).join('') +
       '</div><div class="knopf"><button class="go alt" data-x="weg">↺ Alles zurück</button><button class="go sun" data-x="zahl">✓ Bezahlen</button></div>';
@@ -241,10 +241,10 @@ G.play = function (lv, api) {
       else if (b.dataset.i != null) { gelegt.splice(+b.dataset.i, 1); zeig(); }
       else if (b.dataset.x === 'weg') { gelegt = []; zeig(); }
       else if (b.dataset.x === 'zahl') {
-        if (!gelegt.length) { api.msg('<span class="em">👛</span> Lege zuerst Geld auf die Theke.'); return; }
+        if (!gelegt.length) { api.msg('Lege zuerst Geld auf die Theke.'); return; }
         var s = gelegt.reduce(function (a, c) { return a + c; }, 0), ok = s === p; lock = true;
-        api.msg(ok ? '<span class="em">🎉</span> Genau richtig! ' + w[0] + ' Danke für den Einkauf.' :
-          '<span class="em">💡</span> Das sind ' + fr(s) + '. Es kostet aber ' + fr(p) + (s > p ? '. Das ist zu viel.' : '. Das ist zu wenig.'));
+        api.msg(ok ? 'Genau richtig! ' + w[0] + ' Danke für den Einkauf.' :
+          'Das sind ' + fr(s) + '. Es kostet aber ' + fr(p) + (s > p ? '. Das ist zu viel.' : '. Das ist zu wenig.'));
         if (api.answer(ok)) api.later(next, ok ? 1500 : 3000);
       }
     };
@@ -297,17 +297,17 @@ G.play = function (lv, api) {
   function next() {
     var p = runde[idx++], lock = false;
     var wortHtml = p.z ? h(p.z[1]) + '<i>' + h(p.z[2]) + '</i>' : h(p.w);
-    wrap.innerHTML = '<div class="karte2">' + (p.e ? '<span class="em2">' + p.e + '</span>' : '') + '<span class="wt">' + (p.z ? h(p.w) : wortHtml) + '</span></div>' +
+    wrap.innerHTML = '<div class="karte2">' + '<span class="wt">' + (p.z ? h(p.w) : wortHtml) + '</span></div>' +
       (t === 4 ? '<div class="tipp">Tipp: Das letzte Wort bestimmt den Artikel.</div>' : '') +
-      '<div class="kisten">' + ['der', 'die', 'das'].map(function (a) { return '<button class="k-' + a + '" data-a="' + a + '">' + a + '<small>' + { der: '🔵', die: '🔴', das: '🟢' }[a] + '</small></button>'; }).join('') + '</div>';
-    api.msg('<span class="em">🤔</span> Welcher Artikel passt?');
+      '<div class="kisten">' + ['der', 'die', 'das'].map(function (a) { return '<button class="k-' + a + '" data-a="' + a + '">' + a + '</button>'; }).join('') + '</div>';
+    api.msg('Welcher Artikel passt?');
     wrap.querySelector('.kisten').onclick = function (e) {
       var b = e.target.closest('button'); if (!b || lock) return; lock = true;
       var ok = b.dataset.a === p.a;
       Array.prototype.forEach.call(this.children, function (c) { if (c.dataset.a === p.a) c.classList.add('richtig'); else c.classList.add('weg'); });
       if (!ok) b.classList.add('shake');
       if (p.z) wrap.querySelector('.wt').innerHTML = h(p.z[1]) + '<i>' + h(p.z[2]) + '</i>';
-      api.msg((ok ? '<span class="em">🎉</span> Richtig: ' : '<span class="em">💡</span> Es heisst ') + '<b>' + p.a + ' ' + h(p.w) + '</b>' +
+      api.msg((ok ? 'Richtig: ' : 'Es heisst ') + '<b>' + p.a + ' ' + h(p.w) + '</b>' +
         (p.z ? ' <small>(wie ' + p.a + ' ' + h(p.z[2].charAt(0).toUpperCase() + p.z[2].slice(1)) + ')</small>' : ''));
       if (api.answer(ok)) api.later(next, ok ? 1200 : 2500);
     };
@@ -364,7 +364,7 @@ G.play = function (lv, api) {
     var plaetze = wrap.querySelector('.plaetze'), stEl = wrap.querySelector('.steine');
     for (var i = 0; i < sil.length; i++) plaetze.insertAdjacentHTML('beforeend', '<div class="platz"></div>');
     steine.forEach(function (s, i) { stEl.insertAdjacentHTML('beforeend', '<button class="stein" data-i="' + i + '">' + h(s) + '</button>'); });
-    api.msg('<span class="em">👏</span> ' + (t === 4 ? 'Eine Silbe gehört nicht dazu. ' : '') + 'Welches Wort ist es?' + (sil.length > 2 ? ' <small>' + sil.length + ' Silben</small>' : ''));
+    api.msg('' + (t === 4 ? 'Eine Silbe gehört nicht dazu. ' : '') + 'Welches Wort ist es?' + (sil.length > 2 ? ' <small>' + sil.length + ' Silben</small>' : ''));
     function zeig() { Array.prototype.forEach.call(plaetze.children, function (pl, i) { pl.textContent = gelegt[i] != null ? steine[gelegt[i]] : ''; pl.classList.toggle('voll', gelegt[i] != null); }); Array.prototype.forEach.call(stEl.children, function (b, i) { b.classList.toggle('weg', gelegt.indexOf(i) >= 0); }); }
     plaetze.onclick = function (e) { var pl = e.target.closest('.platz'); if (!pl || lock) return; var i = Array.prototype.indexOf.call(plaetze.children, pl); if (gelegt[i] != null) { gelegt = gelegt.slice(0, i); zeig(); } };
     stEl.onclick = function (e) {
@@ -374,12 +374,12 @@ G.play = function (lv, api) {
       var gebaut = gelegt.map(function (k) { return steine[k]; }).join('');
       if (gebaut === wort) {
         lock = true; plaetze.classList.add('gut');
-        api.msg('<span class="em">🎉</span> Super! <span class="wort2">' + sil.map(function (s) { return '<span>' + h(s) + '</span>'; }).join('·') + '</span>');
+        api.msg('Super! <span class="wort2">' + sil.map(function (s) { return '<span>' + h(s) + '</span>'; }).join('·') + '</span>');
         sprich(wort);
         if (api.answer(fehl === 0)) api.later(next, 2000);
       } else {
         fehl++; bad(); plaetze.classList.remove('shake'); void plaetze.offsetWidth; plaetze.classList.add('shake');
-        api.msg('<span class="em">🔁</span> Das ergibt kein Wort. Versuch es nochmal!' + (fehl >= 2 ? ' <small>Das Wort beginnt mit «' + h(sil[0]) + '».</small>' : ''));
+        api.msg('Das ergibt kein Wort. Versuch es nochmal!' + (fehl >= 2 ? ' <small>Das Wort beginnt mit «' + h(sil[0]) + '».</small>' : ''));
         api.later(function () { gelegt = []; zeig(); }, 700);
       }
     };
@@ -467,9 +467,9 @@ G.play = function (lv, api) {
     for (var v = 1; v <= n; v++) o += '<button data-v="' + v + '"' + (lv.bild ? ' style="font-size:36px"' : '') + '>' + sym(v) + '</button>';
     box.innerHTML = o + '</div></div>'; api.stage.appendChild(box);
     var feld = box.querySelector('.feld'), her = box.querySelector('.herzen');
-    function herzen() { var x = ''; for (var i = 0; i < 3; i++) x += i < 3 - fehler ? '❤️' : '🤍'; her.textContent = x; }
+    function herzen() { var x = ''; for (var i = 0; i < 3; i++) x += ik(i < 3 - fehler ? 'herz' : 'herzleer', 30); her.innerHTML = x; }
     herzen();
-    api.msg('<span class="em">🧩</span> Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
+    api.msg('Tippe auf ein leeres Feld und dann auf ' + (lv.bild ? 'ein Bild' : 'eine Zahl') + '.');
     function markiere() {
       var r = Math.floor(sel / n), c = sel % n, br = Math.floor(r / bm[0]), bc = Math.floor(c / bm[1]);
       Array.prototype.forEach.call(feld.children, function (z, k) {
@@ -482,7 +482,7 @@ G.play = function (lv, api) {
     feld.onclick = function (e) { var z = e.target.closest('.z'); if (!z || fertig) return; var k = +z.dataset.k; if (g[k]) { sel = -1; markiere(); return; } sel = k; tone(520, 0.04, 'sine', 0.06); markiere(); };
     box.querySelector('.pad').onclick = function (e) {
       var b = e.target.closest('button'); if (!b || fertig) return;
-      if (sel < 0) { api.msg('<span class="em">👆</span> Tippe zuerst auf ein leeres Feld.'); return; }
+      if (sel < 0) { api.msg('Tippe zuerst auf ein leeres Feld.'); return; }
       var v = +b.dataset.v, z = feld.children[sel];
       if (P.sol[sel] === v) {
         g[sel] = v; z.textContent = sym(v); z.classList.remove('falsch'); z.classList.add('neu'); tone(660, 0.08, 'sine', 0.1);
@@ -490,7 +490,7 @@ G.play = function (lv, api) {
         sel = -1; markiere();
         if (leer < 0) {
           fertig = true;
-          api.msg('<span class="em">🎉</span> Geschafft!' + (fehler === 0 ? ' Ganz ohne Fehler!' : ''));
+          api.msg('Geschafft!' + (fehler === 0 ? ' Ganz ohne Fehler!' : ''));
           if (api.answer(fehler <= 2)) {
             var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = 'Nächstes Rätsel →';
             nb.onclick = function () { idx++; raetsel(); };
@@ -499,7 +499,7 @@ G.play = function (lv, api) {
         }
       } else {
         fehler++; herzen(); bad(); z.classList.remove('falsch'); void z.offsetWidth; z.classList.add('falsch');
-        api.msg(fehler < 3 ? '<span class="em">🙈</span> Das passt hier nicht. Schau die Zeile, die Spalte und das Kästchen an.' : '<span class="em">💪</span> Keine Herzen mehr, aber mach das Rätsel trotzdem fertig!');
+        api.msg(fehler < 3 ? 'Das passt hier nicht. Schau die Zeile, die Spalte und das Kästchen an.' : 'Keine Herzen mehr, aber mach das Rätsel trotzdem fertig!');
       }
     };
   }
@@ -604,9 +604,9 @@ G.play = function (lv, api) {
     api.stage.innerHTML = '';
     var box = document.createElement('div'); box.className = 'ww';
     var side = function (cls, row, em) { var o = '<div class="' + cls + '" style="grid-template-rows:repeat(' + N + ',' + s + 'px);row-gap:3px;padding:7px 0;font-size:' + Math.round(s * .7) + 'px">'; for (var i = 0; i < N; i++) o += '<span>' + (i === row ? em : '') + '</span>'; return o + '</div>'; };
-    var o = '<div class="zaehler"></div><div class="rahmen">' + side('seitel', P.sr, '🚰') + '<div class="netz" style="grid-template-columns:repeat(' + N + ',' + s + 'px);grid-auto-rows:' + s + 'px">';
+    var o = '<div class="zaehler"></div><div class="rahmen">' + side('seitel', P.sr, ik('hahn', Math.round(s * .8))) + '<div class="netz" style="grid-template-columns:repeat(' + N + ',' + s + 'px);grid-auto-rows:' + s + 'px">';
     for (var k = 0; k < N * N; k++) o += '<button class="ro" data-k="' + k + '" aria-label="Röhre drehen">' + rohrSvg(P.ist[k]) + '</button>';
-    box.innerHTML = o + '</div>' + side('seiter', P.tr, '🥀') + '</div>'; api.stage.appendChild(box);
+    box.innerHTML = o + '</div>' + side('seiter', P.tr, ik('welk', Math.round(s * .8))) + '</div>'; api.stage.appendChild(box);
     var netz = box.querySelector('.netz'), zl = box.querySelector('.zaehler'), blume = box.querySelectorAll('.seiter span')[P.tr];
     // Röhren in der Ausgangslage zeichnen und beim Drehen nur das Bild weiterdrehen
     function male() {
@@ -616,14 +616,14 @@ G.play = function (lv, api) {
       return r.ziel;
     }
     male();
-    api.msg('<span class="em">💧</span> Bring das Wasser zur Blume!');
+    api.msg('Bring das Wasser zur Blume!');
     netz.onclick = function (e) {
       var b = e.target.closest('.ro'); if (!b || fertig) return;
       var k = +b.dataset.k; P.ist[k] = dreh(P.ist[k]); rot[k]++; tipps++; tone(420 + rnd(0, 3) * 40, 0.04, 'square', 0.04);
       if (male()) {
-        fertig = true; blume.textContent = '🌻'; blume.classList.add('bluehe'); good();
+        fertig = true; blume.innerHTML = ik('blume', Math.round(s * .8)); blume.classList.add('bluehe'); good();
         var ok = tipps <= P.mind * 2 + 4;
-        api.msg('<span class="em">🌻</span> Die Blume hat Wasser!' + (ok ? ' Mit ' + tipps + ' Drehungen.' : ' Versuch es nächstes Mal mit weniger Drehungen.'));
+        api.msg('Die Blume hat Wasser!' + (ok ? ' Mit ' + tipps + ' Drehungen.' : ' Versuch es nächstes Mal mit weniger Drehungen.'));
         if (api.answer(ok, true)) {
           var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = 'Nächstes Rätsel →';
           nb.onclick = function () { idx++; raetsel(); };

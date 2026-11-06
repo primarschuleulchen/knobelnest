@@ -30,6 +30,13 @@ assert "'#fdebd8'" in FRAME
 # Ein Spiel kann ein eigenes Stufen-Menü haben (G.menu, z. B. der Kleiderschrank als Pfad)
 FRAME = FRAME.replace("function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);", "function menu() {\n  stopAll(); RUN++; CUR = -1; KN.level(null);\n  if (G.menu) { G.menu(); return; }")
 assert "if (G.menu)" in FRAME
+# Keine Emojis (Wunsch der Lehrerin): gezeichnete Symbole aus ikonen.py, Ton-Knopf und Schluss-Seite damit
+import ikonen
+FRAME = FRAME.replace("function sndBtn() {", ikonen.ICON_JS + "function sndBtn() {", 1)
+FRAME = FRAME.replace("(ST.mute ? '🔇' : '🔊') + '</button>'", "ik(ST.mute ? 'stumm' : 'laut', 22) + '</button>'")
+FRAME = FRAME.replace("b.textContent = ST.mute ? '🔇' : '🔊';", "b.innerHTML = ik(ST.mute ? 'stumm' : 'laut', 22);")
+FRAME = FRAME.replace("var em = q >= 0.9 ? '🏆' : q >= 0.7 ? '🌟' : q >= 0.5 ? '👍' : '💪',", "var em = q >= 0.9 ? ik('pokal', 72) : q >= 0.7 ? ik('stern', 64) + ik('stern', 64) : q >= 0.5 ? ik('stern', 64) : '',")
+assert "ik('pokal', 72)" in FRAME and "ik(ST.mute ? 'stumm' : 'laut', 22) + '</button>'" in FRAME and "b.innerHTML = ik(" in FRAME
 
 SPIELE = []
 
@@ -63,7 +70,7 @@ spiel(id='rechen-rakete', titel='Rechen-Rakete', icon=logo('rechen-rakete'), fac
   background:radial-gradient(2px 2px at 20% 30%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 70% 15%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 60%,#fff 50%,transparent 51%),
   radial-gradient(2px 2px at 80% 50%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 30% 85%,#fff 50%,transparent 51%),linear-gradient(180deg,#1d3557 0%,#2f5f8f 60%,#8ec5ec 100%)}
 .mond{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:46px;line-height:1}
-.rakete{position:absolute;left:50%;bottom:calc(8px + var(--p,0) * (100% - 112px));transform:translateX(-50%) rotate(-45deg);font-size:46px;line-height:1;transition:bottom .7s cubic-bezier(.3,1.3,.5,1)}
+.rakete{position:absolute;left:50%;bottom:calc(8px + var(--p,0) * (100% - 112px));transform:translateX(-50%);font-size:46px;line-height:1;transition:bottom .7s cubic-bezier(.3,1.3,.5,1)}
 .rakete.wackel{animation:wk .5s}
 @keyframes wk{25%{transform:translateX(-62%) rotate(-55deg)}75%{transform:translateX(-38%) rotate(-35deg)}}
 .spur i{position:absolute;left:14px;bottom:calc(26px + var(--p) * (100% - 112px));width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .3s}
@@ -78,7 +85,7 @@ spiel(id='rechen-rakete', titel='Rechen-Rakete', icon=logo('rechen-rakete'), fac
 .opts button.ok{background:#e7f3df;border-color:var(--ok)}.opts button.no{background:#fbe5e2;border-color:var(--no)}.opts button.hint{background:var(--sun);border-color:var(--gold)}
 @media (max-width:640px){.rk{flex-direction:column;gap:14px}.all{width:100%;height:96px}
   .mond{top:50%;left:auto;right:10px;transform:translateY(-50%)}
-  .rakete{bottom:50%;left:calc(8px + var(--p,0) * (100% - 112px));transform:translateY(50%) rotate(45deg);transition:left .7s cubic-bezier(.3,1.3,.5,1)}
+  .rakete{bottom:50%;left:calc(8px + var(--p,0) * (100% - 112px));transform:translateY(50%) rotate(90deg);transition:left .7s cubic-bezier(.3,1.3,.5,1)}
   @keyframes wk{25%{transform:translateY(40%) rotate(35deg)}75%{transform:translateY(60%) rotate(55deg)}}
   .spur i{left:calc(26px + var(--p) * (100% - 112px));bottom:8px}.opts button{min-height:72px}}
 """,
@@ -117,15 +124,15 @@ G.play = function (lv, api, li) {
   var n = G.n, k = 0, right = 0, lock = false, t0 = Date.now(), fertig = false, last = '';
   var w = document.createElement('div'); w.className = 'rk';
   var marks = ''; for (var i = 0; i < n; i++) marks += '<i style="--p:' + ((i + 1) / n) + '"></i>';
-  w.innerHTML = '<div class="all"><span class="mond">🌕</span><div class="spur">' + marks + '</div><span class="rakete" style="--p:0">🚀</span></div>' +
+  w.innerHTML = '<div class="all"><span class="mond">' + ik('mond', 50) + '</span><div class="spur">' + marks + '</div><span class="rakete" style="--p:0">' + ik('rakete', 48) + '</span></div>' +
     '<div class="pult"><div class="uhr"></div><div class="auf"></div><div class="opts"></div></div>';
   api.stage.appendChild(w);
   var rak = w.querySelector('.rakete'), uhr = w.querySelector('.uhr'), auf = w.querySelector('.auf'), opts = w.querySelector('.opts'), dots = w.querySelectorAll('.spur i');
   var rec = (ST.best || {})['rakete' + li];
   function zeit(ms) { var s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
-  function tick() { if (fertig) return; uhr.textContent = '⏱ Flugzeit ' + zeit(Date.now() - t0) + (rec ? ' · Rekord ' + zeit(rec) : ''); api.later(tick, 500); }
+  function tick() { if (fertig) return; uhr.textContent = 'Flugzeit ' + zeit(Date.now() - t0) + (rec ? ' · Rekord ' + zeit(rec) : ''); api.later(tick, 500); }
   tick();
-  api.msg('<span class="em">🧑‍🚀</span> Rechne und flieg zum Mond!');
+  api.msg('Rechne und flieg zum Mond!');
   function next() {
     var r; do { r = aufgabe(lv.t); } while (r.q === last); last = r.q;
     auf.innerHTML = h(r.q) + ' = <b>?</b>'; opts.innerHTML = '';
@@ -139,12 +146,12 @@ G.play = function (lv, api, li) {
         auf.innerHTML = h(r.q) + ' = <b>' + r.a + '</b>';
         dots[k].classList.add(ok ? 'ok' : 'no'); k++; if (ok) right++;
         rak.style.setProperty('--p', k / n);
-        api.msg(ok ? '<span class="em">' + pick(['🚀', '✨', '🌟', '💫'], 1)[0] + '</span> ' + pick(['Richtig!', 'Super!', 'Toll!', 'Genau!'], 1)[0] : '<span class="em">💡</span> Fast! Richtig ist <b>' + r.a + '</b>.');
+        api.msg(ok ? '' + pick(['Richtig!', 'Super!', 'Toll!', 'Genau!'], 1)[0] : 'Fast! Richtig ist <b>' + r.a + '</b>.');
         var weiter = api.answer(ok);
         if (!weiter) {
           fertig = true; var ms = Date.now() - t0, line = '';
           if (right === n) { var b2 = api.best('rakete' + li, ms, true); line = b2.rec && b2.old ? ' Neuer Rekord: ' + zeit(ms) + '!' : ' Flugzeit ' + zeit(ms) + '.'; }
-          api.msg('<span class="em">🌕</span> Gelandet!' + line);
+          api.msg('Gelandet!' + line);
           return;
         }
         api.later(function () { lock = false; next(); }, ok ? 700 : 1700);
@@ -230,7 +237,7 @@ G.play = function (lv, api) {
     }
     tast.innerHTML = KEYS.map(function (row) { return '<div>' + row.split('').map(function (k) {
       return k === '⏎' ? '<button class="w" data-k="ok">Prüfen</button>' : k === '⌫' ? '<button class="w" data-k="del" aria-label="Löschen">⌫</button>' : '<button data-k="' + k + '">' + k + '</button>'; }).join('') + '</div>'; }).join('');
-    api.msg('<span class="em">🔎</span> Welches Wort mit ' + L + ' Buchstaben ist es?');
+    api.msg('Welches Wort mit ' + L + ' Buchstaben ist es?');
     function show() { var f = rows[v].children; for (var c = 0; c < L; c++) { f[c].textContent = cur[c] || ''; f[c].classList.toggle('voll', !!cur[c]); } }
     function score(g) {
       var res = [], rest = {};
@@ -242,7 +249,7 @@ G.play = function (lv, api) {
       if (lock || RUN !== myRun) return;
       if (k === 'del') { cur.pop(); show(); return; }
       if (k === 'ok') {
-        if (cur.length < L) { rows[v].classList.remove('shake'); void rows[v].offsetWidth; rows[v].classList.add('shake'); api.msg('<span class="em">✏️</span> Es braucht ' + L + ' Buchstaben.'); return; }
+        if (cur.length < L) { rows[v].classList.remove('shake'); void rows[v].offsetWidth; rows[v].classList.add('shake'); api.msg('Es braucht ' + L + ' Buchstaben.'); return; }
         var res = score(cur), f = rows[v].children, rank = { x: 1, y: 2, g: 3 };
         for (var i = 0; i < L; i++) { f[i].style.animationDelay = (i * 0.12) + 's'; f[i].classList.add(res[i]); var o = stat[cur[i]]; if (!o || rank[res[i]] > rank[o]) stat[cur[i]] = res[i]; }
         lock = true;
@@ -252,8 +259,8 @@ G.play = function (lv, api) {
           v++; cur = [];
           if (won || v >= MAXV) {
             var lob = ['Super!', 'Toll!', 'Genial!', 'Bravo!', 'Klasse!', 'Stark!'][v - 1] || 'Geschafft!';
-            api.msg(won ? '<span class="em">🎉</span> ' + lob + ' Das Wort heisst <b>' + w.join('') + '</b> ' + (em ? '<span class="em">' + em + '</span>' : '') :
-              '<span class="em">💡</span> Das Wort heisst <b>' + w.join('') + '</b> ' + (em ? '<span class="em">' + em + '</span>' : ''));
+            api.msg(won ? '' + lob + ' Das Wort heisst <b>' + w.join('') + '</b> ' + (em ? '' : '') :
+              'Das Wort heisst <b>' + w.join('') + '</b> ' + (em ? '' : ''));
             if (!won) { var z = rows[MAXV - 1]; z.classList.remove('shake'); void z.offsetWidth; z.classList.add('shake'); }
             if (api.answer(won)) {
               var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = 'Nächstes Wort →';
@@ -263,7 +270,7 @@ G.play = function (lv, api) {
             return;
           }
           lock = false;
-          api.msg('<span class="em">🤔</span> Noch ' + (MAXV - v) + (MAXV - v === 1 ? ' Versuch.' : ' Versuche.'));
+          api.msg('Noch ' + (MAXV - v) + (MAXV - v === 1 ? ' Versuch.' : ' Versuche.'));
         }, L * 120 + 450);
         return;
       }
@@ -338,7 +345,7 @@ G.play = function (lv, api) {
     werk.innerHTML = '<button class="go" data-m="malen" aria-pressed="true">■ Malen</button><button class="go" data-m="kreuz" aria-pressed="false">✕ Kreuzchen</button><span class="herzen" aria-label="Herzen"></span>';
     api.stage.appendChild(werk);
     var her = werk.querySelector('.herzen');
-    function herzen() { var o = ''; for (var i = 0; i < 3; i++) o += i < 3 - fehler ? '❤️' : '🤍'; her.textContent = o; }
+    function herzen() { var o = ''; for (var i = 0; i < 3; i++) o += ik(i < 3 - fehler ? 'herz' : 'herzleer', 30); her.innerHTML = o; }
     herzen();
     function setM(m) { modus = m; Array.prototype.forEach.call(werk.querySelectorAll('[data-m]'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === m)); }); }
     werk.onclick = function (e) { var b = e.target.closest('[data-m]'); if (b) setM(b.dataset.m); };
@@ -353,7 +360,7 @@ G.play = function (lv, api) {
     }
     g.innerHTML = o;
     api.stage.appendChild(g);
-    api.msg('<span class="em">🖼️</span> Welches Bild versteckt sich hier?' + (lv.hilfe ? '' : ' <small>Ohne Hilfe: Kreuzchen setzt du selbst.</small>'));
+    api.msg('Welches Bild versteckt sich hier?' + (lv.hilfe ? '' : ' <small>Ohne Hilfe: Kreuzchen setzt du selbst.</small>'));
     function cell(i, j) { return g.querySelector('[data-i="' + i + '"][data-j="' + j + '"]'); }
     function paint(i, j) { var c = cell(i, j), v = st[i][j]; c.className = c.className.replace(/ (v|k|f)\b/g, ''); if (v === 1) c.classList.add('v'); if (v === 2) c.classList.add('k'); if (v === 3) c.classList.add('f'); }
     function zeileFertig(i) { return sol[i].every(function (x, j) { return !x || st[i][j] === 1; }); }
@@ -371,7 +378,7 @@ G.play = function (lv, api) {
         if (v !== 0) return;
         if (sol[i][j]) { st[i][j] = 1; paint(i, j); tone(520 + rnd(0, 6) * 30, 0.05, 'sine', 0.07); pruef(i, j); fertigCheck(); }
         else { st[i][j] = 3; paint(i, j); fehler++; herzen(); bad(); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); zug = null;
-          api.msg(fehler < 3 ? '<span class="em">🙈</span> Hoppla, dieses Feld bleibt leer.' : '<span class="em">💪</span> Keine Herzen mehr, aber mal das Bild trotzdem fertig!'); }
+          api.msg(fehler < 3 ? 'Hoppla, dieses Feld bleibt leer.' : 'Keine Herzen mehr, aber mal das Bild trotzdem fertig!'); }
       } else if (zug.art === 'kreuz+') { if (v === 0) { st[i][j] = 2; paint(i, j); } }
       else if (zug.art === 'kreuz-') { if (v === 2) { st[i][j] = 0; paint(i, j); } }
     }
@@ -396,7 +403,7 @@ G.play = function (lv, api) {
       Array.prototype.forEach.call(g.querySelectorAll('.hz,.hs'), function (x) { x.classList.add('fertig'); });
       api.later(function () {
         Array.prototype.forEach.call(g.querySelectorAll('.z.v'), function (c) { c.style.background = B.c; });
-        api.msg('<span class="em">' + B.e + '</span> Das ist ' + h(B.n) + '!' + (fehler === 0 ? ' Ganz ohne Fehler!' : ''));
+        api.msg('Das ist ' + h(B.n) + '!' + (fehler === 0 ? ' Ganz ohne Fehler!' : ''));
         if (api.answer(fehler <= 2)) {
           var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = 'Nächstes Bild →';
           nb.onclick = function () { idx++; raetsel(); };
@@ -485,7 +492,7 @@ function wald(lv) {
     var sp = loese(W); if (!sp || sp.length < lv.min || sp.length > lv.max) continue;
     var man = Math.abs(W.start % N - W.goal % N) + Math.abs(Math.floor(W.start / N) - Math.floor(W.goal / N));
     if (lv.umweg && !lv.rel && sp.length <= man) continue;
-    W.best = sp; W.deko = W.obst.map(function () { return Math.random() < .75 ? '🌲' : '🪨'; });
+    W.best = sp; W.deko = W.obst.map(function () { return Math.random() < .75 ? 'baum' : 'stein'; });
     return W;
   }
   return null;
@@ -501,14 +508,14 @@ G.play = function (lv, api) {
     var box = document.createElement('div'); box.className = 'ew';
     var o = '<div class="wald" style="width:' + (s * N + 6) + 'px;height:' + (s * N + 6) + 'px;font-size:' + Math.round(s * .62) + 'px">';
     for (var p = 0; p < N * N; p++) {
-      var ob = W.obst.indexOf(p), nu = W.nuts.indexOf(p), inh = ob >= 0 ? W.deko[ob] : nu >= 0 ? '🌰' : p === W.goal ? '🏠' : '';
+      var ob = W.obst.indexOf(p), nu = W.nuts.indexOf(p), inh = ob >= 0 ? ik(W.deko[ob], Math.round(s * .78)) : nu >= 0 ? ik('nuss', Math.round(s * .66)) : p === W.goal ? ik('haus', Math.round(s * .82)) : '';
       o += '<div class="fd" data-p="' + p + '" style="left:' + (p % N * s) + 'px;top:' + (Math.floor(p / N) * s) + 'px;width:' + s + 'px;height:' + s + 'px"><span>' + inh + '</span></div>';
     }
-    o += '<div class="eule" style="width:' + s + 'px;height:' + s + 'px"><span>🦉</span>' + (W.rel ? '<span class="blick">➜</span>' : '') + '</div></div>';
+    o += '<div class="eule" style="width:' + s + 'px;height:' + s + 'px"><span>' + ik('eule', Math.round(s * .82)) + '</span>' + (W.rel ? '<span class="blick">➜</span>' : '') + '</div></div>';
     var pal = W.rel ? [['F', '↑', 'Vor'], ['l', '↶', 'Links'], ['r', '↷', 'Rechts']] : [['U', '↑', ''], ['R', '→', ''], ['D', '↓', ''], ['L', '←', '']];
     o += '<div class="prog"><div class="zaehler"></div><div class="streifen" aria-label="Programm"></div>' +
       '<div class="palette">' + pal.map(function (x) { return '<button data-c="' + x[0] + '" aria-label="' + (x[2] || 'Pfeil ' + x[1]) + '">' + x[1] + (x[2] ? '<small>' + x[2] + '</small>' : '') + '</button>'; }).join('') + '</div>' +
-      '<div class="steuer"><button class="go alt" data-x="del">⌫ Zurück</button><button class="go alt" data-x="weg">🗑 Alles weg</button><button class="go los" data-x="los">▶ Los!</button></div></div>';
+      '<div class="steuer"><button class="go alt" data-x="del">⌫ Zurück</button><button class="go alt" data-x="weg">Alles weg</button><button class="go los" data-x="los">▶ Los!</button></div></div>';
     box.innerHTML = o; api.stage.appendChild(box);
     var eule = box.querySelector('.eule'), blick = box.querySelector('.blick'), streifen = box.querySelector('.streifen'), zaehler = box.querySelector('.zaehler');
     var Z;
@@ -527,20 +534,20 @@ G.play = function (lv, api) {
       zaehler.textContent = lv.knapp ? 'Karten: ' + prog.length + ' von höchstens ' + limit : prog.length ? prog.length + (prog.length === 1 ? ' Karte' : ' Karten') : '';
     }
     zeichne();
-    var ziel = W.nuts.length ? 'Sammle ' + (W.nuts.length === 1 ? 'die Nuss 🌰' : 'alle Nüsse 🌰') + ' und bring die Eule nach Hause 🏠.' : 'Bring die Eule nach Hause 🏠.';
-    api.msg('<span class="em">🗺️</span> ' + ziel + (W.rel ? ' <small>Der gelbe Pfeil zeigt, wohin die Eule schaut.</small>' : ''));
+    var ziel = W.nuts.length ? 'Sammle ' + (W.nuts.length === 1 ? 'die Nuss' : 'alle Nüsse') + ' und bring die Eule nach Hause.' : 'Bring die Eule nach Hause.';
+    api.msg('' + ziel + (W.rel ? ' <small>Der gelbe Pfeil zeigt, wohin die Eule schaut.</small>' : ''));
     function knoepfe() { Array.prototype.forEach.call(box.querySelectorAll('.prog button'), function (b) { b.disabled = laeuft || gut; }); }
     box.querySelector('.prog').onclick = function (e) {
       var b = e.target.closest('button'); if (!b || laeuft || gut) return;
-      if (b.dataset.c) { if (prog.length >= limit) { api.msg('<span class="em">✋</span> Mehr Karten gehen nicht. Geht es auch kürzer?'); return; } prog.push(b.dataset.c); tone(600, 0.05, 'sine', 0.08); zeichne(); reset(); }
+      if (b.dataset.c) { if (prog.length >= limit) { api.msg('Mehr Karten gehen nicht. Geht es auch kürzer?'); return; } prog.push(b.dataset.c); tone(600, 0.05, 'sine', 0.08); zeichne(); reset(); }
       else if (b.dataset.i != null) { prog.splice(+b.dataset.i, 1); zeichne(); reset(); }
       else if (b.dataset.x === 'del') { prog.pop(); zeichne(); reset(); }
       else if (b.dataset.x === 'weg') { prog = []; zeichne(); reset(); }
       else if (b.dataset.x === 'los') los();
-      else if (b.dataset.x === 'tipp') { hilfe = true; prog = W.best.slice(); zeichne(); reset(); b.remove(); api.msg('<span class="em">💡</span> So geht es. Tippe auf «▶ Los!».'); }
+      else if (b.dataset.x === 'tipp') { hilfe = true; prog = W.best.slice(); zeichne(); reset(); b.remove(); api.msg('So geht es. Tippe auf «▶ Los!».'); }
     };
     function los() {
-      if (!prog.length) { api.msg('<span class="em">👇</span> Lege zuerst Karten.'); return; }
+      if (!prog.length) { api.msg('Lege zuerst Karten.'); return; }
       laeuft = true; knoepfe(); reset();
       var full = (1 << W.nuts.length) - 1, i = 0;
       function weiter() {
@@ -566,8 +573,8 @@ G.play = function (lv, api) {
       if (ok) {
         gut = true; laeuft = false; knoepfe();
         var richtig = fehl <= 1 && !hilfe;
-        api.msg(hilfe ? '<span class="em">🏠</span> Die Eule ist zu Hause. Beim nächsten Weg schaffst du es selbst!' :
-          '<span class="em">🎉</span> Die Eule ist zu Hause!' + (fehl === 0 ? ' Beim ersten Versuch!' : ''));
+        api.msg(hilfe ? 'Die Eule ist zu Hause. Beim nächsten Weg schaffst du es selbst!' :
+          'Die Eule ist zu Hause!' + (fehl === 0 ? ' Beim ersten Versuch!' : ''));
         box.querySelector('.fd[data-p="' + W.goal + '"] span').textContent = '🏡';
         if (api.answer(richtig)) {
           var nb = document.createElement('button'); nb.className = 'go sun'; nb.textContent = 'Nächster Weg →';
@@ -577,12 +584,12 @@ G.play = function (lv, api) {
         return;
       }
       fehl++;
-      api.msg(warum === 'bumm' ? '<span class="em">💥</span> Autsch! Da geht es nicht weiter. Ändere die rote Karte.' :
-        warum === 'nuss' ? '<span class="em">🌰</span> Zu Hause, aber es fehlen noch Nüsse!' : '<span class="em">🤔</span> Die Eule ist noch nicht zu Hause. Es fehlen Karten.');
+      api.msg(warum === 'bumm' ? 'Autsch! Da geht es nicht weiter. Ändere die rote Karte.' :
+        warum === 'nuss' ? 'Zu Hause, aber es fehlen noch Nüsse!' : 'Die Eule ist noch nicht zu Hause. Es fehlen Karten.');
       api.later(function () {
         laeuft = false; reset(); knoepfe();
         if (fehl >= 3 && !hilfe && !box.querySelector('[data-x="tipp"]')) {
-          var t = document.createElement('button'); t.className = 'go alt'; t.dataset.x = 'tipp'; t.textContent = '💡 Lösung zeigen';
+          var t = document.createElement('button'); t.className = 'go alt'; t.dataset.x = 'tipp'; t.textContent = 'Lösung zeigen';
           box.querySelector('.steuer').appendChild(t);
         }
       }, 1300);
@@ -605,6 +612,8 @@ klotz.alle(spiel, logo, LOGO_CSS)
 import knobel3, knobel4
 knobel3.alle(spiel, logo, LOGO_CSS, HIER)
 knobel4.alle(spiel, logo, LOGO_CSS)
+import knobel5
+knobel5.alle(spiel, logo, LOGO_CSS)
 
 # ================================================================== Kleiderschrank (Englisch, kleider.py)
 import kleider
@@ -673,7 +682,7 @@ def pruefen():
 
 # Stern in der Aufgabe wie beim Kleiderschrank (oben neben dem Ton): füllt sich mit jeder richtigen Antwort, 10 richtige = 1 Stern.
 # Nur in der Klassenkiste (MODE url/srcdoc), die Werte (lv, box, per, max) kommen vom Portal (S.view()).
-STERN_SPIELE = {'rechen-rakete', 'uhr-lesen', 'kiosk', 'wort-raten', 'der-die-das', 'silben-puzzle', 'bilderraetsel', 'eulen-weg', 'bilder-sudoku', 'wasser-weg', 'kloetzli-turm', 'kisten-packen', 'laternen', 'schiebe-bild', 'zahlenmauer', 'geheimcode', 'irrgarten'}
+STERN_SPIELE = {'rechen-rakete', 'uhr-lesen', 'kiosk', 'wort-raten', 'der-die-das', 'silben-puzzle', 'bilderraetsel', 'eulen-weg', 'bilder-sudoku', 'wasser-weg', 'kloetzli-turm', 'kisten-packen', 'laternen', 'schiebe-bild', 'zahlenmauer', 'geheimcode', 'irrgarten', 'spiegelbild', 'waage', 'zahlen-pfad'}
 STERN_CSS = r"""
 .fort{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:4px 12px;min-height:46px;box-shadow:var(--sch-k);font-size:20px;white-space:nowrap}
 .fort .fz b{font-weight:400;font-size:24px;color:var(--sky-d)}.fort .fz-st{color:var(--gold-d)}

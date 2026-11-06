@@ -65,12 +65,12 @@ G.play = function (lv, api) {
     '<div class="kt-seite"><div class="kl-info"><span>Reihen <b class="lz">0</b> von ' + lv.ziel + '</span></div>' +
     '<div class="kt-naechst">Als Nächstes<div class="mini"></div></div>' +
     '<div class="kt-tasten"><button data-t="l" aria-label="Nach links">◀</button><button data-t="d" aria-label="Drehen">⟳</button><button data-t="r" aria-label="Nach rechts">▶</button>' +
-    '<button data-t="u" aria-label="Schneller nach unten">▼</button><button data-t="f" aria-label="Ganz nach unten fallen lassen">⤓</button><button data-t="p" aria-label="Pause">⏸</button>' +
+    '<button data-t="u" aria-label="Schneller nach unten">▼</button><button data-t="f" aria-label="Ganz nach unten fallen lassen">⤓</button><button data-t="p" aria-label="Pause">' + ik('pause', 26) + '</button>' +
     '</div></div>';
   api.stage.appendChild(wrap);
   var schacht = wrap.querySelector('.kt-schacht'), zellen = [], lz = wrap.querySelector('.lz'), mini = wrap.querySelector('.mini');
   for (var i = 0; i < B * H; i++) { var z = document.createElement('div'); z.className = 'z'; schacht.appendChild(z); zellen.push(z); }
-  api.msg('<span class="em">🧱</span> Mach volle Reihen!' + (avW > 700 ? ' <small>◀ ▶ schieben, ⟳ drehen, ⤓ fallen lassen</small>' : ''));
+  api.msg('Mach volle Reihen!' + (avW > 700 ? ' <small>◀ ▶ schieben, ⟳ drehen, ⤓ fallen lassen</small>' : ''));
   var pool = lv.teile === 'leicht' ? KT_LEICHT : [0, 1, 2, 3, 4, 5, 6], beutel = [];
   function zieh() { if (!beutel.length) beutel = shuffle(pool.slice()); return beutel.pop(); }
   var akt = null, naechst = zieh();
@@ -114,13 +114,13 @@ G.play = function (lv, api) {
       for (var n = 0; n < volle.length; n++) { linien++; api.answer(true, true); }
       lz.textContent = Math.min(linien, lv.ziel);
       if (linien >= lv.ziel) { ende(); return; }
-      api.msg('<span class="em">' + (volle.length > 1 ? '🎉' : '✨') + '</span> ' + (volle.length > 1 ? volle.length + ' Reihen auf einmal!' : 'Eine Reihe weg!'));
+      api.msg('' + (volle.length > 1 ? volle.length + ' Reihen auf einmal!' : 'Eine Reihe weg!'));
       lauf = true; neu(); takt();
     }, 380);
   }
   function voll() {
     lauf = false; bad();
-    api.msg('<span class="em">🙈</span> Der Turm ist zu hoch! Wir räumen auf und machen weiter.');
+    api.msg('Der Turm ist zu hoch! Wir räumen auf und machen weiter.');
     api.later(function () { for (var y = 0; y < H; y++) for (var x = 0; x < B; x++) feld[y][x] = 0; lauf = true; neu(); takt(); }, 1600);
   }
   function ende() { lauf = false; document.removeEventListener('keydown', taste); api.done('Du hast ' + linien + (linien === 1 ? ' Reihe' : ' Reihen') + ' geschafft!', 1); }
@@ -132,7 +132,7 @@ G.play = function (lv, api) {
   function takt() { if (RUN !== myRun || !lauf) return; api.later(function () { if (!lauf || pause) { if (pause) takt(); return; } schritt(); takt(); }, lv.ms); }
   function tu(t) {
     if (!akt || !lauf || RUN !== myRun) return;
-    if (t === 'p') { pause = !pause; var p = schacht.querySelector('.kt-pause'); if (pause && !p) schacht.insertAdjacentHTML('beforeend', '<div class="kt-pause">Pause<br>Tippe ⏸ zum Weiterspielen</div>'); if (!pause && p) p.remove(); return; }
+    if (t === 'p') { pause = !pause; var p = schacht.querySelector('.kt-pause'); if (pause && !p) schacht.insertAdjacentHTML('beforeend', '<div class="kt-pause">Pause<br>Tippe auf Pause zum Weiterspielen</div>'); if (!pause && p) p.remove(); return; }
     if (pause) return;
     if (t === 'l' || t === 'r') { var n = { f: akt.f, x: akt.x + (t === 'l' ? -1 : 1), y: akt.y }; if (passt(n)) { akt.x = n.x; male(); tone(520, 0.03, 'sine', 0.05); } }
     else if (t === 'd') {
@@ -223,7 +223,7 @@ G.play = function (lv, api) {
   api.stage.appendChild(wrap);
   var box = wrap.querySelector('.kp-kiste'), ablage = wrap.querySelector('.kp-ablage'), lz = wrap.querySelector('.lz'), zellen = [];
   for (var i = 0; i < N * N; i++) { var z = document.createElement('div'); z.className = 'z'; box.appendChild(z); zellen.push(z); }
-  api.msg('<span class="em">📦</span> Zieh ein Klötzli in die Kiste!');
+  api.msg('Zieh ein Klötzli in die Kiste!');
   var hand = [];
   function maxDim(t) { var h = 0, w = 0; t.forEach(function (p) { h = Math.max(h, p[0] + 1); w = Math.max(w, p[1] + 1); }); return [h, w]; }
   function teilHtml(t, k, gr) { var d = maxDim(t), o = ''; for (var y = 0; y < d[0]; y++) for (var x = 0; x < d[1]; x++) { var drin = t.some(function (p) { return p[0] === y && p[1] === x; }); o += '<i class="' + (drin ? 'klotz k' + k : '') + '" style="width:' + gr + 'px;height:' + gr + 'px"></i>'; } return { html: o, cols: d[1] }; }
@@ -299,14 +299,14 @@ G.play = function (lv, api) {
       for (var n = 0; n < voll.length; n++) { reihen++; api.answer(true, true); }
       lz.textContent = Math.min(reihen, lv.ziel);
       if (reihen >= lv.ziel) { api.done('Du hast ' + reihen + ' Reihen geschafft!', 1); return; }
-      api.msg('<span class="em">' + (voll.length > 1 ? '🎉' : '✨') + '</span> ' + (voll.length > 1 ? voll.length + ' Reihen auf einmal!' : 'Eine Reihe weg!'));
+      api.msg('' + (voll.length > 1 ? voll.length + ' Reihen auf einmal!' : 'Eine Reihe weg!'));
       male(); pruefen();
     }, 380);
   }
   function pruefen() {
     if (hand.some(function (h) { return h && passtIrgendwo(h.t); })) return;
-    api.msg('<span class="em">🙈</span> Kein Teil passt mehr. Wir leeren die Kiste und machen weiter!'); bad();
-    api.later(function () { for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) kiste[y][x] = 0; steine(); nachfuellen(); male(); api.msg('<span class="em">📦</span> Weiter geht es!'); }, 1800);
+    api.msg('Kein Teil passt mehr. Wir leeren die Kiste und machen weiter!'); bad();
+    api.later(function () { for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) kiste[y][x] = 0; steine(); nachfuellen(); male(); api.msg('Weiter geht es!'); }, 1800);
   }
 };
 """)

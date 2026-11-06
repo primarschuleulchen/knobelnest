@@ -28,7 +28,7 @@ def logo():
             '<rect x="55" y="47" width="8" height="16" fill="#fbf3dc"/>'
             '<ellipse cx="28" cy="76" rx="9" ry="6" fill="#efe7f7" stroke="#3f78a8" stroke-width="2"/>'
             '<rect x="42" y="71" width="40" height="10" rx="2" fill="#dcf0fd" stroke="#3f78a8" stroke-width="2"/>'
-            '<text x="59" y="44" font-size="13" text-anchor="middle">📍</text></svg>')
+            '<path transform="translate(52.5 30) scale(.55)" d="M12 22s-6.5-7-6.5-12a6.5 6.5 0 0 1 13 0c0 5-6.5 12-6.5 12z" fill="#e8574c"/><circle cx="59" cy="35.5" r="1.4" fill="#fff"/></svg>')
 
 
 def alle(spiel):
@@ -456,7 +456,7 @@ var WOERTER = [['next to', 'neben'], ['opposite / across from', 'gegenüber'], [
 function huelle(api, svgText, woerter) {
   var w = document.createElement('div'); w.className = 'sh';
   w.innerHTML = '<div class="links"><div class="plan">' + svgText + '</div></div><div class="rechts"><div class="karte"></div><div class="opts"></div>' +
-    '<div class="leiste"><button class="knopf weiss" data-x="hilfe">📖 Wörter</button></div><div class="hilfe">' +
+    '<div class="leiste"><button class="knopf weiss" data-x="hilfe">Wörter</button></div><div class="hilfe">' +
     woerter.map(function (x) { return '<div><i>' + h(x[0]) + '</i> = ' + h(x[1]) + '</div>'; }).join('') + '</div></div>';
   api.stage.appendChild(w);
   var U = { plan: w.querySelector('.plan'), karte: w.querySelector('.karte'), opts: w.querySelector('.opts') };
@@ -467,7 +467,7 @@ function huelle(api, svgText, woerter) {
   U.weiter = function (fn, ms) { var t0 = Date.now(); api.later(function warte() { if (SPRICHT && Date.now() - t0 < ms + 8000) return api.later(warte, 200); fn(); }, ms); };
   return U;
 }
-function lob() { return '<span class="em">' + pick(['🎉', '✨', '🌟', '👍'], 1)[0] + '</span> ' + pick(['Richtig!', 'Genau!', 'Super!', 'Toll gelesen!'], 1)[0]; }
+function lob() { return '' + pick(['Richtig!', 'Genau!', 'Super!', 'Toll gelesen!'], 1)[0]; }
 
 function spielPraep(api) {
   var U = huelle(api, praepSvg(), WOERTER.slice(0, 5)), k = 0, lock = false, tippe = null, leer = {};
@@ -490,7 +490,7 @@ function spielPraep(api) {
       return 'The ' + belegt[X].n + ' is ' + w + (Y.length === 2 ? ' the ' + belegt[Y[0]].n + ' and the ' + belegt[Y[1]].n : Y.length ? ' the ' + belegt[Y[0]].n : '') + '.';
     }
     U.karte.innerHTML = '<div class="zeile"><span class="tx">' + h(fuell('\u0003')).replace('\u0003', '<span class="luecke">?</span>') + '</span></div>';
-    api.msg('<span class="em">🔎</span> Welches Wort passt? Schau die gelbe und die blaue Stelle an.');
+    api.msg('Welches Wort passt? Schau die gelbe und die blaue Stelle an.');
     var falsch = shuffle((Y.length === 2 ? ['opposite', 'to the left of', 'to the right of', 'across from'] : PWORT.concat(Y.length ? [] : [])).filter(function (w) { return !wahr[w]; })).slice(0, 3);
     if (typ === 'in the middle') falsch = pick(PWORT, 3);
     U.opts.innerHTML = '';
@@ -501,7 +501,7 @@ function spielPraep(api) {
         b.classList.add(ok ? 'ok' : 'no');
         if (!ok) Array.prototype.forEach.call(U.opts.children, function (c) { if (c.textContent === typ) c.classList.add('hint'); });
         var ganz = fuell(typ); U.karte.querySelector('.tx').innerHTML = h(ganz).replace(h(typ), '<b>' + h(typ) + '</b>');
-        api.msg(ok ? lob() + ' <small>' + h(PHINT[typ]) + '</small>' : '<span class="em">💡</span> Richtig ist <b>' + h(typ) + '</b>. <small>(' + h(PHINT[typ]) + ')</small>');
+        api.msg(ok ? lob() + ' <small>' + h(PHINT[typ]) + '</small>' : 'Richtig ist <b>' + h(typ) + '</b>. <small>(' + h(PHINT[typ]) + ')</small>');
         sag(ganz); ende(ok, ok ? 900 : 2400);
       };
       U.opts.appendChild(b);
@@ -527,17 +527,17 @@ function spielPraep(api) {
       szene(belegt);
       var teil = o.w + (o.b ? ' the ' + belegt[o.a].n + ' and the ' + belegt[o.b].n : o.a ? ' the ' + belegt[o.a].n : '');
       var satz = pick(['The ' + neu.n + ' is ' + teil + '.', 'Put the ' + neu.n + ' ' + teil + '.', 'Where is the ' + neu.n + '? It is ' + teil + '.'], 1)[0];
-      U.karte.innerHTML = '<div class="zeile"><span class="tx"><span class="tier">' + neu.e + '</span>' + h(satz).replace(h(o.w), '<b>' + h(o.w) + '</b>') + '</span><button class="knopf" data-x="sag">🔊</button></div>';
+      U.karte.innerHTML = '<div class="zeile"><span class="tx">' + h(satz).replace(h(o.w), '<b>' + h(o.w) + '</b>') + '</span><button class="knopf" data-x="sag" aria-label="Vorlesen">' + ik('laut', 22) + '</button></div>';
       U.karte.querySelector('[data-x="sag"]').onclick = function () { sag(satz); };
       U.opts.innerHTML = '';
-      api.msg('<span class="em">👆</span> Wo sitzt das Tier? Tippe auf den richtigen freien Platz.');
+      api.msg('Wo sitzt das Tier? Tippe auf den richtigen freien Platz.');
       U.plan.classList.add('tippen');
       tippe = function (x) {
         tippe = null; U.plan.classList.remove('tippen');
         var ok = x === o.ziel;
         if (!ok) { U.raum(x).classList.add('no'); }
         U.raum(o.ziel).classList.remove('leer'); U.raum(o.ziel).classList.add(ok ? 'ok' : 'zeig'); tierLabel(U.svg, o.ziel, neu);
-        api.msg(ok ? lob() + ' <small>' + h(PHINT[o.w]) + '</small>' : '<span class="em">💡</span> Es gehört hierhin. <small>(' + h(PHINT[o.w]) + ')</small>');
+        api.msg(ok ? lob() + ' <small>' + h(PHINT[o.w]) + '</small>' : 'Es gehört hierhin. <small>(' + h(PHINT[o.w]) + ')</small>');
         ende(ok, ok ? 1000 : 2600);
       };
       return;
@@ -575,7 +575,7 @@ G.play = function (lv, api) {
       var ok = x === ziel, nm = R[ziel].name;
       if (!ok) { raum(x).classList.add('no'); raum(ziel).classList.add('zeig'); }
       api.msg(ok ? lob() + ' <small>' + h(nm.n) + ' = ' + h(nm.de) + '</small>' :
-        '<span class="em">💡</span> Das ist hier: <b>' + h(nm.n) + '</b>' + (hilfeTxt ? ' <small>(' + h(hilfeTxt) + ')</small>' : ''));
+        'Das ist hier: <b>' + h(nm.n) + '</b>' + (hilfeTxt ? ' <small>(' + h(hilfeTxt) + ')</small>' : ''));
       if (modus === 'hoeren') { var tx = karte.querySelector('.tx'); tx.innerHTML = satzHtml(satz); tx.classList.remove('verdeckt'); }
       if (modus === 'wort') sag(nm.n);
       tippe = null; fertig(ok, ziel);
@@ -600,7 +600,7 @@ G.play = function (lv, api) {
       if (k % 2 === 0) {
         raum(ziel).classList.add('ziel');
         karte.innerHTML = '<div class="zeile"><span class="tx">What’s this room in English?</span></div>';
-        api.msg('<span class="em">🔎</span> Wie heisst der leuchtende Raum?');
+        api.msg('Wie heisst der leuchtende Raum?');
         var andere = pick(P.slots.filter(function (x) { return x !== ziel; }), 3).map(function (x) { return R[x].name; });
         shuffle([r.name].concat(andere)).forEach(function (o) {
           var b = document.createElement('button'); b.textContent = o.n;
@@ -608,16 +608,16 @@ G.play = function (lv, api) {
             if (lock) return; var ok = o === r.name;
             b.classList.add(ok ? 'ok' : 'no');
             if (!ok) Array.prototype.forEach.call(opts.children, function (c) { if (c.textContent === r.name.n) c.classList.add('hint'); });
-            api.msg(ok ? '<span class="em">🎉</span> Richtig! <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : '<span class="em">💡</span> Das ist <b>' + h(r.name.n) + '</b> = ' + h(r.name.de) + '.');
+            api.msg(ok ? 'Richtig! <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : 'Das ist <b>' + h(r.name.n) + '</b> = ' + h(r.name.de) + '.');
             sag(r.name.n); fertig(ok, ziel);
           };
           opts.appendChild(b);
         });
       } else {
         var frage = 'Where ' + (r.name.p ? 'are' : 'is') + ' the ' + r.name.n + '?';
-        karte.innerHTML = '<div class="zeile"><span class="tx">Where ' + (r.name.p ? 'are' : 'is') + ' the <b>' + h(r.name.n) + '</b>?</span><button class="knopf" data-x="sag">🔊</button></div>';
+        karte.innerHTML = '<div class="zeile"><span class="tx">Where ' + (r.name.p ? 'are' : 'is') + ' the <b>' + h(r.name.n) + '</b>?</span><button class="knopf" data-x="sag" aria-label="Vorlesen">' + ik('laut', 22) + '</button></div>';
         karte.querySelector('[data-x="sag"]').onclick = function () { sag(frage); };
-        api.msg('<span class="em">👆</span> Tippe den Raum auf dem Plan an.');
+        api.msg('Tippe den Raum auf dem Plan an.');
         findenAuf(ziel, '', r.name.de, 'wort');
       }
       return;
@@ -639,7 +639,7 @@ G.play = function (lv, api) {
         if (s !== richtig && falsch.indexOf(s) < 0) falsch.push(s);
       });
       karte.innerHTML = '<div class="zeile"><span class="tx">Look at the yellow room. Which sentence is right?</span></div>';
-      api.msg('<span class="em">🔎</span> Welcher Satz stimmt für den leuchtenden Raum?');
+      api.msg('Welcher Satz stimmt für den leuchtenden Raum?');
       opts.className = 'opts eins';
       shuffle([richtig].concat(falsch)).forEach(function (s) {
         var b = document.createElement('button'); b.innerHTML = satzHtml(s);
@@ -647,7 +647,7 @@ G.play = function (lv, api) {
           if (lock) return; var ok = s === richtig; lock = true;
           b.classList.add(ok ? 'ok' : 'no');
           if (!ok) Array.prototype.forEach.call(opts.children, function (c) { if (c.innerHTML === satzHtml(richtig)) c.classList.add('hint'); });
-          api.msg(ok ? '<span class="em">🎉</span> Genau gelesen!' : '<span class="em">💡</span> Der gelbe Satz stimmt. <small>(' + h(hinweis(d)) + ')</small>');
+          api.msg(ok ? 'Genau gelesen!' : 'Der gelbe Satz stimmt. <small>(' + h(hinweis(d)) + ')</small>');
           sag(satzTxt(richtig));
           if (api.answer(ok)) U.weiter(function () { k++; lock = false; aufgabe(); }, ok ? 1200 : 3200);
         };
@@ -659,19 +659,19 @@ G.play = function (lv, api) {
       ziel = reihe[k]; r = R[ziel];
       satz = TEXT[k][1].replace('{n}', '\u0001' + r.name.n + '\u0002');
       var vor = k > 0 ? '<span class="vor">' + h(TEXT[k - 1][1].replace('{n}', R[TEXT[k - 1][0]].name.n)) + '</span>' : '';
-      karte.innerHTML = vor + '<div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag">🔊</button></div>';
-      api.msg('<span class="em">📖</span> Lies den Satz. Wo ist der Raum? Tippe ihn an.');
+      karte.innerHTML = vor + '<div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag" aria-label="Vorlesen">' + ik('laut', 22) + '</button></div>';
+      api.msg('Lies den Satz. Wo ist der Raum? Tippe ihn an.');
     } else {
       var w = naechstes(); ziel = w[0]; r = R[ziel];
       var d2 = waehle(w[1]); satz = satzAus(d2, r); hilfeTxt = hinweis(d2);
       if (t === 'hoeren') {
-        karte.innerHTML = '<div class="zeile"><span class="tx verdeckt">🎧 Hör gut zu …</span><button class="knopf" data-x="sag">🔊 Nochmal</button><button class="knopf weiss" data-x="zeig">👀 Text</button></div>';
+        karte.innerHTML = '<div class="zeile"><span class="tx verdeckt">Hör gut zu …</span><button class="knopf" data-x="sag">' + ik('laut', 20) + ' Nochmal</button><button class="knopf weiss" data-x="zeig">Text zeigen</button></div>';
         karte.querySelector('[data-x="zeig"]').onclick = function () { var tx = karte.querySelector('.tx'); tx.innerHTML = satzHtml(satz); tx.classList.remove('verdeckt'); this.remove(); };
-        api.msg('<span class="em">🎧</span> Hör zu und tippe den Raum an.');
+        api.msg('Hör zu und tippe den Raum an.');
         api.later(function () { sag(satzTxt(satz)); }, 450);
       } else {
-        karte.innerHTML = '<div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag">🔊</button></div>';
-        api.msg('<span class="em">📖</span> Lies den Satz. Wo ist der Raum? Tippe ihn an.');
+        karte.innerHTML = '<div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag" aria-label="Vorlesen">' + ik('laut', 22) + '</button></div>';
+        api.msg('Lies den Satz. Wo ist der Raum? Tippe ihn an.');
       }
     }
     karte.querySelector('[data-x="sag"]').onclick = function () { sag(satzTxt(satz)); };
@@ -681,7 +681,7 @@ G.play = function (lv, api) {
   if (t !== 'text') return aufgabe();
   // Green Park School: zuerst einen der drei Wege wählen
   karte.innerHTML = '<div class="zeile"><span class="tx">Welchen Weg möchtest du lesen?</span></div>';
-  api.msg('<span class="em">🗺️</span> Wähle einen Weg durch die Green Park School.');
+  api.msg('Wähle einen Weg durch die Green Park School.');
   opts.className = 'opts wahl3';
   WEGE.forEach(function (w) {
     var b = document.createElement('button'); b.textContent = w.titel;
@@ -697,7 +697,7 @@ var SCHRITT = ['First,', 'Then', 'After that,', 'Finally,'];
 function spielWeg(api) {
   var P = neueSchule(), R = P.R, bekannt = {}, k = 0, lock = false, tippe = null, leute = shuffle(LEUTE), wo = null, start = null;
   var U = huelle(api, P.svg, WOERTER), raum = U.raum, karte = U.karte, my = (YC + YC2) / 2, gx = P.gang.x + P.gang.b / 2;
-  U.svg.insertAdjacentHTML('beforeend', '<g class="wege"></g><g class="eule" pointer-events="none" style="opacity:0"><circle r="17" fill="#fff" stroke="#d6ad45" stroke-width="3"/><text y="8" font-size="22" text-anchor="middle">🦉</text></g>');
+  U.svg.insertAdjacentHTML('beforeend', '<g class="wege"></g><g class="eule" pointer-events="none" style="opacity:0"><circle r="17" fill="#fff" stroke="#d6ad45" stroke-width="3"/><image href="' + IK_EULE + '" x="-14" y="-14" width="28" height="28"/></g>');
   var wege = U.svg.querySelector('.wege'), eule = U.svg.querySelector('.eule');
   function lab(x) { return !!(x.fest || bekannt[x.id]); }
   function beschriften() { P.slots.forEach(function (x) { beschrifte(U.svg, R[x], bekannt[x] ? 'voll' : 'leer'); raum(x).classList.toggle('ok', !!bekannt[x]); }); }
@@ -758,16 +758,16 @@ function spielWeg(api) {
     var w = naechstes(), ziel = w[0], r = R[ziel], d = waehle(w[1]);
     var satz = SCHRITT[nr] + ' ' + (nr === 0 ? wer[0] : wer[1]) + ' goes to the ' + r.name.n + '. ' + satzTxt(satzAus(d, r));
     var intro = wer[0] + ' comes in through the ' + start.name + '.';
-    karte.innerHTML = '<span class="vor">' + h(intro) + ' (' + (nr + 1) + '/4)</span><div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag">🔊</button></div>';
+    karte.innerHTML = '<span class="vor">' + h(intro) + ' (' + (nr + 1) + '/4)</span><div class="zeile"><span class="tx">' + satzHtml(satz) + '</span><button class="knopf" data-x="sag" aria-label="Vorlesen">' + ik('laut', 22) + '</button></div>';
     karte.querySelector('[data-x="sag"]').onclick = function () { sag((nr === 0 ? intro + ' ' : '') + satzTxt(satz)); };
-    api.msg('<span class="em">👣</span> Lies, wohin ' + h(wer[0]) + ' geht, und tippe den Raum an. Der Weg wird eingezeichnet.');
+    api.msg('Lies, wohin ' + h(wer[0]) + ' geht, und tippe den Raum an. Der Weg wird eingezeichnet.');
     U.plan.classList.add('tippen');
     tippe = function (x) {
       tippe = null; U.plan.classList.remove('tippen'); lock = true;
       var ok = x === ziel;
       if (!ok) { raum(x).classList.add('no'); raum(ziel).classList.add('zeig'); api.later(function () { raum(x).classList.remove('no'); raum(ziel).classList.remove('zeig'); }, 2400); }
       zeichne(weg(wo, r)); wo = r; setzeEule(r); bekannt[ziel] = true; beschriften();
-      api.msg(ok ? lob() + ' <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : '<span class="em">💡</span> ' + h(wer[0]) + ' geht hierhin: <b>' + h(r.name.n) + '</b> <small>(' + h(hinweis(d)) + ')</small>');
+      api.msg(ok ? lob() + ' <small>' + h(r.name.n) + ' = ' + h(r.name.de) + '</small>' : '' + h(wer[0]) + ' geht hierhin: <b>' + h(r.name.n) + '</b> <small>(' + h(hinweis(d)) + ')</small>');
       if (api.answer(ok)) U.weiter(function () { k++; lock = false; aufgabe(); }, ok ? (nr === 3 ? 1800 : 1200) : 2800);
     };
   }

@@ -69,12 +69,12 @@ G.play = function (lv, api) {
       Array.prototype.forEach.call(zz.querySelectorAll('.gc-loch'), function (l, i) { l.style.background = lage[i] != null ? GC_FARBEN[lage[i]] : ''; l.classList.toggle('p', lage[i] != null); });
     }
     zeig();
-    api.msg('<span class="em">🔐</span> Welche Farben hat der Geheimcode?' + (lv.dop ? ' <small>Farben können doppelt vorkommen.</small>' : ''));
+    api.msg('Welche Farben hat der Geheimcode?' + (lv.dop ? ' <small>Farben können doppelt vorkommen.</small>' : ''));
     wrap.querySelector('.gc-wahl').onclick = function (e) { var b = e.target.closest('[data-f]'); if (!b || fertig || RUN !== myRun || lage.length >= lv.l) return; lage.push(+b.dataset.f); tone(520 + lage.length * 60, 0.05, 'sine', 0.07); zeig(); };
     wrap.querySelector('[data-x="weg"]').onclick = function () { if (fertig) return; lage.pop(); zeig(); };
     wrap.querySelector('[data-x="pruef"]').onclick = function () {
       if (fertig || RUN !== myRun) return;
-      if (lage.length < lv.l) { api.msg('<span class="em">✏️</span> Es braucht ' + lv.l + ' Perlen.'); return; }
+      if (lage.length < lv.l) { api.msg('Es braucht ' + lv.l + ' Perlen.'); return; }
       var w = wertung(lage, geheim), zz = brett.children[zeile];
       if (lv.platz) Array.prototype.forEach.call(zz.querySelectorAll('.gc-loch'), function (l, i) { if (w.pro[i] !== 'x') l.classList.add(w.pro[i]); });
       else { var punkte = []; for (var a = 0; a < w.richtig; a++) punkte.push('s'); for (a = 0; a < w.farbe; a++) punkte.push('f'); Array.prototype.forEach.call(zz.querySelectorAll('.gc-hinweis i'), function (p, i) { if (punkte[i]) p.className = punkte[i]; }); }
@@ -83,13 +83,13 @@ G.play = function (lv, api) {
       if (w.richtig === lv.l || zeile >= lv.versuche) {
         fertig = true; var ok = w.richtig === lv.l; runden++; if (ok) geloest++;
         api.answer(ok, true); if (ok) good(); else bad();
-        api.msg(ok ? '<span class="em">🎉</span> Geknackt in ' + zeile + (zeile === 1 ? ' Versuch!' : ' Versuchen!') : '<span class="em">💡</span> Der Code war: ' + geheim.map(function (f) { return '<span style="display:inline-block;width:22px;height:22px;border-radius:50%;vertical-align:middle;background:' + GC_FARBEN[f] + '"></span>'; }).join(' '));
+        api.msg(ok ? 'Geknackt in ' + zeile + (zeile === 1 ? ' Versuch!' : ' Versuchen!') : 'Der Code war: ' + geheim.map(function (f) { return '<span style="display:inline-block;width:22px;height:22px;border-radius:50%;vertical-align:middle;background:' + GC_FARBEN[f] + '"></span>'; }).join(' '));
         zeig();
         if (geloest >= lv.ziel) { api.later(function () { api.done('Du hast ' + geloest + ' Codes geknackt!', 1); }, 1600); return; }
         api.later(runde, ok ? 1800 : 3200); return;
       }
       zeig();
-      api.msg('<span class="em">🤔</span> ' + (lv.platz ? 'Schau dir die Ringe an und versuche es nochmal.' : w.richtig + ' am richtigen Platz, ' + w.farbe + ' am falschen Platz.'));
+      api.msg('' + (lv.platz ? 'Schau dir die Ringe an und versuche es nochmal.' : w.richtig + ' am richtigen Platz, ' + w.farbe + ' am falschen Platz.'));
     };
   }
   runde();
@@ -159,9 +159,9 @@ G.play = function (lv, api) {
     var fs = Math.round(s * .72);
     wrap.innerHTML = (lv.nuesse ? '<div class="ig-info"><span>Nüsse <b class="nz">0</b> von ' + lv.nuesse + '</span></div>' : '') +
       '<div class="ig-spiel"><div class="ig-feld" style="width:' + (B + 16) + 'px;height:' + (Hh + 16) + 'px;padding:4px">' + svg +
-      nuesse.map(function (n, i) { return '<span class="ig-ding" data-n="' + i + '" style="left:' + (4 + n.x * s) + 'px;top:' + (4 + n.y * s) + 'px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">🌰</span>'; }).join('') +
-      '<span class="ig-ding haus" style="left:' + (4 + haus.x * s) + 'px;top:' + (4 + haus.y * s) + 'px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">🏠</span>' +
-      '<span class="ig-eule" style="left:4px;top:4px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">🦉</span>' + (lv.dunkel ? '<div class="ig-nacht"></div>' : '') + '</div>' +
+      nuesse.map(function (n, i) { return '<span class="ig-ding" data-n="' + i + '" style="left:' + (4 + n.x * s) + 'px;top:' + (4 + n.y * s) + 'px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">' + ik('nuss', fs) + '</span>'; }).join('') +
+      '<span class="ig-ding haus" style="left:' + (4 + haus.x * s) + 'px;top:' + (4 + haus.y * s) + 'px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">' + ik('haus', fs) + '</span>' +
+      '<span class="ig-eule" style="left:4px;top:4px;width:' + s + 'px;height:' + s + 'px;font-size:' + fs + 'px">' + ik('eule', fs) + '</span>' + (lv.dunkel ? '<div class="ig-nacht"></div>' : '') + '</div>' +
       '<div class="ig-tasten"><span></span><button data-r="0" aria-label="Nach oben">▲</button><span></span><button data-r="3" aria-label="Nach links">◀</button><button data-r="2" aria-label="Nach unten">▼</button><button data-r="1" aria-label="Nach rechts">▶</button></div></div>';
     var feld = wrap.querySelector('.ig-feld'), eule = wrap.querySelector('.ig-eule'), nacht = wrap.querySelector('.ig-nacht'), nz = wrap.querySelector('.nz');
     function zeig() {
@@ -169,7 +169,7 @@ G.play = function (lv, api) {
       if (nacht) { var cx = 4 + eu.x * s + s / 2, cy = 4 + eu.y * s + s / 2, r = s * 2.3; nacht.style.background = 'radial-gradient(circle ' + r + 'px at ' + cx + 'px ' + cy + 'px,transparent 0,transparent ' + (r * .55) + 'px,rgba(20,30,50,.985) ' + r + 'px)'; }
     }
     zeig();
-    api.msg('<span class="em">🗺️</span> ' + (lv.nuesse ? 'Hol zuerst alle Nüsse, dann geht es nach Hause!' : 'Bring die Eule nach Hause!'));
+    api.msg('' + (lv.nuesse ? 'Hol zuerst alle Nüsse, dann geht es nach Hause!' : 'Bring die Eule nach Hause!'));
     function kann(r) { return !!(o[eu.y][eu.x] & IG_D[r][2]); }
     function geh(r) {
       if (laeuft || fertig || RUN !== myRun || !kann(r)) { if (!kann(r) && !laeuft && !fertig) tone(180, 0.08, 'triangle', 0.06); return; }
@@ -179,7 +179,7 @@ G.play = function (lv, api) {
         eu.x += IG_D[r][0]; eu.y += IG_D[r][1]; schritte++; zeig(); tone(600, 0.025, 'sine', 0.04);
         nuesse.forEach(function (n, i) { if (n.da && n.x === eu.x && n.y === eu.y) { n.da = false; feld.querySelector('[data-n="' + i + '"]').classList.add('weg'); tone(880, 0.1); if (nz) nz.textContent = nuesse.filter(function (q) { return !q.da; }).length; } });
         if (eu.x === haus.x && eu.y === haus.y) {
-          if (nuesse.some(function (n) { return n.da; })) api.msg('<span class="em">🌰</span> Es fehlen noch Nüsse!');
+          if (nuesse.some(function (n) { return n.da; })) api.msg('Es fehlen noch Nüsse!');
           else { laeuft = false; ziel(); return; }
         }
         // weiterlaufen, solange es nur einen Weg nach vorn gibt (keine Kreuzung, keine Sackgasse)
@@ -191,7 +191,7 @@ G.play = function (lv, api) {
     }
     function ziel() {
       fertig = true; geloest++; good(); api.answer(true, true);
-      api.msg('<span class="em">🏡</span> Die Eule ist zu Hause!');
+      api.msg('Die Eule ist zu Hause!');
       if (geloest >= lv.ziel) { api.later(function () { api.done('Du hast ' + geloest + ' Irrgärten geschafft!', 1); }, 1400); return; }
       api.later(runde, 1600);
     }
