@@ -26,6 +26,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 - Fächer-Bilder: `bilder/faecher/{deutsch,mathematik,englisch,nmg,wandtafelspiele}.webp` (rund, Goldrand per CSS), Zuordnung über den Fachnamen in `fachBild()`; andere Fächer zeigen den Anfangsbuchstaben.
 - Elterngespräche (Version 28, 29): Modul `E` (Lehrperson, `#/gespraeche/<Klasse>` = Liste aller gespeicherten Gespräche der Klasse `E.renderList()`, `#/gespraeche/<Klasse>/<Gespräch>` = planen `E.render()`, Kachel «eltern», Freigabe `eltern` in `TOOLS`) und `EP` (Eltern ohne Anmeldung, `#/eltern/<token>`). Tabelle `talks` (Version 29: Schlüssel `id`, mehrere pro Klasse; `cfg.kids` = Kinder, die sich anmelden sollen, fehlt = alle, `E.inKids()`; `cfg` = Termine/Schwierigkeit `diff`/Fixierungen `fixed`, `answers` pro Kind). Eltern nur über `eltern_get`/`eltern_set` (Schlüssel pro Gerät in `localStorage`; pro Gerät nur ein Kind), Lehrperson trägt mit `talk_answer_put(p_talk, …)` ein. Im Plan zeigt ein Klick auf die Zeit, wer sie angekreuzt hat (`E.open`). Plan: `egPlan()` (grösste Zuteilung + Tauschen gegen anspruchsvolle Gespräche hintereinander); `egReserved()` = Termine, ohne die nicht alle Eingetragenen Platz hätten → für neue Eltern ausgeblendet.
 - Noch nicht freigeschaltete Werkzeuge: Lehrpersonen (nicht Admin) sehen sie grau unter «Noch mehr in der Klassenkiste» mit «👁 Vorschau» (Fenster mit Bild aus `bilder/vorschau/<Schlüssel>.webp` und Stichworten) und «✦ Hol es dir» (`C.SHOP_URL`, sonst `shopSoon`). Liste und Texte in `MEHR` (`mehrTiles()`, `ACT.ttVorschau`); das Atelier ist bewusst nicht dabei. Der Admin sieht den Bereich nur über den Knopf «👁 So sehen Lehrpersonen …» (`T.mehrAdmin`). Vorschau-Bilder nur mit erfundenen Namen.
+- Guthaben für Spiele (Version 31): `profiles.credits` (nur Admin schreibt gut: `admin_add_credits`, Verwaltung `credRow()` mit «+ 10», «+ 50», Betrag, Verlauf aus `credit_log`), `games.price` (Standard 1, Verwaltung `preisFeld()` unter dem Zugang-Schalter; «Für alle» = gratis). Lehrperson: im Reiter «Spiele» unten «Noch mehr Spiele» (`shopSpiele()`, Daten `games_shop()` ohne Spieldatei, `T.shop`), «🔓 Freischalten für N» → zweimal tippen → `buy_game()` (bucht ab, legt `teacher_games` an, schreibt `credit_log`; nicht mit abgelaufener Lizenz). Guthaben kaufen im Shop der Homepage (`C.SHOP_URL`), die Lehrerin schreibt es danach von Hand gut.
 - Spieleregal (Brettspiel-Bibliothek der Lehrerin, eigenständige Seite): `spieleregal/index.html`, Bilder `spieleregal/img/`, Adresse `…/spieleregal/` (Spiel direkt: `#<id>` oder `#<id>/<Personen>`, Stationen `#stationen`). Daten im Skript: `GAMES` (pro Spiel `compute(n)` = Bereitlegen/Aufbau für n Personen, `center`/`seat` = Tischplan-SVG, `rules`, `gallery`, `photos`), `EXTRA` (Kompetenzen `k` aus `KOMP`, Schwierigkeit `s` 1–3, `ziel`, `tipp`). Bilder: `cover_*` = Schachtelbilder (so lassen, Lehrerin will das Regal mit Holzbrettern und keine entzerrten/zugeschnittenen Vorderseiten; Bilder nie verzerren, nur `max-height`/`max-width`). Filter oben: Auswahlfelder `wsel()` (Personen, Alter, Zeit, Schwierigkeit) und runde Kompetenz-Knöpfe `.ktile`. Merkliste/Filter nur im Browser (`localStorage` «sr2-…»). «Spielstationen planen» verteilt Kinder auf gewählte Spiele (`verteile()`). Kein Supabase, nicht im Portal verlinkt.
 - Seite: https://klassenkiste.primarschuleulchen.com/ (GitHub Pages, Branch `main`, Hauptordner, eigene Adresse über die Datei `CNAME`; DNS bei WordPress.com: CNAME `klassenkiste` → `primarschuleulchen.github.io`). Die alte Adresse primarschuleulchen.github.io/knobelnest/ leitet weiter.
 - Kinder: `…/knobelnest/#/klasse`
@@ -62,7 +63,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `englisch/` | Englisch-Spiel «Owl Town» (3D-Stadt), gebaut mit `werkstatt/spiele/englisch/bauen.py` |
 | `zeitreise/` | Zeitreise (Geschichte), gebaut mit `werkstatt/einbau/zeitreise/build_zeitreise.py` |
 | `vokabelkiste/` | Vokabelkiste, gebaut mit `werkstatt/einbau/vokabelkiste/vk_patch.py` (läuft als Spiel, siehe «Spiele») |
-| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 30) |
+| `supabase/schema.sql` | Die ganze Datenbank-Einrichtung (Version 31) |
 | `werkstatt/` | Originale, Einbau-Skripte und Tests (siehe unten). Wird nicht vom Portal geladen. |
 
 Module in `app.js` (jeweils `var X = {…}`):
@@ -144,7 +145,7 @@ So läuft ein Werkzeug im Portal:
 - **Eine Datei:** `supabase/schema.sql` ist die ganze Einrichtung. Sie darf mehrmals ausgeführt werden, deshalb überall `create … if not exists` und `create or replace`.
 - **Ausführen kann nur die Lehrerin.** Sie fügt die ganze Datei in Supabase ein: «SQL Editor» → «New query» → «Run». Du hast keinen Zugang zur Datenbank.
 - **Bei jeder SQL-Änderung:**
-  1. Versionsnummer oben in der Datei erhöhen (zurzeit 30).
+  1. Versionsnummer oben in der Datei erhöhen (zurzeit 31).
   2. Einen kommentierten Abschnitt «Version N» ergänzen.
   3. Rechte vergeben: Kinderfunktionen `anon, authenticated`, Lehrpersonen-Funktionen nur `authenticated`.
   4. Der Lehrerin klar sagen, dass sie das SQL ausführen muss, bevor sie die neuen Dateien braucht.
@@ -154,7 +155,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=220`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=221`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('59')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

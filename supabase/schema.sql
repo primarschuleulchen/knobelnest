@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 30)
+-- Knobelnest – Datenbank-Einrichtung (Version 31)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -2236,5 +2236,95 @@ revoke execute on function public.vk_bild_put(text, text), public.vk_bilder_get(
 grant execute on function public.kid_vk_bilder(uuid, text[]), public.kid_vk_extra(uuid, uuid) to anon, authenticated;
 revoke execute on function public.vk_bild_put(text, text), public.vk_bilder_get(text[]) from anon;
 grant execute on function public.vk_bild_put(text, text), public.vk_bilder_get(text[]) to authenticated;
+
+-- =====================================================================
+-- Version 31: Guthaben für Spiele
+--   profiles.credits = Guthaben der Lehrperson (nur der Admin schreibt es gut: admin_add_credits).
+--   games.price = Preis in Guthaben (Standard 1). Spiele «für alle» sind gratis und immer offen.
+--   Die Lehrperson sieht noch nicht freigeschaltete Spiele mit games_shop() (ohne Spieldatei) und
+--   schaltet sie mit buy_game() frei: Guthaben wird abgebucht, das Spiel kommt in teacher_games.
+--   Jede Buchung steht in credit_log. Mit abgelaufener Lizenz kann nichts freigeschaltet werden.
+-- =====================================================================
+alter table public.profiles add column if not exists credits int not null default 0;
+alter table public.games add column if not exists price int not null default 1;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'games_price_range') then
+    alter table public.games add constraint games_price_range check (price between 0 and 1000);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'profiles_credits_min') then
+    alter table public.profiles add constraint profiles_credits_min check (credits >= 0);
+  end if;
+end $$;
+
+create table if not exists public.credit_log (
+  id         bigserial primary key,
+  teacher_id uuid not null references public.profiles(id) on delete cascade,
+  delta      int not null,
+  game_id    uuid references public.games(id) on delete set null,
+  note       text not null default '',
+  at         timestamptz not null default now()
+);
+alter table public.credit_log enable row level security;
+drop policy if exists credit_log_select on public.credit_log;
+create policy credit_log_select on public.credit_log for select to authenticated
+  using (teacher_id = auth.uid() or public.is_admin());
+revoke all on public.credit_log from anon, authenticated;
+grant select on public.credit_log to authenticated;
+
+-- Gilt die Lizenz der angemeldeten Lehrperson noch?
+create or replace function public._me_licensed() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select p.is_admin or p.valid_until is null or p.valid_until >= (now() at time zone 'Europe/Zurich')::date
+                     from public.profiles p where p.id = auth.uid()), false);
+$$;
+revoke execute on function public._me_licensed() from public, anon, authenticated;
+
+-- Spiele, die die Lehrperson noch nicht hat (ohne Spieldatei), mit Preis
+create or replace function public.games_shop() returns json
+language sql stable security definer set search_path = public as $$
+  select coalesce(json_agg(json_build_object('id', g.id, 'title', g.title, 'description', g.description, 'fach', g.fach,
+                                             'thema', g.thema, 'stufe', g.stufe, 'price', g.price) order by g.fach, g.thema, g.sort, g.title), '[]'::json)
+    from public.games g
+   where auth.uid() is not null and not g.for_all
+     and not exists (select 1 from public.teacher_games t where t.teacher_id = auth.uid() and t.game_id = g.id)
+     and not exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin);
+$$;
+
+-- Spiel mit Guthaben freischalten
+create or replace function public.buy_game(p_game uuid) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare uid uuid := auth.uid(); g public.games; c int;
+begin
+  if uid is null then raise exception 'Bitte anmelden' using errcode = '42501'; end if;
+  if not public._me_licensed() then raise exception 'Ihre Lizenz ist abgelaufen.' using errcode = 'P0001'; end if;
+  select * into g from public.games where id = p_game;
+  if not found then raise exception 'Spiel nicht gefunden' using errcode = 'P0001'; end if;
+  if g.for_all or exists (select 1 from public.teacher_games where teacher_id = uid and game_id = g.id) then
+    return json_build_object('ok', true, 'credits', (select credits from public.profiles where id = uid), 'schon', true);
+  end if;
+  update public.profiles set credits = credits - g.price where id = uid and credits >= g.price returning credits into c;
+  if not found then raise exception 'Zu wenig Guthaben' using errcode = 'P0001'; end if;
+  insert into public.teacher_games (teacher_id, game_id) values (uid, g.id) on conflict do nothing;
+  insert into public.credit_log (teacher_id, delta, game_id, note) values (uid, -g.price, g.id, g.title);
+  return json_build_object('ok', true, 'credits', c);
+end;
+$$;
+
+-- Admin: Guthaben gutschreiben (oder mit negativer Zahl abziehen)
+create or replace function public.admin_add_credits(p_teacher uuid, p_delta int, p_note text) returns int
+language plpgsql volatile security definer set search_path = public as $$
+declare c int;
+begin
+  if not public.is_admin() then raise exception 'Nur für den Admin' using errcode = '42501'; end if;
+  if p_delta is null or p_delta = 0 or abs(p_delta) > 10000 then raise exception 'Betrag ungültig' using errcode = 'P0001'; end if;
+  update public.profiles set credits = greatest(0, credits + p_delta) where id = p_teacher returning credits into c;
+  if not found then raise exception 'Lehrperson nicht gefunden' using errcode = 'P0001'; end if;
+  insert into public.credit_log (teacher_id, delta, note) values (p_teacher, p_delta, left(coalesce(p_note, ''), 200));
+  return c;
+end;
+$$;
+
+revoke execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) from public, anon;
+grant execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) to authenticated;
 
 -- Fertig.

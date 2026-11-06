@@ -2534,7 +2534,7 @@
     out = '';
     if (!T.games.length) {
       return out + '<div class="empty">' + (T.me.is_admin ? 'Noch keine Spiele. Laden Sie Ihr erstes Spiel unter «Verwaltung» hoch.' :
-        'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>';
+        'Für Sie sind noch keine Spiele freigeschaltet. Melden Sie sich bei ' + h(C.CONTACT) + '.') + '</div>' + shopSpiele();
     }
     out += '<section class="stack"><h2 style="font-size:26px">Fächer</h2><div class="tiles">' +
       [{ id: 'alle', label: 'Alle Fächer', n: games.length, col: '#E3ECF5' }].concat(fachs.map(function (f) {
@@ -2607,7 +2607,45 @@
             (isWdt(g) ? '<button class="btn primary" data-a="wdtOpen" data-id="' + g.id + '">✏️ Eigene Wörter</button>' : '') + '</div></article>';
         }).join('') + '</div>');
     });
-    return out + '</section>';
+    return out + '</section>' + shopSpiele();
+  };
+  // Guthaben (Version 31): Spiele, die die Lehrperson noch nicht hat, grau mit Preis; freischalten mit buy_game
+  function shopSpiele() {
+    if (!T.me || T.me.is_admin) return '';
+    if (T.shop === undefined) {
+      T.shop = null;
+      DB.gameShop().then(function (l) { T.shop = l || []; if (T.tab === 'spiele') T.render(); }).catch(function () { T.shop = []; });
+      return '';
+    }
+    var l = T.shop || []; if (!l.length) return '';
+    var cr = T.me.credits || 0, groups = [], by = {};
+    l.forEach(function (g) { var k = g.fach + ' › ' + thTeile(themen(g)[0]).name; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
+    return '<section class="stack shop" id="shop"><div class="shop-kopf"><div><h2>Noch mehr Spiele <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></h2>' +
+      '<p>Diese Spiele können Sie mit Guthaben freischalten. Ein freigeschaltetes Spiel gehört Ihnen, solange Ihre Lizenz läuft.</p></div>' +
+      '<div class="shop-gh"><span>Ihr Guthaben</span><b>' + cr + '</b>' + shopBtn('✦ Guthaben holen', 'btn amber sm') + '</div></div>' +
+      groups.map(function (k) {
+        return '<h3 class="shop-th">' + h(k) + '</h3><div class="games' + (T.spalten ? ' sp-' + T.spalten : '') + '">' + by[k].map(function (g) {
+          var pr = g.price == null ? 1 : g.price, key = 'buy:' + g.id, armed = UI.confirm === key, zuWenig = cr < pr;
+          return '<article class="game kk-karte kkt shop-zu"><div class="kkt-kopf">' + (spielBild(g) || kkIc(g.fach)) + '<div class="kkt-pills">' +
+            (g.stufe ? '<span class="pill" style="background:#DDF5EA;color:#1F6B50">' + h(g.stufe) + '</span>' : '') + '<span class="pill shop-preis">' + pr + ' Guthaben</span></div></div>' +
+            '<span class="kk-fach">' + h(g.fach) + '</span><b>🔒 ' + h(g.title) + '</b>' + (g.description ? '<p>' + h(g.description) + '</p>' : '') +
+            '<div class="game-foot">' + (zuWenig ? '<span class="muted small">Zu wenig Guthaben</span>' + shopBtn('✦ Guthaben holen', 'btn sm') :
+              '<button class="btn ' + (armed ? 'amber' : 'primary') + '" data-a="buyGame" data-id="' + g.id + '">' + (armed ? 'Wirklich? ' + pr + ' Guthaben einlösen' : '🔓 Freischalten für ' + pr) + '</button>') + '</div></article>';
+        }).join('') + '</div>';
+      }).join('') + '</section>';
+  }
+  ACT.buyGame = async function (el) {
+    var id = el.dataset.id, key = 'buy:' + id;
+    if (UI.confirm !== key) { UI.confirm = key; T.render(); setTimeout(function () { if (UI.confirm === key) { UI.confirm = null; T.render(); } }, 5000); return; }
+    UI.confirm = null; el.disabled = true;
+    try {
+      var r = await DB.buyGame(id);
+      if (r && typeof r.credits === 'number') T.me.credits = r.credits;
+      T.games = await DB.listGames(); T.shop = undefined;
+      var g = T.games.filter(function (x) { return x.id === id; })[0];
+      toast(g ? '«' + g.title + '» ist freigeschaltet. Sie finden es jetzt bei Ihren Spielen.' : 'Freigeschaltet.');
+    } catch (e) { toast(/Guthaben/.test(errMsg(e)) ? 'Zu wenig Guthaben. Holen Sie sich neues Guthaben im Shop.' : errMsg(e)); }
+    T.render();
   };
   ACT.fach = function (el) { T.fach = el.dataset.f; T.render(); };
 
@@ -3472,6 +3510,45 @@
         return '<div class="bildopt"><img src="' + h(b.src) + '" alt=""><input class="input" value="' + h(b.name || '') + '" maxlength="30" aria-label="Name" data-change="kbName" data-id="' + h(b.id) + '"><button class="btn sm danger" data-a="kbDel" data-id="' + h(b.id) + '">Entfernen</button></div>'; }).join('') + '</div>' : '<p class="muted small">Noch keine Vorlagen.</p>') +
       '<div class="field"><label for="kbFile">Bilder hinzufügen (mehrere möglich)</label><input class="input" id="kbFile" type="file" accept="image/*" multiple data-change="kbAdd"></div></section>';
   }
+  // Verwaltung (Version 31): Preis pro Spiel in Guthaben (nur bei «Nur zugeteilt»; «Für alle» ist gratis)
+  function preisFeld(g) {
+    var A = T.admin;
+    if (A.prices === undefined) { A.prices = null; DB.gamePrices().then(function (l) { var m = {}; (l || []).forEach(function (x) { m[x.id] = x.price; }); A.prices = l ? m : false; if (T.tab === 'verwaltung') T.render(); }); }
+    if (g.for_all) return '<div class="g-preis muted small">gratis, für alle</div>';
+    if (A.prices === false) return '<div class="g-preis muted small">Preis: zuerst SQL Version 31 ausführen</div>';
+    if (!A.prices) return '';
+    var pr = A.prices[g.id] == null ? 1 : A.prices[g.id];
+    return '<label class="g-preis muted small">Preis <input class="input" type="number" min="0" max="1000" step="1" value="' + pr + '" data-change="gPreis" data-id="' + g.id + '" aria-label="Preis von ' + h(g.title) + ' in Guthaben"> Guthaben</label>';
+  }
+  ACT.gPreis = async function (el) {
+    var v = Math.round(+el.value); if (!isFinite(v) || v < 0 || v > 1000) { toast('Preis zwischen 0 und 1000.'); return; }
+    try { await DB.setGamePrice(el.dataset.id, v); T.admin.prices[el.dataset.id] = v; toast('Preis gespeichert: ' + v + ' Guthaben.'); } catch (e) { toast(errMsg(e)); }
+  };
+  // Verwaltung (Version 31): Guthaben einer Lehrperson gutschreiben (z. B. nach einem Kauf im Shop)
+  function credRow(t) {
+    if (DB.noCredits) return '<div class="row" style="padding:8px 0 2px 52px"><span class="muted small"><b>Guthaben:</b> Bitte zuerst das SQL (Version 31) in Supabase ausführen.</span></div>';
+    var A = T.admin, log = (A.clog || {})[t.id];
+    return '<div class="row cred-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Guthaben:</span><b class="cred-n">' + (t.credits || 0) + '</b>' +
+      [10, 50].map(function (n) { return '<button class="btn sm" data-a="credAdd" data-t="' + t.id + '" data-n="' + n + '">+ ' + n + '</button>'; }).join('') +
+      '<input class="input" type="number" style="width:90px;min-height:38px;padding:4px 10px" placeholder="Betrag" id="cred-' + t.id + '" aria-label="Guthaben für ' + h(t.name || t.email) + '">' +
+      '<button class="btn sm" data-a="credAdd" data-t="' + t.id + '">Gutschreiben</button>' +
+      '<button class="btn sm" data-a="credLog" data-t="' + t.id + '" aria-expanded="' + !!log + '">' + (log ? 'Verlauf schliessen' : 'Verlauf') + '</button></div>' +
+      (log ? '<div class="cred-log" style="padding:4px 0 2px 52px">' + (log.length ? '<ul class="muted small">' + log.map(function (x) {
+        return '<li>' + new Date(x.at).toLocaleDateString('de-CH') + ': <b>' + (x.delta > 0 ? '+' : '') + x.delta + '</b> ' + h(x.note || '') + '</li>'; }).join('') + '</ul>' : '<p class="muted small">Noch keine Buchungen.</p>') + '</div>' : '');
+  }
+  ACT.credAdd = async function (el) {
+    var tid = el.dataset.t, n = el.dataset.n ? +el.dataset.n : Math.round(+((document.getElementById('cred-' + tid) || {}).value || 0));
+    if (!n || !isFinite(n)) { toast('Bitte einen Betrag eintragen (z. B. 50, oder -5 zum Abziehen).'); return; }
+    var t = (T.admin.teachers || []).filter(function (x) { return x.id === tid; })[0]; if (!t) return;
+    try { t.credits = await DB.addCredits(tid, n, n > 0 ? 'Gutschrift' : 'Korrektur'); toast((n > 0 ? '+' + n : n) + ' Guthaben für ' + (t.name || t.email) + '. Neu: ' + t.credits + '.'); if (T.admin.clog) delete T.admin.clog[tid]; }
+    catch (e) { toast(errMsg(e)); }
+    T.render();
+  };
+  ACT.credLog = async function (el) {
+    var A = T.admin, tid = el.dataset.t; A.clog = A.clog || {};
+    if (A.clog[tid]) { delete A.clog[tid]; T.render(); return; }
+    A.clog[tid] = await DB.creditLog(tid); T.render();
+  };
   // Verwaltung: Lizenz «gültig bis» pro Lehrperson (Version 22)
   function licRow(t) {
     if (DB.noLicense) return '<div class="row" style="padding:8px 0 2px 52px"><span class="muted small"><b>Gültig bis:</b> Bitte zuerst das SQL (Version 22) in Supabase ausführen.</span></div>';
@@ -3557,7 +3634,7 @@
           '<input class="ft-in ft-neu" list="alleThemenList" maxlength="40" placeholder="+ Thema" aria-label="Weiteres Thema für ' + h(g.title) + '" title="Weiteres Thema (das Spiel steht dann in beiden)" data-change="gThAdd" data-id="' + g.id + '"></div>' +
           '<div class="ft-edit ft-labs">' + spielLabels(g).map(function (x) { return '<span class="ft-chip lab" style="background:' + labelFarbe(x)[0] + ';color:' + labelFarbe(x)[1] + '">🏷 ' + h(x) + '<button class="ft-x" aria-label="Stichwort ' + h(x) + ' entfernen" data-a="gLabDel" data-id="' + g.id + '" data-t="' + h(x) + '">×</button></span>'; }).join('') +
           '<input class="ft-in ft-neu" list="labelList" maxlength="40" placeholder="+ Stichwort" aria-label="Stichwort für ' + h(g.title) + '" title="Stichwort hinzufügen, z. B. Young World 3" data-change="gLabAdd" data-id="' + g.id + '"></div></td>' +
-        '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button></td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
+        '<td><button class="switch" style="min-height:44px;min-width:190px" role="switch" aria-checked="' + g.for_all + '" data-a="gAllToggle" data-id="' + g.id + '"><span>' + (g.for_all ? 'Für alle' : 'Nur zugeteilt') + '</span><span class="track"></span></button>' + preisFeld(g) + '</td><td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">' +
         '<button class="btn sm" data-a="preview" data-id="' + g.id + '">Ansehen</button><button class="btn sm" data-a="gEdit" data-id="' + g.id + '">Bearbeiten</button>' +
         '<button class="btn sm danger' + (UI.confirm === key ? ' armed' : '') + '" data-a="gDel" data-id="' + g.id + '">' + (UI.confirm === key ? 'Wirklich?' : 'Löschen') + '</button></div></td></tr>';
     }).join('') + '</tbody></table></div>' +
@@ -3575,6 +3652,7 @@
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
         (t.is_admin ? '' : licRow(t)) +
+        (t.is_admin ? '' : credRow(t)) +
         (t.is_admin ? '' : vzRow(t)) +
         (open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
