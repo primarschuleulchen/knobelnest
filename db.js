@@ -69,6 +69,7 @@
     },
     // ---------- Guthaben (Version 31) ----------
     gameShop: async function () { var r = await sb.rpc('games_shop'); if (r.error) return null; return r.data || []; },
+    buyVkUnit: async function (path) { return ok(await sb.rpc('buy_vk_unit', { p_path: String(path || '') })); },
     buyGame: async function (gid) { return ok(await sb.rpc('buy_game', { p_game: gid })); },
     addCredits: async function (tid, delta, note) { return ok(await sb.rpc('admin_add_credits', { p_teacher: tid, p_delta: delta, p_note: note || '' })); },
     gamePrices: async function () { var r = await sb.from('games').select('id,price'); if (r.error) return null; return r.data || []; },

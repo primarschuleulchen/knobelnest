@@ -88,6 +88,11 @@
     gameShop: function () { var m = me(); if (m.is_admin) return delay([]);
       return delay(D.games.filter(function (g) { return !g.for_all && !D.teacher_games.some(function (t) { return t.teacher_id === m.id && t.game_id === g.id; }); })
         .map(function (g) { return { id: g.id, title: g.title, description: g.description, fach: g.fach, thema: g.thema, stufe: g.stufe, price: g.price == null ? 1 : g.price }; })); },
+    buyVkUnit: function (path) { var m = me(); D.shared = D.shared || {}; var tp = D.shared['vokabelkiste-vorlage'] || {}, ids = [];
+      (tp.subjects || []).forEach(function (sb) { var w = function (arr, pa) { (arr || []).forEach(function (n) { if (n.words) { if (pa.join(' › ') === path) ids.push(n.id); } else w(n.kids, pa.concat(n.name)); }); }; w(sb.tree, [sb.name]); });
+      if (!ids.length) return Promise.reject(new Error('Unit nicht gefunden')); if ((m.credits || 0) < 3) return Promise.reject(new Error('Zu wenig Guthaben'));
+      m.credits -= 3; var z = D.shared['vokabelkiste-zuweisung'] = D.shared['vokabelkiste-zuweisung'] || {}; z[m.id] = (z[m.id] || []).concat(ids.filter(function (i) { return (z[m.id] || []).indexOf(i) < 0; }));
+      return delay({ ok: true, credits: m.credits }); },
     buyGame: function (gid) { var m = me(), g = D.games.filter(function (x) { return x.id === gid; })[0], pr = g.price == null ? 1 : g.price;
       if ((m.credits || 0) < pr) return Promise.reject(new Error('Zu wenig Guthaben'));
       m.credits = (m.credits || 0) - pr; D.teacher_games.push({ teacher_id: m.id, game_id: gid }); (D.log = D.log || []).push({ t: m.id, delta: -pr, note: g.title, at: now() }); return delay({ ok: true, credits: m.credits }); },
