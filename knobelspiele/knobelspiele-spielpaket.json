@@ -92,6 +92,24 @@
    "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/wasser-weg.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Wasser-Weg</title></head><body><p>Wasser-Weg: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
   },
   {
+   "title": "Klötzli-Turm",
+   "description": "Fallende Klötzli drehen und schieben, bis Reihen voll sind.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "2.–6. Klasse",
+   "sort": 5,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kloetzli-turm.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Klötzli-Turm</title></head><body><p>Klötzli-Turm: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
+   "title": "Kisten-Packen",
+   "description": "Klötzli in die Kiste legen. Volle Reihen und Spalten verschwinden.",
+   "fach": "Knobeln",
+   "thema": "Logik",
+   "stufe": "1.–6. Klasse",
+   "sort": 6,
+   "html": "<!doctype html><html lang=\"de-CH\"><head><meta charset=\"utf-8\"><meta name=\"knobelnest-url\" content=\"knobelspiele/kisten-packen.html\"><meta name=\"knobelnest-sterne\" content=\"{&quot;modus&quot;: &quot;sammeln&quot;, &quot;pro&quot;: 10, &quot;max&quot;: 3, &quot;proLevel&quot;: true, &quot;proTag&quot;: false}\"><title>Kisten-Packen</title></head><body><p>Kisten-Packen: Dieses Spiel liegt in der Klassenkiste im Ordner knobelspiele/.</p></body></html>"
+  },
+  {
    "title": "Kleiderschrank",
    "description": "Kleider auf Englisch: anschauen, hören, schreiben, sprechen, my/your/his/her/its und «This is my dress.»",
    "fach": "Englisch",
