@@ -205,6 +205,9 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
 .bwrap{position:absolute;inset:0;margin:0}
+.w.oben .chrome{top:auto;bottom:-34px}
+.top{pointer-events:none}
+.top>*{pointer-events:auto}
 #board{position:absolute;left:0;top:0;flex:none;margin:0;transform-origin:0 0;--vh:1vh}
 .app .top{position:absolute;top:0;left:0;right:0}
 .app .dock{position:absolute;bottom:0;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px)}
@@ -1315,16 +1318,18 @@ const STYLED = new Set(["list", "check", "note", "material"]);
 const EXTRA = { groups: ["✎ Titel", "Überschrift bearbeiten"], list: ["✎ Titel", "Überschrift bearbeiten"], check: ["✎ Titel", "Überschrift bearbeiten"], plan: ["✎ Titel", "Überschrift bearbeiten"], material: ["✎ Titel", "Überschrift bearbeiten"], note: ["✎ Titel", "Überschrift bearbeiten"], title: ["Farbe", "Farbe des Titels"], heft: ["⇄ Ansicht", "Kurzansicht oder ganzes Heft"], timer: ["⚙", "Ton und Aussehen"], date: ["Farbe", "Farbe des Kalenderblatts"], symbol: ["Wechseln", "Arbeitsform wählen"], clock: ["Sek.", "Sekunden ein/aus"], image: ["Ersetzen", "Bild ersetzen"] };
 function widgetHTML(w){
   const x = EXTRA[w.type], auto = AUTO.has(w.type);
-  return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${w.type === "note" ? `--fs:${w.fs || FS_DEFAULT.note};` : ""}${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
+  return `<div class="w ${w.type}${w.type === "title" ? " bare" : ""}${w.y < 10 ? " oben" : ""}${auto ? " auto" : ""}${w.id === selId ? " sel" : ""}" data-w="${w.id}" style="left:${w.x}%;top:${w.y}%;width:${w.w}%;${w.type === "note" ? `--fs:${w.fs || FS_DEFAULT.note};` : ""}${auto ? `--fs:${w.fs || FS_DEFAULT[w.type]};` + (w.mh ? `min-height:${w.mh}%;` : "") : `height:${w.h}%;`}z-index:${w.z || 1}">
     <div class="chrome"><button class="grip" data-grip aria-label="Verschieben">⠿ ${TYPES[w.type].lab}</button>${x ? `<button data-opt aria-label="${x[1]}">${x[0]}</button>` : ""}${STYLED.has(w.type) ? `<button data-style aria-label="Farben">🎨</button>` : ""}${auto || w.type === "note" ? `<button data-fsz="-1" aria-label="Schrift kleiner">A−</button><button data-fsz="1" aria-label="Schrift grösser">A+</button>` : ""}<button data-copy aria-label="Kopieren">⧉</button><button data-close aria-label="Entfernen">✕</button></div>
     <div class="card">${widgetInner(w)}</div><div class="rs" data-rs="xy" aria-hidden="true"></div><div class="rse" data-rs="x" aria-hidden="true"></div><div class="rsb" data-rs="y" aria-hidden="true"></div></div>`;
 }
 // Fläche in Vollbild-Grösse, im Fenster verkleinert
 function fitBoard(){
   const wrap = document.getElementById("bwrap"), b = document.getElementById("board"); if (!wrap || !b) return;
+  const tb = document.querySelector(".top"), th = tb ? Math.ceil(tb.offsetHeight) + 6 : 64; // Platz für die obere Leiste
+  if (APP.style.getPropertyValue("--topH") !== th + "px") APP.style.setProperty("--topH", th + "px");
   const aw = wrap.clientWidth, ah = wrap.clientHeight; if (!aw || !ah) return;
   const sw = Math.max(window.screen.width || 0, aw), sh = Math.max(window.screen.height || 0, ah); // window.screen: «screen» ist hier der aktuelle Bildschirm der Folie
-  const W = sw, H = sh; // ganzer Bildschirm: im Vollbild bis an den Rand, Leisten liegen darüber
+  const W = sw, H = sh; // ganzer Bildschirm, in beiden Ansichten gleich; die Leisten liegen darüber
   const k = Math.min(aw / W, ah / H);
   b.style.width = W + "px"; b.style.height = H + "px"; b.style.setProperty("--vh", (sh / 100) + "px");
   b.style.transform = `translate(${((aw - W * k) / 2).toFixed(1)}px, ${((ah - H * k) / 2).toFixed(1)}px) scale(${k.toFixed(5)})`;
@@ -1387,7 +1392,9 @@ $("#board").addEventListener("pointerdown", e => {
   if (selId !== w.id) { document.querySelectorAll(".w.sel").forEach(n => n.classList.remove("sel")); el.classList.add("sel"); selId = w.id; }
   if ((w.z || 1) < topZ()) { w.z = topZ() + 1; el.style.zIndex = w.z; }
   const grip = e.target.closest("[data-grip]"), rs = e.target.closest("[data-rs]");
-  const onBody = DRAG_BODY.has(w.type) && !e.target.closest("button,input,textarea,[contenteditable]");
+  const tCe = w.type === "title" ? e.target.closest("[contenteditable]") : null, tEdit = tCe && document.activeElement !== tCe ? tCe : null;
+  const frei = !e.target.closest("button,input,textarea,select,a,label,[contenteditable],[data-it],[data-mk],[data-gname],[data-pick],iframe,.lfoot,.t-heft,.obody");
+  const onBody = (DRAG_BODY.has(w.type) || frei) && (tEdit || !e.target.closest("button,input,textarea,[contenteditable]"));
   if (!grip && !rs && !onBody) return;
   e.preventDefault();
   const r = $("#board").getBoundingClientRect();
@@ -1396,7 +1403,7 @@ $("#board").addEventListener("pointerdown", e => {
   const bH = $("#board").offsetHeight || r.height;
   const hh = AUTO.has(w.type) ? el.offsetHeight / bH * 100 : w.h;
   const vh = AUTO.has(w.type) ? Math.max(4, (el.offsetHeight - edPx) / bH * 100) : w.h;
-  drag = { w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, vh, bw: r.width, bh: r.height, moved: false };
+  drag = { ted: tEdit ? w.id : "", w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, vh, bw: r.width, bh: r.height, moved: false };
   el.classList.add("drag");
 });
 window.addEventListener("pointermove", e => {
@@ -1413,7 +1420,10 @@ window.addEventListener("pointermove", e => {
     }
   }
 });
-window.addEventListener("pointerup", () => { APP.classList.remove("dragging"); if (!drag) return; drag.el.classList.remove("drag"); if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); } drag = null; });
+window.addEventListener("pointerup", () => { APP.classList.remove("dragging"); if (!drag) return; drag.el.classList.remove("drag"); if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); }
+  else if (drag.ted) { const id = drag.ted, x = drag.sx, y = drag.sy; setTimeout(() => { const ce = document.querySelector(`[data-w="${id}"] [contenteditable]`); if (!ce) return; ce.focus();
+    try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(x, y) : null; if (r && ce.contains(r.startContainer)) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } } catch {} }, 30); }
+  drag = null; });
 
 // ---------- Punkte im Ablauf / in der Checkliste verschieben ----------
 let idrag = null;
