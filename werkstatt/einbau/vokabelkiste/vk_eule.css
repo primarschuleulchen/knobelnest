@@ -443,3 +443,8 @@ ul.miss{margin:0;padding-left:20px;max-height:200px;overflow:auto;color:var(--mu
 .hact .hgrid{display:inline-grid;grid-template-columns:auto auto;gap:6px}
 .hact .hgrid .pill{min-height:32px}
 .hact .hgrid #delNode{font-size:15px;min-height:32px;padding:0 11px}
+.mvnew{display:flex;flex-direction:column;gap:6px;border-top:1.5px dashed var(--rule);padding-top:10px}
+.mvnew b{font-weight:400}
+.mvnew label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:15px}
+.mvnew select{flex:1}
+.mvnew .pill{align-self:flex-start}
