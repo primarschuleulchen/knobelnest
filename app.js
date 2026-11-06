@@ -694,7 +694,7 @@
           }
         }
       };
-      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('53') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
+      paint('<div class="folie"><iframe src="tagesfolie.html?v=' + ('54') + '" title="Tagesfolie" allow="fullscreen; autoplay; encrypted-media; microphone"></iframe></div>');
     }
   };
   // ===================================================================
