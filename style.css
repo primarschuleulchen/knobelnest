@@ -1480,3 +1480,20 @@ body.kidv .kk-tile{background:#F6E7C8}
 .ro-st{font-size:15px;color:#5f6963}.ro-st.gold{color:#d6ad45;font-size:16px;letter-spacing:1px}
 .ro-fuss{color:#5f6963;font-size:15px;text-align:center}
 @media (prefers-reduced-motion:reduce){.ro-k{transition:none}}
+/* Guthaben (Version 31): Spiele zum Freischalten grau, mit Preis; Guthaben oben rechts */
+.shop{margin-top:30px;padding-top:18px;border-top:1.5px dashed #cdd6de}
+.shop-kopf{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.shop-kopf h2{font-size:26px;margin:0}
+.shop-kopf h2 .sterne{color:var(--gold);font-size:14px;letter-spacing:.2em}
+.shop-kopf p{margin:2px 0 0;color:var(--soft)}
+.shop-gh{display:flex;align-items:center;gap:10px;background:var(--sun-soft);border:1.5px solid var(--gold);border-radius:999px;padding:6px 8px 6px 16px}
+.shop-gh span{color:#7a5a12}
+.shop-gh b{font-size:24px;color:#7a5a12;min-width:1.5em;text-align:center}
+.shop-th{margin:10px 0 0;font-family:var(--h);font-weight:400;font-size:20px;color:var(--soft)}
+body.lp .game.shop-zu{background:#f6f7f8;border:1.5px dashed #cdd6de;box-shadow:none}
+body.lp .game.shop-zu .kkt-kopf img,body.lp .game.shop-zu .kkt-kopf .kk-ic,body.lp .game.shop-zu>b,body.lp .game.shop-zu>p{filter:grayscale(1);opacity:.6}
+body.lp .game.shop-zu:hover .kkt-kopf img,body.lp .game.shop-zu:hover>b{filter:grayscale(.3);opacity:.9}
+.pill.shop-preis{background:var(--sun-soft);color:#7a5a12;border:1px solid var(--gold)}
+.g-preis{display:flex;align-items:center;gap:6px;margin-top:6px}
+.g-preis input{width:70px;min-height:34px;padding:2px 8px}
+.cred-n{font-size:20px;color:#7a5a12;min-width:1.5em}
