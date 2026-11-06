@@ -49,5 +49,13 @@ rep('/* Erweiterungen */', '/* Erweiterungen */\n#knBack{margin-right:4px}')
 # 5) Korrekturen (gleich wie in der Eulenkiste)
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pin_fixes.py'), encoding='utf-8').read())
 
+# 6) Klassenkiste-Stil (gemeinsam mit Eulenkiste und Artefakt) mit der Schrift aus schriften/ statt von Google,
+#    danach eigene Vorlagen (nur hier in der Klassenkiste)
+rep('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap">\n', '')
+EULE = ''  # die Eule ist schon im Zurück-Knopf oben links
+SCHRIFT = '@font-face{font-family:"Patrick Hand";src:url(schriften/patrick-hand.woff2) format("woff2");font-weight:400;font-display:swap}\n'
+exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pin_stil.py'), encoding='utf-8').read())
+exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pin_vorlagen.py'), encoding='utf-8').read())
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
