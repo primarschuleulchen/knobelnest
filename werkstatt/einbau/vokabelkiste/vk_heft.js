@@ -134,7 +134,7 @@ function vkUrkunde(u,nameVor){if(!u)return;const t=(P.urk||{})[u.id]||Date.now()
   </div><div class="dact"><button class="pill" id="uzu">Schliessen</button><button class="pill go" id="udr">🖨 Drucken</button></div></div>`;
   const zu=()=>{L.innerHTML='';document.body.classList.remove('drucke')};
   $('#uzu',L).onclick=zu;$('.scrim',L).onclick=zu;
-  $('#udr',L).onclick=()=>{document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
+  $('#udr',L).onclick=()=>{vkPage('landscape');document.body.classList.add('drucke');setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove('drucke'),500)},50)}}
 
 /* ---------- Lehrperson: Belohnungen in der Klassen-Übersicht ---------- */
 function vkClassRewards(){const m=stkModes(),z=C.ziel||{};
@@ -161,7 +161,7 @@ function bindClassRewards(){
   $$('[data-sdel]').forEach(b=>b.onclick=async()=>{const nl=STK.filter(s=>s.id!==b.dataset.sdel);try{await knAsk('vkSticker',{data:{list:nl}});STK=nl;goClass()}catch(e){toast(e.message)}});
   const up=$('#stkUp');if(up)up.onchange=async()=>{const fs=[...up.files];up.value='';const files=await vkReadFiles(fs);if(!files)return;let nl=STK.slice(),n=0;
     files.sort((a,b)=>a.name.localeCompare(b.name,'de',{numeric:true}));
-    for(const x of files){try{const v=await vkStore(await picFromFile(x.blob,300));nl.push({id:v.slice(3),name:x.name.replace(/\.[^.]+$/,'')});n++;toast('Sticker '+n+' von '+files.length+' …')}catch(e){}}
+    for(const x of files){try{const v=await vkStore(await picFromFile(x.blob,560));nl.push({id:v.slice(3),name:x.name.replace(/\.[^.]+$/,'')});n++;toast('Sticker '+n+' von '+files.length+' …')}catch(e){}}
     try{await knAsk('vkSticker',{data:{list:nl}});STK=nl;toast(n+' Sticker gespeichert');goClass()}catch(e){toast(e.message)}}}
 const vkStkN=p=>Object.values((p&&p.stk)||{}).reduce((a,e)=>a+(e.n||0),0);
 
@@ -191,13 +191,13 @@ function bindBulk(node,redraw){const inp=$('#bulkPic');if(!inp)return;inp.onchan
     if(!w){miss.push(x.name);continue}
     try{w.img=await vkStore(await picFromFile(x.blob));ok++;toast('Bild '+ok+' gespeichert …')}catch(e){miss.push(x.name+' (Fehler: '+e.message+')')}}
   if(ok){touch();redraw()}
-  const L=$('#layer');L.innerHTML=`<div class="scrim"></div><div class="dlg"><h2 class="lbl">${ok} ${ok===1?'Bild':'Bilder'} eingefügt</h2>
+  const L=$('#layer');L.innerHTML=`<div class="scrim"></div><div class="dlg"><h2 class="lbl">${ok} ${ok===1?'Bild':'Bilder'} eingefügt</h2><p class="note" style="margin:0">Gespeichert in hoher Qualität (800 px).</p>
     ${miss.length?`<p>Diese passen zu keinem Wort dieser Portion. Der Dateiname muss gleich heissen wie das Wort:</p><ul class="miss">${miss.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'<p>Alle Bilder haben ein Wort gefunden.</p>'}
     ${ok?'<p class="note">Vergiss nicht: unten «Für die Klasse veröffentlichen».</p>':''}<div class="dact"><button class="pill go" id="bok">OK</button></div></div>`;
   $('#bok',L).onclick=()=>{L.innerHTML=''};$('.scrim',L).onclick=()=>{L.innerHTML=''}}}
 
 /* Kachel «Mein Heft» auf der Startseite der Sprache */
 function vkHeftCard(){const list=stkList(),st=list.filter(s=>(P.stk||{})[s.id]).length,bd=BADGES.filter(b=>b[4]()>0).length,ur=Object.keys(P.urk||{}).length;
-  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh"><span class="mhl">Mein Heft</span><i></i></span>
+  return `<button type="button" class="kt kt-heft" id="heftCard"><span class="mh" aria-hidden="true"><i></i></span>
     <span class="ktx"><b>Mein Heft</b><span class="mhz"><span><img src="abzeichen/reiter-sticker.webp?v=2" alt="">${st}/${list.length}</span><span><img src="abzeichen/reiter-abzeichen.webp?v=2" alt="">${bd}</span><span><img src="abzeichen/reiter-urkunden.webp?v=2" alt="">${ur}</span></span><small>Sticker, Abzeichen und Urkunden anschauen →</small></span></button>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#heftCard');if(b)goHeft()});

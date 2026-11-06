@@ -1377,3 +1377,5 @@ body.kidv .kk-tile{background:#F6E7C8}
 .ft-th{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1.5px dashed transparent;padding:0 2px;min-width:3em;max-width:12em;cursor:text}
 .ft-chip:hover .ft-th{border-bottom-color:#9fb8cf}
 .ft-th:focus{outline:none;border-bottom:1.5px solid #d6ad45;background:#fff;border-radius:6px}
+.ft-ueber{width:9em;font-weight:600;background:#fbf3dc55}
+.kk-subs{color:#3f78a8!important;font-size:17px!important}

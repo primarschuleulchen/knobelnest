@@ -387,5 +387,34 @@ rep("""    <div class="kt kt-badges">${bd('🏅','Wochenheld',wk>0,wk?(wk>1?wk+'
       ${bd('📦','Kistenprofi',f5>=PROFI,f5>=PROFI?'100 Wörter im letzten Fach!':f5+' von '+PROFI+' Wörtern im letzten Fach')}</div></div>`}""",
     """    ${vkHeftCard()}</div>`}""")
 
+
+# 18) Vorlagen: Bilder nachliefern. Hat die Admin-Lehrperson in einer Vorlage-Portion Bilder ergänzt oder ersetzt, bekommen
+#     Lehrpersonen, die die Portion schon früher kopiert haben, die Bilder beim nächsten Öffnen auch (gleiche Wort-ID).
+#     Ersetzt wird nur, was noch aus der Vorlage stammt (w.imgT = zuletzt übernommenes Vorlagen-Bild; alte Kopien ohne
+#     w.imgT mit Bild aus der Datenbank gelten ebenfalls als Vorlage). Eigene Bilder und Emojis der Lehrperson bleiben.
+rep("  C.tplSeen=[...seen];return added;", """  {let n=0;const ws=[];TPL.subjects.forEach(ts=>{const walk=a=>(a||[]).forEach(t=>{(t.words||[]).forEach(w=>ws.push(w));walk(t.kids)});walk(ts.tree)});
+    reindex();ws.forEach(tw=>{if(!tw.img||tw.img==='-')return;const i=IDX.get(tw.id);const w=i&&i.w;if(w&&w.img!==tw.img&&(!w.img||w.img===w.imgT||(!w.imgT&&/^vk:/.test(w.img)))){w.img=tw.img;w.imgT=tw.img;n++}});if(n)knFresh=true}
+  C.tplSeen=[...seen];return added;""")
+
+
+# 19) Arbeitsblatt- und Test-Generator für Lehrpersonen (Code vk_blatt.js): Knopf «🖨 Arbeitsblatt / Test» über den Übungen
+#     (nur im Lehrpersonen-Modus), eigene Ansicht nav.view = 'ws', Drucken mit body.wsdruck.
+rep("/* ---------- Karteikasten (pro Sprache) ---------- */", datei('vk_blatt.js') + "\n/* ---------- Karteikasten (pro Sprache) ---------- */")
+
+rep("function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;", "function bindPractice(r){const gr=$('#gapReview',r);if(gr)gr.onclick=reviewGaps;const wb=$('#wsBtn',r);if(wb)wb.onclick=goWs;")
+rep("function rerender(){if(nav.view==='heft')", "function rerender(){if(nav.view==='ws')return goWs();if(nav.view==='heft')")
+
+
+# 20) Werkzeuge der Lehrperson gut sichtbar oben bei «So wurde geübt»: «🖨 Arbeitsblatt / Test» und «✏️ Lückensätze prüfen»
+#     (statt klein über den Übungen). In «… · Gesamt» stehen sie neben dem Titel.
+rep("${T&&!noSent()&&n?'<button class=\"pill rose sm\" id=\"gapReview\">Lückensätze prüfen</button>':''}", "")
+rep("<div class=\"hact\">${KN_ADMIN?", "<div class=\"hact\">${T&&isPortion?wsTools():''}${KN_ADMIN?")
+rep('<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1></div>', '<div class="phead"><h1 class="big">${esc(node.name)} · Gesamt</h1>${T&&ws.length?`<div class="hact">${wsTools()}</div>`:\'\'}</div>')
+
+
+# 21) «Portion löschen» steht unter «Umbenennen» (beide in einer schmalen Spalte am Ende der Knopfreihe)
+rep("""<button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button>""",
+    """<span class="hcol"><button class="pill" id="ren">Umbenennen</button><button class="pill danger" id="delNode">${isPortion?'Portion':'Ordner'} löschen</button></span>""")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))

@@ -39,17 +39,19 @@ function emoFind(q){q=String(q||'').toLowerCase().trim();const out=[];if(!q)retu
   for(const [k,e] of EMO){const kk=k.replace(/^(de|fl):/,'');if((kk.startsWith(q)||kk.split(' ').some(x=>x.startsWith(q)))&&!out.includes(e))out.push(e);if(out.length>=40)break}return out}
 const EMO_GRUND=['🍎','🐕','🐈','🏫','📕','✏️','🎒','👩','👨','👧','👦','👪','😊','😢','😠','😴','☀️','🌧️','❄️','🍂','🌷','🏠','🚲','⚽','🎵','🎨','🍕','🧀','🍞','🥛','👕','👖','👟','🧢','🎁','⭐','❤️','✅','❌','🗣️'];
 
-/* Eigenes Bild: ganz ins Quadrat einpassen (nichts abschneiden, durchsichtiger Hintergrund bleibt), 240 px, als webp.
+/* Eigenes Bild: ganz ins Quadrat einpassen (nichts abschneiden, durchsichtiger Hintergrund bleibt), 800 px (scharf auch gross und auf dem iPad), als webp.
    Kann das Gerät kein webp, dann png (oder jpeg mit weissem Grund, wenn es zu gross wird). */
-function picFromFile(file,S=240){return new Promise((res,rej)=>{
+function picFromFile(file,S=800){return new Promise((res,rej)=>{
   if(!file||!/^image\//.test(file.type)){rej(new Error('Das ist kein Bild.'));return}
   const url=URL.createObjectURL(file),img=new Image();
   img.onload=()=>{try{const c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');
       const w0=img.naturalWidth,h0=img.naturalHeight,f=Math.min((S-8)/w0,(S-8)/h0),w=Math.round(w0*f),h=Math.round(h0*f);
-      g.imageSmoothingQuality='high';g.drawImage(img,0,0,w0,h0,Math.round((S-w)/2),Math.round((S-h)/2),w,h);URL.revokeObjectURL(url);
-      let d=c.toDataURL('image/webp',.8);
-      if(!/^data:image\/webp/.test(d)){d=c.toDataURL('image/png');
-        if(d.length>200000){const c2=document.createElement('canvas');c2.width=S;c2.height=S;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,S,S);g2.drawImage(c,0,0);d=c2.toDataURL('image/jpeg',.85)}}
+      g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(img,0,0,w0,h0,Math.round((S-w)/2),Math.round((S-h)/2),w,h);URL.revokeObjectURL(url);
+      /* webp (durchsichtig); kann das Gerät kein webp: png, wenn zu gross jpeg mit weissem Grund. Höchstens 290'000 Zeichen. */
+      const webp=/^data:image\/webp/.test(c.toDataURL('image/webp',.5));
+      const jpg=q=>{const c2=document.createElement('canvas');c2.width=S;c2.height=S;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,S,S);g2.drawImage(c,0,0);return c2.toDataURL('image/jpeg',q)};
+      let d=webp?c.toDataURL('image/webp',.84):c.toDataURL('image/png');
+      for(const q of [.84,.75,.65,.55,.45]){if(d.length<=290000)break;d=webp?c.toDataURL('image/webp',q):jpg(q)}
       res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Das Bild lässt sich nicht öffnen.'))};img.src=url})}
 
