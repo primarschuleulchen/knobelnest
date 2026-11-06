@@ -161,7 +161,7 @@ function bindClassRewards(){
   $$('[data-sdel]').forEach(b=>b.onclick=async()=>{const nl=STK.filter(s=>s.id!==b.dataset.sdel);try{await knAsk('vkSticker',{data:{list:nl}});STK=nl;goClass()}catch(e){toast(e.message)}});
   const up=$('#stkUp');if(up)up.onchange=async()=>{const fs=[...up.files];up.value='';const files=await vkReadFiles(fs);if(!files)return;let nl=STK.slice(),n=0;
     files.sort((a,b)=>a.name.localeCompare(b.name,'de',{numeric:true}));
-    for(const x of files){try{const v=await vkStore(await picFromFile(x.blob,480));nl.push({id:v.slice(3),name:x.name.replace(/\.[^.]+$/,'')});n++;toast('Sticker '+n+' von '+files.length+' …')}catch(e){}}
+    for(const x of files){try{const v=await vkStore(await picFromFile(x.blob,560));nl.push({id:v.slice(3),name:x.name.replace(/\.[^.]+$/,'')});n++;toast('Sticker '+n+' von '+files.length+' …')}catch(e){}}
     try{await knAsk('vkSticker',{data:{list:nl}});STK=nl;toast(n+' Sticker gespeichert');goClass()}catch(e){toast(e.message)}}}
 const vkStkN=p=>Object.values((p&&p.stk)||{}).reduce((a,e)=>a+(e.n||0),0);
 
@@ -191,7 +191,7 @@ function bindBulk(node,redraw){const inp=$('#bulkPic');if(!inp)return;inp.onchan
     if(!w){miss.push(x.name);continue}
     try{w.img=await vkStore(await picFromFile(x.blob));ok++;toast('Bild '+ok+' gespeichert …')}catch(e){miss.push(x.name+' (Fehler: '+e.message+')')}}
   if(ok){touch();redraw()}
-  const L=$('#layer');L.innerHTML=`<div class="scrim"></div><div class="dlg"><h2 class="lbl">${ok} ${ok===1?'Bild':'Bilder'} eingefügt</h2>
+  const L=$('#layer');L.innerHTML=`<div class="scrim"></div><div class="dlg"><h2 class="lbl">${ok} ${ok===1?'Bild':'Bilder'} eingefügt</h2><p class="note" style="margin:0">Gespeichert in hoher Qualität (800 px).</p>
     ${miss.length?`<p>Diese passen zu keinem Wort dieser Portion. Der Dateiname muss gleich heissen wie das Wort:</p><ul class="miss">${miss.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'<p>Alle Bilder haben ein Wort gefunden.</p>'}
     ${ok?'<p class="note">Vergiss nicht: unten «Für die Klasse veröffentlichen».</p>':''}<div class="dact"><button class="pill go" id="bok">OK</button></div></div>`;
   $('#bok',L).onclick=()=>{L.innerHTML=''};$('.scrim',L).onclick=()=>{L.innerHTML=''}}}
