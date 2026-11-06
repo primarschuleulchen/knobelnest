@@ -204,9 +204,10 @@ li:hover>.mv,.w.sel .t-list .mv{opacity:1}
 .pl-item:hover .pl-ops{opacity:1}
 .pl-ops button{border:0;background:none;font-size:.5em;padding:3px;color:var(--muted)}
 .t-plan.h{flex-direction:row;flex-wrap:wrap;justify-content:center}
-.bwrap{background:#eef2f6}
+.bwrap{background:#e9edf1}
 .app:not(.voll) #board{box-shadow:0 6px 30px rgba(63,120,168,.22)}
 .app.voll .bwrap{background:#000}
+#bg{inset:auto;left:0;top:0;transform-origin:0 0}
 .bwrap{position:absolute;inset:0;margin:0;overflow:hidden}
 .w.oben .chrome{top:auto;bottom:-34px}
 .top{pointer-events:none}
@@ -502,7 +503,6 @@ iframe.yt{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:0;poin
 </style>
 
 <div class="app" id="app" lang="de">
-  <div class="bg" id="bg"></div>
   <div class="top">
     <button class="pill kn-back" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste" style="display:none"><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>
     <div class="tabs" id="tabs" aria-label="Meine Bildschirme"></div>
@@ -517,7 +517,7 @@ iframe.yt{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:0;poin
     <button class="pill" id="fsBtn">⛶ Vollbild</button>
   </div>
   <div id="otterLayer" aria-label="Otterteich"></div>
-  <div class="bwrap" id="bwrap"><div class="board" id="board"></div></div>
+  <div class="bwrap" id="bwrap"><div class="bg" id="bg"></div><div class="board" id="board"></div></div>
   <nav class="dock" id="dock" aria-label="Widget hinzufügen"></nav>
   <div class="toast" id="toast" role="status"></div>
   <input type="file" id="filePick" accept="image/*" hidden>
@@ -687,11 +687,11 @@ for (const k in BG_TPL) { const t = BG_TPL[k], inner = t.draw(1600, 900);
 function drawBg(){
   const bg = $("#bg"), src = S && screen().bg;
   bg.style.background = "";
-  if (src && src.startsWith("tpl:") && BG_TPL[src.slice(4)]) { const t = BG_TPL[src.slice(4)], W = window.innerWidth, H = window.innerHeight;
+  if (src && src.startsWith("tpl:") && BG_TPL[src.slice(4)]) { const t = BG_TPL[src.slice(4)], W = Math.max(window.screen.width || 0, 1), H = Math.max(window.screen.height || 0, 1);
     bg.className = "bg tpl"; bg.style.background = t.base; bg.innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${t.draw(W, H)}</svg>`; return; }
   if (src) { bg.className = "bg custom"; bg.style.backgroundImage = `url("${src.replace(/"/g, "%22")}")`; bg.innerHTML = ""; return; }
   bg.className = "bg"; bg.style.backgroundImage = "";
-  const W = window.innerWidth, H = window.innerHeight;
+  const W = Math.max(window.screen.width || 0, 1), H = Math.max(window.screen.height || 0, 1);
   bg.innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">
     ${branch(W + 40, 150, 160, 330, 9, 7, .9)}${branch(W + 20, 40, 200, 260, 7, 19, .8)}${branch(W + 10, 320, 150, 200, 6, 31, .7)}
     ${branch(-40, H + 30, -40, 340, 9, 11, .9)}${branch(-30, H - 80, -10, 240, 7, 23, .8)}
@@ -1341,6 +1341,7 @@ function fitBoard(){
   b.style.width = sw + "px"; b.style.height = sh + "px"; b.style.setProperty("--vh", (sh / 100) + "px");
   b.style.left = Math.round((aw - sw * k) / 2) + "px"; b.style.top = Math.round(oben + (bh - sh * k) / 2) + "px";
   b.style.transform = Math.abs(k - 1) < 0.001 ? "none" : `scale(${k.toFixed(5)})`;
+  const g = document.getElementById("bg"); if (g) { g.style.width = b.style.width; g.style.height = b.style.height; g.style.left = b.style.left; g.style.top = b.style.top; g.style.transform = b.style.transform; }
 }
 try { new ResizeObserver(() => fitBoard()).observe(document.getElementById("bwrap")); } catch {}
 window.addEventListener("resize", fitBoard);
