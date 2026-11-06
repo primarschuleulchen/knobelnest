@@ -416,7 +416,7 @@
     var mine = me ? entry[me] : null;
     var subjName = {}; s.subjects.forEach(function (x) { subjName[x.id] = x.name; });
     var kid = mode === 'kid', emb = mode === 'embed';
-    var out = emb ? '<div class="board-head"><div class="stack" style="gap:0"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + '</span><h1>Wer kann wem helfen?</h1></div></div>' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
+    var out = emb ? '' : '<div class="board-head">' + (kid ? backBtn('data-a="kBack"', 'Zurück') : backBtn('href="#/"')) + '<img class="board-bild" src="' + h(klassBild(kid ? (K.kl && K.kl.bild) : W.bild)) + '" alt=""><div class="stack" style="gap:6px;flex:1 1 300px"><span class="kick">Arbeitsstand · Klasse ' + h(s.class_name || '') + ' <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></span>' +
       '<h1>' + (kid ? 'Wo stehst du gerade?' : 'Wer kann wem helfen?') + '</h1>' +
       '<p>' + (kid ? 'Tippe beim Fach auf das Feld, das zu dir passt. Dein Name steht immer nur an einem Ort.' : 'Hast du eine Frage? Schau, wer im gleichen Fach helfen kann.') + '</p></div>' +
       (kid ? '' : '<div class="row"><button class="board-btn" data-a="wallFull">Vollbild</button></div>') + '</div>';
