@@ -118,8 +118,16 @@ rep('.kidmode .e{cursor:default}\n</style>', """.kidmode .e{cursor:default}
 #embTools{display:none}
 .embed #embTools{display:flex;position:absolute;right:14px;bottom:14px;z-index:70;width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:#1f2421;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1.5px #d6ad45,0 4px 14px rgba(63,120,168,.25)}
 .embed.tools-on #embTools{background:#fbf3dc}
-.embed.tools-on .top{display:flex;position:absolute;right:14px;bottom:66px;left:auto;z-index:60;max-width:calc(100% - 28px);background:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 10px 28px rgba(63,120,168,.28)}
-.embed.tools-on .top .sp{display:none}
+.embed.tools-on .top{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;position:absolute;right:66px;bottom:14px;left:auto;z-index:60;max-width:calc(100% - 92px);overflow-x:auto;scrollbar-width:none;background:rgba(255,255,255,.97);border-radius:999px;padding:5px 8px;box-shadow:0 0 0 1.5px #d6ad45,0 8px 22px rgba(63,120,168,.25);animation:embIn .2s ease-out}
+.embed.tools-on .top::-webkit-scrollbar{display:none}
+.embed.tools-on .top>*{flex:none}
+.embed.tools-on .top .sp,.embed.tools-on .top .status{display:none}
+.embed.tools-on .top .pill{min-height:34px;padding:4px 12px;font-size:15px;white-space:nowrap}
+.embed.tools-on .top .pill.ic{width:34px;padding:0;justify-content:center}
+.embed.tools-on .top select.pill{padding-right:30px}
+.embed.tools-on .top .wk{white-space:nowrap;font-size:17px;padding:0 4px}
+.embed.tools-on .top .wk small,.embed.tools-on .top .wk span{font-size:12px}
+@keyframes embIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
 </style>""")
 rep('if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;', """if (KN && KN.embed) {
   const app = document.getElementById("app"); app.classList.add("embed");
