@@ -388,11 +388,12 @@ rep("""    <div class="kt kt-badges">${bd('🏅','Wochenheld',wk>0,wk?(wk>1?wk+'
     """    ${vkHeftCard()}</div>`}""")
 
 
-# 18) Vorlagen: Bilder nachliefern. Hat die Admin-Lehrperson in einer Vorlage-Portion später Bilder ergänzt, bekommen
-#     Lehrpersonen, die die Portion schon früher kopiert haben, die Bilder beim nächsten Öffnen auch (nur bei Wörtern
-#     ohne eigenes Bild, erkannt an derselben Wort-ID). Danach wird für die Klasse gespeichert (knFresh).
+# 18) Vorlagen: Bilder nachliefern. Hat die Admin-Lehrperson in einer Vorlage-Portion Bilder ergänzt oder ersetzt, bekommen
+#     Lehrpersonen, die die Portion schon früher kopiert haben, die Bilder beim nächsten Öffnen auch (gleiche Wort-ID).
+#     Ersetzt wird nur, was noch aus der Vorlage stammt (w.imgT = zuletzt übernommenes Vorlagen-Bild; alte Kopien ohne
+#     w.imgT mit Bild aus der Datenbank gelten ebenfalls als Vorlage). Eigene Bilder und Emojis der Lehrperson bleiben.
 rep("  C.tplSeen=[...seen];return added;", """  {let n=0;const ws=[];TPL.subjects.forEach(ts=>{const walk=a=>(a||[]).forEach(t=>{(t.words||[]).forEach(w=>ws.push(w));walk(t.kids)});walk(ts.tree)});
-    reindex();ws.forEach(tw=>{if(!tw.img||tw.img==='-')return;const i=IDX.get(tw.id);if(i&&i.w&&!i.w.img){i.w.img=tw.img;n++}});if(n)knFresh=true}
+    reindex();ws.forEach(tw=>{if(!tw.img||tw.img==='-')return;const i=IDX.get(tw.id);const w=i&&i.w;if(w&&w.img!==tw.img&&(!w.img||w.img===w.imgT||(!w.imgT&&/^vk:/.test(w.img)))){w.img=tw.img;w.imgT=tw.img;n++}});if(n)knFresh=true}
   C.tplSeen=[...seen];return added;""")
 
 
