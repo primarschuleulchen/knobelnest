@@ -1391,7 +1391,8 @@ $("#board").addEventListener("pointerdown", e => {
   if (selId !== w.id) { document.querySelectorAll(".w.sel").forEach(n => n.classList.remove("sel")); el.classList.add("sel"); selId = w.id; }
   if ((w.z || 1) < topZ()) { w.z = topZ() + 1; el.style.zIndex = w.z; }
   const grip = e.target.closest("[data-grip]"), rs = e.target.closest("[data-rs]");
-  const onBody = DRAG_BODY.has(w.type) && !e.target.closest("button,input,textarea,[contenteditable]");
+  const tCe = w.type === "title" ? e.target.closest("[contenteditable]") : null, tEdit = tCe && document.activeElement !== tCe ? tCe : null;
+  const onBody = DRAG_BODY.has(w.type) && (tEdit || !e.target.closest("button,input,textarea,[contenteditable]"));
   if (!grip && !rs && !onBody) return;
   e.preventDefault();
   const r = $("#board").getBoundingClientRect();
@@ -1400,7 +1401,7 @@ $("#board").addEventListener("pointerdown", e => {
   const bH = $("#board").offsetHeight || r.height;
   const hh = AUTO.has(w.type) ? el.offsetHeight / bH * 100 : w.h;
   const vh = AUTO.has(w.type) ? Math.max(4, (el.offsetHeight - edPx) / bH * 100) : w.h;
-  drag = { w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, vh, bw: r.width, bh: r.height, moved: false };
+  drag = { ted: tEdit ? w.id : "", w, el, mode: rs ? "rs" : "mv", axis: rs ? rs.dataset.rs : "", sx: e.clientX, sy: e.clientY, x: w.x, y: w.y, ww: w.w, hh, vh, bw: r.width, bh: r.height, moved: false };
   el.classList.add("drag");
 });
 window.addEventListener("pointermove", e => {
@@ -1417,7 +1418,10 @@ window.addEventListener("pointermove", e => {
     }
   }
 });
-window.addEventListener("pointerup", () => { APP.classList.remove("dragging"); if (!drag) return; drag.el.classList.remove("drag"); if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); } drag = null; });
+window.addEventListener("pointerup", () => { APP.classList.remove("dragging"); if (!drag) return; drag.el.classList.remove("drag"); if (drag.moved) { save(); justDragged = true; setTimeout(() => justDragged = false, 0); }
+  else if (drag.ted) { const id = drag.ted, x = drag.sx, y = drag.sy; setTimeout(() => { const ce = document.querySelector(`[data-w="${id}"] [contenteditable]`); if (!ce) return; ce.focus();
+    try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(x, y) : null; if (r && ce.contains(r.startContainer)) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } } catch {} }, 30); }
+  drag = null; });
 
 // ---------- Punkte im Ablauf / in der Checkliste verschieben ----------
 let idrag = null;
