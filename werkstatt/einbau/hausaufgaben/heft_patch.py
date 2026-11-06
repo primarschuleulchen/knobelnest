@@ -110,5 +110,24 @@ rep('S.entries = S.entries.filter(x => x.id !== d.id); save(); render(); closePa
 # 9) Kein Nachladen im Hintergrund, solange ein Bearbeitungsfenster offen ist (sonst gehen Haken in der Kontrolle verloren)
 rep('if (!s.exists || dirty || flushing) return;', 'if (!s.exists || dirty || flushing || (layer && layer.innerHTML)) return;')
 
+# 10) Als Baustein in der Tagesfolie (KN.embed): keine Leiste oben, nur das Heft; die Knöpfe der Lehrperson
+#     öffnen sich über einen kleinen runden Knopf unten rechts
+rep('.kidmode .e{cursor:default}\n</style>', """.kidmode .e{cursor:default}
+.embed .top{display:none}
+.embed .stage{padding-block:10px}
+#embTools{display:none}
+.embed #embTools{display:flex;position:absolute;right:14px;bottom:14px;z-index:70;width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:#1f2421;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 1.5px #d6ad45,0 4px 14px rgba(63,120,168,.25)}
+.embed.tools-on #embTools{background:#fbf3dc}
+.embed.tools-on .top{display:flex;position:absolute;right:14px;bottom:66px;left:auto;z-index:60;max-width:calc(100% - 28px);background:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 10px 28px rgba(63,120,168,.28)}
+.embed.tools-on .top .sp{display:none}
+</style>""")
+rep('if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;', """if (KN && KN.embed) {
+  const app = document.getElementById("app"); app.classList.add("embed");
+  const t = document.createElement("button"); t.id = "embTools"; t.type = "button"; t.title = "Werkzeuge"; t.setAttribute("aria-label", "Werkzeuge für die Lehrperson"); t.textContent = "⚙";
+  t.onclick = e => { e.stopPropagation(); app.classList.toggle("tools-on"); }; app.appendChild(t);
+  document.addEventListener("click", e => { if (app.classList.contains("tools-on") && !e.target.closest("#top, #embTools, .dd, .menu")) app.classList.remove("tools-on"); });
+}
+if (KN) { const b = $("#knBack"); b.hidden = !!KN.embed;""")
+
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
