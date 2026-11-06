@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 31)
+-- Knobelnest – Datenbank-Einrichtung (Version 32)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -2326,5 +2326,60 @@ $$;
 
 revoke execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) from public, anon;
 grant execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) to authenticated;
+
+-- =====================================================================
+-- Version 32: Vokabelkiste-Units mit Guthaben
+--   Eine «Unit» = alle Portionen in einem Ordner der Vorlage (shared_store «vokabelkiste-vorlage»),
+--   Pfad wie in der Verwaltung: «Fach › Ordner › Unterordner». Preis 3 Guthaben (anders: shared_store
+--   «vokabelkiste-preise» = { Pfad: Preis }). buy_vk_unit() bucht ab und trägt die Portionen in
+--   shared_store «vokabelkiste-zuweisung» bei der Lehrperson ein (wie das Zuteilen in der Verwaltung).
+-- =====================================================================
+create or replace function public._vk_unit_ids(p_path text) returns text[]
+language sql stable security definer set search_path = public as $$
+  with recursive n(node, path) as (
+    select t, s->>'name'
+      from public.shared_store ss,
+           jsonb_array_elements(case when jsonb_typeof(ss.data->'subjects') = 'array' then ss.data->'subjects' else '[]'::jsonb end) s,
+           jsonb_array_elements(case when jsonb_typeof(s->'tree') = 'array' then s->'tree' else '[]'::jsonb end) t
+     where ss.doc = 'vokabelkiste-vorlage'
+    union all
+    select k, n.path || ' › ' || (n.node->>'name')
+      from n, jsonb_array_elements(case when jsonb_typeof(n.node->'kids') = 'array' then n.node->'kids' else '[]'::jsonb end) k
+     where jsonb_typeof(n.node->'words') is distinct from 'array'
+  )
+  select array_agg(node->>'id') from n where jsonb_typeof(node->'words') = 'array' and path = p_path and node->>'id' is not null;
+$$;
+revoke execute on function public._vk_unit_ids(text) from public, anon, authenticated;
+
+create or replace function public.buy_vk_unit(p_path text) returns json
+language plpgsql volatile security definer set search_path = public as $$
+declare uid uuid := auth.uid(); ids text[]; mine jsonb; pr int; c int; neu jsonb;
+begin
+  if uid is null then raise exception 'Bitte anmelden' using errcode = '42501'; end if;
+  if not public._me_licensed() then raise exception 'Ihre Lizenz ist abgelaufen.' using errcode = 'P0001'; end if;
+  if (select data #>> array[uid::text, 'vk'] from public.shared_store where doc = 'werkzeuge') is distinct from 'true'
+     and not public.is_admin() then
+    raise exception 'Die Vokabelkiste ist für Sie noch nicht freigeschaltet.' using errcode = 'P0001';
+  end if;
+  ids := public._vk_unit_ids(p_path);
+  if ids is null or array_length(ids, 1) is null then raise exception 'Unit nicht gefunden' using errcode = 'P0001'; end if;
+  select coalesce(data->uid::text, '[]'::jsonb) into mine from public.shared_store where doc = 'vokabelkiste-zuweisung';
+  mine := coalesce(mine, '[]'::jsonb);
+  if not exists (select 1 from unnest(ids) i where not mine ? i) then
+    return json_build_object('ok', true, 'schon', true, 'credits', (select credits from public.profiles where id = uid));
+  end if;
+  pr := coalesce((select (data->>p_path)::int from public.shared_store where doc = 'vokabelkiste-preise'), 3);
+  update public.profiles set credits = credits - pr where id = uid and credits >= pr returning credits into c;
+  if not found then raise exception 'Zu wenig Guthaben' using errcode = 'P0001'; end if;
+  select coalesce(jsonb_agg(distinct x), '[]'::jsonb) into neu
+    from (select jsonb_array_elements_text(mine) x union select unnest(ids)) q;
+  insert into public.shared_store (doc, data) values ('vokabelkiste-zuweisung', jsonb_build_object(uid::text, neu))
+    on conflict (doc) do update set data = coalesce(public.shared_store.data, '{}'::jsonb) || jsonb_build_object(uid::text, neu);
+  insert into public.credit_log (teacher_id, delta, note) values (uid, -pr, left('Vokabelkiste: ' || p_path, 200));
+  return json_build_object('ok', true, 'credits', c);
+end;
+$$;
+revoke execute on function public.buy_vk_unit(text) from public, anon;
+grant execute on function public.buy_vk_unit(text) to authenticated;
 
 -- Fertig.

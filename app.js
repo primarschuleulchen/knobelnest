@@ -2617,7 +2617,7 @@
       DB.gameShop().then(function (l) { T.shop = l || []; if (T.tab === 'spiele') T.render(); }).catch(function () { T.shop = []; });
       return '';
     }
-    var l = T.shop || []; if (!l.length) return '';
+    var l = T.shop || [], units = vkShopUnits(); if (!l.length && !units.length) return '';
     var cr = T.me.credits || 0, groups = [], by = {};
     l.forEach(function (g) { var k = g.fach + ' › ' + thTeile(themen(g)[0]).name; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
     return '<section class="stack shop" id="shop"><div class="shop-kopf"><div><h2>Noch mehr Spiele <span class="sterne" aria-hidden="true">✦ ✧ ✦</span></h2>' +
@@ -2632,8 +2632,50 @@
             '<div class="game-foot">' + (zuWenig ? '<span class="muted small">Zu wenig Guthaben</span>' + shopBtn('✦ Guthaben holen', 'btn sm') :
               '<button class="btn ' + (armed ? 'amber' : 'primary') + '" data-a="buyGame" data-id="' + g.id + '">' + (armed ? 'Wirklich? ' + pr + ' Guthaben einlösen' : '🔓 Freischalten für ' + pr) + '</button>') + '</div></article>';
         }).join('') + '</div>';
-      }).join('') + '</section>';
+      }).join('') + vkUnitsHTML(units, cr) + '</section>';
   }
+  // Vokabelkiste-Units (Version 32): Ordner der Vorlage, die die Lehrperson noch nicht (ganz) hat, je 3 Guthaben
+  function vkShopUnits() {
+    if (!T.tools || !T.tools.vk) return [];
+    if (T.vkShop === undefined) {
+      T.vkShop = null;
+      Promise.all([DB.sharedGet('vokabelkiste-vorlage'), DB.sharedGet('vokabelkiste-zuweisung').catch(function () { return null; }), DB.sharedGet('vokabelkiste-preise').catch(function () { return null; })])
+        .then(function (r) {
+          var tp = r[0], mine = ((r[1] || {})[T.me.id]) || [], preise = r[2] || {}, by = {}, list = [];
+          ((tp && tp.subjects) || []).forEach(function (sb) {
+            var walk = function (arr, path) { (arr || []).forEach(function (n) { if (n.words) { var k = path.join(' › '); if (!by[k]) { by[k] = { path: k, ids: [], n: 0, namen: [] }; list.push(by[k]); } by[k].ids.push(n.id); by[k].n += n.words.length; by[k].namen.push(n.name); } else walk(n.kids, path.concat(n.name)); }); };
+            walk(sb.tree, [sb.name]);
+          });
+          T.vkShop = list.filter(function (u) { return u.ids.some(function (id) { return mine.indexOf(id) < 0; }); })
+            .map(function (u) { u.preis = preise[u.path] != null ? +preise[u.path] : 3; return u; });
+          if (T.tab === 'spiele') T.render();
+        }).catch(function () { T.vkShop = []; });
+    }
+    return T.vkShop || [];
+  }
+  function vkUnitsHTML(units, cr) {
+    if (!units.length) return '';
+    return '<h3 class="shop-th">📦 Vokabelkiste · Wortlisten</h3><div class="games' + (T.spalten ? ' sp-' + T.spalten : '') + '">' + units.map(function (u) {
+      var key = 'vku:' + u.path, armed = UI.confirm === key, teile = u.path.split(' › ');
+      return '<article class="game kk-karte kkt shop-zu"><div class="kkt-kopf"><span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/vokabelkiste.webp" alt="" width="96" height="96"></span><div class="kkt-pills"><span class="pill shop-preis">' + u.preis + ' Guthaben</span></div></div>' +
+        '<span class="kk-fach">' + h(teile.slice(0, -1).join(' › ') || 'Vokabelkiste') + '</span><b>🔒 ' + h(teile[teile.length - 1]) + '</b>' +
+        '<p>' + plural(u.namen.length, 'Portion', 'Portionen') + ' · ' + plural(u.n, 'Wort', 'Wörter') + '</p>' +
+        '<div class="game-foot">' + (cr < u.preis ? '<span class="muted small">Zu wenig Guthaben</span>' + shopBtn('✦ Guthaben holen', 'btn sm') :
+          '<button class="btn ' + (armed ? 'amber' : 'primary') + '" data-a="buyVk" data-p="' + h(u.path) + '">' + (armed ? 'Wirklich? ' + u.preis + ' Guthaben einlösen' : '🔓 Freischalten für ' + u.preis) + '</button>') + '</div></article>';
+    }).join('') + '</div>';
+  }
+  ACT.buyVk = async function (el) {
+    var path = el.dataset.p, key = 'vku:' + path;
+    if (UI.confirm !== key) { UI.confirm = key; T.render(); setTimeout(function () { if (UI.confirm === key) { UI.confirm = null; T.render(); } }, 5000); return; }
+    UI.confirm = null; el.disabled = true;
+    try {
+      var r = await DB.buyVkUnit(path);
+      if (r && typeof r.credits === 'number') T.me.credits = r.credits;
+      T.vkShop = undefined;
+      toast('«' + path.split(' › ').pop() + '» ist freigeschaltet. Die Wörter erscheinen, sobald Sie die Vokabelkiste das nächste Mal öffnen.');
+    } catch (e) { toast(/Guthaben/.test(errMsg(e)) ? 'Zu wenig Guthaben. Holen Sie sich neues Guthaben im Shop.' : errMsg(e)); }
+    T.render();
+  };
   ACT.buyGame = async function (el) {
     var id = el.dataset.id, key = 'buy:' + id;
     if (UI.confirm !== key) { UI.confirm = key; T.render(); setTimeout(function () { if (UI.confirm === key) { UI.confirm = null; T.render(); } }, 5000); return; }
@@ -3643,18 +3685,24 @@
       '<datalist id="labelList">' + (function () { var o = []; Object.keys(T.labels || {}).forEach(function (k) { (T.labels[k] || []).forEach(function (x) { if (o.indexOf(x) < 0) o.push(x); }); }); return o; })().map(function (x) { return '<option value="' + h(x) + '">'; }).join('') + '</datalist>' : '<div class="empty">Noch keine Spiele hochgeladen.</div>';
     var teachers = A.teachers === null ? '<p class="muted">Wird geladen …</p>' : '<ul class="list">' + A.teachers.map(function (t) {
       var mine = A.tg.filter(function (x) { return x.teacher_id === t.id; }).map(function (x) { return x.game_id; });
-      var open = A.open === t.id;
-      return '<li style="flex-direction:column;align-items:stretch"><div class="row"><span class="avatar">' + h(initials(t.name || t.email)) + '</span><span class="grow"><b>' + h(t.name || '(noch kein Name)') + '</b>' +
-        (t.is_admin ? ' <span class="pill" style="background:#A8E6CF">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' +
-        '<span class="muted small">' + (t.is_admin ? 'sieht alle Spiele' : plural(mine.length, 'Spiel', 'Spiele') + ' zugeteilt') + '</span>' +
-        (t.is_admin ? '' : '<button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Schliessen' : 'Spiele zuteilen') + '</button>') + '</div>' +
-        (t.is_admin ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span><span class="muted small">Immer dabei: ' + BASE_TOOLS.map(function (x) { return x[1].replace(/^\S+\s/, ''); }).join(', ') + ' ·</span>' + TOOLS.map(function (x) {
+      var open = A.open === t.id, det = !t.is_admin && A.detail === t.id;
+      var nTools = TOOLS.filter(function (x) { return ((A.tools || {})[t.id] || {})[x[0]]; }).length, lic = licLeft(t);
+      var kurz = t.is_admin ? '<span class="muted small">sieht alles</span>' : '<span class="lp-kurz">' +
+        '<span class="pill">🧰 ' + nTools + ' von ' + TOOLS.length + ' Werkzeugen</span>' +
+        '<span class="pill">🎮 ' + plural(mine.length, 'Spiel', 'Spiele') + '</span>' +
+        (DB.noLicense ? '' : '<span class="pill"' + (lic !== null && lic < 0 ? ' style="background:#F6C9BC;color:#7A2E12"' : lic !== null && lic <= 30 ? ' style="background:#FCE8B2"' : '') + '>📅 ' + (t.valid_until ? 'bis ' + dateCH(t.valid_until) : 'unbefristet') + '</span>') +
+        (DB.noCredits ? '' : '<span class="pill" style="background:var(--sun-soft);color:#7a5a12">✦ ' + (t.credits || 0) + ' Guthaben</span>') + '</span>';
+      return '<li class="lp-item' + (det ? ' auf' : '') + '" style="flex-direction:column;align-items:stretch"><div class="row"><span class="avatar">' + h(initials(t.name || t.email)) + '</span><span class="grow"><b>' + h(t.name || '(noch kein Name)') + '</b>' +
+        (t.is_admin ? ' <span class="pill" style="background:#A8E6CF">Admin</span>' : '') + '<br><span class="muted small">' + h(t.email) + '</span></span>' + kurz +
+        (t.is_admin ? '' : '<button class="btn sm" data-a="tDetail" data-id="' + t.id + '" aria-expanded="' + det + '">' + (det ? 'Zuklappen ▴' : 'Bearbeiten ▾') + '</button>') + '</div>' +
+        (!det ? '' : '<div class="row" style="padding:8px 0 2px 52px"><button class="btn sm" data-a="tOpen" data-id="' + t.id + '" aria-expanded="' + open + '">' + (open ? 'Spiele schliessen' : '🎮 Spiele zuteilen') + '</button></div>') +
+        (!det ? '' : '<div class="row tools-row" style="gap:8px;padding:8px 0 2px 52px"><span class="muted small" style="font-weight:700">Werkzeuge:</span><span class="muted small">Immer dabei: ' + BASE_TOOLS.map(function (x) { return x[1].replace(/^\S+\s/, ''); }).join(', ') + ' ·</span>' + TOOLS.map(function (x) {
           var on = !!((A.tools || {})[t.id] || {})[x[0]];
           return '<button class="chip" style="min-height:38px" aria-pressed="' + on + '" data-a="toolToggle" data-t="' + t.id + '" data-k="' + x[0] + '">' + (on ? '✓ ' : '') + x[1] + '</button>'; }).join('') + '</div>') +
-        (t.is_admin ? '' : licRow(t)) +
-        (t.is_admin ? '' : credRow(t)) +
-        (t.is_admin ? '' : vzRow(t)) +
-        (open ? (function () {
+        (!det ? '' : licRow(t)) +
+        (!det ? '' : credRow(t)) +
+        (!det ? '' : vzRow(t)) +
+        (det && open ? (function () {
           var ids = function (list) { return list.filter(function (g) { return !g.for_all; }).map(function (g) { return g.id; }).join(','); };
           var groups = [], by = {};
           FG.forEach(function (g) { var k = g.fach + ' › ' + g.thema; if (!by[k]) { by[k] = []; groups.push(k); } by[k].push(g); });
@@ -3681,6 +3729,23 @@
       // Spiele eines Fachs als Spielpaket herunterladen (z. B. um sie überarbeiten zu lassen und wieder zu importieren)
       '<div class="stack" style="gap:6px;border-top:1.5px dashed var(--line2,#d9e4ee);padding-top:12px"><b>Spielpaket herunterladen</b><p class="muted small" style="margin:0">Alle Spiele eines Fachs in einer Datei, zum Beispiel zum Überarbeiten. Danach oben mit «ersetzen» wieder importieren.</p><div class="row" style="gap:8px;flex-wrap:wrap">' +
       uniq(T.games.filter(function (g) { return !isVok(g); }).map(function (g) { return g.fach; })).map(function (f) { return '<button class="btn sm" data-a="packExport" data-f="' + h(f) + '">⬇ ' + h(f) + '</button>'; }).join('') + '</div></div></section>';
+    // Verwaltung als Kacheln (A.view): Start = Kacheln, dann je ein Bereich mit «← Verwaltung»
+    var lpN = (A.teachers || []).filter(function (t) { return !t.is_admin; }).length;
+    var KACH = [['neu', '➕', 'Spiel hinzufügen', 'Spiel hochladen oder Spielpaket importieren'],
+      ['spiele', '🎮', 'Spiele bearbeiten', plural(T.games.length, 'Spiel', 'Spiele') + ' · Fach, Thema, Zugang, Preis'],
+      ['lp', '👩‍🏫', 'Lehrpersonen verwalten', (A.teachers ? plural(lpN, 'Lehrperson', 'Lehrpersonen') + ' · ' : '') + 'Werkzeuge, Lizenz, Guthaben, Spiele'],
+      ['bilder', '🖼️', 'Klassenbilder', 'Maskottchen für die Klassen']];
+    var kopfV = function (titel) { return '<div class="vw-kopf">' + backBtn('data-a="vwView" data-v=""', 'Zurück zur Verwaltung') + '<h1 class="h1">' + titel + '</h1></div>'; };
+    if (!A.view) return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar. Was möchten Sie machen?</p></div>' +
+      '<div class="vw-kacheln">' + KACH.map(function (k) {
+        return '<button class="vw-kachel" data-a="vwView" data-v="' + k[0] + '"><span class="vw-ic" aria-hidden="true">' + k[1] + '</span><b>' + k[2] + '</b><small>' + k[3] + '</small></button>'; }).join('') + '</div>';
+    if (A.view === 'neu') return kopfV(F.id ? 'Spiel bearbeiten' : 'Spiel hinzufügen') + '<div class="cols2"><div class="wide">' + form + pack + '</div>' +
+      '<aside class="side"><div class="note"><b>Tipp:</b> Spiele mit «Für alle» sehen alle Lehrpersonen gratis. Spiele mit «Nur zugeteilt» können Sie zuteilen, oder die Lehrpersonen schalten sie mit Guthaben frei.</div></aside></div>';
+    if (A.view === 'bilder') return kopfV('Klassenbilder') + kbCard();
+    if (A.view === 'spiele') return kopfV('Spiele bearbeiten') + '<section class="stack">' + fchips + glist + '</section>';
+    if (A.view === 'lp') return kopfV('Lehrpersonen verwalten') +
+      '<div class="note"><b>Neue Lehrperson hinzufügen:</b> In Supabase links «Authentication» → «Users» → «Add user» → «Create new user». E-Mail und ein Startpasswort eingeben, «Auto Confirm User» anhaken. Danach erscheint die Person hier. Ihre Lizenz gilt automatisch 1 Jahr ab heute.</div>' +
+      '<section class="stack">' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen von Spielen werden nur die hier gewählten Spiele gezeigt:</p>' + fchips : '') + teachers + '</section>';
     return '<div class="stack" style="gap:8px"><h1 class="h1">Verwaltung</h1><p class="muted">Nur für Sie sichtbar: Spiele hochladen und Lehrpersonen Spiele zuteilen.</p></div>' +
       '<div class="cols2"><div class="wide">' + pack + form + kbCard() + '</div>' +
       '<aside class="side"><div class="note"><b>So teilen Sie Spiele zu:</b> Spiele mit «Nur zugeteilt» sehen nur die Lehrpersonen, denen Sie sie unten zuteilen. Spiele mit «Für alle» sehen alle Lehrpersonen.</div>' +
@@ -3688,6 +3753,8 @@
       '<section class="stack"><h2 style="font-size:26px">Alle Spiele</h2>' + fchips + glist + '</section>' +
       '<section class="stack"><h2 style="font-size:26px">Lehrpersonen und ihre Spiele</h2>' + (fchips ? '<p class="muted small" style="margin:0">Beim Zuteilen werden nur die hier gewählten Spiele gezeigt:</p>' + fchips : '') + teachers + '</section>';
   };
+  ACT.vwView = function (el) { T.admin.view = el.dataset.v || null; T.render(); window.scrollTo(0, 0); };
+  ACT.tDetail = function (el) { var A = T.admin; A.detail = A.detail === el.dataset.id ? null : el.dataset.id; T.render(); };
   ACT.gField = function (el) { T.admin.form[el.dataset.k] = el.value; };
   ACT.gAll = function () { T.admin.form.for_all = !T.admin.form.for_all; T.render(); };
   ACT.gFile = function (el) {
@@ -3756,9 +3823,9 @@
   ACT.gEdit = function (el) {
     var g = T.games.filter(function (x) { return x.id === el.dataset.id; })[0];
     T.admin.form = { id: g.id, title: g.title, description: g.description, fach: g.fach, thema: g.thema, stufe: g.stufe, for_all: g.for_all, html: null, filename: '' };
-    T.render(); window.scrollTo(0, 0);
+    T.admin.view = 'neu'; T.render(); window.scrollTo(0, 0);
   };
-  ACT.gCancel = function () { T.admin.form = blankForm(); T.render(); };
+  ACT.gCancel = function () { T.admin.form = blankForm(); T.admin.view = 'spiele'; T.render(); };
   ACT.gDel = async function (el) {
     if (!armed('game:' + el.dataset.id)) return T.render();
     await DB.deleteGame(el.dataset.id); T.games = wdtVorne(await DB.listGames()); T.rel.delete(el.dataset.id); toast('Spiel gelöscht.'); T.render();

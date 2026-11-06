@@ -1497,3 +1497,18 @@ body.lp .game.shop-zu:hover .kkt-kopf img,body.lp .game.shop-zu:hover>b{filter:g
 .g-preis{display:flex;align-items:center;gap:6px;margin-top:6px}
 .g-preis input{width:70px;min-height:34px;padding:2px 8px}
 .cred-n{font-size:20px;color:#7a5a12;min-width:1.5em}
+/* Verwaltung als Kacheln (A.view) und Lehrpersonen zum Aufklappen */
+.vw-kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-top:6px}
+.vw-kachel{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:26px 18px 22px;background:#fff;border:1.5px solid var(--line);border-radius:22px;box-shadow:var(--schatten);transition:transform .15s,box-shadow .15s}
+.vw-kachel:hover,.vw-kachel:focus-visible{transform:translateY(-3px);box-shadow:0 10px 26px rgba(63,120,168,.22)}
+.vw-kachel:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.vw-ic{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;font-size:38px;background:var(--sky-soft);border:3px solid var(--gold)}
+.vw-kachel b{font-family:var(--h);font-weight:400;font-size:23px}
+.vw-kachel small{color:var(--soft);font-size:15px;line-height:1.35}
+.vw-kopf{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.vw-kopf .h1{margin:0}
+.lp-kurz{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:520px}
+.lp-kurz .pill{font-size:13px}
+.lp-item.auf{background:#fbfdff;box-shadow:inset 3px 0 0 var(--gold)}
+.shop .kkt-kopf .tti.bild{width:72px;height:72px;display:block;border-radius:50%;overflow:hidden;filter:grayscale(1);opacity:.6}
+.shop .kkt-kopf .tti.bild img{width:100%;height:100%;display:block}
