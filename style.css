@@ -1392,3 +1392,35 @@ body.kidv .kk-tile{background:#F6E7C8}
 .ft-th:focus{outline:none;border-bottom:1.5px solid #d6ad45;background:#fff;border-radius:6px}
 .ft-ueber{width:9em;font-weight:600;background:#fbf3dc55}
 .kk-subs{color:#3f78a8!important;font-size:17px!important}
+/* Lehrperson, Reiter «Spiele»: Karten im Stil der Knobelkiste, Ordner mit Überthema und Units, Anzahl nebeneinander */
+.games.sp-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.games.sp-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.games.sp-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.games.sp-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.games.sp-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:700px){.games[class*="sp-"]{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+.game.kkt{overflow:visible;padding:18px 18px 16px;gap:6px}
+.kkt-kopf{display:flex;align-items:flex-start;gap:10px;align-self:stretch}
+.kkt .kk-ic.kk-fbild,.kkt .kk-ic.kk-fbuchst{width:76px;height:76px;margin:2px 0 4px 2px}
+.kkt .kk-fbuchst{font-size:38px}
+.kkt-pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;flex:1;min-width:0}
+.kkt-neu{background:#1f2421;color:#fff}
+.kkt .kk-fach{font-size:14px}
+.kkt b{font-size:26px}
+.kkt p{font-size:16px}
+.kkt.frei{border-color:#cfe6c4;background:linear-gradient(180deg,#fff 0%,#fff 70%,#f3faef 100%)}
+.kkt .game-foot{align-self:stretch}
+.games.sp-5 .kkt b,.games.sp-6 .kkt b{font-size:21px}
+.games.sp-5 .kkt p,.games.sp-6 .kkt p{font-size:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.games.sp-5 .kkt .kk-ic,.games.sp-6 .kkt .kk-ic{width:56px!important;height:56px!important}
+.games.sp-5 .kkt .btn,.games.sp-6 .kkt .btn{font-size:13px;padding:0 8px}
+.g-units{justify-content:flex-start;margin:-4px 0 4px}
+.g-units .kk-art{font-size:17px;min-height:38px;padding:2px 16px}
+.g-ordner{font-size:.85em}
+.sw-lab{display:block;font-size:15px;margin-bottom:6px}
+.sp-wahl{display:flex;border:1.5px solid var(--line,#d9e3ee);border-radius:12px;overflow:hidden;background:#fff}
+.sp-btn{font:inherit;font-size:16px;min-height:45px;min-width:38px;padding:0 9px;border:0;border-right:1px solid var(--line,#d9e3ee);background:#fff;color:#1f2421;cursor:pointer}
+.sp-btn:last-child{border-right:0}
+.sp-btn:hover{background:#f4f8fc}
+.sp-btn.on{background:#dcf0fd;box-shadow:inset 0 0 0 2px #d6ad45}
+@media (max-width:700px){.games.sp-5 .kkt .btn,.games.sp-6 .kkt .btn{font-size:inherit;padding:0 16px}.games.sp-5 .kkt b,.games.sp-6 .kkt b{font-size:24px}}
