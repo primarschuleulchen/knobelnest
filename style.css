@@ -1016,6 +1016,10 @@ body.lp .eg-diff .chip[aria-pressed="true"]{background:var(--c);border-color:var
 .ur-w{display:inline-block;line-height:1.05;font-family:var(--h);transition:transform .2s;cursor:default}
 .ur-w sup{font-size:.4em;color:#5f6963;margin-left:2px}
 .ur-w[data-a]{cursor:pointer}
+.ur-cloud.wolke{display:block;position:relative;min-height:0;padding:10px 0;overflow:hidden}
+.ur-cloud.wolke:not(.fertig){visibility:hidden;min-height:160px}
+.wolke-in{position:absolute;left:50%;top:10px;transform-origin:top center}
+.wolke .ur-w{position:absolute;white-space:nowrap}
 .ur-w[data-a]:hover{text-decoration:line-through;opacity:.6}
 .ur-cards{columns:4 230px;column-gap:14px;width:100%}
 .ur-cards.sm{columns:2 200px}

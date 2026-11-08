@@ -1482,6 +1482,31 @@
 
   // Ergebnisse einer Frage zeichnen. E = [{ v: Antwort, k: Kind-ID, n: Name }] (Kinder bekommen nur v)
   // o = { rev: Lösung zeigen, names: Namen zeigen, mod: Lehrperson darf ausblenden, small: schmale Ansicht, hidw: ausgeblendete Wörter }
+  // Wortwolke ordnen: Wörter auf einer Spirale von der Mitte aus, ohne sich zu überdecken (gross in der Mitte, klein aussen herum).
+  // Läuft von selbst für jede neue Wolke (MutationObserver) und bei Grössenänderung des Fensters.
+  function wolkeOrdnen(c) {
+    var inn = c.querySelector('.wolke-in'), W = c.clientWidth; if (!inn || !W) return;
+    var ws = [].slice.call(inn.children), pl = [], pad = c.classList.contains('sm') ? 3 : 6;
+    var hit = function (r) { for (var j = 0; j < pl.length; j++) { var p = pl[j]; if (r.x < p.x + p.w + pad && r.x + r.w + pad > p.x && r.y < p.y + p.h && r.y + r.h > p.y) return true; } return false; };
+    ws.forEach(function (w, i) {
+      var bw = w.offsetWidth, bh = w.offsetHeight * .82, r = null;
+      for (var t = 0; t < 900; t += .25) {
+        var d = (i % 2 ? 1 : -1) * t, rr = { x: Math.cos(d) * t * 7 * 1.6 - bw / 2, y: Math.sin(d) * t * 7 * .75 - bh / 2, w: bw, h: bh };
+        if (!hit(rr)) { r = rr; break; }
+      }
+      r = r || { x: 0, y: 0, w: bw, h: bh }; pl.push(r); w._r = r;
+    });
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    pl.forEach(function (r) { x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+    var bw = x1 - x0, bh = y1 - y0, sc = Math.min(1, (W - 16) / bw);
+    ws.forEach(function (w) { w.style.left = (w._r.x - x0) + 'px'; w.style.top = (w._r.y - y0 - w.offsetHeight * .09) + 'px'; });
+    inn.style.width = bw + 'px'; inn.style.height = bh + 'px'; inn.style.transform = 'translateX(-50%) scale(' + sc + ')';
+    c.style.height = Math.ceil(bh * sc + 20) + 'px'; c.classList.add('fertig');
+  }
+  function wolkenAlle(alle) { [].slice.call(document.querySelectorAll('.ur-cloud.wolke' + (alle ? '' : ':not(.fertig)'))).forEach(wolkeOrdnen); }
+  if (window.MutationObserver) new MutationObserver(function () { wolkenAlle(false); }).observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('resize', function () { wolkenAlle(true); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { wolkenAlle(true); });
   function umfRes(q, E, o) {
     o = o || {}; var t = q.type, opts = q.opts || [], n = opts.length, N = E.length;
     if (t === 'info') return '';
@@ -1506,12 +1531,13 @@
       var f = {}, show = {}, hw = o.hidw || [];
       E.forEach(function (e) { (e.v || []).forEach(function (w) { w = String(w).trim(); var k = w.toLowerCase(); if (!k || hw.indexOf(k) >= 0) return; f[k] = (f[k] || 0) + 1; if (!show[k]) show[k] = w; }); });
       var keys = Object.keys(f).sort(function (a, b) { return f[b] - f[a] || a.localeCompare(b); }); if (!keys.length) return '<div class="ur-leer">Noch keine Wörter</div>';
-      var top = f[keys[0]], arr = []; keys.forEach(function (k, i) { if (i % 2) arr.push(k); else arr.unshift(k); });
-      return '<div class="ur-cloud' + (o.small ? ' sm' : '') + '">' + arr.map(function (k) {
+      // Wortwolke: grösste Wörter zuerst, wolkeOrdnen() verteilt sie danach kreuz und quer um die Mitte
+      var top = f[keys[0]], arr = keys;
+      return '<div class="ur-cloud wolke' + (o.small ? ' sm' : '') + '"><div class="wolke-in">' + arr.map(function (k) {
         // Wortwolke: je öfter ein Wort vorkommt, desto grösser (ohne Zahl). Kommen alle nur einmal vor, mittlere Grösse.
-        var g = top > 1 ? Math.pow((f[k] - 1) / (top - 1), .75) : .3, s = o.small ? 15 + 24 * g : 22 + 70 * g, r = (hash(k) % 3 - 1) * 3;
+        var g = top > 1 ? Math.pow((f[k] - 1) / (top - 1), .75) : .3, s = o.small ? 15 + 26 * g : 26 + 104 * g, r = (hash(k) % 3 - 1) * 3;
         return '<span class="ur-w" style="font-size:' + Math.round(s) + 'px;color:' + UMF_INK[hash(k) % UMF_INK.length] + ';transform:rotate(' + r + 'deg)"' + (o.mod ? ' data-a="uHideW" data-w="' + h(k) + '" title="Wort ausblenden"' : '') + '>' + h(show[k]) + '</span>';
-      }).join('') + '</div>';
+      }).join('') + '</div></div>';
     }
     if (t === 'text') {
       var cards = []; E.forEach(function (e) { (e.v || []).forEach(function (s) { cards.push({ s: s, k: e.k, n: e.n }); }); });
