@@ -1508,8 +1508,9 @@
       var keys = Object.keys(f).sort(function (a, b) { return f[b] - f[a] || a.localeCompare(b); }); if (!keys.length) return '<div class="ur-leer">Noch keine Wörter</div>';
       var top = f[keys[0]], arr = []; keys.forEach(function (k, i) { if (i % 2) arr.push(k); else arr.unshift(k); });
       return '<div class="ur-cloud' + (o.small ? ' sm' : '') + '">' + arr.map(function (k) {
-        var s = o.small ? 15 + 22 * Math.pow(f[k] / top, .8) : 22 + 64 * Math.pow(f[k] / top, .8), r = (hash(k) % 3 - 1) * 3;
-        return '<span class="ur-w" style="font-size:' + Math.round(s) + 'px;color:' + UMF_INK[hash(k) % UMF_INK.length] + ';transform:rotate(' + r + 'deg)"' + (o.mod ? ' data-a="uHideW" data-w="' + h(k) + '" title="Wort ausblenden"' : '') + '>' + h(show[k]) + (f[k] > 1 ? '<sup>' + f[k] + '</sup>' : '') + '</span>';
+        // Wortwolke: je öfter ein Wort vorkommt, desto grösser (ohne Zahl). Kommen alle nur einmal vor, mittlere Grösse.
+        var g = top > 1 ? Math.pow((f[k] - 1) / (top - 1), .75) : .3, s = o.small ? 15 + 24 * g : 22 + 70 * g, r = (hash(k) % 3 - 1) * 3;
+        return '<span class="ur-w" style="font-size:' + Math.round(s) + 'px;color:' + UMF_INK[hash(k) % UMF_INK.length] + ';transform:rotate(' + r + 'deg)"' + (o.mod ? ' data-a="uHideW" data-w="' + h(k) + '" title="Wort ausblenden"' : '') + '>' + h(show[k]) + '</span>';
       }).join('') + '</div>';
     }
     if (t === 'text') {
