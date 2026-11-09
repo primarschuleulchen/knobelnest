@@ -30,7 +30,7 @@ exec(open(os.path.join(here, 'pin_stil.py'), encoding='utf-8').read())
 rep('      <div class="row"><button class="btn ghost small" type="button" data-act="print">🖨️ Drucken</button></div>\n', '')
 # Hinweis auf die Klassenkiste: dort lassen sich Vorlagen bearbeiten, löschen und eigene erstellen
 rep('esc(t.icon) + " Erstellen"}</button></div></section>`;', '''esc(t.icon) + " Erstellen"}</button></div>
-    <div class="vl-hint"><span class="vl-stern" aria-hidden="true">✦</span><p><b>Eigene Vorlagen?</b> In der Klassenkiste können Sie Vorlagen bearbeiten, löschen und eigene erstellen, dazu viele weitere Werkzeuge für Ihre Klasse.</p><a class="btn vl-btn" href="https://klassenkiste.primarschuleulchen.com/" target="_blank" rel="noopener">✦ Hol dir jetzt den Zugang</a></div></section>`;''')
+    <div class="vl-hint"><span class="vl-stern" aria-hidden="true">✦</span><p><b>Eigene Vorlagen?</b> In der Klassenkiste können Sie Vorlagen bearbeiten, löschen und eigene erstellen, dazu viele weitere Werkzeuge für Ihre Klasse.</p><a class="btn vl-btn" href="https://klassenkiste.ch/" target="_blank" rel="noopener">✦ Hol dir jetzt den Zugang</a></div></section>`;''')
 
 open(dst, 'w', encoding='utf-8').write(s)
 print('ok', len(s))
