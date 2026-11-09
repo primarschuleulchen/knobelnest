@@ -1,0 +1,21 @@
+# Einstellungen für den Webserver bei Infomaniak (Apache). Auf GitHub Pages ohne Wirkung.
+# Immer verschlüsselt (https)
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Alte Adressen auf klassenkiste.ch umleiten (www und klassenkiste.primarschuleulchen.com)
+RewriteCond %{HTTP_HOST} ^(www\.klassenkiste\.ch|klassenkiste\.primarschuleulchen\.com)$ [NC]
+RewriteRule ^ https://klassenkiste.ch%{REQUEST_URI} [L,R=301]
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "microphone=(self), camera=(self), geolocation=(), payment=(), usb=()"
+  Header always set Strict-Transport-Security "max-age=15552000"
+  # Startseite immer frisch laden (die übrigen Dateien haben ?v=… als Cache-Bremse)
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+Options -Indexes
