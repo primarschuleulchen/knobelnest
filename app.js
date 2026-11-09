@@ -1254,7 +1254,7 @@
         }).join('') + '</div></div>';
       }).join('') +
       '<label class="row" style="gap:10px"><input type="checkbox" name="none" style="width:22px;height:22px"' + (a.none ? ' checked' : '') + '> Kein Termin passt</label>' +
-      '<div class="field"><label for="egENote">Bemerkung</label><textarea class="input" id="egENote" name="note" rows="2" maxlength="500">' + h(a.note || '') + '</textarea></div>' +
+      '<div class="field"><label for="egENote">Bemerkung</label><textarea class="input" id="egENote" name="note" rows="2" maxlength="500">' + h(a.note || '') + '</textarea><small class="muted">Nur Organisatorisches, keine Angaben zu Gesundheit oder Förderung.</small></div>' +
       '<div class="row"><button class="btn primary">Speichern</button>' + (E.row.answers[k] ? '<button type="button" class="btn danger" data-a="egEditDel" data-k="' + k + '">Eintrag löschen</button>' : '') +
       '<button type="button" class="btn" data-a="closeOverlay">Abbrechen</button></div>' +
       (E.row.answers[k] ? '<p class="muted small">«Eintrag löschen» gibt das Kind wieder frei, damit sich die Eltern neu eintragen können.</p>' : '') + '</form>');
@@ -1346,7 +1346,7 @@
     out += '<p class="eg-count">' + (EP.sel.size ? '✓ ' + plural(EP.sel.size, 'Termin', 'Termine') + ' gewählt' : 'Noch kein Termin gewählt') + '</p>' +
       '<label class="eg-none"><input type="checkbox" data-change="epNone"' + (EP.none ? ' checked' : '') + '> Keiner dieser Termine passt</label>' +
       '<form class="stack" data-a="epSend"><div class="field"><label for="epName">Ihr Name</label><input class="input" id="epName" maxlength="80" autocomplete="name" required value="' + h(EP.name || '') + '" data-input="epName" placeholder="z. B. Sandra Muster"></div>' +
-      '<div class="field"><label for="epNote">Bemerkung (freiwillig)</label><textarea class="input" id="epNote" rows="2" maxlength="500" data-input="epNote" placeholder="z. B. Wir bringen eine Übersetzerin mit.">' + h(EP.note || '') + '</textarea></div>' +
+      '<div class="field"><label for="epNote">Bemerkung (freiwillig)</label><textarea class="input" id="epNote" rows="2" maxlength="500" data-input="epNote" placeholder="z. B. Wir bringen eine Übersetzerin mit.">' + h(EP.note || '') + '</textarea><small class="muted">Bitte nur Organisatorisches, keine Angaben zu Gesundheit oder Förderung. Das besprechen wir im Gespräch.</small></div>' +
       (EP.err ? '<p class="err">' + h(EP.err) + '</p>' : '') +
       '<button class="btn primary eg-send"' + (EP.busy ? ' disabled' : '') + '>' + (mine ? 'Änderungen speichern' : 'Eintragen') + '</button></form></section>';
     paint(out + '</main>');
@@ -2196,7 +2196,7 @@
   // Live-Quiz: eigene Seite quiz.html. Lehrperson: Quiz bauen und live spielen (Route #/quiz).
   // Mitspielen ohne Konto über QR-Code (Route #/q/<Nummer>). Speicher: teacher_store «quiz» (Liste) und «quiz-<id>».
   // ===================================================================
-  var QUIZ_VER = '8';
+  var QUIZ_VER = '9';
   function quizJoinUrl(pin) { return location.origin + location.pathname + '#/q' + (pin ? '/' + pin : ''); }
   var QZ = {
     start: async function () {
@@ -3990,6 +3990,20 @@
   // Kinder
   // ===================================================================
   var K = { step: 'code', code: null, cls: null, kid: null, pw: [], sess: null, home: null, fach: null, thema: null, tafel: null, err: '', busy: false };
+  // Datenschutz auf gemeinsam genutzten iPads: Kinder werden abgemeldet, wenn 45 Minuten niemand etwas macht
+  // (Tippen, Tasten, Meldungen aus einem Spiel) und beim Öffnen, wenn die letzte Benutzung über 8 Stunden zurückliegt.
+  var KID_RUHE = 45 * 60000, KID_RUHE_START = 8 * 3600000, kidAkt = 0;
+  function kidAktiv() { var n = Date.now(); if (!K.sess || n - kidAkt < 30000) return; kidAkt = n; LS.set('kn_kid_akt', n); }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, kidAktiv, true); });
+  window.addEventListener('message', kidAktiv);
+  setInterval(async function () {
+    if (!K.sess) return;
+    var last = +(LS.get('kn_kid_akt') || 0);
+    if (!last || Date.now() - last < KID_RUHE) return;
+    try { await DB.kidLogout(K.sess.token); } catch (e) {}
+    stopTimers(); LS.del('kn_kid'); LS.del('kn_kid_akt'); K.sess = null; K.home = null; K.step = 'code';
+    toast('Du wurdest abgemeldet, weil länger niemand etwas gemacht hat.'); K.start();
+  }, 60000);
 
   K.start = async function () {
     UI.view = 'kid';
@@ -4005,7 +4019,8 @@
     }
     var s = LS.get('kn_kid');
     if (s && K.wantKid && s.kid !== K.wantKid) { try { DB.kidLogout(s.token); } catch (e) {} LS.del('kn_kid'); s = null; }
-    if (s && s.exp > Date.now()) { K.sess = s; K.step = 'home'; return K.loadHome(); }
+    if (s && Date.now() - +(LS.get('kn_kid_akt') || Date.now()) > KID_RUHE_START) { try { DB.kidLogout(s.token); } catch (e) {} LS.del('kn_kid'); s = null; }
+    if (s && s.exp > Date.now()) { K.sess = s; kidAkt = 0; kidAktiv(); K.step = 'home'; return K.loadHome(); }
     LS.del('kn_kid'); K.sess = null;
     var code = LS.get('kn_code');
     if (code) {
@@ -4379,7 +4394,7 @@
         return K.render();
       }
       K.sess = { token: r.token, name: r.name, code: K.code, kid: K.kid && K.kid.id, exp: Date.now() + 11.5 * 3600 * 1000 };
-      LS.set('kn_kid', K.sess); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
+      LS.set('kn_kid', K.sess); kidAkt = 0; kidAktiv(); K.home = null; K.step = 'home'; K.render(); await K.loadHome();
     } finally { K.busy = false; }
   };
   ACT.kFach = function (el) { K.fach = el.dataset.f; K.unitArt = 'alle'; var th = kidOrdner(kidGames().filter(function (g) { return g.fach === K.fach; }));

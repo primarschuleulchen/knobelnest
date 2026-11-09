@@ -779,6 +779,7 @@ button.pl:hover{background:var(--rose-soft);text-decoration:line-through}
     var o = document.createElement('div'); o.className = 'ov'; o.id = 'kiOv';
     o.innerHTML = '<div class="ovbox ki"><h2>✨ Quiz mit KI erstellen</h2>' +
       '<p class="muted small">Aus einem PDF, einem Foto vom Arbeitsblatt oder einem Text. Dafür brauchen Sie Claude (claude.ai), die Klassenkiste gibt Ihnen den Auftrag dazu.</p>' +
+      '<p class="muted small">🔒 Laden Sie nur Lernmaterial hoch. Keine Namen von Kindern, keine Noten oder andere persönliche Angaben, denn claude.ai gehört nicht zur Klassenkiste.</p>' +
       '<div class="kischritt"><b>1</b><div class="stack" style="gap:10px;flex:1">' +
       '<div class="kigrid"><label><span class="lbl">Anzahl Fragen</span><select class="input" data-ch="kiN">' + [5, 8, 10, 12, 15, 20].map(function (n) { return '<option' + (c.n === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
       '<label><span class="lbl">Für</span><input class="input" data-in="kiStufe" maxlength="40" value="' + h(c.stufe) + '" placeholder="z. B. 4. Klasse"></label></div>' +
