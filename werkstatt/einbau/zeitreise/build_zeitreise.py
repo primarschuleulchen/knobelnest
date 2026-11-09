@@ -1,6 +1,8 @@
 # Baut den Ordner knobelnest/zeitreise aus dem Zeitreise-Projekt (fcbhcd1997/Altsteinzeit).
 # Aufruf: python3 build_zeitreise.py <quellordner> <zielordner>
 import sys, os, shutil, re
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+from lokal import lokal  # Schriften/Programmteile vom eigenen Server
 src, dst = sys.argv[1], sys.argv[2]
 READY = ['altsteinzeit', 'jungsteinzeit']          # später einfach weitere Epochen ergänzen
 PREFIX = {'altsteinzeit': 'alt-', 'jungsteinzeit': 'jung-', 'bronzezeit': 'bronze-', 'eisenzeit': 'eisen-', 'roemerzeit': 'roemer-', 'mittelalter': 'ma-'}
@@ -25,7 +27,7 @@ for era in READY:
                "function renderResult(){\n  const n = qorder.length; tell({ type:'quiz', score:qscore, n });")
     s = rep(s, "  try { localStorage.setItem(GKEY, HQ ? 'schnell' : 'hoch'); } catch(e){}\n  location.reload();",
                "  try { localStorage.setItem(GKEY, HQ ? 'schnell' : 'hoch'); } catch(e){}\n  if (EMBED) { tell({ type:'quality', v: HQ ? 'schnell' : 'hoch' }); return; }\n  location.reload();")
-    open(os.path.join(dst, era + '.html'), 'w', encoding='utf-8').write(s)
+    open(os.path.join(dst, era + '.html'), 'w', encoding='utf-8').write(lokal(s, '../'))
     for f in os.listdir(os.path.join(src, 'bilder')):
         if f.startswith(PREFIX[era]): shutil.copy(os.path.join(src, 'bilder', f), os.path.join(dst, 'bilder', f))
 
@@ -166,5 +168,5 @@ if (window.parent !== window) {
   setTimeout(function(){ if (!booted) { booted = true; boot(); } }, 2500);
 } else boot();"""
 s = rep(s, start_old, start_new)
-open(os.path.join(dst, 'index.html'), 'w', encoding='utf-8').write(s)
+open(os.path.join(dst, 'index.html'), 'w', encoding='utf-8').write(lokal(s, '../'))
 print('ok', sorted(os.listdir(dst)), len(os.listdir(os.path.join(dst, 'bilder'))))

@@ -8,7 +8,7 @@ rm -rf "$DST"; mkdir -p "$DST"
 ( cd "$ROOT" && tar --exclude=.git --exclude=werkstatt -cf - . ) | ( cd "$DST" && tar -xf - )
 cp "$ROOT/werkstatt/test/mock-db.js" "$DST/"
 # Supabase-Skript entfernen, db.js durch mock-db.js ersetzen
-sed -i '/supabase-js/d; s#src="db.js#src="mock-db.js#' "$DST/index.html"
+sed -i '/supabase-js/d; \%bibliothek/supabase/%d; s#src="db.js#src="mock-db.js#' "$DST/index.html"
 grep -q mock-db.js "$DST/index.html" || { echo "index.html konnte nicht umgestellt werden"; exit 1; }
 pkill -f "http.server 8765" 2>/dev/null || true
 cd "$DST" && (setsid nohup python3 -m http.server 8765 >/dev/null 2>&1 &)

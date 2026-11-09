@@ -2,8 +2,7 @@
 </style></head><body>
 <title>Hausaufgabenheft</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Amatic+SC:wght@700&family=Nunito:wght@400;600;700;800&family=Andika:wght@400;700&family=Playpen+Sans:wght@400;600&family=Comic+Neue:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="schriften/schriften.css">
 <style>
 /* Layout: aufgeschlagene Schulagenda über den ganzen Bildschirm. Links Mo–Mi, rechts Do, Fr und Sa|So nebeneinander.
    Wie die Tagesfolien bewusst nur hell, damit es am Beamer gleich aussieht. */
@@ -1151,7 +1150,7 @@ function renderReport(){
 }
 // ---------- PDF für die Eltern (eine Seite pro Kind, mit Unterschriftenfeld) ----------
 let jspdfP = null;
-const loadJsPDF = () => jspdfP || (jspdfP = new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"; sc.onload = () => ok(window.jspdf.jsPDF); sc.onerror = () => { jspdfP = null; bad(); }; document.head.appendChild(sc); }));
+const loadJsPDF = () => jspdfP || (jspdfP = new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "bibliothek/jspdf/jspdf.umd.min.js"; sc.onload = () => ok(window.jspdf.jsPDF); sc.onerror = () => { jspdfP = null; bad(); }; document.head.appendChild(sc); }));
 const pdfTxt = t => String(t || "").replace(/[–—]/g, "-").replace(/↳/g, "->").replace(/…/g, "...").replace(/×/g, "x").replace(/[^\x20-\xFF\n]/g, "");
 const dmy = s0 => { const d = parse(s0); return `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`; };
 const hexArr = h => hexRGB(h);

@@ -27,7 +27,7 @@
   function loadQR() {
     if (window.qrcode) return Promise.resolve(window.qrcode);
     if (!qrLib) qrLib = new Promise(function (res, rej) {
-      var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+      var s = document.createElement('script'); s.src = 'bibliothek/qrcode/qrcode.js';
       s.onload = function () { res(window.qrcode); }; s.onerror = function () { qrLib = null; rej(new Error('QR')); };
       document.head.appendChild(s);
     });
@@ -294,12 +294,12 @@
     var m = /<meta\s+name=["']knobelnest-url["']\s+content=["']([^"']+)["']/i.exec(html || '');
     return m && /^[a-z0-9][a-z0-9_\-\/\.]*$/i.test(m[1]) && m[1].indexOf('..') < 0 ? m[1] : null;
   }
-  var ZR_VER = '1';
+  var ZR_VER = '2';
   var VK_VER = '36'; // Vokabelkiste (vokabelkiste/index.html)
   var GD_VER = '2'; // Gedächtniskiste (gedaechtnis/, gebaut mit werkstatt/spiele/gedaechtnis/bauen.py)
   var RO_VER = '1'; // Rechenoperationen (rechenoperationen/, gebaut mit werkstatt/spiele/rechenoperationen/bauen.py)
   var KS_VER = '38'; // Knobelspiele (knobelspiele/, gebaut mit werkstatt/spiele/knobelspiele/bauen.py)
-  var EN_VER = '19'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
+  var EN_VER = '20'; // Englisch-Spiele (englisch/, gebaut mit werkstatt/spiele/englisch/bauen.py)
   var PL = null;
   function openPlayer(title, html, onMsg, onClose, seed) {
     closePlayer();
@@ -703,7 +703,7 @@
   // Hausaufgabenheft: eigene Seite hausaufgaben.html im Rahmen, ein Heft pro Klasse.
   // Die Kinder kommen aus der Klassenkiste; gespeichert wird bei der Lehrperson (teacher_store «hat-<Klasse>»).
   // ===================================================================
-  var HEFT_VER = '10';
+  var HEFT_VER = '11';
   function heftDownloads() {
     return { save: async function (o) {
       var b = new Blob([o.data], { type: o.type || 'application/pdf' }), u = URL.createObjectURL(b), a = document.createElement('a');
@@ -848,7 +848,7 @@
   // Atelier (Velo-Weg): eigene Seite atelier.html, Kinder der Klasse aus der Klassenkiste.
   // Speicher «atelier-<Klasse>» = { open, kids: { Kind-ID: { thema, umsetzung, stufe, farbe, x, y } } }
   // ===================================================================
-  var ATELIER_VER = '7';
+  var ATELIER_VER = '8';
   var ATELIER_SVG = '<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><g fill="none" stroke="#3f8fd6" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="10"/><circle cx="48" cy="42" r="10"/><path d="M16 42l10-18h16l6 18M26 24l8 18h6M42 24l-2-6h-6M22 18h8"/></g><rect x="38" y="8" width="18" height="9" rx="3" fill="#e0584f"/></svg>';
   var AT = {
     start: async function (cid) {

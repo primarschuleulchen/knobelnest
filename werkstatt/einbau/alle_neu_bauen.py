@@ -4,6 +4,8 @@
 import os, subprocess, sys, filecmp, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
 from zurueck import zurueck
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lokal import lokal  # Schriften/Programmteile vom eigenen Server
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 W = os.path.join(ROOT, 'werkstatt')
 JOBS = [  # (Einbau-Skript, Original, Ziel im Hauptordner)
@@ -25,6 +27,7 @@ with tempfile.TemporaryDirectory() as tmp:
         # Einheitlicher Zurück-Knopf (Pfeil + Eule) für alle Werkzeuge
         h = open(out, encoding='utf-8').read()
         h = zurueck(h, '../bilder/eule.webp' if '/' in dst else 'bilder/eule.webp')
+        if dst != 'vokabelkiste/index.html': h = lokal(h, '../' if '/' in dst else '')  # Vokabelkiste: Google nur im Export-Text für claude.ai
         open(out, 'w', encoding='utf-8').write(h)
         same = filecmp.cmp(out, os.path.join(ROOT, dst), shallow=False) if os.path.exists(os.path.join(ROOT, dst)) else False
         print(('gleich  ' if same else 'anders  ') + dst)

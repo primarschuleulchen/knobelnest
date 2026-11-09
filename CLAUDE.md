@@ -57,6 +57,7 @@ Knobelnest (sichtbarer Name: **«Klassenkiste»**, `C.PORTAL_NAME` in `config.js
 | `app.js` | Die ganze Portal-App (Hash-Routen in `route()`) |
 | `style.css` | Gestaltung des Portals. Lehrpersonen-Seiten (`body.lp`, gesetzt in `T.render`/`T.renderLogin`, entfernt in `route()`) im Stil der Eulenkiste (Repo `lernkompass`): Schrift Patrick Hand (`schriften/`), Eulen-Marke (`bilder/eule.webp`), Gold-Akzente, ✦ ✧ ✦. Die Kinderansicht ist noch im alten Stil. |
 | `bilder/`, `schriften/` | Bilder und Schriften aus der Eulenkiste (lokal, nichts von Google) |
+| `bibliothek/` | Fremde Programmteile lokal (supabase-js, three.js, qrcode, jsPDF; `LIESMICH.md`). `werkstatt/lokal.py` biegt Google-Schriften und CDN-Adressen auf `schriften/`/`bibliothek/` um (läuft in `alle_neu_bauen.py`, Owl-Town- und Zeitreise-Bau; `python3 werkstatt/lokal.py --pruefen` meldet fremde Adressen). Ziel: beim Benutzen keine Aufrufe an Google, jsDelivr oder cdnjs. |
 | `tagesfolie.html`, `hausaufgaben.html`, `pinnwand.html`, `otterteich.html`, `atelier.html`, `quiz.html` | Eingebettete Werkzeuge (eigene Seiten im iframe) |
 | `atelier-*.png/webp` | Bilder für das Atelier |
 | `gedaechtnis/` | Gedächtniskiste (Werkzeug und 12 Spiele), gebaut mit `werkstatt/spiele/gedaechtnis/bauen.py` |
@@ -155,7 +156,7 @@ So läuft ein Werkzeug im Portal:
 
 ## Cache-Bremse (wichtig, sonst sehen Geräte alte Dateien)
 
-- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=224`).
+- **`index.html`:** `?v=N` bei allen vier Dateien um 1 erhöhen, sobald sich `app.js`, `db.js`, `style.css` oder `config.js` ändert (zurzeit `v=225`).
 - **Werkzeug-Versionen in `app.js`:** `HEFT_VER`, `PIN_VER`, `OTTER_VER`, `ATELIER_VER`, `QUIZ_VER`, `ZR_VER`, `VK_VER`, `GD_VER`, `KS_VER`, `EN_VER` und die Tagesfolie (`tagesfolie.html?v=' + ('59')`). Erhöhe die passende Version, wenn sich die Werkzeug-Seite ändert.
 
 ## Neue Version eines Werkzeugs einbauen

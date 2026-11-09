@@ -10,6 +10,8 @@
 # Rahmen (Stufen-Menü, Sterne, Ton, Meldungen an das Portal) und Stil kommen aus werkstatt/spiele/gedaechtnis/bauen.py.
 # Das eigentliche Spiel steht in owl-town.js und owl-town.css (gleicher Ordner).
 import base64, importlib.util, json, os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+from lokal import lokal  # Schriften/Programmteile vom eigenen Server
 sys.dont_write_bytecode = True
 
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -120,7 +122,7 @@ def stub_html(s):
 if __name__ == '__main__':
     os.makedirs(ZIEL, exist_ok=True)
     for s in SPIELE:
-        with open(os.path.join(ZIEL, s['id'] + '.html'), 'w', encoding='utf-8') as f: f.write(game_html(s))
+        with open(os.path.join(ZIEL, s['id'] + '.html'), 'w', encoding='utf-8') as f: f.write(lokal(game_html(s), '../'))
     paket = {'format': 'knobelnest-spielpaket', 'games': [
         {'title': s['titel'], 'description': s['kurz'], 'fach': s['fach'], 'thema': s['thema'], 'stufe': s['stufe'], 'sort': s['sort'], 'html': stub_html(s)} for s in SPIELE]}
     with open(os.path.join(ZIEL, 'englisch-spielpaket.json'), 'w', encoding='utf-8') as f: json.dump(paket, f, ensure_ascii=False, indent=1)
