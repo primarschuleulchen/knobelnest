@@ -1410,7 +1410,12 @@ function renderBoard(){
   const tick = () => {
     requestAnimationFrame(tick);
     const ph = KN && KN.otterUrl ? document.querySelector("#board .obody[data-otter]") : null;
-    if (!ph) { if (last !== "off") { layer.classList.remove("on"); last = "off"; } return; }
+    if (!ph) {
+      if (last !== "off") { layer.classList.remove("on"); last = "off"; }
+      // Kein Lautstärke-Baustein mehr in der ganzen Tagesfolie: Fenster schliessen (stoppt Musik und Mikrofon)
+      if (frame && !S.screens.some(s => (s.widgets || []).some(w => w.type === "otter"))) { frame.remove(); frame = null; }
+      return;
+    }
     if (!frame) { frame = document.createElement("iframe"); frame.src = KN.otterUrl; frame.title = "Otterteich"; frame.allow = "microphone; autoplay"; layer.appendChild(frame); }
     if (!ph.classList.contains("cov")) ph.classList.add("cov");
     const r = ph.getBoundingClientRect(), wz = ph.closest(".w")?.style.zIndex || "1";
@@ -1439,7 +1444,9 @@ setTimeout(() => {
   const layer = document.getElementById("otterLayer"); if (!layer) return; let t = 0;
   const w = () => document.querySelector("#board .w.otter");
   // Darüberfahren holt den Teich nach vorne, auch wenn ein anderer Baustein darüber liegt (dann ist seine Leiste erreichbar)
-  const vor = () => { clearTimeout(t); const el = w(); if (!el) return; el.classList.add("hov");
+  // Leiste nach 2.5 s wieder ausblenden, ausser die Maus ist gerade auf der Leiste selbst
+  const weg = () => { clearTimeout(t); t = setTimeout(() => { const x = w(); if (!x) return; if (x.querySelector(".chrome:hover")) return weg(); x.classList.remove("hov"); }, 2500); };
+  const vor = () => { clearTimeout(t); const el = w(); if (!el) return; el.classList.add("hov"); weg();
     const d = findW(el); if (d && (d.z || 1) < topZ()) { d.z = topZ() + 1; el.style.zIndex = d.z; save(); } };
   layer.addEventListener("pointerenter", vor);
   layer.addEventListener("pointerleave", () => { clearTimeout(t); t = setTimeout(() => { const x = w(); if (x && !x.matches(":hover")) x.classList.remove("hov"); }, 900); });
