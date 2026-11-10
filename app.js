@@ -714,24 +714,73 @@
   }
   // Mein Wochenziel (Version 1): läuft unter dem Konto der Lehrperson, Speicher teacher_store «wz-<Klasse>» =
   // {kinder:{id:{…}}, ziele:{id:{…}}, einstellungen:{klasse:{…}}}. wzBridge baut claude.use('db') nach (collection/doc, onSnapshot).
-  var WZ_VER = '1';
-  function wzBridge(key) {
-    var data = null, subs = [], timer = null, loading = null;
-    function load() {
-      if (data) return Promise.resolve(data);
-      return loading || (loading = DB.storeGet(key).catch(function () { return null; }).then(function (d) {
-        data = d || {}; ['kinder', 'ziele', 'einstellungen'].forEach(function (k) { data[k] = data[k] || {}; }); return data; }));
-    }
-    function save() { clearTimeout(timer); timer = setTimeout(function () { DB.storeSet(key, data).catch(function () { toast('Speichern hat nicht geklappt. Bitte nochmals versuchen.'); }); }, 400); }
+  var WZ_VER = '2';
+  // Brücke für «Mein Wochenziel». o = {key, kids} (Lehrperson: teacher_store «wz-<Klasse>», Kinder aus der Klassenkiste)
+  // oder {token} (Kind: kid_wz / kid_wz_set, nur die eigenen Ziele). Namen werden nicht im Speicher abgelegt.
+  var WZ_FARBEN = ['#fbe3a6', '#f7c9c2', '#cfe4f7', '#d5e9c6', '#e3d6f2', '#fbd3b0', '#c9ece4', '#f3d1e4', '#e0e7b8', '#d6dcf5'];
+  function wzFarbe(id) { var n = 0; String(id).split('').forEach(function (c) { n = (n * 31 + c.charCodeAt(0)) % 9973; }); return WZ_FARBEN[n % WZ_FARBEN.length]; }
+  function wzBridge(o) {
+    var data = null, subs = [], timer = null, loading = null, dirty = {}, setDirty = false, busy = 0, view = o.token ? 'kwz' : 'wz';
     function cp(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
+    function norm(d) { d = d && typeof d === 'object' ? d : {}; ['kinder', 'ziele', 'einstellungen'].forEach(function (k) { if (!d[k] || typeof d[k] !== 'object') d[k] = {}; }); return d; }
+    function kinder(list) { var m = {}; list.forEach(function (k, i) { m[k.id] = { name: k.name, farbe: wzFarbe(k.id), erstellt: i }; }); return m; }
+    async function holen() {
+      if (o.token) {
+        var r = await DB.kidWz(o.token); if (!r || !r.kid) throw new Error('zu');
+        if (window.knWochenziel && window.knWochenziel.mode === 'kid') window.knWochenziel.kidId = r.kid.id;
+        var z = {}; (r.goals || []).forEach(function (g) { var id = g.id; delete g.id; z[id] = g; });
+        return { kinder: kinder([r.kid]), ziele: z, einstellungen: { klasse: r.set || {} } };
+      }
+      var d = norm(cp(await DB.storeGet(o.key))); d.kinder = kinder(o.kids); return d;
+    }
+    function overlay(d) { Object.keys(dirty).forEach(function (id) { if (dirty[id] === null) delete d.ziele[id]; else d.ziele[id] = cp(dirty[id]); }); if (setDirty) d.einstellungen = cp(data.einstellungen); return d; }
+    function load() { if (data) return Promise.resolve(data); return loading || (loading = holen().then(function (d) { data = d; return d; })); }
+    function aktiv() { return o.token ? (K.step === 'wz') : (UI.view === 'wz'); }
+    // Lehrperson: vor dem Speichern den neusten Stand holen (Kinder schreiben über kid_wz_set) und nur die eigenen Änderungen darüberlegen
+    function save() {
+      clearTimeout(timer); timer = setTimeout(async function () {
+        timer = null; var dd = dirty, sd = setDirty; dirty = {}; setDirty = false; busy++;
+        try {
+          var cur = norm(cp(await DB.storeGet(o.key)));
+          Object.keys(dd).forEach(function (id) { if (dd[id] === null) delete cur.ziele[id]; else cur.ziele[id] = cp(dd[id]); });
+          if (sd) cur.einstellungen = cp(data.einstellungen);
+          cur.kinder = {};
+          await DB.storeSet(o.key, cp(cur));
+          cur.kinder = data.kinder; data = overlay(cur); emit();
+        } catch (e) { Object.keys(dd).forEach(function (id) { if (!(id in dirty)) dirty[id] = dd[id]; }); setDirty = setDirty || sd; toast('Speichern hat nicht geklappt. Bitte nochmals versuchen.'); }
+        finally { busy--; }
+      }, 400);
+    }
+    function emit() { subs.forEach(function (f) { try { f(); } catch (e) {} }); }
+    // Neue Einträge der Kinder bzw. Beurteilungen der Lehrperson alle 8 Sekunden nachladen
+    var iv = setInterval(async function () {
+      if (!aktiv()) { clearInterval(iv); return; }
+      if (!data || document.hidden || busy || timer) return;
+      try { var d = await holen(); if (busy || timer || !aktiv()) return; d = overlay(d); if (JSON.stringify(d) !== JSON.stringify(data)) { data = d; emit(); } } catch (e) {}
+    }, 8000);
     function snapDoc(c, id) { var v = data[c][id]; return { id: id, exists: v != null, data: function () { return cp(v); } }; }
     function snapColl(c) { return { docs: Object.keys(data[c]).map(function (id) { return snapDoc(c, id); }) }; }
-    function emit() { subs.forEach(function (f) { try { f(); } catch (e) {} }); }
     function watch(f, err) { load().then(function () { subs.push(f); f(); }, function (e) { if (err) err(e); }); return function () { subs = subs.filter(function (y) { return y !== f; }); }; }
+    async function schreiben(c, id, v) {
+      await load();
+      if (o.token) { // Kind: nur eigene Ziele, nur die Felder des Kindes
+        if (c !== 'ziele' || !v) return;
+        var g = { woche: v.woche, text: v.text, plan: v.plan || '', kindBew: v.kindBew == null ? null : v.kindBew, kindKom: v.kindKom || '' };
+        data.ziele[id] = cp(v); emit();
+        var ok = false; try { ok = await DB.kidWzSet(o.token, g); } catch (e) {}
+        if (!ok) toast('Speichern hat nicht geklappt. Bitte nochmals versuchen.');
+        try { data = await holen(); emit(); } catch (e) {}
+        return;
+      }
+      if (c === 'kinder') return; // Kinder verwaltet die Klassenkiste
+      if (c === 'einstellungen') { if (v) data.einstellungen[id] = cp(v); else delete data.einstellungen[id]; setDirty = true; }
+      else { if (v) data.ziele[id] = cp(v); else delete data.ziele[id]; dirty[id] = v ? cp(v) : null; }
+      save(); emit();
+    }
     function docRef(c, id) { return {
       get: async function () { await load(); return snapDoc(c, id); },
-      set: async function (o) { await load(); data[c][id] = cp(o); save(); emit(); },
-      delete: async function () { await load(); delete data[c][id]; save(); emit(); },
+      set: function (v) { return schreiben(c, id, v); },
+      delete: function () { return schreiben(c, id, null); },
       onSnapshot: function (cb, err) { return watch(function () { cb(snapDoc(c, id)); }, err); }
     }; }
     return {
@@ -745,10 +794,10 @@
       var s = await DB.session();
       if (!s) { location.hash = '#/'; return; }
       if (!(await toolGate('wz', 'Mein Wochenziel'))) return;
-      var cls = null; try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; } catch (e) {}
+      var cls = null, kids = []; try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; kids = await DB.listKids(cid); } catch (e) {}
       if (!cls) { paint('<div class="main"><div class="card stack"><h2>Mein Wochenziel nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
-      var db = wzBridge('wz-' + cid);
-      window.knWochenziel = { className: cls.name, claude: { use: async function (n) { return n === 'db' ? db : null; } }, back: function () { location.hash = '#/'; } };
+      var db = wzBridge({ key: 'wz-' + cid, kids: (kids || []).slice().sort(kidSort) });
+      window.knWochenziel = { mode: 'teacher', className: 'Klasse ' + cls.name, claude: { use: async function (n) { return n === 'db' ? db : null; } }, back: function () { location.hash = '#/'; } };
       paint('<div class="folie"><iframe src="wochenziel.html?v=' + WZ_VER + '" title="Mein Wochenziel" allow="fullscreen"></iframe></div>');
     }
   };
@@ -2580,12 +2629,14 @@
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
           ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live'],
-          ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null], ['wz', 'wochenziel', '🎯', 'Mein Wochenziel', 'Jede Woche ein Ziel setzen', null]]
+          ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null], ['wz', 'wochenziel', '🎯', 'Mein Wochenziel', 'Jede Woche ein Ziel setzen', 'wz']]
           .filter(function (x) { return T.tools[x[0]]; });
         // Live-Quiz: Kinder dürfen eigene Quiz erstellen (kid_tools.quiz === true, fehlt = aus)
         var quizFoot = function () { var on = !!(c.kid_tools && c.kid_tools.quiz === true);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="quiz">' + (on ? '✓ Kinder dürfen Quiz erstellen' : 'Quiz erstellen für Kinder gesperrt · freigeben') + '</button>'; };
-        var foot = function (k) { if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
+        var foot = function (k) { if (k === 'wz') { var w = !!(c.kid_tools && c.kid_tools.wz === true);
+            return '<button class="tt-rel' + (w ? ' on' : '') + '" data-a="toolRel" data-k="wz">' + (w ? '✓ Kinder sehen ihre Ziele' : 'Für die Kinder gesperrt · freigeben') + '</button>'; }
+          if (!k) return '<span class="tt-only">Nur für Sie</span>'; if (k === 'live') return '<span class="tt-only">Die Kinder machen am iPad mit</span>'; if (k === 'spiele') return '<span class="tt-only">Vorschau · Spiele freigeben</span>'; var on = toolOn(c, k);
           return '<button class="tt-rel' + (on ? ' on' : '') + '" data-a="toolRel" data-k="' + k + '">' + (on ? '✓ Für die Klasse freigegeben' : 'Für die Klasse gesperrt · freigeben') + '</button>'; };
         var tafelTile = '<div class="tooltile tt-card"><button class="tt-open" data-a="tab" data-t="tafel">' + ttIcon('tafel', '🙋') + '<span><b>Arbeitsstand</b><small>Wer kann helfen, wer hat Fragen</small></span></button>' + foot('tafel') + '</div>';
         var vt = vkg ? '<div class="tooltile tt-card tt-vk"><button class="tt-open" data-a="vkOpen" data-id="' + vkg.id + '">' + ttIcon('vk', VK_SVG) + '<span><b>Vokabelkiste</b><small>Wörter, Freigaben und Fortschritt</small></span></button>' +
@@ -3105,7 +3156,7 @@
       '<ul class="tt-v-liste">' + x[4].map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul>' +
       '<div class="row" style="justify-content:flex-end;gap:10px"><button class="btn" data-a="closeOverlay">Schliessen</button>' + shopBtn('✦ Hol es dir', 'btn amber') + '</div></div>');
   };
-  var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz-buzzer', umfrage: 'umfrage-urne', eltern: 'elterngespraeche' };
+  var KACHEL_BILD = { wz: 'wochenziel', folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz-buzzer', umfrage: 'umfrage-urne', eltern: 'elterngespraeche' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
   var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern', 'wz'];
@@ -3159,8 +3210,9 @@
   document.addEventListener('dragstart', function (e) { if (e.target.closest && e.target.closest('.tooltiles')) e.preventDefault(); });
   ACT.toolRel = async function (el) {
     var c = T.cur(), k = el.dataset.k, kt = Object.assign({}, c.kid_tools || {}), before = c.kid_tools;
-    kt[k] = k === 'quiz' ? !(kt.quiz === true) : !toolOn(c, k); c.kid_tools = kt; T.render();
-    try { await DB.updateClass(c.id, { kid_tools: kt }); toast(k === 'quiz' ? (kt.quiz ? 'Die Kinder können jetzt eigene Quiz erstellen.' : 'Quiz erstellen ist für die Kinder gesperrt.') : kt[k] ? 'Für die Klasse freigegeben.' : 'Für die Klasse gesperrt.'); }
+    kt[k] = k === 'quiz' || k === 'wz' ? !(kt[k] === true) : !toolOn(c, k); c.kid_tools = kt; T.render();
+    try { await DB.updateClass(c.id, { kid_tools: kt }); toast(k === 'quiz' ? (kt.quiz ? 'Die Kinder können jetzt eigene Quiz erstellen.' : 'Quiz erstellen ist für die Kinder gesperrt.') :
+      k === 'wz' ? (kt.wz ? 'Die Kinder sehen jetzt «Mein Wochenziel», wenn sie sich anmelden.' : '«Mein Wochenziel» ist für die Kinder gesperrt.') : kt[k] ? 'Für die Klasse freigegeben.' : 'Für die Klasse gesperrt.'); }
     catch (e) { c.kid_tools = before; T.render(); toast(sqlHint(e)); }
   };
   ACT.gRelAll = async function (el) {
@@ -4206,6 +4258,7 @@
     var kt = { kid_tools: (K.kl && K.kl.tools) || {} };
     return K.shell('<div class="kid-hello"><img class="kid-bild" src="' + h(klassBild(K.kl && K.kl.bild)) + '" alt=""><div class="stack" style="gap:6px"><h1>Hallo ' + h(K.home.kid.name) + '!</h1><p class="lead">' + (fachs.length || kn.length ? 'Welches Fach möchtest du üben?' : 'Deine Lehrperson hat noch keine Spiele freigegeben.') + '</p></div>' +
       '<button class="kid-btn kid-out" data-a="kBack">Abmelden</button></div>' +
+      (kt.kid_tools.wz === true ? '<button class="sprint-tile wz-tile" data-a="kWz"><span class="ic ic-bild"><img src="bilder/kacheln/wochenziel.webp" alt="" draggable="false"></span><span><b>Mein Wochenziel</b><span>Setz dir ein Ziel für diese Woche und schau, wie es klappt.</span></span></button>' : '') +
       (K.umfOpen ? '<button class="sprint-tile umf-tile" data-a="kUmf"><span class="ic ic-bild"><img src="bilder/kacheln/umfrage-urne.webp" alt="" draggable="false"></span><span><b>Umfrage!</b><span>Deine Lehrperson möchte wissen, was du denkst. Tippe hier.</span></span></button>' : '') +
       (K.raceOpen ? '<button class="sprint-tile" data-a="kRace"><span class="ic">🏃</span><span><b>Sprint!</b><span>Deine Lehrperson hat einen Klassen-Sprint geöffnet. Tippe hier, um mitzumachen.</span></span></button>' : '') +
       (tiles ? '<div class="big-tiles">' + tiles + '</div>' : '') +
@@ -4403,6 +4456,14 @@
     return '<div class="folie"><iframe src="quiz.html?v=' + QUIZ_VER + '" title="Quiz erstellen" allow="fullscreen"></iframe></div>';
   };
   ACT.kQuiz = function () { K.step = 'quiz'; K.render(); };
+  // Mein Wochenziel: das Kind kommt direkt zu seinen eigenen Zielen (kid_wz / kid_wz_set)
+  K.view_wz = function () {
+    if (!K.sess) { K.step = 'home'; return K.view_home(); }
+    var db = wzBridge({ token: K.sess.token }), kid = K.sess.kid;
+    window.knWochenziel = { mode: 'kid', kidId: kid, className: '', claude: { use: async function (n) { return n === 'db' ? db : null; } }, back: function () { ACT.kBack(); } };
+    return '<div class="folie"><iframe src="wochenziel.html?v=' + WZ_VER + '" title="Mein Wochenziel" allow="fullscreen"></iframe></div>';
+  };
+  ACT.kWz = function () { K.step = 'wz'; K.render(); };
   ACT.kHeft = function () { K.step = 'heft'; K.render(); };
   K.view_tafel = function () {
     if (!K.tafel) return K.shell('<p class="lead">Tafel wird geladen …</p>', 'Zurück');
@@ -4460,6 +4521,7 @@
       case 'atelier': K.step = 'home'; K.render(); K.checkHeft(); break;
       case 'umfrage': clearInterval(K.umfIv); K.U = null; K.step = 'home'; K.render(); K.checkRace(); break;
       case 'quiz': K.step = 'home'; K.loadHome(); break;
+      case 'wz': K.step = 'home'; K.render(); break;
       case 'race': clearInterval(K.raceIv); if (K.R && K.R.cd) clearInterval(K.R.cd); K.R = null; K.step = 'home'; K.loadHome(); break;
       default: K.step = 'home';
     }

@@ -212,6 +212,22 @@
       var ents = d.entries.filter(function (e) { return !(e.for && e.for.length) || e.for.indexOf(sid) >= 0; }).map(function (e) {
         e.for = []; e.status = one(e.status); e.notes = one(e.notes); e.first = one(e.first); e.neuAuf = one(e.neuAuf); e.selbst = one(e.selbst); return e; });
       return delay({ klasse: d.klasse, settings: d.settings, entries: ents, sus: [{ id: sid, name: k.name }], kidNotes: {} }); },
+    kidWz: function (t) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0];
+      if (!(c.kid_tools && c.kid_tools.wz === true)) return delay(null);
+      var d = (D.store || {})[c.teacher_id + '|wz-' + c.id] || {}, s = JSON.parse(JSON.stringify((d.einstellungen || {}).klasse || {})); delete s.pinH;
+      var sicht = s.lpSichtbar !== false, z = d.ziele || {};
+      var g = Object.keys(z).filter(function (id) { return z[id] && z[id].kind === k.id; }).map(function (id) { var o = JSON.parse(JSON.stringify(z[id])); o.id = id; if (!sicht) { delete o.lpBew; delete o.lpKom; delete o.lpAm; } return o; });
+      return delay({ set: s, kid: { id: k.id, name: k.name }, goals: g }); },
+    kidWzSet: function (t, p) { var k = kidOf(t), c = D.classes.filter(function (x) { return x.id === k.class_id; })[0];
+      if (!(c.kid_tools && c.kid_tools.wz === true) || !p || typeof p !== 'object') return delay(false);
+      var wk = String(p.woche || ''); if (!/^\d{4}-W\d{2}$/.test(wk) || String(p.text || '').trim().length < 3) return delay(false);
+      if (p.kindBew != null && [1, 2, 3, 4, 5].indexOf(p.kindBew) < 0) return delay(false);
+      D.store = D.store || {}; var key = c.teacher_id + '|wz-' + c.id, d = D.store[key] = D.store[key] || { kinder: {}, ziele: {}, einstellungen: {} }; d.ziele = d.ziele || {};
+      var gid = k.id + '_' + wk, old = d.ziele[gid] || {};
+      var ne = { kind: k.id, woche: wk, text: String(p.text).trim().slice(0, 160), plan: String(p.plan || '').slice(0, 200), kindBew: p.kindBew == null ? null : p.kindBew,
+        kindKom: String(p.kindKom || '').slice(0, 300), lpBew: old.lpBew == null ? null : old.lpBew, lpKom: old.lpKom || '', erstellt: old.erstellt || Date.now() };
+      if (old.lpAm) ne.lpAm = old.lpAm; if (ne.kindBew != null) ne.bewertetAm = old.bewertetAm || Date.now();
+      d.ziele[gid] = ne; return delay(true); },
     atelierPut: function (cid, kid, patch) { var c = D.classes.filter(function (x) { return x.id === cid; })[0]; if (!c || c.teacher_id !== D.session.user.id) return Promise.reject(new Error('Nicht erlaubt'));
       D.store = D.store || {}; var k = c.teacher_id + '|atelier-' + cid, d = D.store[k] = D.store[k] || { open: false, kids: {} };
       if (kid === '_') { if ('open' in patch) d.open = !!patch.open; if (Array.isArray(patch.arten)) d.arten = patch.arten.map(String).filter(function (x) { return x.trim(); }); } else if (patch == null) delete d.kids[kid]; else d.kids[kid] = Object.assign(d.kids[kid] || {}, JSON.parse(JSON.stringify(patch))); return delay(); },

@@ -1,5 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.door.kid{min-height:0;padding:16px 18px}
-/* kn-back */#knBack,.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}#knBack:not([hidden]),.kn-back{display:inline-flex}#knBack:hover,.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}#knBack img,.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* kn-back */#knBack,.kn-back{align-items:center;gap:6px;padding:3px 4px 3px 13px!important;min-height:0!important;height:auto!important;border-radius:999px!important;background:#fff!important;color:#1f2421!important;border:0!important;text-decoration:none;font:700 19px/1 system-ui,-apple-system,sans-serif!important;box-shadow:0 4px 14px rgba(63,120,168,.2)!important;flex:none;cursor:pointer}#knBack:not([hidden]),.kn-back{display:inline-flex}#knBack:hover,.kn-back:hover{box-shadow:0 6px 18px rgba(63,120,168,.3)!important;transform:none}#knBack img,.kn-back img{width:34px;height:34px;display:block;border-radius:50%}
 </style></head><body>
 <title>Mein Wochenziel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -276,6 +275,93 @@ textarea.input{resize:vertical;line-height:1.3}
 .lpcom textarea{min-height:46px;height:46px;font-size:18px}
 @media (max-width:520px){.vg-r{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.door.kid{min-height:0;padding:16px 18px}
+
+/* ===== Klassenkiste-Stil (wz_patch.py Abschnitt 10) ===== */
+:root{--hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;--h:var(--hand);--gold-l:#f3e2b3;--paper:#fffdf7}
+html,body{background:#eef6fc}
+body{background:radial-gradient(1100px 520px at 8% -8%,#d9ecfb 0,rgba(217,236,251,0) 60%),radial-gradient(900px 480px at 100% 0,#fbf0d6 0,rgba(251,240,214,0) 55%),
+  radial-gradient(800px 600px at 50% 110%,#e3f0e0 0,rgba(227,240,224,0) 60%),#f4f9fd;background-attachment:fixed}
+.lp,.kid{background:transparent!important}
+.knw-weg{display:none!important}
+/* Kopf */
+.top{background:rgba(255,255,255,.82);box-shadow:0 1px 0 rgba(214,173,69,.45),0 6px 18px rgba(63,120,168,.08)}
+.marke-bild{background:#fff;box-shadow:0 0 0 3px var(--gold),0 6px 18px rgba(63,120,168,.25)}
+.topbar .btn{font-size:19px}
+.tab[aria-selected="true"]{border-color:var(--gold);background:#fffdf5;box-shadow:0 4px 14px rgba(214,173,69,.25)}
+.h2{color:var(--ink)}
+/* Lehrperson: Karten der Kinder */
+.kc{border:1.5px solid #ecdcae;border-radius:24px;background:linear-gradient(180deg,#fff,#fffdf8)}
+.kc:hover{border-color:var(--gold)}
+.kc-top b{font-size:24px}
+.kc-goal{background:var(--paper);border:1.5px dashed #e4c978;border-radius:16px;font-size:21px}
+.kc-goal.none{background:#f6f9fc;border:1.5px dashed #cfdceb}
+.sumbox{border-color:#ecdcae}
+.sumbox b{font-family:var(--hand);font-weight:400;font-size:28px;color:var(--gold-d)}
+.chip[aria-pressed="true"]{background:#fff6dc;border-color:var(--gold);box-shadow:0 3px 10px rgba(214,173,69,.25)}
+.weeknav{border-color:#ecdcae}
+.weeknav button{background:#fff3cf;color:#7a5a12}
+.card{border-color:#ecdcae}
+.mode[aria-pressed="true"]{border-color:var(--gold);background:#fffaea}
+.sheet-head h2{font-family:var(--hand)}
+.vg{border-color:#ecdcae}
+.lprate button[aria-pressed="true"]{border-color:var(--gold);background:#fff6dc;box-shadow:0 0 0 3px rgba(214,173,69,.25)}
+/* Kinder: weich statt schwarzer Ränder */
+.kid{font-family:"Andika","Trebuchet MS",system-ui,sans-serif}
+.kid h1,.kid h2,.kid h3,.kid-top .who,.kid-btn,.kid-name b,.kid-go,.rate button span.t,.klbl,.goalbox .wk,.goalbox .gp b,.hitem .wk,.feedback small,.strip figcaption,.hitem .rs figcaption{font-family:var(--hand)!important;font-weight:400!important;letter-spacing:0;text-transform:none}
+.kid h1{font-size:clamp(36px,6vw,52px)}
+.kid h1::after,.kid-card h2::after{content:" ✦";color:var(--gold);font-size:.5em;vertical-align:super}
+.kid .party+h2::after,.kid-card.narrow h2::after{content:""}
+.kid-top .who{font-size:28px}
+.kid-top .who .ini{box-shadow:0 0 0 3px var(--gold)}
+.kid-btn{border:1.5px solid #d9c38a;border-radius:999px;background:#fff;font-size:20px;box-shadow:0 4px 12px rgba(63,120,168,.14);padding:0 20px}
+.kid-btn:hover{background:#fffaea}
+.kid-card{border:2px solid #ecdcae;border-radius:30px;box-shadow:var(--schatten);background:linear-gradient(180deg,#fff 0,#fff 75%,#fffdf6 100%)}
+.kid-card h2{font-size:clamp(28px,4.6vw,38px)}
+.kid-name{border:2px solid #ecdcae;box-shadow:0 6px 16px rgba(63,120,168,.14);border-radius:22px}
+.kid-name:hover{border-color:var(--gold);transform:translateY(-2px)}
+.kid-name:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(63,120,168,.14)}
+.kid-name b{font-size:25px}
+.kid-go{border-radius:999px;color:#3d2c05;background:linear-gradient(180deg,#ffd873,#f2be3c);box-shadow:0 5px 0 #c99a2e,0 14px 24px rgba(214,173,69,.32);font-size:27px;transition:transform .12s,box-shadow .12s}
+.kid-go:hover{background:linear-gradient(180deg,#ffdd85,#f4c44a);transform:translateY(-2px)}
+.kid-go:active{transform:translateY(4px);box-shadow:0 1px 0 #c99a2e,0 6px 12px rgba(214,173,69,.3)}
+.kid-go[disabled]{background:#e9edf0;color:#8a948e;box-shadow:none;transform:none}
+.kid-go.alt{background:#fff;color:var(--ink);border:2px dashed var(--gold);box-shadow:none;font-size:22px;line-height:1.2;padding:12px 22px}
+.kid-go.alt:hover{background:#fffaea}
+.goalbox{background:var(--paper);border:2px dashed var(--gold);border-radius:24px;box-shadow:inset 0 0 0 6px #fff9e8}
+.goalbox .wk{font-size:19px}
+.goalbox .gt{font-size:clamp(30px,5vw,44px)}
+.goalbox .gp b{font-size:18px}
+.rate button{border:2px solid #e2e8ee;box-shadow:0 5px 14px rgba(63,120,168,.13);border-radius:22px}
+.rate button:hover{border-color:#e4c978}
+.rate button span.t{font-size:20px}
+.rate button[aria-pressed="true"]{background:#fff6dc;border-color:var(--gold);outline:0;transform:translateY(2px);box-shadow:0 0 0 4px rgba(214,173,69,.35)}
+.ktext{border:2px solid #dfe8f0;border-radius:20px;background:#fff;font-size:27px;box-shadow:inset 0 2px 6px rgba(63,120,168,.06)}
+.ktext:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(214,173,69,.25)}
+.klbl{font-size:22px}
+.idea{border:1.5px solid #e4c978;background:#fffdf5;font-size:20px}
+.idea:hover{background:#fff3cf}
+.feedback{background:#f1f7ec;border:2px solid #cfe2c2;border-radius:24px}
+.feedback small{font-size:17px}
+.hitem{border:1.5px solid #ecdcae;box-shadow:0 4px 12px rgba(63,120,168,.1);border-radius:22px}
+.hitem .wk{font-size:17px}
+.strip figure{background:#fff;border-radius:16px;padding:6px 2px 4px;box-shadow:0 3px 10px rgba(63,120,168,.1)}
+.symbtn,.pwslots span{border-width:2px}
+.symbtn{border-color:#e2e8ee;box-shadow:0 5px 14px rgba(63,120,168,.13)}
+.pwslots span.on{border-color:var(--gold)}
+.door{border:2px solid #ecdcae}
+.door:hover{border-color:var(--gold)}
+.login-hero{background:linear-gradient(160deg,#d9ecfb,#eaf5fd 60%,#fdf3dc)}
+/* Klassenkiste: Zurück-Knopf wie überall (weisse Pille mit Pfeil und Eule) */
+.knback{position:fixed;left:12px;top:10px;z-index:60;display:flex;align-items:center;gap:6px;height:48px;padding:0 8px 0 16px;border:0;border-radius:999px;background:#fff;
+  box-shadow:0 6px 18px rgba(63,120,168,.22),0 0 0 1.5px #ecdcae;font:24px/1 var(--hand);color:var(--ink);cursor:pointer}
+.knback img{width:36px;height:36px;border-radius:50%}
+.knback:hover{transform:translateY(-1px)}
+body.inkn .top-in{padding-left:max(110px,env(safe-area-inset-left,0px))}
+body.inkn .kid{padding-top:72px}
+.knlpbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 16px 8px 110px;background:#fff6dc;
+  border-bottom:1.5px dashed var(--gold);font:20px/1.2 var(--hand);color:#5b4a1e}
+body.inkn .knlpbar+.kid{padding-top:22px}
 </style>
 
 <div id="app" aria-live="polite"><p class="boot">Mein Wochenziel wird geladen …</p></div>
@@ -284,6 +370,9 @@ textarea.input{resize:vertical;line-height:1.3}
 <script>
 (() => {
 'use strict';
+const KNW = (() => { try { return window.parent !== window && window.parent.knWochenziel; } catch (e) { return null; } })();
+const KNT = !!(KNW && KNW.mode === 'teacher'), KNK = !!(KNW && KNW.mode === 'kid');
+if (KNW) document.documentElement.classList.add('knw', KNK ? 'knw-kid' : 'knw-lp');
 const INK = '#1f2421';
 
 /* ================= Hilfsfunktionen ================= */
@@ -470,7 +559,6 @@ const store = {
 async function init() {
   let db = null;
   try {
-    const KNW = (() => { try { return window.parent !== window && window.parent.knWochenziel; } catch (e) { return null; } })();
     if (KNW && KNW.claude) db = await KNW.claude.use('db');
     else if (window.claude && typeof window.claude.use === 'function')
       db = await Promise.race([window.claude.use('db'), new Promise(r => setTimeout(() => r(null), 10000))]);
@@ -478,11 +566,11 @@ async function init() {
   if (!db) { S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); return; }
   dbRef = db; S.backend = 'db';
   const got = new Set();
-  const ready = k => { got.add(k); if (got.size === 3 && S.screen === 'loading') { clearTimeout(timer); S.screen = 'start'; } render(); };
+  const ready = k => { got.add(k); if (got.size === 3 && S.screen === 'loading') { clearTimeout(timer); S.screen = knStart(); } render(); };
   const timer = setTimeout(() => {
     if (S.screen === 'loading') { S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); toast('Die Klassendaten antworten nicht. Es wird vorerst nur auf diesem Gerät gespeichert.'); }
   }, 10000);
-  const onErr = () => { if (S.screen === 'loading') { clearTimeout(timer); S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); } };
+  const onErr = () => { if (KNW) { clearTimeout(timer); S.screen = 'knaus'; render(); return; } if (S.screen === 'loading') { clearTimeout(timer); S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); } };
   db.collection('kinder').onSnapshot(s => { if (S.backend !== 'db') return; real.kids = s.docs.map(d => ({ id: d.id, ...d.data() })); ready('k'); }, onErr);
   db.collection('ziele').onSnapshot(s => { if (S.backend !== 'db') return; real.goals = s.docs.map(d => ({ id: d.id, ...d.data() })); ready('g'); }, onErr);
   db.doc('einstellungen/klasse').onSnapshot(s => { if (S.backend !== 'db') return; real.set = { ...DEF, ...(s.exists ? s.data() : {}) }; ready('s'); }, onErr);
@@ -517,6 +605,11 @@ function makeDemo() {
   return { kids, goals, set: { ...DEF, klasse: 'Beispielklasse 4b', bildpw: false } };
 }
 
+function knStart() {
+  if (KNT) { S.lpOk = true; return 'lp'; }
+  if (KNK) { S.kidId = KNW.kidId; return 'kid'; }
+  return 'start';
+}
 /* ================= Abfragen ================= */
 const kidById = id => D().kids.find(k => k.id === id);
 const kidsSorted = () => [...D().kids].sort((a, b) => a.name.localeCompare(b.name, 'de'));
@@ -542,6 +635,7 @@ function render() {
   if (S.demo) h += `<div class="demobar"><span><b>Beispielklasse</b> mit erfundenen Namen · nichts wird gespeichert · Bildpasswort ist hier ausgeschaltet</span><button class="btn sm" data-a="demoEnd">Beispiel beenden</button></div>`;
   switch (S.screen) {
     case 'loading': h += `<p class="boot">Mein Wochenziel wird geladen …</p>`; break;
+    case 'knaus': h += `<div class="kid"><div class="kid-in"><div class="kid-card narrow"><h2>Mein Wochenziel ist gerade zu.</h2><p class="lead">Frag deine Lehrperson.</p></div></div></div>`; break;
     case 'start': h += vStart(); break;
     case 'kidpick': h += vKidPick(); break;
     case 'kidpw': h += vKidPw(); break;
@@ -549,6 +643,8 @@ function render() {
     case 'lppin': h += vLpPin(); break;
     case 'lp': h += vLp(); break;
   }
+  if (KNT && (S.screen === 'kidpick' || S.screen === 'kid'))
+    h = `<div class="knlpbar"><span>👁 Kinderansicht${S.screen === 'kid' && kidById(S.kidId) ? ' · so sieht es ' + esc(kidById(S.kidId).name) : ' · wähle ein Kind'}</span><button class="btn sm" data-a="knLp">Zur Übersicht</button></div>` + h;
   $app.innerHTML = h;
   for (const id in drafts) { const el = document.getElementById(id); if (el) { el.value = drafts[id]; el.dataset.dirty = '1'; } }
   if (keep) { const el = document.getElementById(keep.id); if (el) { el.value = keep.v; el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
@@ -558,11 +654,11 @@ function render() {
 function storeNote() {
   if (S.demo) return `<p class="storenote"><i></i>Beispiel – wird nicht gespeichert</p>`;
   return S.backend === 'db'
-    ? `<p class="storenote db"><i></i>Gespeichert für die ganze Klasse</p>`
+    ? `<p class="storenote db"><i></i>${KNW ? 'In der Klassenkiste gespeichert' : 'Gespeichert für die ganze Klasse'}</p>`
     : `<p class="storenote"><i></i>Wird nur auf diesem Gerät gespeichert</p>`;
 }
 function marke() {
-  const k = D().set.klasse;
+  const k = KNW && KNW.className ? KNW.className : D().set.klasse;
   return `<div class="marke"><span class="marke-bild">${LOGO}</span><span class="marke-text"><b>Mein <em>Wochenziel</em><i>✦</i></b><small>Klassenkiste${k ? ' · ' + esc(k) : ''}</small></span></div>`;
 }
 
@@ -586,8 +682,8 @@ function vStart() {
 function vKidPick() {
   const ks = kidsSorted();
   return `<div class="kid"><div class="kid-in">
-    <div class="kid-top"><button class="kid-btn" data-a="home">‹ Zurück</button>${D().set.klasse ? `<span class="who">${esc(D().set.klasse)}</span>` : ''}</div>
-    <h1>Wer bist du?</h1>
+    <div class="kid-top"><button class="kid-btn" data-a="home">‹ Zurück</button>${KNW && KNW.className ? `<span class="who">${esc(KNW.className)}</span>` : D().set.klasse ? `<span class="who">${esc(D().set.klasse)}</span>` : ''}</div>
+    <h1>${KNT ? 'Wessen Seite möchten Sie ansehen?' : 'Wer bist du?'}</h1>
     ${ks.length ? `<div class="kid-grid">${ks.map(k => `<button class="kid-name" data-a="pickKid" data-id="${esc(k.id)}">${iniHtml(k)}<b>${esc(k.name)}</b></button>`).join('')}</div>`
       : `<div class="kid-card narrow"><h2>Hier sind noch keine Namen.</h2><p class="lead">Deine Lehrperson trägt zuerst die Namen der Klasse ein.</p></div>`}
   </div></div>`;
@@ -675,7 +771,7 @@ function vKid() {
   }
   if (!main && next) {
     main = showGoal(next, 'Dein Ziel für nächste Woche', `${!next.lpBew ? `<div class="row"><button class="kid-btn" data-a="editGoal" data-wk="${next.woche}">Ziel ändern</button></div>` : ''}
-      <p class="lead" style="text-align:center">Super, alles erledigt! Du kannst jetzt auf «Fertig» tippen.</p>`);
+      <p class="lead" style="text-align:center">Super, alles erledigt!${KNT ? '' : ' Du kannst jetzt auf «Fertig» tippen.'}</p>`);
   }
 
   // Rückmeldung der Lehrperson zur letzten beurteilten Woche
@@ -688,7 +784,7 @@ function vKid() {
   const recent = gs.filter(g => g.kindBew).slice(-10);
   const hist = [...gs].reverse().filter(g => g.kindBew);
   return `<div class="kid"><div class="kid-in">
-    <div class="kid-top"><span class="who">${iniHtml(k)}Hallo ${esc(k.name)}</span><button class="kid-btn" data-a="kidDone">Fertig</button></div>
+    <div class="kid-top"><span class="who">${iniHtml(k)}Hallo ${esc(k.name)}</span><button class="kid-btn" data-a="kidDone">${KNT ? '‹ Anderes Kind' : 'Fertig'}</button></div>
     ${main}
     ${fb}
     ${recent.length ? `<section class="stack"><h3>Meine Wochen</h3><div class="strip">${recent.map(g => `<figure>${symHtml(g.kindBew)}<figcaption>${kw(g.woche)}</figcaption></figure>`).join('')}</div></section>` : ''}
@@ -716,14 +812,14 @@ function vLpPin() {
 }
 
 function vLp() {
-  const tabs = [['klasse', 'Klasse'], ['kinder', 'Kinder'], ['einst', 'Beurteilung & Einstellungen']];
+  const tabs = [['klasse', 'Klasse'], ['kinder', 'Kinder'], ['einst', 'Beurteilung & Einstellungen']].filter(t => !(KNW && t[0] === 'kinder'));
   let body = '';
   if (S.lpTab === 'klasse') body = vLpKlasse();
   if (S.lpTab === 'kinder') body = vLpKinder();
   if (S.lpTab === 'einst') body = vLpEinst();
   return `<div class="lp">
     <header class="top"><div class="top-in">${marke()}
-      <div class="topbar">${D().set.klasse ? `<span class="cls">${esc(D().set.klasse)}</span>` : ''}<button class="btn sm" data-a="goKid">Kinderansicht</button><button class="btn sm" data-a="lpLogout">Abmelden</button></div></div>
+      <div class="topbar">${KNW && KNW.className ? `<span class="cls">${esc(KNW.className)}</span>` : D().set.klasse ? `<span class="cls">${esc(D().set.klasse)}</span>` : ''}<button class="btn sm" data-a="goKid">👁 Kinderansicht</button><button class="btn sm knw-weg" data-a="lpLogout">Abmelden</button></div></div>
       <nav class="tabs" role="tablist">${tabs.map(t => `<button class="tab" role="tab" aria-selected="${S.lpTab === t[0]}" data-a="tab" data-t="${t[0]}">${t[1]}</button>`).join('')}</nav>
     </header>
     <main class="main">${body}${storeNote()}</main>
@@ -733,8 +829,8 @@ function vLp() {
 
 function vLpKlasse() {
   const ks = kidsSorted();
-  if (!ks.length) return `<div class="empty"><h3>Noch keine Kinder eingetragen</h3><p>Tragen Sie zuerst die Vornamen Ihrer Klasse ein. Danach können die Kinder ihr Wochenziel setzen.</p>
-    <button class="btn primary" data-a="tab" data-t="kinder">Kinder eintragen</button></div>`;
+  if (!ks.length) return `<div class="empty"><h3>Noch keine Kinder eingetragen</h3><p>${KNW ? 'Tragen Sie die Kinder in der Klassenkiste unter «Kinder» ein. Sie erscheinen dann automatisch hier.' : 'Tragen Sie zuerst die Vornamen Ihrer Klasse ein. Danach können die Kinder ihr Wochenziel setzen.'}</p>
+    ${KNW ? '' : '<button class="btn primary" data-a="tab" data-t="kinder">Kinder eintragen</button>'}</div>`;
   const wk = S.lpWeek, cw = thisWeek(), set = D().set;
   const rows = ks.map(k => ({ k, g: goalAt(k.id, wk) }));
   const nGoal = rows.filter(r => r.g).length, nSelf = rows.filter(r => r.g && r.g.kindBew).length, nLp = rows.filter(r => r.g && r.g.lpBew).length;
@@ -819,9 +915,9 @@ function vLpEinst() {
     <div class="setgrid">
       <div class="card"><h3>Für die Kinder</h3>
         <button class="switch" role="switch" data-a="tgl" data-k="lpSichtbar" aria-checked="${!!set.lpSichtbar}">Kinder sehen Ihre Beurteilung und Rückmeldung<span class="track"></span></button>
-        <button class="switch" role="switch" data-a="tgl" data-k="bildpw" aria-checked="${!!set.bildpw}">Anmelden mit Bildpasswort<span class="track"></span></button>
+        <button class="switch knw-weg" role="switch" data-a="tgl" data-k="bildpw" aria-checked="${!!set.bildpw}">Anmelden mit Bildpasswort<span class="track"></span></button>
       </div>
-      <div class="card"><h3>Klasse</h3>
+      <div class="card knw-weg"><h3>Klasse</h3>
         <form data-f="klasse" class="stack" style="gap:8px"><label class="lbl" for="klasseIn">Name der Klasse</label><div class="row" style="flex-wrap:nowrap"><input id="klasseIn" class="input" maxlength="40" value="${esc(set.klasse)}" placeholder="z. B. 4b"><button class="btn sm" type="submit">Speichern</button></div></form>
         <form data-f="pinChange" class="stack" style="gap:8px"><label class="lbl" for="pinChg">PIN für den Lehrpersonen-Bereich ${set.pinH ? '(ist gesetzt)' : '(keine)'}</label><div class="row" style="flex-wrap:nowrap"><input id="pinChg" class="input" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="${set.pinH ? 'Neue PIN' : 'PIN festlegen'}"><button class="btn sm" type="submit">Speichern</button></div>
         ${set.pinH ? `<button type="button" class="linkbtn" style="align-self:flex-start" data-a="pinOff">PIN entfernen</button>` : ''}</form>
@@ -848,14 +944,17 @@ document.addEventListener('click', e => {
   const a = t.dataset.a, id = t.dataset.id;
   if (a !== 'delKid' && a !== 'delGoal') S.armed = null;
   switch (a) {
-    case 'home': kidReset(); S.lpOk = false; go('start'); break;
+    case 'home': if (KNK) { try { KNW.back(); } catch (e) {} break; }
+      if (KNT) { kidReset(); go('lp'); break; }
+      kidReset(); S.lpOk = false; go('start'); break;
+    case 'knLp': kidReset(); go('lp'); break;
     case 'demo': demoData = makeDemo(); S.demo = true; kidReset(); S.lpOk = true; go('start'); break;
     case 'demoEnd': S.demo = false; demoData = null; kidReset(); S.lpOk = false; S.openKid = null; go('start'); break;
-    case 'goKid': kidReset(); S.openKid = null; if (!S.demo) S.lpOk = false; go('kidpick'); break;
+    case 'goKid': kidReset(); S.openKid = null; if (!S.demo && !KNT) S.lpOk = false; go('kidpick'); break;
     case 'pickKid': {
       kidReset(); S.kidId = id;
       const k = kidById(id);
-      go(D().set.bildpw && k && (k.pw || []).length === 3 ? 'kidpw' : 'kid'); break;
+      go(!KNW && D().set.bildpw && k && (k.pw || []).length === 3 ? 'kidpw' : 'kid'); break;
     }
     case 'pw': {
       if (S.pwSel.length >= 3) break;
@@ -868,7 +967,7 @@ document.addEventListener('click', e => {
       break;
     }
     case 'pwClear': S.pwSel = []; S.pwErr = false; render(); break;
-    case 'kidDone': kidReset(); go('kidpick'); break;
+    case 'kidDone': if (KNK) { try { KNW.back(); } catch (e) {} break; } kidReset(); go('kidpick'); break;
     case 'openRate': S.rateOpen = true; S.rateSel = 0; render(); break;
     case 'rateKid': S.rateSel = Number(t.dataset.l); render(); break;
     case 'saveRate': {
@@ -963,8 +1062,7 @@ init();
 })();
 </script>
 
-<button class="pill" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste" type="button" hidden><span aria-hidden="true">←</span><img src="bilder/eule.webp" alt="" width="34" height="34"></button>
-<style>#knBack{position:fixed;left:12px;top:10px;z-index:60}body.inkn{padding-top:58px}</style>
+<button class="knback" id="knBack" aria-label="Zurück zur Klassenkiste" title="Zurück zur Klassenkiste" type="button" hidden aria-label="Zurück zur Klassenkiste"><span>←</span><img src="bilder/eule.webp" alt=""></button>
 <script>(() => { let K = null; try { K = window.parent !== window && window.parent.knWochenziel; } catch (e) {}
   if (!K) return; const b = document.getElementById('knBack'); b.hidden = false; document.body.classList.add('inkn');
   b.addEventListener('click', () => { try { K.back(); } catch (e) {} }); })();</script>

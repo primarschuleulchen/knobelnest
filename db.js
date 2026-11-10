@@ -157,6 +157,9 @@
     umfGastSend: async function (token, q, val) { return ok(await sb.rpc('umf_gast_send', { p_token: token, p_q: String(q || ''), p_val: val })); },
     pinPut: async function (cid, coll, id, obj) { return ok(await sb.rpc('pin_put', { p_class: cid, p_coll: coll, p_id: id, p_obj: obj })); },
     kidHeftOwn: async function (token, entry, del) { return ok(await sb.rpc('kid_heft_own', { p_token: token, p_entry: entry, p_delete: !!del })); },
+    // Mein Wochenziel (Version 33): eigene Ziele lesen und schreiben
+    kidWz: async function (token) { return ok(await sb.rpc('kid_wz', { p_token: token })); },
+    kidWzSet: async function (token, goal) { return ok(await sb.rpc('kid_wz_set', { p_token: token, p_goal: goal })); },
     kidHeftTick: async function (token, id, on) { return ok(await sb.rpc('kid_heft_tick', { p_token: token, p_entry: String(id), p_on: !!on })); },
     kidGame: async function (token, gid) { return ok(await sb.rpc('kid_game', { p_token: token, p_game: gid })); },
     kidReport: async function (token, gid, r) {

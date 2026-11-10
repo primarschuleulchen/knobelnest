@@ -1,5 +1,5 @@
 -- =====================================================================
--- Knobelnest – Datenbank-Einrichtung (Version 31)
+-- Knobelnest – Datenbank-Einrichtung (Version 33)
 --
 -- So geht's: In Supabase links «SQL Editor» öffnen, «New query»,
 -- diesen ganzen Text einfügen und unten rechts auf «Run» klicken.
@@ -2326,5 +2326,67 @@ $$;
 
 revoke execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) from public, anon;
 grant execute on function public.games_shop(), public.buy_game(uuid), public.admin_add_credits(uuid, int, text) to authenticated;
+
+-- =====================================================================
+-- Version 33: Mein Wochenziel für die Kinder (Version 32 ist für «Vokabelkiste-Units mit Guthaben» reserviert)
+--   Speicher bei der Lehrperson: teacher_store «wz-<Klasse>» = {kinder:{}, ziele:{Ziel-ID:{kind, woche, text, plan,
+--   kindBew, kindKom, lpBew, lpKom, …}}, einstellungen:{klasse:{…}}}. Ziel-ID = <Kind-ID>_<Woche> (z. B. …_2026-W46).
+--   Kinder (nur wenn classes.kid_tools.wz = true): lesen ihre eigenen Ziele und die Einstellungen (ohne PIN),
+--   schreiben nur eigene Ziele und nur die Kinder-Felder (Text, Plan, eigene Beurteilung, Kommentar).
+-- =====================================================================
+create or replace function public.kid_wz(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; c public.classes; d jsonb; s jsonb; g jsonb; sicht boolean;
+begin
+  k := public._kid(p_token);
+  select * into c from public.classes where id = k.class_id;
+  if coalesce(c.kid_tools->>'wz', '') <> 'true' then return null; end if;
+  select data into d from public.teacher_store where teacher_id = c.teacher_id and doc = 'wz-' || c.id::text;
+  s := coalesce(d->'einstellungen'->'klasse', '{}'::jsonb) - 'pinH';
+  sicht := coalesce(s->>'lpSichtbar', 'true') <> 'false';
+  select coalesce(jsonb_agg(jsonb_build_object('id', x.key) || case when sicht then x.value else x.value - 'lpBew' - 'lpKom' - 'lpAm' end), '[]'::jsonb)
+    into g from jsonb_each(case when jsonb_typeof(d->'ziele') = 'object' then d->'ziele' else '{}'::jsonb end) as x
+   where x.value->>'kind' = k.id::text;
+  return jsonb_build_object('set', s, 'kid', jsonb_build_object('id', k.id, 'name', k.name), 'goals', g);
+end;
+$$;
+
+create or replace function public.kid_wz_set(p_token uuid, p_goal jsonb) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare k public.kids; c public.classes; d jsonb; wk text; gid text; old jsonb; ne jsonb; n int; bew jsonb; dname text;
+begin
+  k := public._kid(p_token);
+  select * into c from public.classes where id = k.class_id;
+  if coalesce(c.kid_tools->>'wz', '') <> 'true' or jsonb_typeof(p_goal) is distinct from 'object' then return false; end if;
+  wk := coalesce(p_goal->>'woche', '');
+  if wk !~ '^\d{4}-W\d{2}$' or length(btrim(coalesce(p_goal->>'text', ''))) < 3 then return false; end if;
+  bew := p_goal->'kindBew';
+  if bew is not null and jsonb_typeof(bew) <> 'null' and not (jsonb_typeof(bew) = 'number' and bew::text ~ '^[1-5]$') then return false; end if;
+  dname := 'wz-' || c.id::text; gid := k.id::text || '_' || wk;
+  insert into public.teacher_store (teacher_id, doc, data) values (c.teacher_id, dname, '{"kinder":{},"ziele":{},"einstellungen":{}}'::jsonb)
+    on conflict (teacher_id, doc) do nothing;
+  select data into d from public.teacher_store where teacher_id = c.teacher_id and teacher_store.doc = dname for update;
+  if jsonb_typeof(d->'ziele') is distinct from 'object' then d := jsonb_set(d, '{ziele}', '{}'::jsonb); end if;
+  old := d->'ziele'->gid;
+  if old is null then
+    select count(*) into n from jsonb_each(d->'ziele') as x where x.value->>'kind' = k.id::text;
+    if n >= 300 then return false; end if;
+  end if;
+  ne := jsonb_build_object('kind', k.id::text, 'woche', wk, 'text', left(btrim(p_goal->>'text'), 160),
+    'plan', left(coalesce(p_goal->>'plan', ''), 200),
+    'kindBew', case when jsonb_typeof(bew) = 'number' then bew else 'null'::jsonb end,
+    'kindKom', left(coalesce(p_goal->>'kindKom', ''), 300),
+    'lpBew', coalesce(old->'lpBew', 'null'::jsonb), 'lpKom', coalesce(old->'lpKom', '""'::jsonb),
+    'erstellt', coalesce(old->'erstellt', to_jsonb((extract(epoch from now()) * 1000)::bigint)));
+  if old ? 'lpAm' then ne := ne || jsonb_build_object('lpAm', old->'lpAm'); end if;
+  if jsonb_typeof(bew) = 'number' then ne := ne || jsonb_build_object('bewertetAm', coalesce(old->'bewertetAm', to_jsonb((extract(epoch from now()) * 1000)::bigint))); end if;
+  d := jsonb_set(d, array['ziele', gid], ne);
+  update public.teacher_store set data = d, updated_at = now() where teacher_id = c.teacher_id and teacher_store.doc = dname;
+  return true;
+end;
+$$;
+
+revoke execute on function public.kid_wz(uuid), public.kid_wz_set(uuid, jsonb) from public;
+grant execute on function public.kid_wz(uuid), public.kid_wz_set(uuid, jsonb) to anon, authenticated;
 
 -- Fertig.
