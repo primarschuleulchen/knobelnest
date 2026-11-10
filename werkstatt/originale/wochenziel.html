@@ -1,0 +1,964 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mein Wochenziel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mein Wochenziel aus der Klassenkiste: Kinder setzen sich jede Woche ein Ziel und beurteilen es am Ende der Woche. Die Lehrperson sieht alle Ziele und beurteilt mit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@400;500;600&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: Klassenkiste. Lehrperson im Eulenkisten-Stil (hellblau, weisse Karten mit weichem blauem Schatten, Gold-Sterne, Patrick Hand),
+   Kinder im Kinderstil der Klassenkiste (kräftige schwarze Ränder, harter Schatten, Fredoka/Andika, grosse Tippflächen).
+   Bewusst nur hell, damit es am Beamer und auf dem Tablet gleich aussieht wie die übrigen Klassenkisten-Werkzeuge. */
+:root{
+  color-scheme:light;
+  --bg:#f4f9fd; --kid:#dceefc; --card:#ffffff; --ink:#1f2421; --soft:#5f6963; --line:#dbe7f1; --line2:#c5d8e8;
+  --sky:#dcf0fd; --sky-2:#c9e7fb; --sky-d:#3f78a8; --gold:#d6ad45; --gold-d:#a77d1f;
+  --rose:#fcefed; --rose-d:#9a3b33; --leaf:#e9f1e3; --leaf-d:#3f6b2e; --sun:#fbf3dc;
+  --hand:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;
+  --h:"Fredoka","Andika",system-ui,sans-serif;
+  --b:"Andika","Trebuchet MS",system-ui,sans-serif;
+  --schatten:0 10px 26px rgba(63,120,168,.18),0 2px 6px rgba(63,120,168,.10);
+  --schatten-hoch:0 16px 34px rgba(63,120,168,.26),0 3px 8px rgba(63,120,168,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--b);font-size:17px;line-height:1.45;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sky-d);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{text-wrap:balance;font-weight:400}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:14px}
+.muted{color:var(--soft)}
+svg{display:block}
+
+/* ---------- Grundbausteine ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:14px;border:2px solid var(--ink);background:#fff;
+  font-family:var(--hand);font-size:19px;box-shadow:var(--schatten);transition:transform .15s,box-shadow .15s;color:var(--ink)}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--schatten-hoch)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--sky)}
+.btn.primary:hover{background:var(--sky-2)}
+.btn.sm{min-height:38px;padding:0 13px;font-size:17px;border-radius:11px;box-shadow:0 4px 12px rgba(63,120,168,.14)}
+.btn.ghost{border-color:var(--line2);box-shadow:none}
+.btn.danger{border-color:#b5524a;color:var(--rose-d);box-shadow:none}
+.btn.danger.armed{background:#b5524a;color:#fff}
+.btn[disabled]{opacity:.5;cursor:default;transform:none}
+.linkbtn{border:0;background:none;padding:2px;color:var(--sky-d);text-decoration:underline;font:inherit}
+.input{min-height:46px;padding:9px 14px;border:1.5px solid var(--line2);border-radius:14px;background:#fff;width:100%;font-family:var(--hand);font-size:19px}
+textarea.input{resize:vertical;line-height:1.3}
+.input:focus{outline:3px solid #9fd0f3;border-color:var(--sky-d)}
+.lbl{font-family:var(--hand);font-size:18px;color:var(--soft)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 11px;border-radius:999px;font-size:15px;font-family:var(--hand);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.p-none{background:var(--rose);color:var(--rose-d)}
+.p-set{background:var(--sky);color:#2f5f8f}
+.p-self{background:var(--sun);color:#7a5a12}
+.p-done{background:var(--leaf);color:var(--leaf-d)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line2);background:#fff;font-family:var(--hand);font-size:18px}
+.chip[aria-pressed="true"]{background:var(--sky);border-color:var(--ink)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;width:100%;padding:8px 12px 8px 16px;border-radius:14px;border:1.5px solid var(--line);
+  background:#f7fbfe;color:var(--soft);text-align:left;font-family:var(--hand);font-size:18px}
+.switch[aria-checked="true"]{background:var(--leaf);border-color:#7ea56a;color:var(--leaf-d)}
+.track{flex:none;width:48px;height:28px;border-radius:999px;background:#9aafc6;position:relative}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+[aria-checked="true"] .track{background:#7ea56a}
+[aria-checked="true"] .track::after{left:23px}
+.ini{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--h);font-size:21px;font-weight:500;color:var(--ink);border:2px solid rgba(31,36,33,.15)}
+.err{color:var(--rose-d);font-family:var(--hand);font-size:18px;min-height:1.2em}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:999px;
+  font-family:var(--hand);font-size:19px;z-index:80;max-width:calc(100% - 32px);text-align:center;box-shadow:var(--schatten)}
+.demobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--sun);border-bottom:1.5px dashed var(--gold);padding:7px max(16px,env(safe-area-inset-right,0px)) 7px max(16px,env(safe-area-inset-left,0px));
+  font-family:var(--hand);font-size:18px;color:#4a3d1a;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:center;text-align:center}
+.boot{padding:80px 20px;text-align:center;font-family:var(--hand);font-size:22px;color:var(--soft)}
+.sym{display:inline-grid;place-items:center}
+.sym svg{width:100%;height:100%}
+
+/* ---------- Start ---------- */
+.login{min-height:100vh;display:flex;flex-wrap:wrap}
+.login-hero{flex:1 1 420px;background:var(--sky);padding:44px max(28px,env(safe-area-inset-left,0px)) 44px 40px;display:flex;flex-direction:column;justify-content:space-between;gap:36px}
+.login-hero h1{font-family:var(--hand);font-size:clamp(40px,6vw,62px);line-height:1}
+.login-hero p{font-family:var(--hand);font-size:22px;color:#36597d;max-width:28em;margin-top:12px}
+.login-form{flex:1 1 420px;display:flex;align-items:center;justify-content:center;padding:40px max(20px,env(safe-area-inset-right,0px)) 40px 20px}
+.login-form .stack{width:100%;max-width:440px;gap:16px}
+.marke{display:flex;align-items:center;gap:12px;color:var(--ink)}
+.marke-bild{flex:none;width:60px;height:60px;border-radius:50%;background:#fff;padding:6px;box-shadow:0 0 0 2px var(--gold),0 6px 18px rgba(63,120,168,.25);transform:rotate(-6deg)}
+.marke-text b{display:block;font-family:var(--hand);font-size:34px;line-height:.95;font-weight:400}
+.marke-text em{font-style:normal;color:var(--gold-d)}
+.marke-text i{font-style:normal;color:var(--gold);font-size:.55em;vertical-align:super;margin-left:2px}
+.marke-text small{display:inline-block;margin-top:3px;font-family:var(--hand);font-size:16px;color:var(--soft);border-top:1.5px dashed var(--gold);padding-top:1px}
+.hero-scale{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end}
+.hero-scale figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;width:76px}
+.hero-scale .sym{width:64px;height:64px}
+.hero-scale .sym.wide{width:76px;height:auto}
+.hero-scale figcaption{font-family:var(--hand);font-size:15px;line-height:1.1;text-align:center;color:#36597d}
+.door{display:flex;align-items:center;gap:16px;width:100%;padding:16px 18px;border-radius:18px;border:2px solid var(--ink);background:#fff;box-shadow:var(--schatten);text-align:left;transition:transform .15s,box-shadow .15s}
+.door:hover{transform:translateY(-2px);box-shadow:var(--schatten-hoch)}
+.door .di{flex:none;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:var(--sky)}
+.door .di svg{width:40px;height:40px}
+.door b{display:block;font-family:var(--hand);font-size:26px;font-weight:400;line-height:1.05}
+.door span span{font-family:var(--hand);font-size:17px;color:var(--soft)}
+.door.kid .di{background:var(--sun)}
+.storenote{font-family:var(--hand);font-size:17px;color:var(--soft);display:flex;gap:8px;align-items:center;justify-content:center;text-align:center}
+.storenote i{width:9px;height:9px;border-radius:50%;background:#9aafc6;flex:none}
+.storenote.db i{background:#7ea56a}
+
+/* ---------- Kinder ---------- */
+.kid{min-height:100vh;background:var(--kid);padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.kid-in{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.kid-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.kid-top .who{display:flex;align-items:center;gap:12px;font-family:var(--h);font-size:24px;font-weight:500}
+.kid-btn{min-height:50px;padding:0 18px;border-radius:12px;border:2px solid var(--ink);background:#fff;font-family:var(--h);font-weight:500;font-size:18px}
+.kid h1{font-family:var(--h);font-weight:500;font-size:clamp(30px,6vw,44px);line-height:1.1}
+.kid .lead{font-size:20px}
+.kid-card{width:100%;background:#fff;border:3px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);padding:30px clamp(18px,4vw,36px);display:flex;flex-direction:column;gap:20px}
+.kid-card.narrow{max-width:600px;margin:0 auto;text-align:center}
+.kid-card h2{font-family:var(--h);font-weight:500;font-size:clamp(24px,4.4vw,32px);line-height:1.15}
+.kid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.kid-name{display:flex;align-items:center;gap:12px;min-height:76px;padding:12px 14px;border-radius:18px;border:3px solid var(--ink);background:#fff;box-shadow:0 5px 0 var(--ink);text-align:left}
+.kid-name:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.kid-name b{font-family:var(--h);font-size:22px;font-weight:500;line-height:1.15;min-width:0;overflow-wrap:anywhere}
+.kid-go{min-height:64px;border-radius:18px;border:0;background:#4a8bd0;color:#fff;font-family:var(--h);font-weight:500;font-size:24px;padding:0 26px;width:100%}
+.kid-go:hover{background:#3b7cc4}
+.kid-go[disabled]{background:#c9cfcc;color:var(--soft);cursor:default}
+.kid-go.alt{background:#fff;color:var(--ink);border:3px solid var(--ink)}
+.kid-go.alt:hover{background:var(--sun)}
+.pwslots{display:flex;gap:12px;justify-content:center}
+.pwslots span{width:72px;height:72px;border-radius:18px;border:3px dashed #9aafc6;display:grid;place-items:center;background:#fafcff}
+.pwslots span.on{border-style:solid;border-color:var(--ink)}
+.pwslots svg{width:54px;height:54px}
+.syms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.symbtn{height:96px;border-radius:20px;border:3px solid var(--ink);background:#fff;box-shadow:0 5px 0 var(--ink);display:grid;place-items:center}
+.symbtn svg{width:64px;height:64px}
+.symbtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.goalbox{background:var(--sun);border:2.5px dashed var(--gold);border-radius:22px;padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+.goalbox .wk{font-family:var(--h);font-weight:500;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-d)}
+.goalbox .gt{font-family:var(--hand);font-size:clamp(28px,5vw,40px);line-height:1.12;overflow-wrap:anywhere}
+.goalbox .gp{font-family:var(--hand);font-size:21px;color:#5b4a1e;overflow-wrap:anywhere}
+.goalbox .gp b{font-family:var(--h);font-weight:500;font-size:15px;letter-spacing:.05em;text-transform:uppercase;display:block;color:var(--gold-d)}
+.rate{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px}
+.rate button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:14px 6px 12px;border-radius:20px;border:3px solid var(--ink);background:#fff;box-shadow:0 5px 0 var(--ink);min-width:0}
+.rate button .sym{width:min(84px,100%);aspect-ratio:1}
+.rate button .sym.wide{aspect-ratio:auto;width:100%}
+.rate button span.t{font-family:var(--h);font-weight:500;font-size:17px;line-height:1.1;text-align:center}
+.rate button[aria-pressed="true"]{background:var(--sky);transform:translateY(3px);box-shadow:0 2px 0 var(--ink);outline:4px solid #4a8bd0;outline-offset:2px}
+@media (max-width:560px){.rate{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}.rate button span.t{font-size:15px}}
+.ktext{min-height:64px;border:3px solid var(--ink);border-radius:18px;background:#fafcff;padding:12px 16px;font-family:var(--hand);font-size:26px;line-height:1.2;width:100%;resize:vertical}
+.ktext:focus{outline:4px solid #9fd0f3}
+.ktext.small{font-size:21px;min-height:56px}
+.klbl{font-family:var(--h);font-weight:500;font-size:19px;display:block;margin-bottom:6px}
+.ideas{display:flex;flex-wrap:wrap;gap:8px}
+.idea{border:2px solid var(--ink);background:#fff;border-radius:999px;padding:6px 14px;font-family:var(--hand);font-size:19px;line-height:1.15;text-align:left}
+.idea:hover{background:var(--sun)}
+.feedback{display:flex;gap:16px;align-items:center;background:var(--leaf);border-radius:20px;padding:14px 18px}
+.feedback .sym{width:62px;height:62px;flex:none}
+.feedback .sym.wide{width:96px;height:auto}
+.feedback p{font-family:var(--hand);font-size:21px;line-height:1.2}
+.feedback small{display:block;font-family:var(--h);font-weight:500;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--leaf-d)}
+.strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px}
+.strip figure{margin:0;flex:0 0 74px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.strip .sym{width:58px;height:58px}
+.strip .sym.wide{width:72px;height:auto}
+.strip .sym.leer{border:2.5px dashed #9aafc6;border-radius:50%}
+.strip figcaption{font-family:var(--h);font-size:14px;color:var(--soft)}
+.hist{display:flex;flex-direction:column;gap:12px}
+.hitem{background:#fff;border:2.5px solid var(--ink);border-radius:20px;padding:14px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center}
+.hitem .wk{font-family:var(--h);font-weight:500;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.hitem .gt{font-family:var(--hand);font-size:24px;line-height:1.15;overflow-wrap:anywhere}
+.hitem .cm{font-family:var(--hand);font-size:18px;color:var(--soft);overflow-wrap:anywhere}
+.hitem .rs{display:flex;gap:12px;grid-row:1/span 3;grid-column:2}
+.hitem .rs figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.hitem .rs .sym{width:50px;height:50px}
+.hitem .rs .sym.wide{width:70px;height:auto}
+.hitem .rs figcaption{font-family:var(--h);font-size:13px;color:var(--soft)}
+.party{font-size:0;display:flex;justify-content:center}
+.party svg{width:120px;height:120px}
+.kid h3{font-family:var(--h);font-weight:500;font-size:24px}
+
+/* ---------- Lehrperson ---------- */
+.lp{min-height:100vh;font-family:var(--hand);font-size:19px}
+.top{background:rgba(244,249,253,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 1px 0 rgba(214,173,69,.35);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.top-in,.tabs,.main{max-width:1320px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.top-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.topbar{display:flex;align-items:center;gap:4px;background:#fff;border:1.5px solid #e1edf7;border-radius:999px;padding:5px;box-shadow:var(--schatten);flex-wrap:wrap}
+.topbar .btn{border:0;box-shadow:none;border-radius:999px;min-height:40px;background:transparent;font-size:18px}
+.topbar .btn:hover{background:var(--sky);transform:none}
+.topbar .cls{background:var(--sky);border-radius:999px;padding:6px 16px;font-size:18px}
+.tabs{display:flex;gap:6px;padding-block:2px 12px;overflow-x:auto}
+.tab{min-height:42px;padding:0 18px;border:1.5px solid transparent;border-radius:999px;background:none;font-family:var(--hand);font-size:19px;white-space:nowrap}
+.tab:hover{background:var(--sky)}
+.tab[aria-selected="true"]{background:#fff;border-color:var(--ink);box-shadow:var(--schatten)}
+.main{padding-block:26px 80px;display:flex;flex-direction:column;gap:26px}
+.h2{font-size:clamp(30px,4vw,40px);line-height:1.05;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.h2::after{content:"✦ ✧ ✦";font-size:13px;letter-spacing:.3em;color:var(--gold)}
+.card{background:linear-gradient(180deg,#fff 0%,#fff 70%,#f7fbfe 100%);border:1.5px solid #e1edf7;border-radius:26px;box-shadow:var(--schatten);padding:22px 24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card h3{font-size:25px;line-height:1.1}
+.card .sub{color:var(--soft);font-size:17px}
+.weeknav{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e1edf7;border-radius:999px;padding:4px;box-shadow:var(--schatten)}
+.weeknav button{width:40px;height:40px;border-radius:50%;border:0;background:var(--sky);font-size:22px;line-height:1}
+.weeknav button:disabled{opacity:.35;cursor:default}
+.weeknav .wl{padding:0 10px;text-align:center;line-height:1.05;min-width:150px}
+.weeknav .wl b{display:block;font-weight:400;font-size:21px}
+.weeknav .wl small{font-size:15px;color:var(--soft)}
+.summary{display:flex;flex-wrap:wrap;gap:10px}
+.sumbox{background:#fff;border:1.5px solid #e1edf7;border-radius:18px;padding:8px 16px;box-shadow:0 4px 12px rgba(63,120,168,.1);display:flex;align-items:baseline;gap:8px}
+.sumbox b{font-family:var(--h);font-weight:500;font-size:26px;font-variant-numeric:tabular-nums}
+.sumbox span{color:var(--soft);font-size:17px}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.kc{display:flex;flex-direction:column;gap:10px;text-align:left;background:#fff;border:1.5px solid #e1edf7;border-radius:22px;box-shadow:var(--schatten);padding:14px 16px 12px;min-width:0;transition:transform .15s,box-shadow .15s}
+.kc:hover{transform:translateY(-2px);box-shadow:var(--schatten-hoch)}
+.kc-top{display:flex;align-items:center;gap:10px;min-width:0}
+.kc-top b{font-weight:400;font-size:23px;line-height:1.05;flex:1;min-width:0;overflow-wrap:anywhere}
+.kc-goal{background:var(--sun);border-radius:14px;padding:10px 12px;font-size:21px;line-height:1.15;min-height:64px;overflow-wrap:anywhere}
+.kc-goal.none{background:#f4f6f8;color:#8a948e;font-size:18px;display:flex;align-items:center}
+.kc-goal small{display:block;font-size:14px;color:var(--gold-d);margin-top:2px}
+.kc-foot{display:flex;align-items:center;gap:14px;border-top:1.5px dashed var(--line2);padding-top:8px;min-height:44px}
+.kc-foot figure{margin:0;display:flex;align-items:center;gap:6px;font-size:15px;color:var(--soft)}
+.kc-foot .sym{width:32px;height:32px}
+.kc-foot .sym.wide{width:56px;height:auto}
+.kc-foot .sym.leer{border:2px dashed #b9cbdc;border-radius:50%}
+.kc-foot .more{margin-left:auto;color:var(--sky-d);font-size:16px}
+.empty{padding:34px 24px;border:2px dashed #b9d6ec;border-radius:26px;text-align:center;color:var(--soft);display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty h3{font-size:28px;color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.klist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.klist li{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:10px 4px;border-bottom:1px dashed var(--line2)}
+.klist li:last-child{border-bottom:0}
+.klist .nm{flex:1 1 140px;min-width:0;font-size:21px;overflow-wrap:anywhere}
+.pwmini{display:flex;gap:4px}
+.pwmini span{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line2);display:grid;place-items:center;background:#fff}
+.pwmini svg{width:28px;height:28px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.mode{display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px;border:2px solid var(--line);border-radius:20px;background:#fff;text-align:left;font-family:var(--hand)}
+.mode:hover{border-color:var(--sky-d)}
+.mode[aria-pressed="true"]{border-color:var(--ink);background:var(--sky);box-shadow:var(--schatten)}
+.mode b{font-weight:400;font-size:21px;display:flex;justify-content:space-between;gap:8px}
+.mode b span{font-size:15px;color:var(--leaf-d)}
+.mode .prev{display:flex;gap:4px;align-items:center;justify-content:space-between}
+.mode .prev .sym{width:36px;height:36px}
+.mode .prev .sym.wide{width:auto;height:20px;flex:1}
+.mode .prev.wide{justify-content:flex-start}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+
+/* Verlauf (Dialog) */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(31,36,33,.38);display:flex;justify-content:flex-end}
+.sheet{width:min(640px,100%);height:100%;background:var(--bg);box-shadow:-14px 0 40px rgba(0,0,0,.2);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.sheet-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1.5px dashed var(--gold);background:#fff}
+.sheet-head h2{flex:1;font-size:30px;line-height:1;min-width:0;overflow-wrap:anywhere}
+.sheet-head .x{width:44px;height:44px;border-radius:50%;border:2px solid var(--ink);background:#fff;font-size:22px;line-height:1}
+.sheet-body>*{flex-shrink:0}
+.sheet-body{flex:1;overflow:auto;overscroll-behavior:contain;padding:18px 20px 40px;display:flex;flex-direction:column;gap:14px}
+.vg{background:#fff;border:1.5px solid #e1edf7;border-radius:22px;box-shadow:var(--schatten);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.vg.cur{border:2px solid var(--gold)}
+.vg-wk{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;color:var(--soft);font-size:17px}
+.vg-t{font-size:25px;line-height:1.15;overflow-wrap:anywhere}
+.vg-p{font-size:18px;color:#5b4a1e;background:var(--sun);border-radius:12px;padding:6px 10px;overflow-wrap:anywhere}
+.vg-r{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;border-top:1.5px dashed var(--line2);padding-top:10px}
+.vg-r>span{font-size:16px;color:var(--soft);line-height:1.1}
+.vg-k{display:flex;align-items:center;gap:10px;min-width:0}
+.vg-k .sym{width:42px;height:42px;flex:none}
+.vg-k .sym.wide{width:84px;height:auto}
+.vg-k p{min-width:0;overflow-wrap:anywhere;font-size:18px}
+.lprate{display:flex;gap:6px;flex-wrap:wrap}
+.lprate button{width:52px;height:52px;border-radius:14px;border:1.5px solid var(--line2);background:#fff;padding:5px;display:grid;place-items:center}
+.lprate button.wide{width:auto;min-width:52px;padding:5px 8px}
+.lprate button .sym{width:100%;height:100%}
+.lprate button.wide .sym{width:84px;height:auto}
+.lprate button[aria-pressed="true"]{border:2.5px solid var(--ink);background:var(--sky)}
+.lpcom{display:flex;gap:8px;align-items:flex-start}
+.lpcom textarea{min-height:46px;height:46px;font-size:18px}
+@media (max-width:520px){.vg-r{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app" aria-live="polite"><p class="boot">Mein Wochenziel wird geladen …</p></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const INK = '#1f2421';
+
+/* ================= Hilfsfunktionen ================= */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const hash = s => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); };
+const MONATE = ['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sept.','Okt.','Nov.','Dez.'];
+const FARBEN = ['#fbe3a6','#f7c9c2','#cfe4f7','#d5e9c6','#e3d6f2','#fbd3b0','#c9ece4','#f3d1e4','#e0e7b8','#d6dcf5'];
+
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear();
+  const w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return y + '-W' + String(w).padStart(2, '0');
+}
+function weekMonday(key) {
+  const [y, w] = key.split('-W').map(Number);
+  const j4 = new Date(Date.UTC(y, 0, 4));
+  const mon = new Date(j4); mon.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() || 7) - 1) + (w - 1) * 7);
+  return mon;
+}
+function addWeeks(key, n) { const m = weekMonday(key); m.setUTCDate(m.getUTCDate() + 7 * n + 3); return isoWeek(new Date(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate())); }
+const kw = key => 'KW ' + Number(key.split('-W')[1]);
+function weekRange(key) {
+  const a = weekMonday(key), b = new Date(a); b.setUTCDate(a.getUTCDate() + 4);
+  return a.getUTCMonth() === b.getUTCMonth()
+    ? `${a.getUTCDate()}.–${b.getUTCDate()}. ${MONATE[b.getUTCMonth()]}`
+    : `${a.getUTCDate()}. ${MONATE[a.getUTCMonth()]} – ${b.getUTCDate()}. ${MONATE[b.getUTCMonth()]}`;
+}
+const thisWeek = () => isoWeek(new Date());
+
+/* ================= Zeichnungen ================= */
+const LV_FARBEN = ['#e8836f','#f1aa63','#f2d15a','#a9d27a','#62b56f'];
+function starPath(cx, cy, R, r) {
+  let d = '';
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r : R; d += (i ? 'L' : 'M') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a)).toFixed(1); }
+  return d + 'Z';
+}
+const cloud = (x, y, s, fill) => `<path transform="translate(${x} ${y}) scale(${s})" d="M12 42 C2 42 0 34 2 29 C4 23 10 21 14 22 C15 11 24 5 33 7 C40 0 54 2 58 13 C68 12 75 20 73 29 C80 31 81 42 70 42 Z" fill="${fill}" stroke="${INK}" stroke-width="${(3.5 / s).toFixed(2)}" stroke-linejoin="round"/>`;
+function sun(cx, cy, r) {
+  let rays = '';
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; rays += `<line x1="${(cx + Math.cos(a) * (r + 6)).toFixed(1)}" y1="${(cy + Math.sin(a) * (r + 6)).toFixed(1)}" x2="${(cx + Math.cos(a) * (r + 15)).toFixed(1)}" y2="${(cy + Math.sin(a) * (r + 15)).toFixed(1)}"/>`; }
+  return `<g stroke="${INK}" stroke-width="4" stroke-linecap="round">${rays}</g><circle cx="${cx}" cy="${cy}" r="${r}" fill="#f7d154" stroke="${INK}" stroke-width="4"/>`;
+}
+const leaf = (x, y, a, s) => `<path d="M0 0 Q${s * .5} ${-s * .5} ${s} 0 Q${s * .5} ${s * .5} 0 0Z" transform="translate(${x} ${y}) rotate(${a})" fill="#8cc474" stroke="${INK}" stroke-width="2.8" stroke-linejoin="round"/>`;
+
+const DRAW = {
+  smiley(l) {
+    const c = ['#f6b8ad','#f8cfa4','#f7e3a1','#d5e9ae','#b5dea4'][l - 1];
+    const k = [-14,-7,0,9,17][l - 1], y = l < 3 ? 72 : 65;
+    return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="${c}" stroke="${INK}" stroke-width="4"/><circle cx="36" cy="41" r="5" fill="${INK}"/><circle cx="64" cy="41" r="5" fill="${INK}"/><path d="M30 ${y} Q50 ${y + k} 70 ${y}" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/></svg>`;
+  },
+  farben(l) {
+    return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="${LV_FARBEN[l - 1]}" stroke="${INK}" stroke-width="4"/><circle cx="37" cy="36" r="9" fill="#fff" opacity=".45"/></svg>`;
+  },
+  pflanze(l) {
+    const pot = `<rect x="23" y="63" width="54" height="10" rx="3" fill="#e4ab80" stroke="${INK}" stroke-width="3"/><path d="M28 73 H72 L66 95 H34 Z" fill="#d99a6c" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    const stem = top => `<path d="M50 63 V${top}" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M50 63 V${top}" stroke="#6fae58" stroke-width="3.5" stroke-linecap="round"/>`;
+    let p = '';
+    if (l === 1) p = `<path d="M34 63 Q50 52 66 63Z" fill="#8a6343" stroke="${INK}" stroke-width="3"/><ellipse cx="50" cy="56" rx="5" ry="3.6" fill="#c79a5e" stroke="${INK}" stroke-width="2.5"/>`;
+    if (l === 2) p = stem(50) + leaf(50, 51, -150, 13) + leaf(50, 51, -30, 13);
+    if (l === 3) p = stem(36) + leaf(50, 50, -155, 20) + leaf(50, 44, -25, 20) + leaf(50, 37, -120, 12) + leaf(50, 37, -60, 12);
+    if (l === 4) p = stem(22) + leaf(50, 54, -160, 22) + leaf(50, 47, -20, 22) + leaf(50, 36, -150, 17) + leaf(50, 32, -30, 17) + `<ellipse cx="50" cy="17" rx="7" ry="10" fill="#f2a3b3" stroke="${INK}" stroke-width="3"/>`;
+    if (l === 5) {
+      let pet = '';
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; pet += `<circle cx="${(50 + Math.cos(a) * 11).toFixed(1)}" cy="${(20 + Math.sin(a) * 11).toFixed(1)}" r="8" fill="#f2a3b3" stroke="${INK}" stroke-width="3"/>`; }
+      p = stem(24) + leaf(50, 55, -160, 22) + leaf(50, 48, -20, 22) + leaf(50, 38, -150, 17) + leaf(50, 34, -30, 17) + pet + `<circle cx="50" cy="20" r="7.5" fill="#f7d154" stroke="${INK}" stroke-width="3"/>`;
+    }
+    return `<svg viewBox="0 0 100 100">${p}${pot}</svg>`;
+  },
+  wetter(l) {
+    let g = '';
+    if (l === 1) g = cloud(10, 14, 1.08, '#8d99a8') + `<path d="M52 58 L40 78 H50 L44 96 L64 70 H53 L60 58Z" fill="#f7d154" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    if (l === 2) g = cloud(10, 14, 1.08, '#b6c2d0') + `<g stroke="#4a8bd0" stroke-width="5" stroke-linecap="round"><line x1="32" y1="68" x2="27" y2="82"/><line x1="51" y1="68" x2="46" y2="86"/><line x1="70" y1="68" x2="65" y2="82"/></g>`;
+    if (l === 3) g = cloud(30, 16, .82, '#c9d4df') + cloud(6, 40, 1, '#e7edf3');
+    if (l === 4) g = sun(62, 34, 17) + cloud(6, 44, .95, '#f3f6f9');
+    if (l === 5) g = sun(50, 50, 22);
+    return `<svg viewBox="0 0 100 100">${g}</svg>`;
+  },
+  skala(l, n) {
+    const p = pos(l, n), c = LV_FARBEN[Math.round((p - 1) / Math.max(1, n - 1) * 4)];
+    return `<svg viewBox="0 0 100 100"><rect x="8" y="8" width="84" height="84" rx="22" fill="${c}" stroke="${INK}" stroke-width="4"/><text x="50" y="68" text-anchor="middle" font-family="Fredoka,Andika,sans-serif" font-weight="500" font-size="50" fill="${INK}">${p}</text></svg>`;
+  },
+  sterne(l, n) {
+    const p = pos(l, n); let s = '';
+    for (let i = 0; i < n; i++) s += `<path d="${starPath(12 + i * 24, 12, 10.5, 4.6)}" fill="${i < p ? '#f2c94c' : '#fff'}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
+    return `<svg viewBox="0 0 ${n * 24} 24">${s}</svg>`;
+  }
+};
+const MODI = [
+  { k: 'smiley', n: 'Smileys' },
+  { k: 'farben', n: 'Farben' },
+  { k: 'pflanze', n: 'Pflanze, die wächst' },
+  { k: 'wetter', n: 'Wetter' },
+  { k: 'skala', n: 'Zahlen-Skala' },
+  { k: 'sterne', n: 'Sterne' }
+];
+const WIDE = m => m === 'sterne';
+function pos(l, n) { return Math.round((l - 1) / 4 * (n - 1)) + 1; }
+function levels(n) { return n === 3 ? [1, 3, 5] : [1, 2, 3, 4, 5]; }
+const LBL5 = ['Gar nicht', 'Ein bisschen', 'Halb geschafft', 'Fast geschafft', 'Voll geschafft'];
+const LBL3 = ['Noch nicht', 'Teilweise', 'Geschafft'];
+function label(l, n) { return n === 3 ? LBL3[pos(l, 3) - 1] : LBL5[l - 1]; }
+function symHtml(l, extra = '') {
+  const set = D().set, m = set.modus, n = set.stufen;
+  if (!l) return `<span class="sym leer ${extra}" aria-label="noch nicht beurteilt"></span>`;
+  return `<span class="sym ${WIDE(m) ? 'wide' : ''} ${extra}" role="img" aria-label="${esc(label(l, n))}">${DRAW[m](l, n)}</span>`;
+}
+function symFor(m, n, l) { return `<span class="sym ${WIDE(m) ? 'wide' : ''}">${DRAW[m](l, n)}</span>`; }
+
+/* Bildpasswort-Symbole */
+const PW = {
+  sonne: ['Sonne', () => `<svg viewBox="0 0 100 100">${sun(50, 50, 20)}</svg>`],
+  mond: ['Mond', () => `<svg viewBox="0 0 100 100"><path d="M60 14 A36 36 0 1 0 86 66 A28 28 0 1 1 60 14Z" fill="#f2d98a" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></svg>`],
+  stern: ['Stern', () => `<svg viewBox="0 0 100 100"><path d="${starPath(50, 53, 40, 17)}" fill="#f2c94c" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></svg>`],
+  herz: ['Herz', () => `<svg viewBox="0 0 100 100"><path d="M50 86 C18 64 10 46 20 31 C30 17 45 22 50 33 C55 22 70 17 80 31 C90 46 82 64 50 86Z" fill="#ec8f88" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></svg>`],
+  baum: ['Baum', () => `<svg viewBox="0 0 100 100"><rect x="43" y="56" width="14" height="34" rx="3" fill="#b07a4f" stroke="${INK}" stroke-width="4"/><circle cx="50" cy="40" r="28" fill="#8cc474" stroke="${INK}" stroke-width="4"/></svg>`],
+  fisch: ['Fisch', () => `<svg viewBox="0 0 100 100"><path d="M74 50 L94 34 V66Z" fill="#8fb8de" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="44" cy="50" rx="34" ry="22" fill="#8fb8de" stroke="${INK}" stroke-width="4"/><circle cx="28" cy="45" r="4.5" fill="${INK}"/></svg>`],
+  haus: ['Haus', () => `<svg viewBox="0 0 100 100"><rect x="22" y="46" width="56" height="42" fill="#f7c9c2" stroke="${INK}" stroke-width="4"/><path d="M14 50 L50 16 L86 50Z" fill="#d9776d" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><rect x="43" y="62" width="14" height="26" fill="#fff" stroke="${INK}" stroke-width="3.5"/></svg>`],
+  apfel: ['Apfel', () => `<svg viewBox="0 0 100 100"><path d="M50 30 C34 20 14 30 16 54 C18 78 36 92 50 84 C64 92 82 78 84 54 C86 30 66 20 50 30Z" fill="#e8705f" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M50 30 Q50 18 56 10" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M54 18 Q66 8 76 14 Q68 26 54 18Z" fill="#8cc474" stroke="${INK}" stroke-width="3"/></svg>`],
+  ball: ['Ball', () => `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#a9c9ec" stroke="${INK}" stroke-width="4"/><path d="M12 50 H88 M50 12 Q30 50 50 88 M50 12 Q70 50 50 88" fill="none" stroke="${INK}" stroke-width="3.5"/></svg>`]
+};
+const PWKEYS = Object.keys(PW);
+const pwSvg = k => (PW[k] ? PW[k][1]() : '');
+const randomPw = () => { const a = [...PWKEYS]; const out = []; for (let i = 0; i < 3; i++) out.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]); return out; };
+
+const LOGO = `<svg viewBox="0 0 100 100">${DRAW.pflanze(5).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
+const ICON_KID = `<svg viewBox="0 0 100 100"><path d="${starPath(50, 54, 40, 17)}" fill="#f2c94c" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/></svg>`;
+const ICON_LP = `<svg viewBox="0 0 100 100"><rect x="14" y="18" width="72" height="66" rx="12" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M14 38 H86" stroke="${INK}" stroke-width="5"/><path d="M30 10 V26 M70 10 V26" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M32 60 l10 10 l24 -22" fill="none" stroke="#3f78a8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* ================= Daten ================= */
+const DEF = {
+  klasse: '', modus: 'smiley', stufen: 5, lpSichtbar: true, bildpw: true, pinH: '',
+  ideen: ['Ich melde mich, bevor ich etwas sage.', 'Ich lese jeden Tag 10 Minuten.', 'Ich frage nach, wenn ich etwas nicht verstehe.', 'Ich lasse andere ausreden.',
+    'Ich beginne sofort mit der Arbeit.', 'Ich übe jeden Tag das Einmaleins.', 'Ich schreibe sauber und gut lesbar.', 'Ich räume meinen Platz selber auf.']
+};
+const real = { kids: [], goals: [], set: { ...DEF } };
+let demoData = null;
+const D = () => (S.demo ? demoData : real);
+
+const S = {
+  screen: 'loading', backend: 'local', demo: false,
+  kidId: null, pwSel: [], pwErr: false, rateSel: null, editing: false, justDone: false,
+  lpOk: false, lpTab: 'klasse', lpWeek: thisWeek(), lpFilter: 'alle', openKid: null, armed: null, pinErr: ''
+};
+
+let dbRef = null;
+const LSKEY = 'klassenkiste-wochenziel-v1';
+function saveLocal() { if (S.backend !== 'local') return; try { localStorage.setItem(LSKEY, JSON.stringify(real)); } catch (e) {} }
+function loadLocal() {
+  try { const o = JSON.parse(localStorage.getItem(LSKEY) || 'null'); if (o) { real.kids = o.kids || []; real.goals = o.goals || []; real.set = { ...DEF, ...(o.set || {}) }; } } catch (e) {}
+}
+function upsert(arr, obj) { const i = arr.findIndex(x => x.id === obj.id); if (i < 0) arr.push(obj); else arr[i] = obj; }
+const strip = o => { const c = { ...o }; delete c.id; return c; };
+
+function writeFail(e) {
+  const c = e && e.code;
+  toast(c === 'not_granted' ? 'Speichern geht nicht: Mit diesem Zugang darf man nur lesen.' : 'Speichern hat nicht geklappt. Bitte nochmals versuchen.');
+}
+const store = {
+  put(col, obj) {
+    upsert(D()[col], obj); render();
+    if (S.demo) return;
+    if (S.backend === 'db') dbRef.collection(col === 'kids' ? 'kinder' : 'ziele').doc(obj.id).set(strip(obj)).catch(writeFail);
+    else saveLocal();
+  },
+  del(col, id) {
+    const a = D()[col]; const i = a.findIndex(x => x.id === id); if (i >= 0) a.splice(i, 1); render();
+    if (S.demo) return;
+    if (S.backend === 'db') dbRef.collection(col === 'kids' ? 'kinder' : 'ziele').doc(id).delete().catch(writeFail);
+    else saveLocal();
+  },
+  setSettings(p) {
+    D().set = { ...D().set, ...p }; render();
+    if (S.demo) return;
+    if (S.backend === 'db') dbRef.doc('einstellungen/klasse').set({ ...D().set }).catch(writeFail);
+    else saveLocal();
+  }
+};
+
+async function init() {
+  let db = null;
+  try {
+    if (window.claude && typeof window.claude.use === 'function')
+      db = await Promise.race([window.claude.use('db'), new Promise(r => setTimeout(() => r(null), 10000))]);
+  } catch (e) { db = null; }
+  if (!db) { S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); return; }
+  dbRef = db; S.backend = 'db';
+  const got = new Set();
+  const ready = k => { got.add(k); if (got.size === 3 && S.screen === 'loading') { clearTimeout(timer); S.screen = 'start'; } render(); };
+  const timer = setTimeout(() => {
+    if (S.screen === 'loading') { S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); toast('Die Klassendaten antworten nicht. Es wird vorerst nur auf diesem Gerät gespeichert.'); }
+  }, 10000);
+  const onErr = () => { if (S.screen === 'loading') { clearTimeout(timer); S.backend = 'local'; loadLocal(); S.screen = 'start'; render(); } };
+  db.collection('kinder').onSnapshot(s => { if (S.backend !== 'db') return; real.kids = s.docs.map(d => ({ id: d.id, ...d.data() })); ready('k'); }, onErr);
+  db.collection('ziele').onSnapshot(s => { if (S.backend !== 'db') return; real.goals = s.docs.map(d => ({ id: d.id, ...d.data() })); ready('g'); }, onErr);
+  db.doc('einstellungen/klasse').onSnapshot(s => { if (S.backend !== 'db') return; real.set = { ...DEF, ...(s.exists ? s.data() : {}) }; ready('s'); }, onErr);
+}
+
+/* Beispielklasse (nur im Speicher, wird nie gespeichert) */
+function makeDemo() {
+  const cw = thisWeek();
+  const names = ['Lina', 'Noah', 'Mia', 'Elias', 'Sara', 'Luca', 'Emma', 'Jonas'];
+  const kids = names.map((n, i) => ({ id: 'demo_k' + i, name: n, farbe: FARBEN[i % FARBEN.length], pw: ['sonne', 'herz', 'baum'], erstellt: i }));
+  const plan = {
+    Lina: [['Ich melde mich, bevor ich etwas sage.', 3, 4], ['Ich melde mich, bevor ich etwas sage.', 4, 4], ['Ich melde mich, bevor ich etwas sage.', 5, 5], ['Ich lese jeden Tag 10 Minuten.']],
+    Noah: [['Ich beginne sofort mit der Arbeit.', 2, 2], ['Ich beginne sofort mit der Arbeit.', 3, 3], ['Ich beginne sofort mit der Arbeit.', 4, 3], ['Ich beginne sofort mit der Arbeit.', 4]],
+    Mia: [['Ich übe jeden Tag das Einmaleins.', 5, 4], ['Ich schreibe sauber und gut lesbar.', 3, 3], ['Ich frage nach, wenn ich etwas nicht verstehe.', 4, 5], ['Ich lasse andere ausreden.']],
+    Elias: [['Ich räume meinen Platz selber auf.', 1, 2], ['Ich räume meinen Platz selber auf.', 3, 2], ['Ich räume meinen Platz selber auf.', 3]],
+    Sara: [['Ich lese jeden Tag 10 Minuten.', 5, 5], ['Ich helfe jemandem, der nicht weiterkommt.', 4, 5], ['Ich spreche im Kreis mindestens einmal.', 3, 4], ['Ich spreche im Kreis mindestens einmal.', 4, 4]],
+    Luca: [['Ich lasse andere ausreden.', 2, 3], ['Ich lasse andere ausreden.', 4, 4], ['Ich packe am Abend meinen Schulsack.']],
+    Emma: [['Ich trinke in der Pause Wasser statt Sirup.', 4, 4], ['Ich schreibe sauber und gut lesbar.', 3]],
+    Jonas: [['Ich frage nach, wenn ich etwas nicht verstehe.', 3, 3], ['Ich übe jeden Tag das Einmaleins.', 2, 3]]
+  };
+  const kom = ['Hat schon recht gut geklappt.', 'Am Mittwoch war es schwierig.', 'Ich habe es fast jeden Tag geschafft!', ''];
+  const lpk = ['Das habe ich auch gesehen, super!', 'Bleib dran, es wird besser.', '', 'Toll, wie du das geübt hast.'];
+  const goals = [];
+  kids.forEach((k, i) => {
+    const arr = plan[k.name], n = arr.length;
+    arr.forEach((g, j) => {
+      const wk = addWeeks(cw, j - (n - 1) - (k.name === 'Jonas' ? 1 : 0));
+      goals.push({ id: k.id + '_' + wk, kind: k.id, woche: wk, text: g[0], plan: j === n - 1 && i % 2 === 0 ? 'Ich lege mir einen Zettel aufs Pult.' : '',
+        kindBew: g[1] || null, kindKom: g[1] ? kom[(i + j) % 4] : '', lpBew: g[2] || null, lpKom: g[2] ? lpk[(i + j) % 4] : '', erstellt: j });
+    });
+  });
+  return { kids, goals, set: { ...DEF, klasse: 'Beispielklasse 4b', bildpw: false } };
+}
+
+/* ================= Abfragen ================= */
+const kidById = id => D().kids.find(k => k.id === id);
+const kidsSorted = () => [...D().kids].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+const goalsOf = id => D().goals.filter(g => g.kind === id).sort((a, b) => a.woche < b.woche ? -1 : a.woche > b.woche ? 1 : 0);
+const goalAt = (id, wk) => D().goals.find(g => g.kind === id && g.woche === wk);
+function streak(g) {
+  let n = 1, wk = g.woche;
+  for (;;) { const p = goalAt(g.kind, addWeeks(wk, -1)); if (p && norm(p.text) === norm(g.text)) { n++; wk = p.woche; } else break; }
+  return n;
+}
+const iniOf = k => esc((k.name || '?').trim().charAt(0).toUpperCase());
+const iniHtml = k => `<span class="ini" style="background:${esc(k.farbe || FARBEN[0])}">${iniOf(k)}</span>`;
+
+/* ================= Darstellung ================= */
+const $app = document.getElementById('app');
+function render() {
+  const a = document.activeElement;
+  const keep = a && a.id && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT') ? { id: a.id, v: a.value, s: a.selectionStart, e: a.selectionEnd } : null;
+  const drafts = {};
+  $app.querySelectorAll('textarea[id],input[id]').forEach(el => { if (el.dataset.dirty) drafts[el.id] = el.value; });
+  const sc = document.querySelector('.sheet-body'); const sheetTop = sc ? sc.scrollTop : 0;
+  let h = '';
+  if (S.demo) h += `<div class="demobar"><span><b>Beispielklasse</b> mit erfundenen Namen · nichts wird gespeichert · Bildpasswort ist hier ausgeschaltet</span><button class="btn sm" data-a="demoEnd">Beispiel beenden</button></div>`;
+  switch (S.screen) {
+    case 'loading': h += `<p class="boot">Mein Wochenziel wird geladen …</p>`; break;
+    case 'start': h += vStart(); break;
+    case 'kidpick': h += vKidPick(); break;
+    case 'kidpw': h += vKidPw(); break;
+    case 'kid': h += vKid(); break;
+    case 'lppin': h += vLpPin(); break;
+    case 'lp': h += vLp(); break;
+  }
+  $app.innerHTML = h;
+  for (const id in drafts) { const el = document.getElementById(id); if (el) { el.value = drafts[id]; el.dataset.dirty = '1'; } }
+  if (keep) { const el = document.getElementById(keep.id); if (el) { el.value = keep.v; el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+  const sc2 = document.querySelector('.sheet-body'); if (sc2) sc2.scrollTop = sheetTop;
+}
+
+function storeNote() {
+  if (S.demo) return `<p class="storenote"><i></i>Beispiel – wird nicht gespeichert</p>`;
+  return S.backend === 'db'
+    ? `<p class="storenote db"><i></i>Gespeichert für die ganze Klasse</p>`
+    : `<p class="storenote"><i></i>Wird nur auf diesem Gerät gespeichert</p>`;
+}
+function marke() {
+  const k = D().set.klasse;
+  return `<div class="marke"><span class="marke-bild">${LOGO}</span><span class="marke-text"><b>Mein <em>Wochenziel</em><i>✦</i></b><small>Klassenkiste${k ? ' · ' + esc(k) : ''}</small></span></div>`;
+}
+
+function vStart() {
+  const set = D().set, lv = levels(set.stufen);
+  return `<div class="login">
+  <section class="login-hero">
+    ${marke()}
+    <div><h1>Ein Ziel pro Woche.</h1>
+      <p>Am Montag setzt sich jedes Kind ein Ziel. Am Ende der Woche schaut es zurück: Wie gut hat es geklappt? Dann geht es weiter, mit einem neuen Ziel oder nochmals mit dem gleichen.</p></div>
+    <div class="hero-scale" aria-label="So wird beurteilt">${lv.map(l => `<figure>${symHtml(l)}<figcaption>${esc(label(l, set.stufen))}</figcaption></figure>`).join('')}</div>
+  </section>
+  <section class="login-form"><div class="stack">
+    <button class="door kid" data-a="goKid"><span class="di">${ICON_KID}</span><span><b>Ich bin ein Kind</b><span>Zu meinem Wochenziel</span></span></button>
+    <button class="door" data-a="goLp"><span class="di">${ICON_LP}</span><span><b>Lehrperson</b><span>Alle Ziele der Klasse sehen und beurteilen</span></span></button>
+    ${!S.demo ? `<button class="linkbtn" data-a="demo" style="font-family:var(--hand);font-size:18px">Beispielklasse ansehen (erfundene Namen, wird nicht gespeichert)</button>` : ''}
+    ${storeNote()}
+  </div></section></div>`;
+}
+
+function vKidPick() {
+  const ks = kidsSorted();
+  return `<div class="kid"><div class="kid-in">
+    <div class="kid-top"><button class="kid-btn" data-a="home">‹ Zurück</button>${D().set.klasse ? `<span class="who">${esc(D().set.klasse)}</span>` : ''}</div>
+    <h1>Wer bist du?</h1>
+    ${ks.length ? `<div class="kid-grid">${ks.map(k => `<button class="kid-name" data-a="pickKid" data-id="${esc(k.id)}">${iniHtml(k)}<b>${esc(k.name)}</b></button>`).join('')}</div>`
+      : `<div class="kid-card narrow"><h2>Hier sind noch keine Namen.</h2><p class="lead">Deine Lehrperson trägt zuerst die Namen der Klasse ein.</p></div>`}
+  </div></div>`;
+}
+
+function vKidPw() {
+  const k = kidById(S.kidId); if (!k) { S.screen = 'kidpick'; return vKidPick(); }
+  return `<div class="kid"><div class="kid-in">
+    <div class="kid-top"><button class="kid-btn" data-a="goKid">‹ Anderer Name</button></div>
+    <div class="kid-card narrow ${S.pwErr ? 'shake' : ''}">
+      <h2>Hallo ${esc(k.name)}!</h2>
+      <p class="lead">Tippe dein Bildpasswort.</p>
+      <div class="pwslots">${[0, 1, 2].map(i => `<span class="${S.pwSel[i] ? 'on' : ''}">${S.pwSel[i] ? pwSvg(S.pwSel[i]) : ''}</span>`).join('')}</div>
+      <p class="err" role="alert">${S.pwErr ? 'Das war nicht ganz richtig. Probier es nochmals.' : ''}</p>
+      <div class="syms">${PWKEYS.map(p => `<button class="symbtn" data-a="pw" data-k="${p}" aria-label="${PW[p][0]}">${pwSvg(p)}</button>`).join('')}</div>
+      <button class="kid-btn" data-a="pwClear">Nochmals von vorn</button>
+    </div>
+  </div></div>`;
+}
+
+function rateButtons(sel, act) {
+  const set = D().set, lv = levels(set.stufen);
+  return `<div class="rate" style="--n:${lv.length}" role="group" aria-label="Wie gut hat es geklappt?">${lv.map(l =>
+    `<button data-a="${act}" data-l="${l}" aria-pressed="${sel === l}">${symHtml(l)}<span class="t">${esc(label(l, set.stufen))}</span></button>`).join('')}</div>`;
+}
+
+function vKid() {
+  const k = kidById(S.kidId); if (!k) { S.screen = 'kidpick'; return vKidPick(); }
+  const set = D().set, cw = thisWeek(), nw = addWeeks(cw, 1);
+  const gs = goalsOf(k.id);
+  const past = gs.find(g => g.woche < cw && !g.kindBew);
+  const cur = goalAt(k.id, cw), next = goalAt(k.id, nw);
+  const last = gs[gs.length - 1];
+  const lastRated = [...gs].reverse().find(g => g.kindBew);
+  let main = '';
+
+  const rateCard = (g, title) => `<div class="kid-card">
+      <h2>${title}</h2>
+      <div class="goalbox"><span class="wk">Mein Ziel · ${kw(g.woche)}</span><p class="gt">${esc(g.text)}</p></div>
+      <p class="lead">Wie gut hat es geklappt?</p>
+      ${rateButtons(S.rateSel, 'rateKid')}
+      <div><label class="klbl" for="kidKom">Was hat gut geklappt? Was war schwierig? <span class="muted">(freiwillig)</span></label>
+      <textarea id="kidKom" class="ktext small" rows="2" maxlength="300">${esc(g.kindKom || '')}</textarea></div>
+      <button class="kid-go" data-a="saveRate" data-id="${esc(g.id)}" ${S.rateSel ? '' : 'disabled'}>Fertig beurteilt</button>
+    </div>`;
+
+  const goalForm = (wk, rated) => {
+    const isEdit = S.editing && goalAt(k.id, wk);
+    const g0 = isEdit ? goalAt(k.id, wk) : null;
+    return `<div class="kid-card">
+      ${S.justDone && lastRated ? `<div class="party">${symHtml(lastRated.kindBew)}</div><h2 style="text-align:center">Danke! Du hast deine Woche beurteilt.</h2>` : ''}
+      <h2>${isEdit ? 'Ziel ändern' : 'Mein Ziel für ' + (wk === cw ? 'diese Woche' : 'nächste Woche')} <span class="muted" style="font-size:.7em">${kw(wk)} · ${weekRange(wk)}</span></h2>
+      ${last && !isEdit ? `<button class="kid-go alt" data-a="sameGoal">Gleiches Ziel nochmals: «${esc(last.text)}»</button>` : ''}
+      <div><label class="klbl" for="zielText">Mein Ziel</label>
+      <textarea id="zielText" class="ktext" rows="2" maxlength="160" placeholder="Ich …">${esc(g0 ? g0.text : '')}</textarea></div>
+      ${set.ideen.length ? `<div><span class="klbl">Ideen</span><div class="ideas">${set.ideen.map((t, i) => `<button class="idea" data-a="idea" data-i="${i}">${esc(t)}</button>`).join('')}</div></div>` : ''}
+      <div><label class="klbl" for="zielPlan">So schaffe ich das <span class="muted">(freiwillig)</span></label>
+      <textarea id="zielPlan" class="ktext small" rows="2" maxlength="200" placeholder="Zum Beispiel: Ich lege mir einen Zettel aufs Pult.">${esc(g0 ? g0.plan : '')}</textarea></div>
+      <p class="err" id="zielErr" role="alert"></p>
+      <div class="row">${isEdit ? `<button class="kid-btn" data-a="cancelEdit">Abbrechen</button>` : ''}<button class="kid-go" style="flex:1" data-a="saveGoal" data-wk="${wk}">Ziel speichern</button></div>
+    </div>`;
+  };
+
+  const showGoal = (g, title, hint) => `<div class="kid-card">
+      <h2>${title}</h2>
+      <div class="goalbox"><span class="wk">${kw(g.woche)} · ${weekRange(g.woche)}${streak(g) > 1 ? ` · ${streak(g)}. Woche` : ''}</span><p class="gt">${esc(g.text)}</p>
+        ${g.plan ? `<p class="gp"><b>So schaffe ich das</b>${esc(g.plan)}</p>` : ''}</div>
+      ${hint || ''}
+    </div>`;
+
+  if (past) {
+    main = rateCard(past, `Wie lief dein Ziel aus ${kw(past.woche)}?`);
+  } else if (cur && !cur.kindBew && !S.editing) {
+    main = S.rateSel !== null && S.rateOpen
+      ? rateCard(cur, 'Wie lief deine Woche?')
+      : showGoal(cur, 'Mein Wochenziel', `<div class="row"><button class="kid-go" style="flex:1 1 260px" data-a="openRate">Woche beurteilen</button>
+          ${!cur.lpBew ? `<button class="kid-btn" data-a="editGoal">Ziel ändern</button>` : ''}</div>
+          <p class="muted" style="text-align:center">Am Ende der Woche tippst du auf «Woche beurteilen».</p>`);
+  } else if (S.editing && cur && !cur.kindBew) {
+    main = goalForm(cw);
+  } else if (!cur) {
+    main = goalForm(cw, null);
+  } else if (!next || (S.editing && next)) {
+    main = next && !S.editing ? '' : goalForm(nw, cur);
+  }
+  if (!main && next) {
+    main = showGoal(next, 'Dein Ziel für nächste Woche', `${!next.lpBew ? `<div class="row"><button class="kid-btn" data-a="editGoal" data-wk="${next.woche}">Ziel ändern</button></div>` : ''}
+      <p class="lead" style="text-align:center">Super, alles erledigt! Du kannst jetzt auf «Fertig» tippen.</p>`);
+  }
+
+  // Rückmeldung der Lehrperson zur letzten beurteilten Woche
+  let fb = '';
+  if (set.lpSichtbar) {
+    const lastLp = [...gs].reverse().find(g => g.lpBew || g.lpKom);
+    if (lastLp) fb = `<div class="feedback">${lastLp.lpBew ? symHtml(lastLp.lpBew) : ''}<p><small>Deine Lehrperson zu ${kw(lastLp.woche)}</small>${lastLp.lpBew ? esc(label(lastLp.lpBew, set.stufen)) + '. ' : ''}${esc(lastLp.lpKom || '')}</p></div>`;
+  }
+
+  const recent = gs.filter(g => g.kindBew).slice(-10);
+  const hist = [...gs].reverse().filter(g => g.kindBew);
+  return `<div class="kid"><div class="kid-in">
+    <div class="kid-top"><span class="who">${iniHtml(k)}Hallo ${esc(k.name)}</span><button class="kid-btn" data-a="kidDone">Fertig</button></div>
+    ${main}
+    ${fb}
+    ${recent.length ? `<section class="stack"><h3>Meine Wochen</h3><div class="strip">${recent.map(g => `<figure>${symHtml(g.kindBew)}<figcaption>${kw(g.woche)}</figcaption></figure>`).join('')}</div></section>` : ''}
+    ${hist.length ? `<section class="stack"><h3>Meine Ziele bisher</h3><div class="hist">${hist.map(g => `<div class="hitem">
+        <span class="wk">${kw(g.woche)} · ${weekRange(g.woche)}</span><p class="gt">${esc(g.text)}</p>
+        ${g.kindKom ? `<p class="cm">«${esc(g.kindKom)}»</p>` : '<span></span>'}
+        <div class="rs"><figure>${symHtml(g.kindBew)}<figcaption>Ich</figcaption></figure>${set.lpSichtbar && g.lpBew ? `<figure>${symHtml(g.lpBew)}<figcaption>Lehrperson</figcaption></figure>` : ''}</div>
+      </div>`).join('')}</div></section>` : ''}
+  </div></div>`;
+}
+
+function vLpPin() {
+  const has = !!D().set.pinH;
+  return `<div class="kid" style="background:var(--bg)"><div class="kid-in">
+    <div class="kid-top"><button class="kid-btn" data-a="home">‹ Zurück</button></div>
+    <div class="kid-card narrow" style="font-family:var(--hand)">
+      ${has ? `<h2>Lehrpersonen-Bereich</h2><p class="lead">Bitte die PIN eingeben.</p>
+        <form data-f="pin" class="stack"><input id="pinIn" class="kid-input input" style="text-align:center;font-size:32px;letter-spacing:.3em" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="PIN">
+        <p class="err" role="alert">${esc(S.pinErr)}</p><button class="kid-go" type="submit">Weiter</button></form>`
+      : `<h2>PIN für die Lehrperson</h2><p class="lead">Mit einer PIN kommen die Kinder nicht in diesen Bereich. Sie gilt für alle Geräte der Klasse.</p>
+        <form data-f="pinNew" class="stack"><input id="pinNew" class="input" style="text-align:center;font-size:32px;letter-spacing:.3em" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="Neue PIN" placeholder="z. B. 2468">
+        <p class="err" role="alert">${esc(S.pinErr)}</p><button class="kid-go" type="submit">PIN speichern</button></form>
+        <button class="linkbtn" data-a="noPin">Ohne PIN weiter</button>`}
+    </div></div></div>`;
+}
+
+function vLp() {
+  const tabs = [['klasse', 'Klasse'], ['kinder', 'Kinder'], ['einst', 'Beurteilung & Einstellungen']];
+  let body = '';
+  if (S.lpTab === 'klasse') body = vLpKlasse();
+  if (S.lpTab === 'kinder') body = vLpKinder();
+  if (S.lpTab === 'einst') body = vLpEinst();
+  return `<div class="lp">
+    <header class="top"><div class="top-in">${marke()}
+      <div class="topbar">${D().set.klasse ? `<span class="cls">${esc(D().set.klasse)}</span>` : ''}<button class="btn sm" data-a="goKid">Kinderansicht</button><button class="btn sm" data-a="lpLogout">Abmelden</button></div></div>
+      <nav class="tabs" role="tablist">${tabs.map(t => `<button class="tab" role="tab" aria-selected="${S.lpTab === t[0]}" data-a="tab" data-t="${t[0]}">${t[1]}</button>`).join('')}</nav>
+    </header>
+    <main class="main">${body}${storeNote()}</main>
+    ${S.openKid ? vSheet() : ''}
+  </div>`;
+}
+
+function vLpKlasse() {
+  const ks = kidsSorted();
+  if (!ks.length) return `<div class="empty"><h3>Noch keine Kinder eingetragen</h3><p>Tragen Sie zuerst die Vornamen Ihrer Klasse ein. Danach können die Kinder ihr Wochenziel setzen.</p>
+    <button class="btn primary" data-a="tab" data-t="kinder">Kinder eintragen</button></div>`;
+  const wk = S.lpWeek, cw = thisWeek(), set = D().set;
+  const rows = ks.map(k => ({ k, g: goalAt(k.id, wk) }));
+  const nGoal = rows.filter(r => r.g).length, nSelf = rows.filter(r => r.g && r.g.kindBew).length, nLp = rows.filter(r => r.g && r.g.lpBew).length;
+  const todo = rows.filter(r => r.g && r.g.kindBew && !r.g.lpBew).length;
+  const f = S.lpFilter;
+  const shown = rows.filter(r => f === 'alle' || (f === 'ohne' && !r.g) || (f === 'todo' && r.g && r.g.kindBew && !r.g.lpBew));
+  const status = g => !g ? `<span class="pill p-none"><i></i>Noch kein Ziel</span>`
+    : g.lpBew ? `<span class="pill p-done"><i></i>Beurteilt</span>`
+    : g.kindBew ? `<span class="pill p-self"><i></i>Selbst beurteilt</span>`
+    : `<span class="pill p-set"><i></i>Ziel gesetzt</span>`;
+  return `<section class="stack">
+    <div class="row" style="justify-content:space-between;gap:14px">
+      <h2 class="h2">Wochenziele</h2>
+      <div class="weeknav"><button data-a="wk" data-d="-1" aria-label="Woche vorher">‹</button><span class="wl"><b>${kw(wk)}${wk === cw ? ' · diese Woche' : ''}</b><small>${weekRange(wk)}</small></span>
+        <button data-a="wk" data-d="1" aria-label="Woche nachher" ${wk >= addWeeks(cw, 1) ? 'disabled' : ''}>›</button></div>
+    </div>
+    <div class="summary">
+      <div class="sumbox"><b>${nGoal}/${ks.length}</b><span>haben ein Ziel</span></div>
+      <div class="sumbox"><b>${nSelf}</b><span>selbst beurteilt</span></div>
+      <div class="sumbox"><b>${nLp}</b><span>von Ihnen beurteilt</span></div>
+    </div>
+    <div class="chips" role="group" aria-label="Filter">
+      <button class="chip" data-a="filt" data-f="alle" aria-pressed="${f === 'alle'}">Alle (${ks.length})</button>
+      <button class="chip" data-a="filt" data-f="ohne" aria-pressed="${f === 'ohne'}">Noch kein Ziel (${ks.length - nGoal})</button>
+      <button class="chip" data-a="filt" data-f="todo" aria-pressed="${f === 'todo'}">Von Ihnen noch zu beurteilen (${todo})</button>
+    </div>
+    ${shown.length ? `<div class="kgrid">${shown.map(({ k, g }) => `<button class="kc" data-a="openKid" data-id="${esc(k.id)}">
+        <span class="kc-top">${iniHtml(k)}<b>${esc(k.name)}</b>${status(g)}</span>
+        ${g ? `<span class="kc-goal">${esc(g.text)}${streak(g) > 1 ? `<small>${streak(g)}. Woche mit diesem Ziel</small>` : ''}</span>` : `<span class="kc-goal none">Für ${kw(wk)} noch kein Ziel gesetzt</span>`}
+        <span class="kc-foot"><figure>${symHtml(g && g.kindBew)}Kind</figure><figure>${symHtml(g && g.lpBew)}Sie</figure><span class="more">Verlauf ›</span></span>
+      </button>`).join('')}</div>` : `<div class="empty"><p>In diesem Filter ist gerade niemand.</p></div>`}
+  </section>`;
+}
+
+function vSheet() {
+  const k = kidById(S.openKid); if (!k) { S.openKid = null; return ''; }
+  const set = D().set, cw = thisWeek(), lv = levels(set.stufen), m = set.modus;
+  const gs = [...goalsOf(k.id)].reverse();
+  return `<div class="modal" data-a="closeSheet"><aside class="sheet" role="dialog" aria-modal="true" aria-label="Verlauf von ${esc(k.name)}" data-stop="1">
+    <div class="sheet-head">${iniHtml(k)}<h2>${esc(k.name)}</h2><button class="x" data-a="closeSheet" aria-label="Schliessen">✕</button></div>
+    <div class="sheet-body">
+      ${gs.length ? `<div class="strip" aria-label="Selbstbeurteilungen">${[...gs].reverse().slice(-12).map(g => `<figure>${symHtml(g.kindBew)}<figcaption>${kw(g.woche)}</figcaption></figure>`).join('')}</div>` : ''}
+      ${gs.length ? gs.map(g => `<article class="vg ${g.woche === cw ? 'cur' : ''}">
+        <div class="vg-wk"><span>${kw(g.woche)} · ${weekRange(g.woche)}${g.woche === cw ? ' · diese Woche' : g.woche > cw ? ' · nächste Woche' : ''}</span>${streak(g) > 1 ? `<span class="pill p-set">${streak(g)}. Woche gleiches Ziel</span>` : ''}</div>
+        <p class="vg-t">${esc(g.text)}</p>
+        ${g.plan ? `<p class="vg-p">So schaffe ich das: ${esc(g.plan)}</p>` : ''}
+        <div class="vg-r"><span>Kind</span><div class="vg-k">${g.kindBew ? symHtml(g.kindBew) + `<p>${esc(label(g.kindBew, set.stufen))}${g.kindKom ? ` · «${esc(g.kindKom)}»` : ''}</p>` : `<p class="muted">Noch nicht beurteilt</p>`}</div></div>
+        <div class="vg-r"><span>Ihre Beurteilung</span><div class="stack" style="gap:8px">
+          <div class="lprate" role="group" aria-label="Beurteilung Lehrperson">${lv.map(l => `<button class="${WIDE(m) ? 'wide' : ''}" data-a="lpRate" data-id="${esc(g.id)}" data-l="${l}" aria-pressed="${g.lpBew === l}" title="${esc(label(l, set.stufen))}" aria-label="${esc(label(l, set.stufen))}">${symFor(m, set.stufen, l)}</button>`).join('')}</div>
+          <div class="lpcom"><textarea id="lpk_${esc(g.id)}" class="input" rows="1" maxlength="300" placeholder="Rückmeldung an ${esc(k.name)} (freiwillig)">${esc(g.lpKom || '')}</textarea><button class="btn sm" data-a="lpKom" data-id="${esc(g.id)}">Speichern</button></div>
+        </div></div>
+        <div class="row" style="justify-content:flex-end"><button class="btn sm danger ${S.armed === 'g' + g.id ? 'armed' : ''}" data-a="delGoal" data-id="${esc(g.id)}">${S.armed === 'g' + g.id ? 'Wirklich löschen?' : 'Ziel löschen'}</button></div>
+      </article>`).join('') : `<div class="empty"><p>${esc(k.name)} hat noch kein Wochenziel gesetzt.</p></div>`}
+    </div></aside></div>`;
+}
+
+function vLpKinder() {
+  const ks = kidsSorted(), set = D().set;
+  return `<section class="two">
+    <div class="card"><h3>Kinder eintragen</h3><p class="sub">Ein Vorname pro Zeile. Jedes Kind bekommt automatisch ein Bildpasswort aus drei Bildern.</p>
+      <form data-f="addKids" class="stack"><textarea id="newKids" class="input" rows="6" placeholder="Lina&#10;Noah&#10;Mia"></textarea><div class="row"><button class="btn primary" type="submit">Hinzufügen</button></div></form></div>
+    <div class="card"><h3>Klasse (${ks.length})</h3>
+      ${set.bildpw ? `<p class="sub">Die Kinder melden sich mit ihrem Namen und den drei Bildern in dieser Reihenfolge an.</p>` : `<p class="sub">Das Bildpasswort ist ausgeschaltet. Die Kinder tippen nur auf ihren Namen.</p>`}
+      ${ks.length ? `<ul class="klist">${ks.map(k => `<li>${iniHtml(k)}<span class="nm">${esc(k.name)}</span>
+          ${set.bildpw ? `<span class="pwmini" aria-label="Bildpasswort: ${(k.pw || []).map(p => PW[p] ? PW[p][0] : '').join(', ')}">${(k.pw || []).map(p => `<span>${pwSvg(p)}</span>`).join('')}</span><button class="btn sm ghost" data-a="newPw" data-id="${esc(k.id)}">Neues Passwort</button>` : ''}
+          <button class="btn sm danger ${S.armed === 'k' + k.id ? 'armed' : ''}" data-a="delKid" data-id="${esc(k.id)}">${S.armed === 'k' + k.id ? 'Mit allen Zielen löschen?' : 'Entfernen'}</button></li>`).join('')}</ul>`
+        : `<p class="muted">Noch niemand eingetragen.</p>`}
+    </div></section>`;
+}
+
+function vLpEinst() {
+  const set = D().set, n = set.stufen;
+  return `<section class="stack">
+    <h2 class="h2">Beurteilung</h2>
+    <div class="card"><h3>Womit beurteilen die Kinder ihre Woche?</h3><p class="sub">Gilt für die Kinder und für Ihre eigene Beurteilung. Frühere Beurteilungen werden sofort im neuen Stil angezeigt.</p>
+      <div class="modes">${MODI.map(md => `<button class="mode" data-a="mode" data-m="${md.k}" aria-pressed="${set.modus === md.k}"><b>${md.n}${set.modus === md.k ? '<span>gewählt</span>' : ''}</b>
+        <span class="prev ${WIDE(md.k) ? 'wide' : ''}">${WIDE(md.k) ? symFor(md.k, n, 5) : levels(n).map(l => symFor(md.k, n, l)).join('')}</span></button>`).join('')}</div>
+      <div><span class="lbl">Wie viele Stufen?</span>
+      <div class="chips" style="margin-top:6px"><button class="chip" data-a="stufen" data-n="3" aria-pressed="${n === 3}">3 Stufen: ${LBL3.join(' · ')}</button>
+        <button class="chip" data-a="stufen" data-n="5" aria-pressed="${n === 5}">5 Stufen: ${LBL5.join(' · ')}</button></div></div>
+    </div>
+    <div class="setgrid">
+      <div class="card"><h3>Für die Kinder</h3>
+        <button class="switch" role="switch" data-a="tgl" data-k="lpSichtbar" aria-checked="${!!set.lpSichtbar}">Kinder sehen Ihre Beurteilung und Rückmeldung<span class="track"></span></button>
+        <button class="switch" role="switch" data-a="tgl" data-k="bildpw" aria-checked="${!!set.bildpw}">Anmelden mit Bildpasswort<span class="track"></span></button>
+      </div>
+      <div class="card"><h3>Klasse</h3>
+        <form data-f="klasse" class="stack" style="gap:8px"><label class="lbl" for="klasseIn">Name der Klasse</label><div class="row" style="flex-wrap:nowrap"><input id="klasseIn" class="input" maxlength="40" value="${esc(set.klasse)}" placeholder="z. B. 4b"><button class="btn sm" type="submit">Speichern</button></div></form>
+        <form data-f="pinChange" class="stack" style="gap:8px"><label class="lbl" for="pinChg">PIN für den Lehrpersonen-Bereich ${set.pinH ? '(ist gesetzt)' : '(keine)'}</label><div class="row" style="flex-wrap:nowrap"><input id="pinChg" class="input" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="${set.pinH ? 'Neue PIN' : 'PIN festlegen'}"><button class="btn sm" type="submit">Speichern</button></div>
+        ${set.pinH ? `<button type="button" class="linkbtn" style="align-self:flex-start" data-a="pinOff">PIN entfernen</button>` : ''}</form>
+      </div>
+    </div>
+    <div class="card"><h3>Ideen für Ziele</h3><p class="sub">Die Kinder sehen diese Vorschläge beim Ziel-Setzen und können einen antippen. Ein Vorschlag pro Zeile.</p>
+      <form data-f="ideen" class="stack"><textarea id="ideenIn" class="input" rows="8">${esc(set.ideen.join('\n'))}</textarea><div class="row"><button class="btn primary" type="submit">Ideen speichern</button></div></form></div>
+  </section>`;
+}
+
+/* ================= Aktionen ================= */
+let toastT;
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3200); }
+const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+function kidReset() { S.kidId = null; S.pwSel = []; S.pwErr = false; S.rateSel = null; S.rateOpen = false; S.editing = false; S.justDone = false; }
+const go = sc => { S.screen = sc; S.armed = null; render(); window.scrollTo(0, 0); };
+
+document.addEventListener('input', e => { if (e.target.id) e.target.dataset.dirty = '1'; });
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-a]');
+  if (!t) return;
+  if (t.dataset.a === 'closeSheet' && e.target.closest('[data-stop]') && !e.target.closest('.x')) return;
+  const a = t.dataset.a, id = t.dataset.id;
+  if (a !== 'delKid' && a !== 'delGoal') S.armed = null;
+  switch (a) {
+    case 'home': kidReset(); S.lpOk = false; go('start'); break;
+    case 'demo': demoData = makeDemo(); S.demo = true; kidReset(); S.lpOk = true; go('start'); break;
+    case 'demoEnd': S.demo = false; demoData = null; kidReset(); S.lpOk = false; S.openKid = null; go('start'); break;
+    case 'goKid': kidReset(); S.openKid = null; if (!S.demo) S.lpOk = false; go('kidpick'); break;
+    case 'pickKid': {
+      kidReset(); S.kidId = id;
+      const k = kidById(id);
+      go(D().set.bildpw && k && (k.pw || []).length === 3 ? 'kidpw' : 'kid'); break;
+    }
+    case 'pw': {
+      if (S.pwSel.length >= 3) break;
+      S.pwSel.push(t.dataset.k); S.pwErr = false;
+      if (S.pwSel.length === 3) {
+        const k = kidById(S.kidId);
+        if (k && S.pwSel.join() === (k.pw || []).join()) { S.pwSel = []; go('kid'); }
+        else { render(); setTimeout(() => { S.pwSel = []; S.pwErr = true; render(); }, 450); }
+      } else render();
+      break;
+    }
+    case 'pwClear': S.pwSel = []; S.pwErr = false; render(); break;
+    case 'kidDone': kidReset(); go('kidpick'); break;
+    case 'openRate': S.rateOpen = true; S.rateSel = 0; render(); break;
+    case 'rateKid': S.rateSel = Number(t.dataset.l); render(); break;
+    case 'saveRate': {
+      const g = D().goals.find(x => x.id === id); if (!g || !S.rateSel) break;
+      store.put('goals', { ...g, kindBew: S.rateSel, kindKom: val('kidKom').trim(), bewertetAm: Date.now() });
+      S.rateSel = null; S.rateOpen = false; S.justDone = true; S.editing = false; render(); window.scrollTo(0, 0); break;
+    }
+    case 'editGoal': S.editing = true; render(); break;
+    case 'cancelEdit': S.editing = false; render(); break;
+    case 'idea': { const el = document.getElementById('zielText'); if (el) { el.value = D().set.ideen[Number(t.dataset.i)] || ''; el.dataset.dirty = '1'; el.focus(); } break; }
+    case 'sameGoal': {
+      const gs = goalsOf(S.kidId), last = gs[gs.length - 1]; if (!last) break;
+      const a1 = document.getElementById('zielText'), a2 = document.getElementById('zielPlan');
+      if (a1) { a1.value = last.text; a1.dataset.dirty = '1'; } if (a2) { a2.value = last.plan || ''; a2.dataset.dirty = '1'; }
+      if (a1) a1.focus();
+      break;
+    }
+    case 'saveGoal': {
+      const text = val('zielText').trim(), wk = t.dataset.wk;
+      if (text.length < 3) { const er = document.getElementById('zielErr'); if (er) er.textContent = 'Schreib zuerst dein Ziel auf.'; break; }
+      const old = goalAt(S.kidId, wk);
+      store.put('goals', { ...(old || {}), id: old ? old.id : S.kidId + '_' + wk, kind: S.kidId, woche: wk, text, plan: val('zielPlan').trim(),
+        kindBew: old ? old.kindBew || null : null, kindKom: old ? old.kindKom || '' : '', lpBew: old ? old.lpBew || null : null, lpKom: old ? old.lpKom || '' : '', erstellt: old ? old.erstellt : Date.now() });
+      S.editing = false; S.justDone = false; render(); window.scrollTo(0, 0); toast('Dein Ziel ist gespeichert.'); break;
+    }
+    case 'goLp': S.openKid = null; if (S.demo || S.lpOk) go('lp'); else { S.pinErr = ''; go('lppin'); setTimeout(() => { const el = document.getElementById('pinIn') || document.getElementById('pinNew'); if (el) el.focus(); }, 30); } break;
+    case 'noPin': S.lpOk = true; go('lp'); break;
+    case 'lpLogout': S.lpOk = false; S.openKid = null; go('start'); break;
+    case 'tab': S.lpTab = t.dataset.t; S.openKid = null; render(); break;
+    case 'wk': { const nw = addWeeks(S.lpWeek, Number(t.dataset.d)); if (nw <= addWeeks(thisWeek(), 1)) { S.lpWeek = nw; render(); } break; }
+    case 'filt': S.lpFilter = t.dataset.f; render(); break;
+    case 'openKid': S.openKid = id; render(); setTimeout(() => { const x = document.querySelector('.sheet .x'); if (x) x.focus(); }, 30); break;
+    case 'closeSheet': S.openKid = null; render(); break;
+    case 'lpRate': {
+      const g = D().goals.find(x => x.id === id); if (!g) break;
+      const l = Number(t.dataset.l);
+      store.put('goals', { ...g, lpBew: g.lpBew === l ? null : l, lpAm: Date.now() }); break;
+    }
+    case 'lpKom': {
+      const g = D().goals.find(x => x.id === id); if (!g) break;
+      const el = document.getElementById('lpk_' + id); if (el) delete el.dataset.dirty;
+      store.put('goals', { ...g, lpKom: el ? el.value.trim() : '' }); toast('Rückmeldung gespeichert.'); break;
+    }
+    case 'delGoal':
+      if (S.armed === 'g' + id) { S.armed = null; store.del('goals', id); toast('Ziel gelöscht.'); } else { S.armed = 'g' + id; render(); } break;
+    case 'delKid':
+      if (S.armed === 'k' + id) { S.armed = null; D().goals.filter(g => g.kind === id).forEach(g => store.del('goals', g.id)); store.del('kids', id); toast('Kind entfernt.'); }
+      else { S.armed = 'k' + id; render(); } break;
+    case 'newPw': { const k = kidById(id); if (k) store.put('kids', { ...k, pw: randomPw() }); break; }
+    case 'mode': store.setSettings({ modus: t.dataset.m }); break;
+    case 'stufen': store.setSettings({ stufen: Number(t.dataset.n) }); break;
+    case 'tgl': store.setSettings({ [t.dataset.k]: !D().set[t.dataset.k] }); break;
+    case 'pinOff': store.setSettings({ pinH: '' }); toast('PIN entfernt.'); break;
+  }
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.openKid) { S.openKid = null; render(); } });
+
+document.addEventListener('submit', e => {
+  const f = e.target.closest('form[data-f]'); if (!f) return;
+  e.preventDefault();
+  const clean = ids => ids.forEach(i => { const el = document.getElementById(i); if (el) delete el.dataset.dirty; });
+  switch (f.dataset.f) {
+    case 'pin':
+      if (hash(val('pinIn')) === D().set.pinH) { S.lpOk = true; S.pinErr = ''; go('lp'); }
+      else { S.pinErr = 'Die PIN stimmt nicht.'; render(); const el = document.getElementById('pinIn'); if (el) { el.value = ''; el.focus(); } }
+      break;
+    case 'pinNew': {
+      const p = val('pinNew').trim();
+      if (p.length < 4) { S.pinErr = 'Die PIN braucht mindestens 4 Zeichen.'; render(); break; }
+      store.setSettings({ pinH: hash(p) }); S.lpOk = true; S.pinErr = ''; go('lp'); toast('PIN gespeichert.'); break;
+    }
+    case 'pinChange': {
+      const p = val('pinChg').trim(); clean(['pinChg']);
+      if (p.length < 4) { toast('Die PIN braucht mindestens 4 Zeichen.'); break; }
+      store.setSettings({ pinH: hash(p) }); toast('Neue PIN gespeichert.'); break;
+    }
+    case 'addKids': {
+      const names = val('newKids').split(/\n|,|;/).map(s => s.trim()).filter(Boolean);
+      if (!names.length) { toast('Bitte mindestens einen Namen eintragen.'); break; }
+      const start = D().kids.length;
+      clean(['newKids']); const ta = document.getElementById('newKids'); if (ta) ta.value = '';
+      names.forEach((n, i) => store.put('kids', { id: uid('k_'), name: n.slice(0, 40), farbe: FARBEN[(start + i) % FARBEN.length], pw: randomPw(), erstellt: Date.now() + i }));
+      toast(names.length === 1 ? names[0] + ' ist eingetragen.' : names.length + ' Kinder eingetragen.'); break;
+    }
+    case 'klasse': clean(['klasseIn']); store.setSettings({ klasse: val('klasseIn').trim().slice(0, 40) }); toast('Gespeichert.'); break;
+    case 'ideen': clean(['ideenIn']); store.setSettings({ ideen: val('ideenIn').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 30) }); toast('Ideen gespeichert.'); break;
+  }
+});
+
+init();
+})();
+</script>
+
+</body></html>

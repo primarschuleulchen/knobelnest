@@ -390,6 +390,8 @@
     if (ma) return AT.start(ma[1]);
     var mp = hs.match(/^#\/pinnwand\/([0-9a-f-]{36})/);
     if (mp) return P.start(mp[1]);
+    var mwz = hs.match(/^#\/wochenziel\/([0-9a-f-]{36})/);
+    if (mwz) return WZ.start(mwz[1]);
     var mh = hs.match(/^#\/hausaufgaben\/([0-9a-f-]{36})(\/embed)?/);
     if (mh) return H.start(mh[1], !!mh[2]);
     var mgs = hs.match(/^#\/gespraeche\/([0-9a-f-]{36})(?:\/([0-9a-f-]{36}))?/);
@@ -608,7 +610,7 @@
   // Gespeichert in shared_store «werkzeuge» = { Lehrperson-ID: { heft: true, atelier: true, tafel: true, vk: true } }
   // ===================================================================
   var BASE_TOOLS = [['folie', '☀️ Tagesfolie'], ['pin', '📌 Pinnwand'], ['otter', '🦦 Lautstärkeregler']];
-  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage'], ['eltern', '🗓️ Elterngespräche']];
+  var TOOLS = [['heft', '📒 Hausaufgabenheft'], ['tafel', '🙋 Arbeitsstand'], ['vk', '📦 Vokabelkiste'], ['atelier', '🚲 Atelier'], ['quiz', '❓ Live-Quiz'], ['gd', '🧠 Gedächtniskiste'], ['umfrage', '📊 Umfrage'], ['eltern', '🗓️ Elterngespräche'], ['wz', '🎯 Mein Wochenziel']];
   async function toolAccess(me) {
     var all = {}; BASE_TOOLS.concat(TOOLS).forEach(function (t) { all[t[0]] = true; });
     if (me && me.is_admin) return all;
@@ -710,6 +712,46 @@
       a.href = u; a.download = o.filename || 'Hausaufgaben.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
     } };
   }
+  // Mein Wochenziel (Version 1): läuft unter dem Konto der Lehrperson, Speicher teacher_store «wz-<Klasse>» =
+  // {kinder:{id:{…}}, ziele:{id:{…}}, einstellungen:{klasse:{…}}}. wzBridge baut claude.use('db') nach (collection/doc, onSnapshot).
+  var WZ_VER = '1';
+  function wzBridge(key) {
+    var data = null, subs = [], timer = null, loading = null;
+    function load() {
+      if (data) return Promise.resolve(data);
+      return loading || (loading = DB.storeGet(key).catch(function () { return null; }).then(function (d) {
+        data = d || {}; ['kinder', 'ziele', 'einstellungen'].forEach(function (k) { data[k] = data[k] || {}; }); return data; }));
+    }
+    function save() { clearTimeout(timer); timer = setTimeout(function () { DB.storeSet(key, data).catch(function () { toast('Speichern hat nicht geklappt. Bitte nochmals versuchen.'); }); }, 400); }
+    function cp(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
+    function snapDoc(c, id) { var v = data[c][id]; return { id: id, exists: v != null, data: function () { return cp(v); } }; }
+    function snapColl(c) { return { docs: Object.keys(data[c]).map(function (id) { return snapDoc(c, id); }) }; }
+    function emit() { subs.forEach(function (f) { try { f(); } catch (e) {} }); }
+    function watch(f, err) { load().then(function () { subs.push(f); f(); }, function (e) { if (err) err(e); }); return function () { subs = subs.filter(function (y) { return y !== f; }); }; }
+    function docRef(c, id) { return {
+      get: async function () { await load(); return snapDoc(c, id); },
+      set: async function (o) { await load(); data[c][id] = cp(o); save(); emit(); },
+      delete: async function () { await load(); delete data[c][id]; save(); emit(); },
+      onSnapshot: function (cb, err) { return watch(function () { cb(snapDoc(c, id)); }, err); }
+    }; }
+    return {
+      collection: function (c) { return { doc: function (id) { return docRef(c, id); }, onSnapshot: function (cb, err) { return watch(function () { cb(snapColl(c)); }, err); } }; },
+      doc: function (path) { var p = String(path).split('/'); return docRef(p[0], p[1]); }
+    };
+  }
+  var WZ = {
+    start: async function (cid) {
+      UI.view = 'wz';
+      var s = await DB.session();
+      if (!s) { location.hash = '#/'; return; }
+      if (!(await toolGate('wz', 'Mein Wochenziel'))) return;
+      var cls = null; try { cls = (await DB.listClasses()).filter(function (c) { return c.id === cid; })[0]; } catch (e) {}
+      if (!cls) { paint('<div class="main"><div class="card stack"><h2>Mein Wochenziel nicht verfügbar</h2><p>Diese Klasse wurde nicht gefunden.</p><a class="btn" href="#/">Zum Portal</a></div></div>'); return; }
+      var db = wzBridge('wz-' + cid);
+      window.knWochenziel = { className: cls.name, claude: { use: async function (n) { return n === 'db' ? db : null; } }, back: function () { location.hash = '#/'; } };
+      paint('<div class="folie"><iframe src="wochenziel.html?v=' + WZ_VER + '" title="Mein Wochenziel" allow="fullscreen"></iframe></div>');
+    }
+  };
   var H = {
     start: async function (cid, embed) {
       UI.view = 'heft';
@@ -2538,7 +2580,7 @@
         // [Freigabe-Schlüssel, Route, Symbol, Name, Text, Schlüssel für die Kinder (null = nur für die Lehrperson)]
         var t = [['folie', 'tagesfolie', '☀️', 'Tagesfolie', 'Der Tag an der Wandtafel', null], ['heft', 'hausaufgaben', '📒', 'Hausaufgabenheft', 'Aufgaben und Kontrollen', 'heft'],
           ['pin', 'pinnwand', '📌', 'Pinnwand', 'Ideen sammeln und abstimmen', 'pin'], ['otter', 'otterteich', '🦦', 'Otterteich', 'Leise sein mit den Ottern', null], ['atelier', 'atelier', '🚲', 'Atelier', 'Wer steht wo im Atelier', 'atelier'], ['quiz', 'quiz', '❓', 'Live-Quiz', 'Alle spielen gleichzeitig mit', null], ['gd', 'gedaechtnis', '🧠', 'Gedächtniskiste', '12 Spiele fürs Gedächtnis', 'spiele'], ['umfrage', 'umfrage', '📊', 'Umfrage', 'Fragen stellen, live abstimmen', 'live'],
-          ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null]]
+          ['eltern', 'gespraeche', '🗓️', 'Elterngespräche', 'Termine mit den Eltern planen', null], ['wz', 'wochenziel', '🎯', 'Mein Wochenziel', 'Jede Woche ein Ziel setzen', null]]
           .filter(function (x) { return T.tools[x[0]]; });
         // Live-Quiz: Kinder dürfen eigene Quiz erstellen (kid_tools.quiz === true, fehlt = aus)
         var quizFoot = function () { var on = !!(c.kid_tools && c.kid_tools.quiz === true);
@@ -3066,7 +3108,7 @@
   var KACHEL_BILD = { folie: 'tagesfolie', heft: 'hausaufgaben', pin: 'pinnwand', otter: 'otterteich', atelier: 'atelier', tafel: 'arbeitsstand', vk: 'vokabelkiste', quiz: 'quiz-buzzer', umfrage: 'umfrage-urne', eltern: 'elterngespraeche' };
   function ttIcon(k, sym) { return KACHEL_BILD[k] ? '<span class="tti bild" aria-hidden="true"><img src="bilder/kacheln/' + KACHEL_BILD[k] + '.webp" alt="" width="96" height="96"></span>' : '<span class="tti" aria-hidden="true">' + sym + '</span>'; }
   // Reihenfolge der Werkzeug-Kacheln pro Lehrperson (teacher_store «kacheln»), zuerst die Werkzeuge nur für die Lehrperson
-  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern'];
+  var TILE_DEF = ['folie', 'otter', 'quiz', 'heft', 'pin', 'atelier', 'umfrage', 'tafel', 'vk', 'gd', 'eltern', 'wz'];
   function tileOrder() {
     if (!T.tileLoaded) {
       T.tileLoaded = true; T.tileOrderList = LS.get('kn_kacheln') || null;

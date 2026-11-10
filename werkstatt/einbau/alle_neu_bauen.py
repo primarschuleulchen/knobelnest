@@ -15,6 +15,7 @@ JOBS = [  # (Einbau-Skript, Original, Ziel im Hauptordner)
     ('einbau/otterteich/otter2_patch.py',  'originale/otterteich.html',        'otterteich.html'),
     ('einbau/atelier/atelier_patch.py',    'originale/atelier/index.html',     'atelier.html'),
     ('einbau/vokabelkiste/vk_patch.py',    'originale/vokabelkiste.html',      'vokabelkiste/index.html'),
+    ('einbau/wochenziel/wz_patch.py',      'originale/wochenziel.html',        'wochenziel.html'),
 ]
 write = '--schreiben' in sys.argv
 ok = True
