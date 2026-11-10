@@ -30,3 +30,6 @@ s = s[:i] + '''<button class="pill" id="knBack" type="button" hidden>← Klassen
   b.addEventListener('click', () => { try { K.back(); } catch (e) {} }); })();</script>
 ''' + s[i:]
 open(dst, 'w', encoding='utf-8').write(s)
+# 3) Startseite: die Regel für die Kinderansicht (.kid = ganze Bildschirmhöhe) traf auch den Knopf «Ich bin ein Kind»
+s = s.replace('</style>', '.door.kid{min-height:0;padding:16px 18px}\n</style>', 1)
+open(dst, 'w', encoding='utf-8').write(s)
