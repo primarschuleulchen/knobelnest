@@ -12,6 +12,8 @@ rep('const c = COVERS[S.settings.cover] || COVERS.gruen;', 'const c = S.settings
 rep('book.style.setProperty("--cover", c[0]);', 'book.classList.toggle("eule", !COVERS[S.settings.cover] || /^(eule|monat|m\\d+)$/.test(S.settings.cover)); book.style.setProperty("--cover", c[0]);')
 # Auswahl im Fenster: Namen beim Darüberfahren, «Passend zum Monat» mit Stern
 rep('aria-label="Umschlag ${k}"></button>`).join("")}</div></div>`;', 'aria-label="Umschlag ${COVER_N(k)}" title="${COVER_N(k)}">${k === "monat" ? "✦" : ""}</button>`).join("")}</div><p class="covtip">✦ = passend zum Monat, wechselt von selbst mit der Woche</p></div>`;')
+# Schriften lokal aus der Klassenkiste (schriften/schriften.css) statt von Google
+rep('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Amatic+SC:wght@700&family=Nunito:wght@400;600;700;800&family=Andika:wght@400;700&family=Playpen+Sans:wght@400;600&family=Comic+Neue:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">', '<link rel="stylesheet" href="schriften/schriften.css">')
 rep('#knBack{font-weight:700}', '''#knBack{font-weight:700}
 /* ===== Klassenkiste-Stil ===== */
 :root{--ui:"Patrick Hand","Segoe Print","Comic Sans MS",cursive;--gold:#d6ad45;--gold-d:#a87c1f;--sun:#fbf3dc;--himmel:#dcf0fd;--blau:#3f78a8;--line2:#c5d8e8;
