@@ -7,7 +7,7 @@ function emoKeys(t){t=String(t||'').toLowerCase().normalize('NFC').replace(/[’
   return t.split(/\s*[\/,;]\s*|\s+oder\s+|\s+or\s+|\s+ou\s+/).map(x=>x.replace(/[.!?…]+/g,' ').replace(/\s+/g,' ').trim().replace(EMO_PRE,'').replace(/^l'/,'').trim()).filter(Boolean)}
 function autoEmo(w){for(const k of emoKeys(w.de)){const e=EMO.get('de:'+k)||EMO.get(k);if(e)return e}
   for(const k of emoKeys(w.f)){const e=EMO.get('fl:'+k)||EMO.get(k);if(e)return e}return null}
-const isImgUrl=v=>/^data:image\//.test(v||'');
+const isImgUrl=v=>/^data:image\//.test(v||'')||/^sticker\/[a-z0-9-]+\.webp(\?v=\d+)?$/.test(v||'');
 const picOf=w=>!w||w.img==='-'?null:(w.img||autoEmo(w));
 const bildOK=w=>!!picOf(w);
 /* Bilder in der Datenbank (Version 30): w.img = 'vk:<id>'. Sie kommen nur über das Portal (mit Anmeldung) und werden hier

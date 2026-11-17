@@ -85,6 +85,17 @@
     setGameForAll: function (id, on) { D.games.filter(function (g) { return g.id === id; })[0].for_all = on; return delay(); },
     setTeacherGames: function (t, ids, on) { D.teacher_games = D.teacher_games.filter(function (x) { return !(x.teacher_id === t && ids.indexOf(x.game_id) >= 0); }); if (on) ids.forEach(function (g) { D.teacher_games.push({ teacher_id: t, game_id: g }); }); return delay(); },
     listTeachers: function () { return delay(D.profiles); },
+    gameShop: function () { var m = me(); if (m.is_admin) return delay([]);
+      return delay(D.games.filter(function (g) { return !g.for_all && !D.teacher_games.some(function (t) { return t.teacher_id === m.id && t.game_id === g.id; }); })
+        .map(function (g) { return { id: g.id, title: g.title, description: g.description, fach: g.fach, thema: g.thema, stufe: g.stufe, price: g.price == null ? 1 : g.price }; })); },
+    buyGame: function (gid) { var m = me(), g = D.games.filter(function (x) { return x.id === gid; })[0], pr = g.price == null ? 1 : g.price;
+      if ((m.credits || 0) < pr) return Promise.reject(new Error('Zu wenig Guthaben'));
+      m.credits = (m.credits || 0) - pr; D.teacher_games.push({ teacher_id: m.id, game_id: gid }); (D.log = D.log || []).push({ t: m.id, delta: -pr, note: g.title, at: now() }); return delay({ ok: true, credits: m.credits }); },
+    addCredits: function (tid, d, note) { if (!me().is_admin) return Promise.reject(new Error('Nur für den Admin')); var p = D.profiles.filter(function (x) { return x.id === tid; })[0];
+      p.credits = Math.max(0, (p.credits || 0) + d); (D.log = D.log || []).push({ t: tid, delta: d, note: note || '', at: now() }); return delay(p.credits); },
+    gamePrices: function () { return delay(D.games.map(function (g) { return { id: g.id, price: g.price == null ? 1 : g.price }; })); },
+    setGamePrice: function (gid, pr) { D.games.filter(function (g) { return g.id === gid; })[0].price = pr; return delay(); },
+    creditLog: function (tid) { return delay((D.log || []).filter(function (x) { return x.t === tid; }).reverse().map(function (x) { return { delta: x.delta, note: x.note, at: x.at }; })); },
     setValidUntil: function (t, day) {
       if (!me().is_admin) return Promise.reject(new Error('Nur für Admin'));
       D.profiles.filter(function (x) { return x.id === t; })[0].valid_until = day || null; return delay();

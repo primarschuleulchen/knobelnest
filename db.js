@@ -32,7 +32,9 @@
     me: async function () {
       var s = await this.session(); if (!s) return null;
       // Version 22: valid_until (gültig bis). Solange das SQL noch nicht ausgeführt ist, ohne dieses Feld.
-      var r = await sb.from('profiles').select('id,email,name,is_admin,valid_until').eq('id', s.user.id);
+      // Version 31: credits (Guthaben)
+      var r = await sb.from('profiles').select('id,email,name,is_admin,valid_until,credits').eq('id', s.user.id);
+      if (r.error && /credits|column/i.test(r.error.message || '')) r = await sb.from('profiles').select('id,email,name,is_admin,valid_until').eq('id', s.user.id);
       if (r.error && /valid_until|column/i.test(r.error.message || '')) r = await sb.from('profiles').select('id,email,name,is_admin').eq('id', s.user.id);
       var rows = ok(r);
       return rows[0] || { id: s.user.id, email: s.user.email, name: null, is_admin: false };
@@ -59,11 +61,19 @@
 
     // ---------- Lehrpersonen (Admin) ----------
     listTeachers: async function () {
-      var r = await sb.from('profiles').select('id,email,name,is_admin,created_at,valid_until').order('created_at');
-      this.noLicense = false;
+      var r = await sb.from('profiles').select('id,email,name,is_admin,created_at,valid_until,credits').order('created_at');
+      this.noLicense = false; this.noCredits = false;
+      if (r.error && /credits|column/i.test(r.error.message || '')) { this.noCredits = true; r = await sb.from('profiles').select('id,email,name,is_admin,created_at,valid_until').order('created_at'); }
       if (r.error && /valid_until|column/i.test(r.error.message || '')) { this.noLicense = true; r = await sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at'); }
       return ok(r);
     },
+    // ---------- Guthaben (Version 31) ----------
+    gameShop: async function () { var r = await sb.rpc('games_shop'); if (r.error) return null; return r.data || []; },
+    buyGame: async function (gid) { return ok(await sb.rpc('buy_game', { p_game: gid })); },
+    addCredits: async function (tid, delta, note) { return ok(await sb.rpc('admin_add_credits', { p_teacher: tid, p_delta: delta, p_note: note || '' })); },
+    gamePrices: async function () { var r = await sb.from('games').select('id,price'); if (r.error) return null; return r.data || []; },
+    setGamePrice: async function (gid, price) { ok(await sb.from('games').update({ price: price }).eq('id', gid)); },
+    creditLog: async function (tid) { var r = await sb.from('credit_log').select('delta,note,at').eq('teacher_id', tid).order('at', { ascending: false }).limit(30); if (r.error) return []; return r.data || []; },
     // Lizenz «gültig bis» setzen (null = unbefristet), nur Admin
     setValidUntil: async function (tid, day) { ok(await sb.rpc('admin_set_valid', { p_teacher: tid, p_until: day || null })); },
     listTeacherGames: async function () { return ok(await sb.from('teacher_games').select('teacher_id,game_id,created_at')); },
